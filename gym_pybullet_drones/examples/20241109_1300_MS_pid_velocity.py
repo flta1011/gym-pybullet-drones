@@ -10,7 +10,7 @@ In a terminal, run as:
 
 Notes
 -----
-The drones use interal PID control to track a target velocity.
+The drones use internal PID control to track a target velocity.
 
 """
 import os
@@ -32,18 +32,75 @@ from gym_pybullet_drones.utils.utils import sync, str2bool
 
 from gym_pybullet_drones.envs.VelocityAviary import VelocityAviary
 
-DEFAULT_DRONE = DroneModel("cf2x")
+DEFAULT_DRONE = DroneModel("cf2x") # x = Configuration of the rotors
 DEFAULT_GUI = True
 DEFAULT_RECORD_VIDEO = False
-DEFAULT_PLOT = True
+DEFAULT_PLOT = True # plot the simulation results
 DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_OBSTACLES = False
 DEFAULT_SIMULATION_FREQ_HZ = 240
 DEFAULT_CONTROL_FREQ_HZ = 48
-DEFAULT_DURATION_SEC = 5
+DEFAULT_DURATION_SEC = 60
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
+DEFAULT_CONTROL_MODE = 'Keyboard'  # 'Keyboard' for manual control using keyboard inputs,
+                                   # 'PID' for automated PID control (automatic parts will be deleted)
+DEFAULT_ALTITUDE = 0.5  # Altitude at which the drone will hover in meters)
+DEFAULT_NUM_DRONES = 1
 
+# Define key mappings
+KEY_MAPPING = {
+    'w': np.array([1, 0, 0, 0]),  # Forward
+    's': np.array([-1, 0, 0, 0]), # Backward
+    'a': np.array([0, -1, 0, 0]), # Left
+    'd': np.array([0, 1, 0, 0]),  # Right
+    'up': np.array([0, 0, 1, 0]), # Up
+    'down': np.array([0, 0, -1, 0]), # Down
+    'left': np.array([0, 0, 0, -1]), # Yaw left
+    'right': np.array([0, 0, 0, 1]) # Yaw right
+    }
+
+#def get_keyboard_events():
+#    keys = p.getKeyboardEvents()
+#    movement = np.zeros(4)
+#    for k, v in keys.items():
+#        if (v & p.KEY_WAS_TRIGGERED) or (v & p.KEY_IS_DOWN):
+#            if chr(k) in KEY_MAPPING:
+#                movement += KEY_MAPPING[chr(k)]
+#            elif k == p.B3G_UP_ARROW:
+#                movement += KEY_MAPPING['up']
+#            elif k == p.B3G_DOWN_ARROW:
+#                movement += KEY_MAPPING['down']
+#            elif k == p.B3G_LEFT_ARROW:
+#                movement += KEY_MAPPING['left']
+#            elif k == p.B3G_RIGHT_ARROW:
+#                movement += KEY_MAPPING['right']
+#    return movement
+
+def get_keyboard_events():
+    keys = p.getKeyboardEvents()
+    movement = np.zeros(4)
+
+    if p.B3G_UP_ARROW in keys and (keys[p.B3G_UP_ARROW] & p.KEY_WAS_TRIGGERED or keys[p.B3G_UP_ARROW] & p.KEY_IS_DOWN):
+        movement += KEY_MAPPING['up']
+    if p.B3G_DOWN_ARROW in keys and (keys[p.B3G_DOWN_ARROW] & p.KEY_WAS_TRIGGERED or keys[p.B3G_DOWN_ARROW] & p.KEY_IS_DOWN):
+        movement += KEY_MAPPING['down']
+    if p.B3G_LEFT_ARROW in keys and (keys[p.B3G_LEFT_ARROW] & p.KEY_WAS_TRIGGERED or keys[p.B3G_LEFT_ARROW] & p.KEY_IS_DOWN):
+        movement += KEY_MAPPING['left']
+    if p.B3G_RIGHT_ARROW in keys and (keys[p.B3G_RIGHT_ARROW] & p.KEY_WAS_TRIGGERED or keys[p.B3G_RIGHT_ARROW] & p.KEY_IS_DOWN):
+        movement += KEY_MAPPING['right']
+    
+    for k, v in keys.items():
+        if chr(k) in KEY_MAPPING and ((v & p.KEY_WAS_TRIGGERED) or (v & p.KEY_IS_DOWN)):
+            movement += KEY_MAPPING[chr(k)]
+
+    return movement
+
+
+
+
+
+# Run the Simulation
 def run(
         drone=DEFAULT_DRONE,
         gui=DEFAULT_GUI,
@@ -55,26 +112,22 @@ def run(
         control_freq_hz=DEFAULT_CONTROL_FREQ_HZ,
         duration_sec=DEFAULT_DURATION_SEC,
         output_folder=DEFAULT_OUTPUT_FOLDER,
-        colab=DEFAULT_COLAB
+        colab=DEFAULT_COLAB,
+        control_mode=DEFAULT_CONTROL_MODE
         ):
         #### Initialize the simulation #############################
     INIT_XYZS = np.array([
                           [ 0, 0, .1],
-                          [.3, 0, .1],
-                          [.6, 0, .1],
-                          [0.9, 0, .1]
                           ])
     INIT_RPYS = np.array([
                           [0, 0, 0],
-                          [0, 0, np.pi/3],
-                          [0, 0, np.pi/4],
-                          [0, 0, np.pi/2]
                           ])
+
     PHY = Physics.PYB
 
     #### Create the environment ################################
     env = VelocityAviary(drone_model=drone,
-                         num_drones=4,
+                         num_drones=1,
                          initial_xyzs=INIT_XYZS,
                          initial_rpys=INIT_RPYS,
                          physics=Physics.PYB,
@@ -94,48 +147,65 @@ def run(
     #### Compute number of control steps in the simlation ######
     PERIOD = duration_sec
     NUM_WP = control_freq_hz*PERIOD
-    wp_counters = np.array([0 for i in range(4)])
+    wp_counters = np.array([0 for i in range(1)])
 
-    #### Initialize the velocity target ########################
-    TARGET_VEL = np.zeros((4,NUM_WP,4))
-    for i in range(NUM_WP):
-        TARGET_VEL[0, i, :] = [-0.5, 1, 0, 0.99] if i < (NUM_WP/8) else [0.5, -1, 0, 0.99]
-        TARGET_VEL[1, i, :] = [0, 1, 0, 0.99] if i < (NUM_WP/8+NUM_WP/6) else [0, -1, 0, 0.99]
-        TARGET_VEL[2, i, :] = [0.2, 1, 0.2, 0.99] if i < (NUM_WP/8+2*NUM_WP/6) else [-0.2, -1, -0.2, 0.99]
-        TARGET_VEL[3, i, :] = [0, 1, 0.5, 0.99] if i < (NUM_WP/8+3*NUM_WP/6) else [0, -1, -0.5, 0.99]
+    ##### Initialize the velocity target ########################
+    #TARGET_VEL = np.zeros((4,NUM_WP,4))
+    #for i in range(NUM_WP):
+    #    TARGET_VEL[0, i, :] = [-0.5, 1, 0, 0.99] if i < (NUM_WP/8) else [0.5, -1, 0, 0.99]
 
     #### Initialize the logger #################################
     logger = Logger(logging_freq_hz=control_freq_hz,
-                    num_drones=4,
+                    num_drones=1,
                     output_folder=output_folder,
                     colab=colab
                     )
 
     #### Run the simulation ####################################
-    action = np.zeros((4,4))
+    action = np.zeros((DEFAULT_NUM_DRONES,4))
     START = time.time()
-    for i in range(0, int(duration_sec*env.CTRL_FREQ)):
 
+    # initial target position
+    TARGET_POS = np.copy(INIT_XYZS)
+
+    # initial camera position
+    camera_distance = 1
+    camera_yaw = 50
+    camera_pitch = -35
+    camera_target_position = [0, 0, 1]
+
+    for i in range(0, NUM_WP): # for each control step
+
+        #### Capture keyboard events ############################
+        movement = get_keyboard_events()
+        print(f"Movement: {movement}")
+
+        for j in range(DEFAULT_NUM_DRONES):
+            action[j, :] = movement
+            print(f"Action for drone {action[j, :]}")
+
+        
         ############################################################
         # for j in range(3): env._showDroneLocalAxes(j)
 
         #### Step the simulation ###################################
         obs, reward, terminated, truncated, info = env.step(action)
 
-        #### Compute control for the current way point #############
-        for j in range(4):
-            action[j, :] = TARGET_VEL[j, wp_counters[j], :] 
+        ##### PID ### Compute control for the current way point #############
+        #for j in range(num_drones):
+        #    action[j, :] = TARGET_VEL[j, wp_counters[j], :] 
+
 
         #### Go to the next way point and loop #####################
-        for j in range(4):
+        for j in range(DEFAULT_NUM_DRONES):
             wp_counters[j] = wp_counters[j] + 1 if wp_counters[j] < (NUM_WP-1) else 0
 
         #### Log the simulation ####################################
-        for j in range(4):
+        for j in range(DEFAULT_NUM_DRONES):
             logger.log(drone=j,
                        timestamp=i/env.CTRL_FREQ,
                        state= obs[j],
-                       control=np.hstack([TARGET_VEL[j, wp_counters[j], 0:3], np.zeros(9)])
+                       #control=np.hstack([TARGET_VEL[j, wp_counters[j], 0:3], np.zeros(9)])
                        )
 
         #### Printout ##############################################
@@ -144,7 +214,7 @@ def run(
         #### Sync the simulation ###################################
         if gui:
             sync(i, START, env.CTRL_TIMESTEP)
-            
+        
         print(f"Step {i}")
 
     #### Close the environment #################################
@@ -154,8 +224,6 @@ def run(
     logger.save_as_csv("vel") # Optional CSV save
     if plot:
         logger.plot()
-        
-    
 
 if __name__ == "__main__":
     #### Define and parse (optional) arguments for the script ##

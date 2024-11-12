@@ -1,6 +1,6 @@
 """Script demonstrating the joint use of velocity input.
 
-The simulation is run by a `VelocityAviary` environment.
+The simulation is run by a `Test4_VelocityAviary` environment.
 
 Example
 -------
@@ -30,19 +30,21 @@ from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync, str2bool
 
-from gym_pybullet_drones.envs.VelocityAviary import VelocityAviary
+from gym_pybullet_drones.envs.Test4_VelocityAviary import VelocityAviary
 
-DEFAULT_DRONE = DroneModel("cf2x")
+DEFAULT_DRONE = DroneModel("cf2x") # x steht für x configuration der Rotorblätter
 DEFAULT_GUI = True
 DEFAULT_RECORD_VIDEO = False
-DEFAULT_PLOT = True
-DEFAULT_USER_DEBUG_GUI = False
+DEFAULT_PLOT = True # Plot the simulation results
+DEFAULT_USER_DEBUG_GUI = True
 DEFAULT_OBSTACLES = False
 DEFAULT_SIMULATION_FREQ_HZ = 240
 DEFAULT_CONTROL_FREQ_HZ = 48
 DEFAULT_DURATION_SEC = 5
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
+DEFAULT_CONTROL_MODE = 'Keyboard' # Keyboard for manual control, 'PID' for automated PID control --> Automatic parts will be deleted
+DEFAULT_ALTITUDE = 0.5  # Altitude at which the drone will hover in meters)
 
 def run(
         drone=DEFAULT_DRONE,
@@ -55,26 +57,25 @@ def run(
         control_freq_hz=DEFAULT_CONTROL_FREQ_HZ,
         duration_sec=DEFAULT_DURATION_SEC,
         output_folder=DEFAULT_OUTPUT_FOLDER,
-        colab=DEFAULT_COLAB
+        colab=DEFAULT_COLAB,
+        control_mode=DEFAULT_CONTROL_MODE
         ):
-        #### Initialize the simulation #############################
+        #### Initialize the simulation ############################# # 3 Drohnen raustgeschmissen
     INIT_XYZS = np.array([
                           [ 0, 0, .1],
-                          [.3, 0, .1],
-                          [.6, 0, .1],
-                          [0.9, 0, .1]
                           ])
     INIT_RPYS = np.array([
-                          [0, 0, 0],
-                          [0, 0, np.pi/3],
-                          [0, 0, np.pi/4],
-                          [0, 0, np.pi/2]
+                          [0, 0, 0], # yaw, pitch, roll (in Radiant), es könnte z.B. np.pi/2 sein
                           ])
     PHY = Physics.PYB
+    
+    
+  
+    
 
     #### Create the environment ################################
     env = VelocityAviary(drone_model=drone,
-                         num_drones=4,
+                         num_drones=1,
                          initial_xyzs=INIT_XYZS,
                          initial_rpys=INIT_RPYS,
                          physics=Physics.PYB,
@@ -90,32 +91,80 @@ def run(
     #### Obtain the PyBullet Client ID from the environment ####
     PYB_CLIENT = env.getPyBulletClient()
     DRONE_IDS = env.getDroneIds()
+    
+    
+    
+
 
     #### Compute number of control steps in the simlation ######
     PERIOD = duration_sec
     NUM_WP = control_freq_hz*PERIOD
-    wp_counters = np.array([0 for i in range(4)])
+    wegpunkt_counters = np.array([0 for i in range(1)])
+    
 
-    #### Initialize the velocity target ########################
-    TARGET_VEL = np.zeros((4,NUM_WP,4))
-    for i in range(NUM_WP):
+    #### Initialize the velocity target ########################   # die 3 anderen Drohen sind rausgeschmissen
+    TARGET_VEL = np.zeros((1,NUM_WP,4))
+    for i in range(NUM_WP): # für jeden Calculationschritt gibt es ein definiertes Set an Velocities 
         TARGET_VEL[0, i, :] = [-0.5, 1, 0, 0.99] if i < (NUM_WP/8) else [0.5, -1, 0, 0.99]
-        TARGET_VEL[1, i, :] = [0, 1, 0, 0.99] if i < (NUM_WP/8+NUM_WP/6) else [0, -1, 0, 0.99]
-        TARGET_VEL[2, i, :] = [0.2, 1, 0.2, 0.99] if i < (NUM_WP/8+2*NUM_WP/6) else [-0.2, -1, -0.2, 0.99]
-        TARGET_VEL[3, i, :] = [0, 1, 0.5, 0.99] if i < (NUM_WP/8+3*NUM_WP/6) else [0, -1, -0.5, 0.99]
+
 
     #### Initialize the logger #################################
     logger = Logger(logging_freq_hz=control_freq_hz,
-                    num_drones=4,
+                    num_drones=1,
                     output_folder=output_folder,
                     colab=colab
                     )
 
     #### Run the simulation ####################################
-    action = np.zeros((4,4))
+    action = np.zeros((1,4)) # nur noch 1 Drohne!
     START = time.time()
-    for i in range(0, int(duration_sec*env.CTRL_FREQ)):
+    
+    # Initiale Kameraeinstellungen
+    camera_distance = 1
+    camera_yaw = 50
+    camera_pitch = -35
+    camera_target_position = [0, 0, 1]
+    
+    i = 0
+    while True:
 
+        #### Per Keyboard debuggen ################################
+        desired_state_roll = 0
+        desired_state_pitch = 0
+        desired_state_vx = 0
+        desired_state_vy = 0
+        desired_state_yaw_rate = 0
+        desired_state_altitude = DEFAULT_ALTITUDE
+        
+        #Keyboard inputs werden hierin gespeichert
+        forward_desired = 0
+        sideways_desired = 0
+        yaw_desired = 0
+        height_diff_desired = 0
+        
+        #keyboard inputs lesen
+        keys = p.getKeyboardEvents()
+        if p.B3G_UP_ARROW in keys and keys[p.B3G_UP_ARROW] & p.KEY_WAS_TRIGGERED:
+            forward_desired = 0.5
+        if p.B3G_DOWN_ARROW in keys and keys[p.B3G_DOWN_ARROW] & p.KEY_WAS_TRIGGERED:
+            forward_desired = -0.5
+        if p.B3G_RIGHT_ARROW in keys and keys[p.B3G_RIGHT_ARROW] & p.KEY_WAS_TRIGGERED:
+            sideways_desired = -0.5
+        if p.B3G_LEFT_ARROW in keys and keys[p.B3G_LEFT_ARROW] & p.KEY_WAS_TRIGGERED:
+            sideways_desired = 0.5
+        if ord('q') in keys and keys[ord('q')] & p.KEY_WAS_TRIGGERED:
+            yaw_desired = 1.0
+        if ord('e') in keys and keys[ord('e')] & p.KEY_WAS_TRIGGERED:
+            yaw_desired = -1.0
+        if ord(' ') in keys and keys[ord(' ')] & p.KEY_WAS_TRIGGERED:
+            break
+        
+        #write desired from keyboard into the desired state
+        desired_state_yaw_rate = yaw_desired
+        desired_state_vy = sideways_desired
+        desired_state_vy  = forward_desired
+        
+        
         ############################################################
         # for j in range(3): env._showDroneLocalAxes(j)
 
@@ -123,19 +172,19 @@ def run(
         obs, reward, terminated, truncated, info = env.step(action)
 
         #### Compute control for the current way point #############
-        for j in range(4):
-            action[j, :] = TARGET_VEL[j, wp_counters[j], :] 
+        for j in range(1): # nur noch 1 Drohne!
+            action[j, :] = TARGET_VEL[j, wegpunkt_counters[j], :] 
 
         #### Go to the next way point and loop #####################
-        for j in range(4):
-            wp_counters[j] = wp_counters[j] + 1 if wp_counters[j] < (NUM_WP-1) else 0
+        for j in range(1): # nur noch 1 Drohne!
+            wegpunkt_counters[j] = wegpunkt_counters[j] + 1 if wegpunkt_counters[j] < (NUM_WP-1) else 0
 
         #### Log the simulation ####################################
-        for j in range(4):
+        for j in range(1): # nur noch 1 Drohne!
             logger.log(drone=j,
                        timestamp=i/env.CTRL_FREQ,
                        state= obs[j],
-                       control=np.hstack([TARGET_VEL[j, wp_counters[j], 0:3], np.zeros(9)])
+                       control=np.hstack([TARGET_VEL[j, wegpunkt_counters[j], 0:3], np.zeros(9)])
                        )
 
         #### Printout ##############################################
@@ -144,8 +193,12 @@ def run(
         #### Sync the simulation ###################################
         if gui:
             sync(i, START, env.CTRL_TIMESTEP)
-            
+        
         print(f"Step {i}")
+        
+        i += 1
+        
+    
 
     #### Close the environment #################################
     env.close()
@@ -154,8 +207,6 @@ def run(
     logger.save_as_csv("vel") # Optional CSV save
     if plot:
         logger.plot()
-        
-    
 
 if __name__ == "__main__":
     #### Define and parse (optional) arguments for the script ##
