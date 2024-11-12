@@ -217,6 +217,49 @@ class BaseAviary(gym.Env):
     
     ################################################################################
 
+
+    # def _getToFSensorReadings(self, drone_id): TBD ALEX
+    #     """Get ToF sensor readings for the specified drone.
+
+    #     Parameters
+    #     ----------
+    #     drone_id : int
+    #         The ID of the drone for which to get the sensor readings.
+
+    #     Returns
+    #     -------
+    #     dict
+    #         A dictionary with the distances measured by the ToF sensors in each direction.
+    #     """
+    #     # Define the directions for the ToF sensors
+    #     directions = {
+    #         'front': [1, 0, 0],
+    #         'back': [-1, 0, 0],
+    #         'right': [0, -1, 0],
+    #         'left': [0, 1, 0]
+    #     }
+
+    #     # Get the current position and orientation of the drone
+    #     drone_pos, drone_orn = p.getBasePositionAndOrientation(drone_id)
+    #     drone_rot_matrix = p.getMatrixFromQuaternion(drone_orn)
+    #     drone_rot_matrix = np.array(drone_rot_matrix).reshape(3, 3)
+
+    #     # Cast rays in the specified directions
+    #     ray_results = {}
+    #     for direction_name, direction_vector in directions.items():
+    #         # Transform the direction vector to the drone's local frame
+    #         direction_vector = np.dot(drone_rot_matrix, direction_vector)
+    #         ray_end = drone_pos + direction_vector * 100  # Cast the ray up to 100 units
+
+    #         # Perform the ray test
+    #         ray_result = p.rayTest(drone_pos, ray_end)
+    #         ray_results[direction_name] = ray_result[0][2]  # Distance to the nearest object
+
+    #     return ray_results
+
+
+    ################################################################################
+
     def reset(self,
               seed : int = None,
               options : dict = None):
@@ -254,6 +297,8 @@ class BaseAviary(gym.Env):
         initial_info = self._computeInfo()
         return initial_obs, initial_info
     
+    
+
     ################################################################################
 
     def step(self,

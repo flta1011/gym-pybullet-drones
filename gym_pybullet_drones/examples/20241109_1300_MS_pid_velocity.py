@@ -49,15 +49,12 @@ DEFAULT_ALTITUDE = 0.5  # Altitude at which the drone will hover in meters)
 DEFAULT_NUM_DRONES = 1
 
 # Define key mappings
+# [X, Y, Z, Scaling factor]
 KEY_MAPPING = {
-    'w': np.array([1, 0, 0, 0]),  # Forward
-    's': np.array([-1, 0, 0, 0]), # Backward
-    'a': np.array([0, -1, 0, 0]), # Left
-    'd': np.array([0, 1, 0, 0]),  # Right
-    'up': np.array([0, 0, 1, 0]), # Up
-    'down': np.array([0, 0, -1, 0]), # Down
-    'left': np.array([0, 0, 0, -1]), # Yaw left
-    'right': np.array([0, 0, 0, 1]) # Yaw right
+    'up': np.array([1, 0, 0, 0.99]), # Up
+    'down': np.array([-1, 0, 0, 0.99]), # Down
+    'left': np.array([0, 1, 0, 0.99]), # Yaw left
+    'right': np.array([0, -1, 0, 0.99]) # Yaw right
     }
 
 #def get_keyboard_events():
@@ -80,7 +77,7 @@ KEY_MAPPING = {
 def get_keyboard_events():
     keys = p.getKeyboardEvents()
     movement = np.zeros(4)
-
+    
     if p.B3G_UP_ARROW in keys and (keys[p.B3G_UP_ARROW] & p.KEY_WAS_TRIGGERED or keys[p.B3G_UP_ARROW] & p.KEY_IS_DOWN):
         movement += KEY_MAPPING['up']
     if p.B3G_DOWN_ARROW in keys and (keys[p.B3G_DOWN_ARROW] & p.KEY_WAS_TRIGGERED or keys[p.B3G_DOWN_ARROW] & p.KEY_IS_DOWN):
@@ -95,8 +92,6 @@ def get_keyboard_events():
             movement += KEY_MAPPING[chr(k)]
 
     return movement
-
-
 
 
 
@@ -169,10 +164,10 @@ def run(
     TARGET_POS = np.copy(INIT_XYZS)
 
     # initial camera position
-    camera_distance = 1
-    camera_yaw = 50
-    camera_pitch = -35
-    camera_target_position = [0, 0, 1]
+    #camera_distance = 1
+    #camera_yaw = 50
+    #camera_pitch = -35
+    #camera_target_position = [0, 0, 1]
 
     for i in range(0, NUM_WP): # for each control step
 
@@ -190,11 +185,27 @@ def run(
 
         #### Step the simulation ###################################
         obs, reward, terminated, truncated, info = env.step(action)
+        
+        events = p.getMouseEvents()
+        for e in events:
+            if e[0] == p.MOUSE_WHEEL:
+                cameraDistance -= e[2] * 0.1  # Adjust zoom speed as needed
 
+        drone_pos, _ = p.getBasePositionAndOrientation(env.DRONE_IDS[0])
+        p.resetDebugVisualizerCamera(cameraDistance=2,
+                                 cameraYaw=-90,
+                                 cameraPitch=-30,
+                                 cameraTargetPosition=drone_pos,
+                                 physicsClientId=env.CLIENT
+                                 )
+        
         ##### PID ### Compute control for the current way point #############
         #for j in range(num_drones):
         #    action[j, :] = TARGET_VEL[j, wp_counters[j], :] 
 
+        # Get ToF sensor readings for the first drone TBD ALEX
+        # tof_readings = env._getToFSensorReadings(env.DRONE_IDS[0])
+        # print(f"ToF Sensor Readings: {tof_readings}")
 
         #### Go to the next way point and loop #####################
         for j in range(DEFAULT_NUM_DRONES):

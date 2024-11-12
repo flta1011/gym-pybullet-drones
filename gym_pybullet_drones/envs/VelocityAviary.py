@@ -77,6 +77,7 @@ class VelocityAviary(BaseAviary):
         #### Set a limit on the maximum target speed ###############
         self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000/3600)
 
+
     ################################################################################
 
     def _actionSpace(self):
