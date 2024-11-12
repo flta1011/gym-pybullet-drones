@@ -952,15 +952,23 @@ class BaseAviary(gym.Env):
     
     ################################################################################
 
-    def _addObstacles(self):
+    def _addObstacles(self): ## Trainings
         """Add obstacles to the environment.
 
         These obstacles are loaded from standard URDF files included in Bullet.
 
         """
-        p.loadURDF("samurai.urdf",
-                   physicsClientId=self.CLIENT
-                   )
+        p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/train_square.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
+        
+        p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/target.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
+            
+        #Wände mit Variablen.. läuft aber irgendwie nicht
+        #p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/train_quader.urdf'), physicsClientId=self.CLIENT)
+        
+        
+        # p.loadURDF("samurai.urdf",
+        #            physicsClientId=self.CLIENT
+        #            )
         # p.loadURDF("duck_vhacd.urdf",
         #            [-.5, -.5, .05],
         #            p.getQuaternionFromEuler([0, 0, 0]),
