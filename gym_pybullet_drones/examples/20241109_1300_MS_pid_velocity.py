@@ -37,7 +37,7 @@ DEFAULT_GUI = True
 DEFAULT_RECORD_VIDEO = False
 DEFAULT_PLOT = True # plot the simulation results
 DEFAULT_USER_DEBUG_GUI = False
-DEFAULT_OBSTACLES = False
+DEFAULT_OBSTACLES = True
 DEFAULT_SIMULATION_FREQ_HZ = 240
 DEFAULT_CONTROL_FREQ_HZ = 48
 DEFAULT_DURATION_SEC = 60
@@ -47,6 +47,7 @@ DEFAULT_CONTROL_MODE = 'Keyboard'  # 'Keyboard' for manual control using keyboar
                                    # 'PID' for automated PID control (automatic parts will be deleted)
 DEFAULT_ALTITUDE = 0.5  # Altitude at which the drone will hover in meters)
 DEFAULT_NUM_DRONES = 1
+
 
 # Define key mappings
 # [X, Y, Z, Scaling factor]
@@ -84,7 +85,7 @@ def get_keyboard_events():
         movement += KEY_MAPPING['down']
     if p.B3G_LEFT_ARROW in keys and (keys[p.B3G_LEFT_ARROW] & p.KEY_WAS_TRIGGERED or keys[p.B3G_LEFT_ARROW] & p.KEY_IS_DOWN):
         movement += KEY_MAPPING['left']
-    if p.B3G_RIGHT_ARROW in keys and (keys[p.B3G_RIGHT_ARROW] & p.KEY_WAS_TRIGGERED or keys[p.B3G_RIGHT_ARROW] & p.KEY_IS_DOWN):
+    if p.B3G_RIGHT_ARROW in keys and (p.KEY_WAS_TRIGGERED or keys[p.B3G_RIGHT_ARROW] & p.KEY_IS_DOWN):
         movement += KEY_MAPPING['right']
     
     for k, v in keys.items():
