@@ -113,7 +113,7 @@ def run(
         ):
         #### Initialize the simulation #############################
     INIT_XYZS = np.array([
-                          [ 0, 0, .1],
+                          [ 0, 0, DEFAULT_ALTITUDE],
                           ])
     INIT_RPYS = np.array([
                           [0, 0, 0],
@@ -187,10 +187,11 @@ def run(
         #### Step the simulation ###################################
         obs, reward, terminated, truncated, info = env.step(action)
         
-        events = p.getMouseEvents()
-        for e in events:
-            if e[0] == p.MOUSE_WHEEL:
-                cameraDistance -= e[2] * 0.1  # Adjust zoom speed as needed
+        #### Alex:tbd Update the camera position ###########################
+        # events = p.getMouseEvents()
+        # for e in events:
+        #     if e[0] == p.MOUSE_WHEEL:
+        #         cameraDistance -= e[2] * 0.1  # Adjust zoom speed as needed
 
         drone_pos, _ = p.getBasePositionAndOrientation(env.DRONE_IDS[0])
         p.resetDebugVisualizerCamera(cameraDistance=2,
