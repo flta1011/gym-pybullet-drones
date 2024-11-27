@@ -1,6 +1,7 @@
 import numpy as np
 
 from gym_pybullet_drones.envs.BaseRLAviary import BaseRLAviary
+from gym_pybullet_drones.envs.BaseRLAviaryMaze import BaseRLAviary_Maze
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType
 
 class MultiHoverAviary(BaseRLAviary):

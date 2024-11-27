@@ -61,35 +61,36 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
 
     #### Train the model #######################################
     ## CNN Policy wäre bei RBG-Bildern geeignet
-    # model = SAC('MlpPolicy',
-    #             train_env,
-    #             verbose=1,
-    #             tensorboard_log=filename + '/tb/')
+    model = SAC('MlpPolicy',
+                train_env,
+                verbose=1,
+                #tensorboard_log=filename + '/tb/'
+                )
     # Initialisiere das SAC-Modell mit zusätzlichen Parametern
-    model = SAC(
-    'MlpPolicy',  # oder 'CnnPolicy', 'MultiInputPolicy' je nach Bedarf
-    train_env,
-    verbose=1,
-    tensorboard_log=filename + '/tb/',
-    learning_rate=3e-4,  # Lernrate für den Optimierer
-    buffer_size=1_000_000,  # Größe des Replay-Puffers
-    learning_starts=100,  # Anzahl der Schritte, bevor das Lernen beginnt
-    batch_size=256,  # Größe der Mini-Batches für das Lernen
-    tau=0.005,  # Polyak-Glättungsfaktor für das Zielnetzwerk
-    gamma=0.99,  # Diskontierungsfaktor
-    train_freq=1,  # Frequenz des Trainings
-    gradient_steps=1,  # Anzahl der Optimierungsschritte nach jedem Rollout
-    ent_coef='auto',  # Koeffizient für den Entropieverlust
-    target_update_interval=1,  # Anzahl der Schritte, nach denen das Zielnetzwerk aktualisiert wird
-    target_entropy='auto',  # Zielentropie für die Entropieregulierung
-    use_sde=False,  # Ob stochastische differenzierbare Exploration verwendet werden soll
-    sde_sample_freq=-1,  # Frequenz der Neuprobenahme der SDE
-    use_sde_at_warmup=False,  # Ob SDE während des Warmups verwendet werden soll
-    create_eval_env=False,  # Ob eine Evaluierungsumgebung erstellt werden soll
-    policy_kwargs=None,  # Zusätzliche Argumente für die Politik
-    seed=None,  # Seed für die Zufallszahlengenerierung
-    device='auto'  # Gerät, auf dem das Modell trainiert wird
-    )
+    # model = SAC(
+    # 'MlpPolicy',  # oder 'CnnPolicy', 'MultiInputPolicy' je nach Bedarf
+    # train_env,
+    # verbose=1,
+    # tensorboard_log=filename + '/tb/',
+    # learning_rate=3e-4,  # Lernrate für den Optimierer
+    # buffer_size=1_000_000,  # Größe des Replay-Puffers
+    # learning_starts=100,  # Anzahl der Schritte, bevor das Lernen beginnt
+    # batch_size=256,  # Größe der Mini-Batches für das Lernen
+    # tau=0.005,  # Polyak-Glättungsfaktor für das Zielnetzwerk
+    # gamma=0.99,  # Diskontierungsfaktor
+    # train_freq=1,  # Frequenz des Trainings
+    # gradient_steps=1,  # Anzahl der Optimierungsschritte nach jedem Rollout
+    # ent_coef='auto',  # Koeffizient für den Entropieverlust
+    # target_update_interval=1,  # Anzahl der Schritte, nach denen das Zielnetzwerk aktualisiert wird
+    # target_entropy='auto',  # Zielentropie für die Entropieregulierung
+    # use_sde=False,  # Ob stochastische differenzierbare Exploration verwendet werden soll
+    # sde_sample_freq=-1,  # Frequenz der Neuprobenahme der SDE
+    # use_sde_at_warmup=False,  # Ob SDE während des Warmups verwendet werden soll
+    # create_eval_env=False,  # Ob eine Evaluierungsumgebung erstellt werden soll
+    # policy_kwargs=None,  # Zusätzliche Argumente für die Politik
+    # seed=None,  # Seed für die Zufallszahlengenerierung
+    # device='auto'  # Gerät, auf dem das Modell trainiert wird
+    # )
     
     #Definiert einen Callback, um das Training zu stoppen, wenn ein bestimmter 
     #Belohnungsschwellenwert erreicht wird, und einen Evaluierungs-Callback.
