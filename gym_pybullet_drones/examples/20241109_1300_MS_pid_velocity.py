@@ -11,7 +11,6 @@ In a terminal, run as:
 Notes
 -----
 The drones use internal PID control to track a target velocity.
-
 """
 import os
 import time
@@ -94,7 +93,93 @@ def get_keyboard_events():
 
     return movement
 
+# Visualisierung Abstandsensoren
+def visualize_ray(self, start_pos, end_pos, hit_fraction):
+    """
+    Visualize the ray in PyBullet.
+    Args:
+        start_pos (tuple): The starting position of the ray.
+        end_pos (tuple): The ending position of the ray.
+        hit_fraction (float): The fraction of the ray that hit an object.
+    """
 
+    # Debug-Ausgaben
+    #print(f"Visualizing ray from {start_pos} to {end_pos}, hit_fraction: {hit_fraction}")
+    if hit_fraction < 1:
+        hit_pos = start_pos + hit_fraction * (end_pos - start_pos)
+        print(f"Hit position: {hit_pos}")
+        p.addUserDebugLine(start_pos, hit_pos, [1, 0, 0])  # Red line for hit
+        p.addUserDebugLine(hit_pos, end_pos, [0, 1, 0])    # Green line for remaining ray
+    else:
+        p.addUserDebugLine(start_pos, end_pos, [0, 1, 0])  # Green line for no hit
+
+# Get Sensor Data
+def check_distance_sensors(self, crazyflie_id):
+        """
+        Check the distance sensors of the Crazyflie drone.
+        Args:
+            crazyflie_id (int): The PyBullet body ID of the Crazyflie drone.
+        Returns:
+            list: Sensor readings for each direction (forward, backward, left, right, up, down).
+                Each reading is the distance to the nearest obstacle or max_distance if no obstacle is detected.
+        """
+        pos, ori = p.getBasePositionAndOrientation(crazyflie_id)
+        
+        local_directions = np.array([
+            [1, 0, 0],    # Forward
+            [-1, 0, 0],   # Backward
+            [0, 1, 0],    # Left
+            [0, -1, 0],   # Right
+            [0, 0, 1],    # Up
+            [0, 0, -1],   # Down
+        ])
+        
+        max_distance = 4  # meters
+        sensor_readings = []
+        
+        # Convert quaternion to rotation matrix using NumPy
+        rot_matrix = np.array(p.getMatrixFromQuaternion(ori)).reshape(3, 3)
+
+        # Vorbereitung Visualisierung
+        p.removeAllUserDebugItems() # Entferne alle vergangenen Linien
+        # Benötigt, damit die Linien nur den akutellen Ray zeigen
+        
+        hit_fraction_list = []
+
+        for direction in local_directions:
+            # Transform local direction to world direction
+            world_direction = rot_matrix.dot(direction)
+            
+            to_pos = pos + world_direction * max_distance
+            
+            ray_result = p.rayTest(pos, to_pos)
+            hit_object_id = ray_result[0][0]
+            hit_fraction = ray_result[0][2]
+            hit_fraction_list.append(hit_fraction)
+
+            if hit_object_id != -1 and hit_fraction > 0:
+                distance = hit_fraction * max_distance
+                
+                #if distance < 0.2:
+                    # Visualize the ray
+                    #visualize_ray(self, pos, to_pos, hit_fraction)
+
+            else:
+                distance = None  # No obstacle detected within max_distance
+            
+            sensor_readings.append(distance)
+
+            # hit_fraction_forward = ray_result[0][2]
+            # hit_fraction_backward = ray_result[1][2]
+            # hit_fraction_left = ray_result[2][2]
+            # hit_fraction_right = ray_result[3][2]
+            # hit_fraction_up = ray_result[4][2]
+            # hit_fraction_down = ray_result[5][2]
+        
+           # hit_fraction_list = [hit_fraction_forward, hit_fraction_backward, hit_fraction_left, hit_fraction_right, hit_fraction_up, hit_fraction_down]
+
+        
+        return sensor_readings, pos, to_pos, hit_fraction_list
 
 # Run the Simulation
 def run(
@@ -186,6 +271,16 @@ def run(
 
         #### Step the simulation ###################################
         obs, reward, terminated, truncated, info = env.step(action)
+
+        # Check distance sensors
+        sensor_readings, pos, to_pos, hit_fraction_list= check_distance_sensors(env, env.DRONE_IDS[0])
+        print(f"Sensor Readings: \n forward {sensor_readings[0]} \n backwards {sensor_readings[1]} \n left {sensor_readings[2]} \n right {sensor_readings[3]} \n up {sensor_readings[4]} \n down {sensor_readings[5]}")
+
+        # Aktualisiere die Visualisierung alle 24 Schritte
+        if i % 24 == 0:
+            for hit_fraction in hit_fraction_list:
+                visualize_ray(env, pos, to_pos, hit_fraction)
+        
         
         #### Alex:tbd Update the camera position ###########################
         # events = p.getMouseEvents()
