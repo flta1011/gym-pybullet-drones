@@ -29,7 +29,7 @@ class BaseAviary(gym.Env):
                  initial_xyzs=None,
                  initial_rpys=None,
                  physics: Physics=Physics.PYB,
-                 pyb_freq: int = 240,
+                 pyb_freq: int = 240, #simulation frequency
                  ctrl_freq: int = 240,
                  gui=False,
                  record=False,
@@ -583,9 +583,7 @@ class BaseAviary(gym.Env):
     
     ################################################################################
 
-    def _getDroneStateVector(self,
-                             nth_drone
-                             ):
+    def _getDroneStateVector(self, nth_drone):
         """Returns the state vector of the n-th drone.
 
         Parameters
@@ -596,14 +594,22 @@ class BaseAviary(gym.Env):
         Returns
         -------
         ndarray 
-            (20,)-shaped array of floats containing the state vector of the n-th drone.
-            Check the only line in this method and `_updateAndStoreKinematicInformation()`
-            to understand its format.
+            (25,)-shaped array of floats containing the state vector of the n-th drone.
+            The state vector includes:
+            - Position (x, y, z) [0:3]
+            - Quaternion (qx, qy, qz, qw) [3:7]
+            - Roll, pitch, yaw (r, p, y) [7:10]
+            - Linear velocity (vx, vy, vz) [10:13]
+            - Angular velocity (wx, wy, wz) [13:16]
+            - Last clipped action [16:20]
+            - Raycast readings (front, back, left, right, top) [20:25]
 
         """
+        ray_results = self._getToFSensorReadings(nth_drone)
         state = np.hstack([self.pos[nth_drone, :], self.quat[nth_drone, :], self.rpy[nth_drone, :],
-                           self.vel[nth_drone, :], self.ang_v[nth_drone, :], self.last_clipped_action[nth_drone, :]])
-        return state.reshape(20,)
+                        self.vel[nth_drone, :], self.ang_v[nth_drone, :], self.last_clipped_action[nth_drone, :],
+                        ray_results['front'], ray_results['back'], ray_results['left'], ray_results['right'], ray_results['top']])
+        return state.reshape(25,)
 
     ################################################################################
 

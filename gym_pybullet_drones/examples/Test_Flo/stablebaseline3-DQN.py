@@ -1,86 +1,19 @@
-import gym
-from gym import spaces
+import gymnasium
+from gymnasium import spaces
 import numpy as np
 import pybullet as p
 from stable_baselines3 import DQN
 from stable_baselines3.common.env_util import DummyVecEnv
 from stable_baselines3.common.evaluation import evaluate_policy
 
+from gym_pybullet_drones.utils.Logger import Logger
+from gym_pybullet_drones.examples.Test_Flo.BaseRLAviary_TestFlo import HoverAviary
+from gym_pybullet_drones.utils.utils import sync, str2bool
+from gym_pybullet_drones.utils.enums import ObservationType, ActionType
+from gym_pybullet_drones.examples.Test_Flo.BaseRLAviary_TestFlo import BaseRLAviary
+
 class DroneEnv(gym.Env):
     def __init__(self):
-        super(DroneEnv, self).__init__()
-        
-        # Define action and observation space, 0: forward, 1:backward, 2:left, 3:right
-        self.action_space = spaces.Discrete(4)
-        """
-        The following dictionary maps abstract actions from `self.action_space` to 
-        the direction we will fly in if that action is taken. Coppied from the 20241109_1300_MS_pid_velocity-File
-        """
-        self._action_to_direction = {
-            0: np.array([1, 0, 0, 0.99]), # Up
-            1: np.array([-1, 0, 0, 0.99]), # Down
-            2: np.array([0, 1, 0, 0.99]), # Yaw left
-            3: np.array([0, -1, 0, 0.99]), # Yaw right
-        }
-            
-        
-        
-        low_values = {
-            'distance_front': 0,
-            'distance_back': 0,
-            'distance_left': 0,
-            'distance_right': 0,
-            'flow_sensor_x': 0,
-            'flow_sensor_y': 0,
-            'pressure_sensor': 0,
-            'accelerometer_x': -np.inf,
-            'accelerometer_y': -np.inf,
-            'accelerometer_z': -np.inf,
-            'gyroscope_x': -np.inf,
-            'gyroscope_y': -np.inf,
-            'gyroscope_z': -np.inf,
-            'other': -np.inf
-        }
-        
-        high_values = {
-            'distance_front': np.inf,
-            'distance_back': np.inf,
-            'distance_left': np.inf,
-            'distance_right': np.inf,
-            'flow_sensor_x': np.inf,
-            'flow_sensor_y': np.inf,
-            'pressure_sensor': np.inf,
-            'accelerometer_x': np.inf,
-            'accelerometer_y': np.inf,
-            'accelerometer_z': np.inf,
-            'gyroscope_x': np.inf,
-            'gyroscope_y': np.inf,
-            'gyroscope_z': np.inf,
-            'other': np.inf
-        }
-        
-        self.observation_space = spaces.Box(
-            low=np.array([low_values[key] for key in low_values]),  # Lower bounds for each dimension
-            high=np.array([high_values[key] for key in high_values]),  # Upper bounds for each dimension
-            dtype=np.float32  # Data type of the elements
-        )
-        
-        self.observation_dict = {
-            'distance_front': 0,
-            'distance_back': 1,
-            'distance_left': 2,
-            'distance_right': 3,
-            'flow_sensor_x': 4,
-            'flow_sensor_y': 5,
-            'pressure_sensor': 6,
-            'accelerometer_x': 7,
-            'accelerometer_y': 8,
-            'accelerometer_z': 9,
-            'gyroscope_x': 10,
-            'gyroscope_y': 11,
-            'gyroscope_z': 12,
-            'other': 13
-        }
         
         self.max_steps = 360  # 3 minutes / 0.5s per step
         self.current_step = 0
@@ -97,31 +30,48 @@ class DroneEnv(gym.Env):
         return self.state
     
     def step(self, action):
-        # Apply action to the drone
-        # For example, action could be thrust values for the motors
-        # p.applyExternalForce(self.drone, linkIndex, forceObj, posObj, flags)
+        # Apply action
+        direction = self._action_to_direction[action]
+        # Perform raycasting
+        raycast_results = self._perform_raycast()
         
-        # Simulate physics
-        p.stepSimulation(self.client)
+        # Update observation with raycast results
+        observation = {
+            'distance_front': 0,  # Replace with actual sensor data
+            'distance_back': 0,   # Replace with actual sensor data
+            'distance_left': 0,   # Replace with actual sensor data
+            'distance_right': 0,  # Replace with actual sensor data
+            'flow_sensor_x': 0,   # Replace with actual sensor data
+            'flow_sensor_y': 0,   # Replace with actual sensor data
+            'pressure_sensor': 0, # Replace with actual sensor data
+            'accelerometer_x': 0, # Replace with actual sensor data
+            'accelerometer_y': 0, # Replace with actual sensor data
+            'raycast_front': raycast_results['front'],
+            'raycast_back': raycast_results['back'],
+            'raycast_left': raycast_results['left'],
+            'raycast_right': raycast_results['right'],
+        }
         
-        # Get observation from PyBullet
-        position, orientation = p.getBasePositionAndOrientation(self.drone)
-        linear_velocity, angular_velocity = p.getBaseVelocity(self.drone)
+        reward = 0  # Define your reward function
+        done = False  # Define your termination condition
+        info = {}  # Additional information
         
-        # Update state with PyBullet data
-        self.state = np.array([
-            # ...existing code...
-            position[0], position[1], position[2],  # Position x, y, z
-            orientation[0], orientation[1], orientation[2], orientation[3],  # Orientation quaternion
-            linear_velocity[0], linear_velocity[1], linear_velocity[2],  # Linear velocity x, y, z
-            angular_velocity[0], angular_velocity[1], angular_velocity[2]  # Angular velocity x, y, z
-        ])
+        return observation, reward, done, info
+    
+    def _perform_raycast(self):
+        # Perform raycasting in four directions
+        ray_length = 10  # Define the length of the rays
+        front_ray = p.rayTest([0, 0, 0], [ray_length, 0, 0])
+        back_ray = p.rayTest([0, 0, 0], [-ray_length, 0, 0])
+        left_ray = p.rayTest([0, 0, 0], [0, ray_length, 0])
+        right_ray = p.rayTest([0, 0, 0], [0, -ray_length, 0])
         
-        reward = 0
-        self.current_step += 1
-        done = self.current_step >= self.max_steps
-        info = {}
-        return self.state, reward, done, info
+        return {
+            'front': front_ray[0][2],  # Distance to the first hit object
+            'back': back_ray[0][2],
+            'left': left_ray[0][2],
+            'right': right_ray[0][2],
+        }
     
     def render(self, mode='human'):
         pass
