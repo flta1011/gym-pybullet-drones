@@ -136,24 +136,31 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
                                  deterministic=True,
                                  render=False)
     #Startet das Training des Modells für eine bestimmte Anzahl von Zeitschritten.
-    model.learn(total_timesteps=int(1e7) if local else int(1e2),
-                callback=eval_callback,
-                log_interval=100)
+    # model.learn(total_timesteps=int(1e4) if local else int(1e2),
+    #             callback=eval_callback,
+    #             log_interval=100)
      
     #### Save the model ########################################
-    model.save(filename + '/final_model.zip')
-    print(filename)
+    # model.save(filename + '/final_model.zip')
+    # print(filename)
 
-    #### Print training progression ############################
-    with np.load(filename + '/evaluations.npz') as data:
-        for j in range(data['timesteps'].shape[0]):
-            print(str(data['timesteps'][j]) + "," + str(data['results'][j][0]))
-
-    if os.path.isfile(filename + '/best_model.zip'):
-        path = filename + '/best_model.zip'
+    #### Load the pre-trained model ############################
+    model_path = '/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/results/save-12.09.2024_18.42.46/final_model.zip'
+    if os.path.isfile(model_path):
+        model = SAC.load(model_path)
     else:
-        print("[ERROR]: no model under the specified path", filename)
-    model = SAC.load(path)
+        print("[ERROR]: no model under the specified path", model_path)
+
+    # #### Print training progression ############################
+    # with np.load(filename + '/evaluations.npz') as data:
+    #     for j in range(data['timesteps'].shape[0]):
+    #         print(str(data['timesteps'][j]) + "," + str(data['results'][j][0]))
+
+    # if os.path.isfile(filename + '/best_model.zip'):
+    #     path = filename + '/best_model.zip'
+    # else:
+    #     print("[ERROR]: no model under the specified path", filename)
+    # model = SAC.load(path)
 
     #### Show (and record a video of) the model's performance ##
     if not multiagent:
