@@ -19,15 +19,15 @@ class BaseRLAviary_TestFlo(BaseAviary):
                  neighbourhood_radius: float=np.inf,
                  initial_xyzs=None,
                  initial_rpys=None,
-                 Test_Area_Size_x= 10, #hoffentlich 10 Meter, später Größe der Map
-                 Test_Area_Size_y= 10, #hoffentlich 10 Meter, später Größe der Map
+                 Test_Area_Size_x: int = 10, #hoffentlich 10 Meter, später Größe der Map
+                 Test_Area_Size_y: int = 10, #hoffentlich 10 Meter, später Größe der Map
                  physics: Physics=Physics.PYB,
                  pyb_freq: int = 240,
                  ctrl_freq: int = 240,
                  gui=False,
                  record=False,
                  obs: ObservationType=ObservationType.KIN,
-                 act: ActionType=ActionType.RPM
+                 # act: ActionType=ActionType.RPM  #wurde rausgenommen
                  ):
         """Initialization of a generic single and multi-agent RL environment.
 
@@ -131,61 +131,20 @@ class BaseRLAviary_TestFlo(BaseAviary):
 
     ################################################################################
 
-    def _actionSpace_obersvationSpace(self):
+    def _actionSpace(self):
         """Returns the action space of the environment.
 
         Returns
         -------
-        spaces.Box
-            A Box of size NUM_DRONES x 4, 3, or 1, depending on the action type.
+        spaces.Discrete
+        0: np.array([1, 0, 0, 0.99]), # Up
+        1: np.array([-1, 0, 0, 0.99]), # Down
+        2: np.array([0, 1, 0, 0.99]), # Yaw left
+        3: np.array([0, -1, 0, 0.99]), # Yaw right
 
         """
-        self._action_to_movement_direction = {
-            0: np.array([1, 0, 0, 0.99]), # Up
-            1: np.array([-1, 0, 0, 0.99]), # Down
-            2: np.array([0, 1, 0, 0.99]), # Yaw left
-            3: np.array([0, -1, 0, 0.99]), # Yaw right
-        }
         
-        low_values = {
-            'distance_front': 0,
-            'distance_back': 0,
-            'distance_left': 0,
-            'distance_right': 0,
-            'flow_sensor_x': 0,
-            'flow_sensor_y': 0,
-            'pressure_sensor': 0,
-            'accelerometer_x': -np.inf,
-            'accelerometer_y': -np.inf,
-            'raycast_front': 0,
-            'raycast_back': 0,
-            'raycast_left': 0,
-            'raycast_right': 0,
-        }
-        
-        high_values = {
-            'distance_front': np.inf,
-            'distance_back': np.inf,
-            'distance_left': np.inf,
-            'distance_right': np.inf,
-            'flow_sensor_x': np.inf,
-            'flow_sensor_y': np.inf,
-            'pressure_sensor': np.inf,
-            'accelerometer_x': np.inf,
-            'accelerometer_y': np.inf,
-            'raycast_front': np.inf,
-            'raycast_back': np.inf,
-            'raycast_left': np.inf,
-            'raycast_right': np.inf,
-        }
-        
-        # Using .Dict instead of .Box because we have multiple values and can create a dictionary
-        self.observation_space = spaces.Dict({
-            key: spaces.Box(low=low_values[key], high=high_values[key], shape=(1,), dtype=np.float32)
-            for key in low_values
-        })
-        #
-        return self._action_to_movement_direction, self.observation_space
+        return spaces.Discrete(4)
         
     ################################################################################
 
@@ -265,35 +224,89 @@ class BaseRLAviary_TestFlo(BaseAviary):
             A Box() of shape (NUM_DRONES,H,W,4) or (NUM_DRONES,12) depending on the observation type.
 
         """
-        if self.OBS_TYPE == ObservationType.RGB:
-            return spaces.Box(low=0,
-                              high=255,
-                              shape=(self.NUM_DRONES, self.IMG_RES[1], self.IMG_RES[0], 4), dtype=np.uint8)
-        elif self.OBS_TYPE == ObservationType.KIN:
-            ############################################################
-            #### OBS SPACE OF SIZE 12
-            #### Observation vector ### X        Y        Z       Q1   Q2   Q3   Q4   R       P       Y       VX       VY       VZ       WX       WY       WZ
-            lo = -np.inf
-            hi = np.inf
-            obs_lower_bound = np.array([[lo,lo,0, lo,lo,lo,lo,lo,lo,lo,lo,lo] for i in range(self.NUM_DRONES)])
-            obs_upper_bound = np.array([[hi,hi,hi,hi,hi,hi,hi,hi,hi,hi,hi,hi] for i in range(self.NUM_DRONES)])
-            #### Add action buffer to observation space ################
-            act_lo = -1
-            act_hi = +1
-            for i in range(self.ACTION_BUFFER_SIZE):
-                if self.ACT_TYPE in [ActionType.RPM, ActionType.VEL]:
-                    obs_lower_bound = np.hstack([obs_lower_bound, np.array([[act_lo,act_lo,act_lo,act_lo] for i in range(self.NUM_DRONES)])])
-                    obs_upper_bound = np.hstack([obs_upper_bound, np.array([[act_hi,act_hi,act_hi,act_hi] for i in range(self.NUM_DRONES)])])
-                elif self.ACT_TYPE==ActionType.PID:
-                    obs_lower_bound = np.hstack([obs_lower_bound, np.array([[act_lo,act_lo,act_lo] for i in range(self.NUM_DRONES)])])
-                    obs_upper_bound = np.hstack([obs_upper_bound, np.array([[act_hi,act_hi,act_hi] for i in range(self.NUM_DRONES)])])
-                elif self.ACT_TYPE in [ActionType.ONE_D_RPM, ActionType.ONE_D_PID]:
-                    obs_lower_bound = np.hstack([obs_lower_bound, np.array([[act_lo] for i in range(self.NUM_DRONES)])])
-                    obs_upper_bound = np.hstack([obs_upper_bound, np.array([[act_hi] for i in range(self.NUM_DRONES)])])
-            return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
-            ############################################################
-        else:
-            print("[ERROR] in BaseRLAviary._observationSpace()")
+         """Returns the observation space of the environment.
+
+        Returns
+        -------
+        spaces.Box
+            The observation space, i.e., and ndarray of shape (NUM_DRONES, 20).
+
+        """
+    
+        
+        low_values = {
+            'x': -np.inf,
+            'y': -np.inf,
+            'z': 0,
+            'Roll': -np.pi,
+            'Pitch': -np.pi,
+            'Yaw': -np.pi,
+            'Vx': -np.inf,
+            'Vy': -np.inf,
+            'Vz': -np.inf,
+            'angular_velocity_x': -np.inf,
+            'angular_velocity_y': -np.inf,
+            'angular_velocity_z': -np.inf,
+            'Last_Clipped_action_A0': 0,
+            'Last_Clipped_action_A1': 0,
+            'Last_Clipped_action_A2': 0,
+            'Last_Clipped_action_A3': 0,
+            # 'distance_front': 0,
+            # 'distance_back': 0,
+            # 'distance_left': 0,
+            # 'distance_right': 0,
+            # 'flow_sensor_x': 0,
+            # 'flow_sensor_y': 0,
+            # 'pressure_sensor': 0,
+            # 'accelerometer_x': -np.inf,
+            # 'accelerometer_y': -np.inf,
+            'raycast_front': 0,
+            'raycast_back': 0,
+            'raycast_left': 0,
+            'raycast_right': 0,
+            'raycast_top': np.inf
+        }
+        
+        high_values = {
+            'x': np.inf,
+            'y': np.inf,
+            'z': np.inf,
+            'Roll': np.pi,
+            'Pitch': np.pi,
+            'Yaw': np.pi,
+            'Vx': np.inf,
+            'Vy': np.inf,
+            'Vz': np.inf,
+            'angular_velocity_x': np.inf,
+            'angular_velocity_y': np.inf,
+            'angular_velocity_z': np.inf,
+            'Last_Clipped_action_A0': 3,
+            'Last_Clipped_action_A1': 3,
+            'Last_Clipped_action_A2': 3,
+            'Last_Clipped_action_A3': 3,
+            # 'distance_front': np.inf,
+            # 'distance_back': np.inf,
+            # 'distance_left': np.inf,
+            # 'distance_right': np.inf,
+            # 'flow_sensor_x': np.inf,
+            # 'flow_sensor_y': np.inf,
+            # 'pressure_sensor': np.inf,
+            # 'accelerometer_x': np.inf,
+            # 'accelerometer_y': np.inf,
+            'raycast_front': np.inf,
+            'raycast_back': np.inf,
+            'raycast_left': np.inf,
+            'raycast_right': np.inf,
+            'raycast_top': np.inf
+        }
+        
+        # Using .Dict instead of .Box because we have multiple values and can create a dictionary
+        self.observation_space = spaces.Dict({
+            key: spaces.Box(low=low_values[key], high=high_values[key], shape=(1,), dtype=np.float32)
+            for key in low_values
+        })
+        
+        return self.observation_space
     
     ################################################################################
 
@@ -306,23 +319,28 @@ class BaseRLAviary_TestFlo(BaseAviary):
             A Box() of shape (NUM_DRONES,H,W,4) or (NUM_DRONES,21) depending on the observation type.
 
         """
+        obs_25 = np.zeros(25)
+        obs = self._getDroneStateVector(0)
+        obs_25[:21] = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16], obs[16:20], obs[20:25]])
+     
+        return obs_25
+            ############################################################
+       
         
-        if self.OBS_TYPE == ObservationType.KIN:
-            ############################################################
-            #### OBS SPACE OF SIZE 12
-            obs_21 = np.zeros((self.NUM_DRONES,21))
-            for i in range(self.NUM_DRONES):
-                #obs = self._clipAndNormalizeState(self._getDroneStateVector(i))
-                obs = self._getDroneStateVector(i)
-                obs_21[i, :] = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16], obs[16:20], obs[20:25]]).reshape(21,)
-            ret = np.array([obs_21[i, :] for i in range(self.NUM_DRONES)]).astype('float32')
-            #### Add action buffer to observation #######################
-            for i in range(self.ACTION_BUFFER_SIZE):
-                ret = np.hstack([ret, np.array([self.action_buffer[i][j, :] for j in range(self.NUM_DRONES)])])
-            return ret
-            ############################################################
-        else:
-            print("[ERROR] in BaseRLAviary._computeObs()")
+        # '''für mehrere Drohnen'''
+        # obs_25 = np.zeros((self.NUM_DRONES,25))
+        # for i in range(self.NUM_DRONES):
+        #     #obs = self._clipAndNormalizeState(self._getDroneStateVector(i))
+        #     obs = self._getDroneStateVector(i)
+        #     obs_25[i, :] = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16], obs[16:20], obs[20:25]]).reshape(21,)
+        #     ret = np.array([obs_25[i, :] for i in range(self.NUM_DRONES)]).astype('float32')
+        # #### Add action buffer to observation #######################
+        # for i in range(self.ACTION_BUFFER_SIZE):
+        #     ret = np.hstack([ret, np.array([self.action_buffer[i][j, :] for j in range(self.NUM_DRONES)])])
+        # return ret
+        #     ############################################################
+        # else:
+        #     print("[ERROR] in BaseRLAviary._computeObs()")
 
 ################################################################################
 
@@ -445,20 +463,7 @@ class BaseRLAviary_TestFlo(BaseAviary):
         self.drone = p.loadURDF("drone.urdf")
         return self.state
     
-    def _perform_raycast(self):
-        # Perform raycasting in four directions
-        ray_length = 10  # Define the length of the rays
-        front_ray = p.rayTest([0, 0, 0], [ray_length, 0, 0])
-        back_ray = p.rayTest([0, 0, 0], [-ray_length, 0, 0])
-        left_ray = p.rayTest([0, 0, 0], [0, ray_length, 0])
-        right_ray = p.rayTest([0, 0, 0], [0, -ray_length, 0])
-        
-        return {
-            'front': front_ray[0][2],  # Distance to the first hit object
-            'back': back_ray[0][2],
-            'left': left_ray[0][2],
-            'right': right_ray[0][2],
-        }
+    
         
     def step(self, action):
         # Apply action

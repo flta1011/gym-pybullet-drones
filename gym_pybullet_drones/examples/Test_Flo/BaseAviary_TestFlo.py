@@ -333,6 +333,18 @@ class BaseAviary(gym.Env):
             in each subclass for its format.
 
         """
+        actual_action_0_bis_3 = action
+        
+        # translate action into movement direction
+        action_to_movement_direction = {
+            0: np.array([1, 0, 0, 0.99]), # Up
+            1: np.array([-1, 0, 0, 0.99]), # Down
+            2: np.array([0, 1, 0, 0.99]), # Yaw left
+            3: np.array([0, -1, 0, 0.99]), # Yaw right
+        }
+        action = action_to_movement_direction[actual_action_0_bis_3]
+        
+        
         #### Save PNG video frames if RECORD=True and GUI=False ####
         if self.RECORD and not self.GUI and self.step_counter%self.CAPTURE_FREQ == 0:
             [w, h, rgb, dep, seg] = p.getCameraImage(width=self.VID_WIDTH,
@@ -381,6 +393,8 @@ class BaseAviary(gym.Env):
                                                           replaceItemUniqueId=int(self.GUI_INPUT_TEXT[i]),
                                                           physicsClientId=self.CLIENT
                                                           ) for i in range(self.NUM_DRONES)]
+        
+        
         #### Save, preprocess, and clip the action to the max. RPM #
         else:
             clipped_action = np.reshape(self._preprocessAction(action), (self.NUM_DRONES, 4))
@@ -1036,6 +1050,23 @@ class BaseAviary(gym.Env):
         #            physicsClientId=self.CLIENT
         #            )
     
+    ################################################################################
+    
+    def _perform_raycast(self):
+        # Perform raycasting in four directions
+        ray_length = 10  # Define the length of the rays
+        front_ray = p.rayTest([0, 0, 0], [ray_length, 0, 0])
+        back_ray = p.rayTest([0, 0, 0], [-ray_length, 0, 0])
+        left_ray = p.rayTest([0, 0, 0], [0, ray_length, 0])
+        right_ray = p.rayTest([0, 0, 0], [0, -ray_length, 0])
+        
+        return {
+            'front': front_ray[0][2],  # Distance to the first hit object
+            'back': back_ray[0][2],
+            'left': left_ray[0][2],
+            'right': right_ray[0][2],
+        }
+        
     ################################################################################
     
     def _parseURDFParameters(self):
