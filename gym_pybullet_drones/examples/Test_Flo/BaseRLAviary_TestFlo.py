@@ -19,6 +19,8 @@ class BaseRLAviary_TestFlo(BaseAviary):
                  neighbourhood_radius: float=np.inf,
                  initial_xyzs=None,
                  initial_rpys=None,
+                 Test_Area_Size_x= 10, #hoffentlich 10 Meter, später Größe der Map
+                 Test_Area_Size_y= 10, #hoffentlich 10 Meter, später Größe der Map
                  physics: Physics=Physics.PYB,
                  pyb_freq: int = 240,
                  ctrl_freq: int = 240,
