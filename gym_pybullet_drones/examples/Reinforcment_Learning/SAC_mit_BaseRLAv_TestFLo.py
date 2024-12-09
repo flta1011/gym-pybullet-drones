@@ -20,6 +20,7 @@ from gym_pybullet_drones.envs.HoverAviary import HoverAviary
 from gym_pybullet_drones.envs.MultiHoverAviary import MultiHoverAviary
 from gym_pybullet_drones.utils.utils import sync, str2bool
 from gym_pybullet_drones.utils.enums import ObservationType, ActionType
+from gym_pybullet_drones.examples.Test_Flo.BaseRLAviary_TestFlo import BaseRLAviary_TestFlo
 
 DEFAULT_GUI = True
 DEFAULT_RECORD_VIDEO = False
@@ -39,34 +40,23 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
         os.makedirs(filename + '/')
     #Erstellt die Trainings- und Evaluierungsumgebungen basierend auf dem Einzel- oder Mehragentenmodus.
     if not multiagent:
-        train_env = make_vec_env(HoverAviary,
+        train_env = make_vec_env(BaseRLAviary_TestFlo,
                                  env_kwargs=dict(obs=DEFAULT_OBS, act=DEFAULT_ACT),
                                  n_envs=1,
                                  seed=0
                                  )
-        eval_env = HoverAviary(obs=DEFAULT_OBS, act=DEFAULT_ACT, gui=True)
+        eval_env = BaseRLAviary_TestFlo(obs=DEFAULT_OBS, act=DEFAULT_ACT, gui=True)
     else:
-        train_env = make_vec_env(MultiHoverAviary,
+        train_env = make_vec_env(BaseRLAviary_TestFlo,
                                  env_kwargs=dict(num_drones=DEFAULT_AGENTS, obs=DEFAULT_OBS, act=DEFAULT_ACT),
                                  n_envs=1,
                                  seed=0
                                  )
-        eval_env = MultiHoverAviary(num_drones=DEFAULT_AGENTS, obs=DEFAULT_OBS, act=DEFAULT_ACT, gui=True)
+        eval_env = BaseRLAviary_TestFlo(num_drones=DEFAULT_AGENTS, obs=DEFAULT_OBS, act=DEFAULT_ACT, gui=True)
 
     #### Check the environment's spaces ########################
     # Der Action-Space definiert die Steuerbefehle, die die Drohne an die Umgebung senden kann.
-    # Box(-1.0, 1.0, (1, 1), float32):
-    # Box: Der Aktionsraum ist ein kontinuierlicher Raum, der durch eine Box definiert wird.
-    # -1.0: Die untere Grenze des Aktionsraums. Der minimale Wert, den eine Aktion annehmen kann, ist -1.0.
-    # 1.0: Die obere Grenze des Aktionsraums. Der maximale Wert, den eine Aktion annehmen kann, ist 1.0.
-    # (1, 1): Die Form des Aktionsraums. In diesem Fall ist es ein 2D-Array mit den Dimensionen (1, 1), was bedeutet, dass es eine einzelne Aktion gibt, die einen Wert hat.
-    # float32: Der Datentyp der Aktionen. In diesem Fall sind die Aktionen float32-Werte.
     print('[INFO] Action space:', train_env.action_space)
-    # Position (x, y, z): Die ersten drei Werte geben die Position der Drohne in den x-, y- und z-Koordinaten an.
-    # Orientierung (Quaternion q1, q2, q3, q4): Die nächsten vier Werte geben die Orientierung der Drohne als Quaternion an.
-    # Geschwindigkeit (vx, vy, vz): Die nächsten drei Werte geben die Geschwindigkeit der Drohne in den x-, y- und z-Richtungen an.
-    # Winkelgeschwindigkeit (wx, wy, wz): Die nächsten drei Werte geben die Winkelgeschwindigkeit der Drohne um die x-, y- und z-Achsen an.
-    # Aktionen aus dem Aktionspuffer: Die restlichen 17 Werte stammen aus dem Aktionspuffer und geben die letzten Aktionen an, die von der Drohne ausgeführt wurden.
     #Der Observation-Space beschreibt die Informationen, die die Drohne über die Umgebung erhält.
     print('[INFO] Observation space:', train_env.observation_space)
 
@@ -140,12 +130,12 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
 
     #### Show (and record a video of) the model's performance ##
     if not multiagent:
-        test_env = HoverAviary(gui=gui,
+        test_env = BaseRLAviary_TestFlo(gui=gui,
                                obs=DEFAULT_OBS,
                                act=DEFAULT_ACT,
                                record=record_video)
     else:
-        test_env = MultiHoverAviary(gui=gui,
+        test_env = BaseRLAviary_TestFlo(gui=gui,
                                     num_drones=DEFAULT_AGENTS,
                                     obs=DEFAULT_OBS,
                                     act=DEFAULT_ACT,

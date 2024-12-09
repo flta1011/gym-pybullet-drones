@@ -8,7 +8,7 @@ from gym_pybullet_drones.examples.Test_Flo.BaseAviary_TestFlo import BaseAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType, ImageType
 from gym_pybullet_drones.examples.Test_Flo.DSLPIDControl_TestFlo import DSLPIDControl
 
-class BaseRLAviary(BaseAviary):
+class BaseRLAviary_TestFlo(BaseAviary):
     """Base single and multi-agent environment class for reinforcement learning."""
     
     ################################################################################
@@ -184,7 +184,7 @@ class BaseRLAviary(BaseAviary):
         })
         #
         return self.observation_space
-
+        
     ################################################################################
 
     def _preprocessAction(self,
@@ -361,9 +361,9 @@ class BaseRLAviary(BaseAviary):
             neg_reward_wall_crash = -1000
         
         '''einbauen, dass der Reward erst kommt, wenn diese Bedingung länger als 3 Sekunden erfüllt ist --> die Drohne muss dann irgendwie geziehlt zurückfliegen oder Teilreward, dadurch, dass sie schon mal den upper belegt bekommen hat und dann endreward, wenn es für mind. 3 Sekunden belegt ist --> muss dann irgendwie in die Observation eingebaut werden'''    
-        # # positive reward for reaching the target (raycast_upper !=None and < 1.5)
-        # if self.raycast_upper != None and self.raycast_upper < 1.5:
-        #     pos_reward_target = 2000
+        # positive reward for reaching the target (raycast_upper !=None and < 1.5)
+        if self.raycast_upper != None and self.raycast_upper < 1.5:
+            pos_reward_target = 2000
         
         reward_SUM = np.sum(self.reward_grid) + neg_reward_wall_crash + pos_reward_target
         return reward_SUM
@@ -429,4 +429,57 @@ class BaseRLAviary(BaseAviary):
         """
         return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
 
+    #########################################################################################
+
+    def reset(self):
+        self.state = np.zeros(14)
+        self.current_step = 0
+        p.resetSimulation(self.client)
+        p.setGravity(0, 0, -9.8, physicsClientId=self.client)
+        p.loadURDF("plane.urdf")
+        self.drone = p.loadURDF("drone.urdf")
+        return self.state
     
+    def step(self, action):
+        # Apply action
+        direction = self._action_to_direction[action]
+        # Perform raycasting
+        raycast_results = self._perform_raycast()
+        
+        # Update observation with raycast results
+        observation = {
+            'distance_front': 0,  # Replace with actual sensor data
+            'distance_back': 0,   # Replace with actual sensor data
+            'distance_left': 0,   # Replace with actual sensor data
+            'distance_right': 0,  # Replace with actual sensor data
+            'flow_sensor_x': 0,   # Replace with actual sensor data
+            'flow_sensor_y': 0,   # Replace with actual sensor data
+            'pressure_sensor': 0, # Replace with actual sensor data
+            'accelerometer_x': 0, # Replace with actual sensor data
+            'accelerometer_y': 0, # Replace with actual sensor data
+            'raycast_front': raycast_results['front'],
+            'raycast_back': raycast_results['back'],
+            'raycast_left': raycast_results['left'],
+            'raycast_right': raycast_results['right'],
+        }
+        
+        reward = 0  # Define your reward function
+        done = False  # Define your termination condition
+        info = {}  # Additional information
+        
+        return observation, reward, done, info
+    
+    def _perform_raycast(self):
+        # Perform raycasting in four directions
+        ray_length = 10  # Define the length of the rays
+        front_ray = p.rayTest([0, 0, 0], [ray_length, 0, 0])
+        back_ray = p.rayTest([0, 0, 0], [-ray_length, 0, 0])
+        left_ray = p.rayTest([0, 0, 0], [0, ray_length, 0])
+        right_ray = p.rayTest([0, 0, 0], [0, -ray_length, 0])
+        
+        return {
+            'front': front_ray[0][2],  # Distance to the first hit object
+            'back': back_ray[0][2],
+            'left': left_ray[0][2],
+            'right': right_ray[0][2],
+        }
