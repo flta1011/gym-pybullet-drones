@@ -1257,8 +1257,8 @@ class BaseAviary(gym.Env):
             [-1, 0, 0],   # Backward
             [0, 1, 0],    # Left
             [0, -1, 0],   # Right
-            [0, 0, 1],    # Up
-            [0, 0, -1],   # Down
+            [0, 0, -1],    # Up die Z-Achse zeigt anscheinend nach unten
+            [0, 0, 1],   # Down
         ])
         
         max_distance = 4  # meters

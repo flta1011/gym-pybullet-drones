@@ -301,6 +301,9 @@ class BaseRLAviary_TestFlo(BaseAviary):
         }
         
         # Using .Dict instead of .Box because we have multiple values and can create a dictionary
+        ### TBD TBD TBD Weil die Learn fkt nicht ausgeführt wird, weil mit strings nicht hochzählen
+        # Reihenfolge auch weird. Sie Bilder WhatsAPP von Kameraman Alex
+        # 09.12.2024 23:50 
         self.observation_space = spaces.Dict({
             key: spaces.Box(low=low_values[key], high=high_values[key], shape=(1,), dtype=np.float32)
             for key in low_values
@@ -319,6 +322,7 @@ class BaseRLAviary_TestFlo(BaseAviary):
             A Box() of shape (NUM_DRONES,H,W,4) or (NUM_DRONES,21) depending on the observation type.
 
         """
+        # TBD letzer Wert ist weg
         obs_21 = np.zeros(21)
         obs = self._getDroneStateVector(0)
         obs_21[:21] = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16], obs[16:20], obs[20:25]])
