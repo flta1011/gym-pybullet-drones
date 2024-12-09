@@ -619,10 +619,12 @@ class BaseAviary(gym.Env):
             - Raycast readings (front, back, left, right, top) [20:25]
 
         """
-        ray_results = self._getToFSensorReadings(nth_drone)
+        ## tbd prüfen ALEX, FLORIAN, MORITZ
+        #ray_results = self._getToFSensorReadings(nth_drone)
+        self.ray_results = self.check_distance_sensors(nth_drone)[0]
         state = np.hstack([self.pos[nth_drone, :], self.quat[nth_drone, :], self.rpy[nth_drone, :],
                         self.vel[nth_drone, :], self.ang_v[nth_drone, :], self.last_clipped_action[nth_drone, :],
-                        ray_results['front'], ray_results['back'], ray_results['left'], ray_results['right'], ray_results['top']])
+                        self.ray_results[0], self.ray_results[1], self.ray_results[2], self.ray_results[3], self.ray_results[4]])
         return state.reshape(25,)
 
     ################################################################################
@@ -1235,3 +1237,73 @@ class BaseAviary(gym.Env):
             current_position + normalized_direction * step_size
         )  # Calculate the next step
         return next_step
+    
+    ################################################################################
+
+    # Get Sensor Data
+    def check_distance_sensors(self, crazyflie_id):
+        """
+        Check the distance sensors of the Crazyflie drone.
+        Args:
+            crazyflie_id (int): The PyBullet body ID of the Crazyflie drone.
+        Returns:
+            list: Sensor readings for each direction (forward, backward, left, right, up, down).
+                Each reading is the distance to the nearest obstacle or max_distance if no obstacle is detected.
+        """
+        pos, ori = p.getBasePositionAndOrientation(crazyflie_id)
+        
+        local_directions = np.array([
+            [1, 0, 0],    # Forward
+            [-1, 0, 0],   # Backward
+            [0, 1, 0],    # Left
+            [0, -1, 0],   # Right
+            [0, 0, 1],    # Up
+            [0, 0, -1],   # Down
+        ])
+        
+        max_distance = 4  # meters
+        sensor_readings = []
+        
+        # Convert quaternion to rotation matrix using NumPy
+        rot_matrix = np.array(p.getMatrixFromQuaternion(ori)).reshape(3, 3)
+
+        # Vorbereitung Visualisierung
+        p.removeAllUserDebugItems() # Entferne alle vergangenen Linien
+        # Benötigt, damit die Linien nur den akutellen Ray zeigen
+        
+        hit_fraction_list = []
+
+        for direction in local_directions:
+            # Transform local direction to world direction
+            world_direction = rot_matrix.dot(direction)
+            
+            to_pos = pos + world_direction * max_distance
+            
+            ray_result = p.rayTest(pos, to_pos)
+            hit_object_id = ray_result[0][0]
+            hit_fraction = ray_result[0][2]
+            hit_fraction_list.append(hit_fraction)
+
+            if hit_object_id != -1 and hit_fraction > 0:
+                distance = hit_fraction * max_distance
+                
+                #if distance < 0.2:
+                    # Visualize the ray
+                    #visualize_ray(self, pos, to_pos, hit_fraction)
+
+            else:
+                distance = 9999  # No obstacle detected within max_distance
+            
+            sensor_readings.append(distance)
+
+            # hit_fraction_forward = ray_result[0][2]
+            # hit_fraction_backward = ray_result[1][2]
+            # hit_fraction_left = ray_result[2][2]
+            # hit_fraction_right = ray_result[3][2]
+            # hit_fraction_up = ray_result[4][2]
+            # hit_fraction_down = ray_result[5][2]
+        
+        # hit_fraction_list = [hit_fraction_forward, hit_fraction_backward, hit_fraction_left, hit_fraction_right, hit_fraction_up, hit_fraction_down]
+
+        
+        return sensor_readings, pos, to_pos, hit_fraction_list

@@ -27,7 +27,7 @@ class BaseRLAviary_TestFlo(BaseAviary):
                  gui=False,
                  record=False,
                  obs: ObservationType=ObservationType.KIN,
-                 # act: ActionType=ActionType.RPM  #wurde rausgenommen
+                 act: ActionType=ActionType.VEL  #wurde rausgenommen
                  ):
         """Initialization of a generic single and multi-agent RL environment.
 
@@ -93,41 +93,41 @@ class BaseRLAviary_TestFlo(BaseAviary):
                          vision_attributes=vision_attributes,
                          )
         #### Set a limit on the maximum target speed ###############
-        if act == ActionType.VEL:
+        if  act == ActionType.VEL:
             self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000/3600)
 
     ################################################################################
+    # TBD
+    # def _addObstacles(self):
+    #     """Add obstacles to the environment.
 
-    def _addObstacles(self):
-        """Add obstacles to the environment.
+    #     Only if the observation is of type RGB, 4 landmarks are added.
+    #     Overrides BaseAviary's method.
 
-        Only if the observation is of type RGB, 4 landmarks are added.
-        Overrides BaseAviary's method.
-
-        """
-        if self.OBS_TYPE == ObservationType.RGB:
-            p.loadURDF("block.urdf",
-                       [1, 0, .1],
-                       p.getQuaternionFromEuler([0, 0, 0]),
-                       physicsClientId=self.CLIENT
-                       )
-            p.loadURDF("cube_small.urdf",
-                       [0, 1, .1],
-                       p.getQuaternionFromEuler([0, 0, 0]),
-                       physicsClientId=self.CLIENT
-                       )
-            p.loadURDF("duck_vhacd.urdf",
-                       [-1, 0, .1],
-                       p.getQuaternionFromEuler([0, 0, 0]),
-                       physicsClientId=self.CLIENT
-                       )
-            p.loadURDF("teddy_vhacd.urdf",
-                       [0, -1, .1],
-                       p.getQuaternionFromEuler([0, 0, 0]),
-                       physicsClientId=self.CLIENT
-                       )
-        else:
-            pass
+    #     """
+    #     if self.OBS_TYPE == ObservationType.RGB:
+    #         p.loadURDF("block.urdf",
+    #                    [1, 0, .1],
+    #                    p.getQuaternionFromEuler([0, 0, 0]),
+    #                    physicsClientId=self.CLIENT
+    #                    )
+    #         p.loadURDF("cube_small.urdf",
+    #                    [0, 1, .1],
+    #                    p.getQuaternionFromEuler([0, 0, 0]),
+    #                    physicsClientId=self.CLIENT
+    #                    )
+    #         p.loadURDF("duck_vhacd.urdf",
+    #                    [-1, 0, .1],
+    #                    p.getQuaternionFromEuler([0, 0, 0]),
+    #                    physicsClientId=self.CLIENT
+    #                    )
+    #         p.loadURDF("teddy_vhacd.urdf",
+    #                    [0, -1, .1],
+    #                    p.getQuaternionFromEuler([0, 0, 0]),
+    #                    physicsClientId=self.CLIENT
+    #                    )
+    #     else:
+    #         pass
 
     ################################################################################
 
@@ -224,7 +224,7 @@ class BaseRLAviary_TestFlo(BaseAviary):
             A Box() of shape (NUM_DRONES,H,W,4) or (NUM_DRONES,12) depending on the observation type.
 
         """
-         """Returns the observation space of the environment.
+        """Returns the observation space of the environment.
 
         Returns
         -------
@@ -264,7 +264,7 @@ class BaseRLAviary_TestFlo(BaseAviary):
             'raycast_back': 0,
             'raycast_left': 0,
             'raycast_right': 0,
-            'raycast_top': np.inf
+            'raycast_top': 0
         }
         
         high_values = {
@@ -319,11 +319,11 @@ class BaseRLAviary_TestFlo(BaseAviary):
             A Box() of shape (NUM_DRONES,H,W,4) or (NUM_DRONES,21) depending on the observation type.
 
         """
-        obs_25 = np.zeros(25)
+        obs_21 = np.zeros(21)
         obs = self._getDroneStateVector(0)
-        obs_25[:21] = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16], obs[16:20], obs[20:25]])
+        obs_21[:21] = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16], obs[16:20], obs[20:25]])
      
-        return obs_25
+        return obs_21
             ############################################################
        
         
@@ -354,7 +354,7 @@ class BaseRLAviary_TestFlo(BaseAviary):
 
         """
         
-        
+        # tbd FLORIAN Test_Area_Size_x und Test_Area_Size_y in der Observation mitgeben, um die Position der Drohne im Raum zu wissen
         if not hasattr(self, 'reward_grid'):
             self.reward_grid = np.zeros((int(2 * self.Test_Area_Size_x / 0.05), int(2 * self.Test_Area_Size_y / 0.05)))
         
@@ -380,9 +380,10 @@ class BaseRLAviary_TestFlo(BaseAviary):
         if (state[20] < 0.015 or state[21] < 0.015 or state[22] < 0.015 or state[23] < 0.015):
             neg_reward_wall_crash = -1000
         
+        #tbd FLORIAN:
         '''einbauen, dass der Reward erst kommt, wenn diese Bedingung länger als 3 Sekunden erfüllt ist --> die Drohne muss dann irgendwie geziehlt zurückfliegen oder Teilreward, dadurch, dass sie schon mal den upper belegt bekommen hat und dann endreward, wenn es für mind. 3 Sekunden belegt ist --> muss dann irgendwie in die Observation eingebaut werden'''    
         # positive reward for reaching the target (raycast_upper !=None and < 1.5)
-        if self.raycast_upper != None and self.raycast_upper < 1.5:
+        if self.ray_results[4] < 1.5:
             pos_reward_target = 2000
         
         reward_SUM = np.sum(self.reward_grid) + neg_reward_wall_crash + pos_reward_target
@@ -405,10 +406,10 @@ class BaseRLAviary_TestFlo(BaseAviary):
         if self.step_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC:
             return True
         
-         '''einbauen, dass der Reward erst kommt, wenn diese Bedingung länger als 3 Sekunden erfüllt ist --> die Drohne muss dann irgendwie geziehlt zurückfliegen oder Teilreward, dadurch, dass sie schon mal den upper belegt bekommen hat und dann endreward, wenn es für mind. 3 Sekunden belegt ist --> muss dann irgendwie in die Observation eingebaut werden'''  
+        '''einbauen, dass der Reward erst kommt, wenn diese Bedingung länger als 3 Sekunden erfüllt ist --> die Drohne muss dann irgendwie geziehlt zurückfliegen oder Teilreward, dadurch, dass sie schon mal den upper belegt bekommen hat und dann endreward, wenn es für mind. 3 Sekunden belegt ist --> muss dann irgendwie in die Observation eingebaut werden'''  
         # #target errreicht
-        # if self.raycast_upper != None and self.raycast_upper < 1.5:
-        #     pos_reward_target = 2000
+        if self.ray_results[4] < 1.5:
+            return True
         
         
         return False
@@ -421,7 +422,7 @@ class BaseRLAviary_TestFlo(BaseAviary):
         Returns
         -------
         bool
-            Whether the current episode timed out.
+            Whether the drone is too tilted or has crashed into a wall.
 
         """
         # Truncate when the drone is too tilted
@@ -429,7 +430,10 @@ class BaseRLAviary_TestFlo(BaseAviary):
         if abs(state[7]) > .4 or abs(state[8]) > .4: 
             return True
         
-        
+        # TBD wenn die Drone abstürzt, dann auch truncaten
+        if state[2] < 0.1:
+            return True
+
         #Wenn an einer Wand gecrashed wird, beenden!
         if (state[20] < 0.015 or state[21] < 0.015 or state[22] < 0.015 or state[23] < 0.015):
             return True
@@ -454,44 +458,17 @@ class BaseRLAviary_TestFlo(BaseAviary):
 
     #########################################################################################
 
-    def reset(self):
-        self.state = np.zeros(14)
-        self.current_step = 0
-        p.resetSimulation(self.client)
-        p.setGravity(0, 0, -9.8, physicsClientId=self.client)
-        p.loadURDF("plane.urdf")
-        self.drone = p.loadURDF("drone.urdf")
-        return self.state
+    # def reset(self):
+    #     self.state = np.zeros(14)
+    #     self.current_step = 0
+    #     p.resetSimulation(self.client)
+    #     p.setGravity(0, 0, -9.8, physicsClientId=self.client)
+    #     p.loadURDF("plane.urdf")
+    #     self.drone = p.loadURDF("drone.urdf")
+    #     return self.state
     
     
         
-    def step(self, action):
-        # Apply action
-        direction = self._action_to_direction[action]
-        # Perform raycasting
-        raycast_results = self._perform_raycast()
-        
-        # Update observation with raycast results
-        observation = {
-            'distance_front': 0,  # Replace with actual sensor data
-            'distance_back': 0,   # Replace with actual sensor data
-            'distance_left': 0,   # Replace with actual sensor data
-            'distance_right': 0,  # Replace with actual sensor data
-            'flow_sensor_x': 0,   # Replace with actual sensor data
-            'flow_sensor_y': 0,   # Replace with actual sensor data
-            'pressure_sensor': 0, # Replace with actual sensor data
-            'accelerometer_x': 0, # Replace with actual sensor data
-            'accelerometer_y': 0, # Replace with actual sensor data
-            'raycast_front': raycast_results['front'],
-            'raycast_back': raycast_results['back'],
-            'raycast_left': raycast_results['left'],
-            'raycast_right': raycast_results['right'],
-        }
-        
-        reward = 0  # Define your reward function
-        done = False  # Define your termination condition
-        info = {}  # Additional information
-        
-        return observation, reward, done, info
+   
     
     

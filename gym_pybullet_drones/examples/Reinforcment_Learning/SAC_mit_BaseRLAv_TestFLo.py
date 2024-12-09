@@ -11,6 +11,7 @@ import argparse
 import gymnasium as gym
 import numpy as np
 from stable_baselines3 import SAC
+from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from stable_baselines3.common.evaluation import evaluate_policy
@@ -28,8 +29,8 @@ DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 
 DEFAULT_OBS = ObservationType('kin')  # 'kin' or 'rgb'
-DEFAULT_ACT = ActionType('one_d_rpm')  # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'one_d_pid'
-DEFAULT_AGENTS = 2
+DEFAULT_ACT = ActionType('vel')  # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'one_d_pid'
+DEFAULT_AGENTS = 1
 DEFAULT_MA = False
 
 #Training und Auswertung des Models
@@ -62,7 +63,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
 
     #### Train the model #######################################
     ## CNN Policy wäre bei RBG-Bildern geeignet
-    model = SAC('MlpPolicy',
+    model = PPO('MultiInputPolicy',
                 train_env,
                 verbose=1,
                 #tensorboard_log=filename + '/tb/'
@@ -109,7 +110,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
                                  deterministic=True,
                                  render=False)
     #Startet das Training des Modells für eine bestimmte Anzahl von Zeitschritten.
-    model.learn(total_timesteps=int(1e7) if local else int(1e2),
+    model.learn(total_timesteps=int(1e4) if local else int(1e2),
                 callback=eval_callback,
                 log_interval=100)
 
@@ -126,7 +127,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
         path = filename + '/best_model.zip'
     else:
         print("[ERROR]: no model under the specified path", filename)
-    model = SAC.load(path)
+    model = PPO.load(path)
 
     #### Show (and record a video of) the model's performance ##
     if not multiagent:

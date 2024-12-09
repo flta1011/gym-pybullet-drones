@@ -165,7 +165,7 @@ def check_distance_sensors(self, crazyflie_id):
                     #visualize_ray(self, pos, to_pos, hit_fraction)
 
             else:
-                distance = None  # No obstacle detected within max_distance
+                distance = 9999  # No obstacle detected within max_distance
             
             sensor_readings.append(distance)
 
