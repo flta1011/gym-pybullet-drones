@@ -4,11 +4,11 @@ import pybullet as p
 from gymnasium import spaces
 from collections import deque
 
-from gym_pybullet_drones.envs.BaseAviary import BaseAviary
+from gym_pybullet_drones.examples.Test_Flo.BaseAviary_TestFlo import BaseAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType, ImageType
 from gym_pybullet_drones.examples.Test_Flo.DSLPIDControl_TestFlo import DSLPIDControl
 
-class BaseRLAviary_Maze(BaseAviary):
+class BaseRLAviary(BaseAviary):
     """Base single and multi-agent environment class for reinforcement learning."""
     
     ################################################################################
@@ -66,7 +66,6 @@ class BaseRLAviary_Maze(BaseAviary):
         self.ACTION_BUFFER_SIZE = int(ctrl_freq//2)
         self.action_buffer = deque(maxlen=self.ACTION_BUFFER_SIZE)
         ####
-        self.obstacle_matrix = self._initializeObstacleMatrix()
         vision_attributes = True if obs == ObservationType.RGB else False
         self.OBS_TYPE = obs
         self.ACT_TYPE = act
@@ -94,19 +93,6 @@ class BaseRLAviary_Maze(BaseAviary):
         #### Set a limit on the maximum target speed ###############
         if act == ActionType.VEL:
             self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000/3600)
-
-        self.obstacle_matrix = self._initializeObstacleMatrix()
-
-    def _initializeObstacleMatrix(self):
-        """Initialize the obstacle matrix."""
-        # Beispielhafte Initialisierung einer 10x10-Matrix
-        matrix = np.zeros((10, 10))
-        # Setzen Sie einige Hindernisse (1) in die Matrix
-        matrix[2, 3] = 1
-        matrix[4, 5] = 1
-        matrix[7, 8] = 1
-        return matrix
-
 
     ################################################################################
 
@@ -143,38 +129,6 @@ class BaseRLAviary_Maze(BaseAviary):
 
     ################################################################################
 
-    def _initializeObstacleMatrix(self):
-        """Initialize the obstacle matrix."""
-        # Initialisierung einer 50x50-Matrix mit Wänden (1) und freien Räumen (0)
-        matrix = np.ones((50, 50))
-        
-        # Erstellen eines Pfades im Labyrinth
-        for i in range(1, 49):
-            matrix[i, 1] = 0
-            matrix[1, i] = 0
-            matrix[i, 48] = 0
-            matrix[48, i] = 0
-        
-        # Zusätzliche Pfade im Inneren des Labyrinths
-        for i in range(2, 48, 2):
-            for j in range(2, 48, 2):
-                matrix[i, j] = 0
-                if i + 1 < 48:
-                    matrix[i + 1, j] = 0
-                if j + 1 < 48:
-                    matrix[i, j + 1] = 0
-        
-        # Ein paar zusätzliche Hindernisse hinzufügen
-        matrix[10, 10] = 1
-        matrix[20, 20] = 1
-        matrix[30, 30] = 1
-        matrix[40, 40] = 1
-        
-        return matrix
-
-
-    ##################################################################################
-
     def _actionSpace(self):
         """Returns the action space of the environment.
 
@@ -184,22 +138,52 @@ class BaseRLAviary_Maze(BaseAviary):
             A Box of size NUM_DRONES x 4, 3, or 1, depending on the action type.
 
         """
-        if self.ACT_TYPE in [ActionType.RPM, ActionType.VEL]:
-            size = 4
-        elif self.ACT_TYPE==ActionType.PID:
-            size = 3
-        elif self.ACT_TYPE in [ActionType.ONE_D_RPM, ActionType.ONE_D_PID]:
-            size = 1
-        else:
-            print("[ERROR] in BaseRLAviary._actionSpace()")
-            exit()
-        act_lower_bound = np.array([-1*np.ones(size) for i in range(self.NUM_DRONES)])
-        act_upper_bound = np.array([+1*np.ones(size) for i in range(self.NUM_DRONES)])
+        self._action_to_movement_direction = {
+            0: np.array([1, 0, 0, 0.99]), # Up
+            1: np.array([-1, 0, 0, 0.99]), # Down
+            2: np.array([0, 1, 0, 0.99]), # Yaw left
+            3: np.array([0, -1, 0, 0.99]), # Yaw right
+        }
+        
+        low_values = {
+            'distance_front': 0,
+            'distance_back': 0,
+            'distance_left': 0,
+            'distance_right': 0,
+            'flow_sensor_x': 0,
+            'flow_sensor_y': 0,
+            'pressure_sensor': 0,
+            'accelerometer_x': -np.inf,
+            'accelerometer_y': -np.inf,
+            'raycast_front': 0,
+            'raycast_back': 0,
+            'raycast_left': 0,
+            'raycast_right': 0,
+        }
+        
+        high_values = {
+            'distance_front': np.inf,
+            'distance_back': np.inf,
+            'distance_left': np.inf,
+            'distance_right': np.inf,
+            'flow_sensor_x': np.inf,
+            'flow_sensor_y': np.inf,
+            'pressure_sensor': np.inf,
+            'accelerometer_x': np.inf,
+            'accelerometer_y': np.inf,
+            'raycast_front': np.inf,
+            'raycast_back': np.inf,
+            'raycast_left': np.inf,
+            'raycast_right': np.inf,
+        }
+        
+        # Using .Dict instead of .Box because we have multiple values and can create a dictionary
+        self.observation_space = spaces.Dict({
+            key: spaces.Box(low=low_values[key], high=high_values[key], shape=(1,), dtype=np.float32)
+            for key in low_values
+        })
         #
-        for i in range(self.ACTION_BUFFER_SIZE):
-            self.action_buffer.append(np.zeros((self.NUM_DRONES,size)))
-        #
-        return spaces.Box(low=act_lower_bound, high=act_upper_bound, dtype=np.float32)
+        return self.observation_space
 
     ################################################################################
 
@@ -234,24 +218,8 @@ class BaseRLAviary_Maze(BaseAviary):
         rpm = np.zeros((self.NUM_DRONES,4))
         for k in range(action.shape[0]):
             target = action[k, :]
-            if self.ACT_TYPE == ActionType.RPM:
-                rpm[k,:] = np.array(self.HOVER_RPM * (1+0.05*target))
-            elif self.ACT_TYPE == ActionType.PID:
-                state = self._getDroneStateVector(k)
-                next_pos = self._calculateNextStep(
-                    current_position=state[0:3],
-                    destination=target,
-                    step_size=1,
-                    )
-                rpm_k, _, _ = self.ctrl[k].computeControl(control_timestep=self.CTRL_TIMESTEP,
-                                                        cur_pos=state[0:3],
-                                                        cur_quat=state[3:7],
-                                                        cur_vel=state[10:13],
-                                                        cur_ang_vel=state[13:16],
-                                                        target_pos=next_pos
-                                                        )
-                rpm[k,:] = rpm_k
-            elif self.ACT_TYPE == ActionType.VEL:
+            
+            if self.ACT_TYPE == ActionType.VEL:
                 state = self._getDroneStateVector(k)
                 if np.linalg.norm(target[0:3]) != 0:
                     v_unit_vector = target[0:3] / np.linalg.norm(target[0:3])
@@ -297,31 +265,31 @@ class BaseRLAviary_Maze(BaseAviary):
         """
         if self.OBS_TYPE == ObservationType.RGB:
             return spaces.Box(low=0,
-                            high=255,
-                            shape=(self.NUM_DRONES, self.IMG_RES[1], self.IMG_RES[0], 4), dtype=np.uint8)
+                              high=255,
+                              shape=(self.NUM_DRONES, self.IMG_RES[1], self.IMG_RES[0], 4), dtype=np.uint8)
         elif self.OBS_TYPE == ObservationType.KIN:
+            ############################################################
+            #### OBS SPACE OF SIZE 12
+            #### Observation vector ### X        Y        Z       Q1   Q2   Q3   Q4   R       P       Y       VX       VY       VZ       WX       WY       WZ
             lo = -np.inf
             hi = np.inf
-            obs_lower_bound = np.array([[lo, lo, 0, lo, lo, lo, lo, lo, lo, lo, lo, lo] for i in range(self.NUM_DRONES)])
-            obs_upper_bound = np.array([[hi, hi, hi, hi, hi, hi, hi, hi, hi, hi, hi, hi] for i in range(self.NUM_DRONES)])
+            obs_lower_bound = np.array([[lo,lo,0, lo,lo,lo,lo,lo,lo,lo,lo,lo] for i in range(self.NUM_DRONES)])
+            obs_upper_bound = np.array([[hi,hi,hi,hi,hi,hi,hi,hi,hi,hi,hi,hi] for i in range(self.NUM_DRONES)])
+            #### Add action buffer to observation space ################
             act_lo = -1
             act_hi = +1
             for i in range(self.ACTION_BUFFER_SIZE):
                 if self.ACT_TYPE in [ActionType.RPM, ActionType.VEL]:
-                    obs_lower_bound = np.hstack([obs_lower_bound, np.array([[act_lo, act_lo, act_lo, act_lo] for i in range(self.NUM_DRONES)])])
-                    obs_upper_bound = np.hstack([obs_upper_bound, np.array([[act_hi, act_hi, act_hi, act_hi] for i in range(self.NUM_DRONES)])])
-                elif self.ACT_TYPE == ActionType.PID:
-                    obs_lower_bound = np.hstack([obs_lower_bound, np.array([[act_lo, act_lo, act_lo] for i in range(self.NUM_DRONES)])])
-                    obs_upper_bound = np.hstack([obs_upper_bound, np.array([[act_hi, act_hi, act_hi] for i in range(self.NUM_DRONES)])])
+                    obs_lower_bound = np.hstack([obs_lower_bound, np.array([[act_lo,act_lo,act_lo,act_lo] for i in range(self.NUM_DRONES)])])
+                    obs_upper_bound = np.hstack([obs_upper_bound, np.array([[act_hi,act_hi,act_hi,act_hi] for i in range(self.NUM_DRONES)])])
+                elif self.ACT_TYPE==ActionType.PID:
+                    obs_lower_bound = np.hstack([obs_lower_bound, np.array([[act_lo,act_lo,act_lo] for i in range(self.NUM_DRONES)])])
+                    obs_upper_bound = np.hstack([obs_upper_bound, np.array([[act_hi,act_hi,act_hi] for i in range(self.NUM_DRONES)])])
                 elif self.ACT_TYPE in [ActionType.ONE_D_RPM, ActionType.ONE_D_PID]:
                     obs_lower_bound = np.hstack([obs_lower_bound, np.array([[act_lo] for i in range(self.NUM_DRONES)])])
                     obs_upper_bound = np.hstack([obs_upper_bound, np.array([[act_hi] for i in range(self.NUM_DRONES)])])
-            #### Add the obstacle matrix to the observation space ######
-            obstacle_matrix_flat = self.obstacle_matrix.flatten().reshape(1, -1)
-            obstacle_matrix_repeated = np.repeat(obstacle_matrix_flat, self.NUM_DRONES, axis=0)
-            obs_lower_bound = np.hstack([obs_lower_bound, np.zeros(obstacle_matrix_repeated.shape)])
-            obs_upper_bound = np.hstack([obs_upper_bound, np.ones(obstacle_matrix_repeated.shape)])
             return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
+            ############################################################
         else:
             print("[ERROR] in BaseRLAviary._observationSpace()")
     
@@ -333,32 +301,132 @@ class BaseRLAviary_Maze(BaseAviary):
         Returns
         -------
         ndarray
-            A Box() of shape (NUM_DRONES,H,W,4) or (NUM_DRONES,12) depending on the observation type.
+            A Box() of shape (NUM_DRONES,H,W,4) or (NUM_DRONES,21) depending on the observation type.
 
         """
-        if self.OBS_TYPE == ObservationType.RGB:
-            if self.step_counter % self.IMG_CAPTURE_FREQ == 0:
-                for i in range(self.NUM_DRONES):
-                    self.rgb[i], self.dep[i], self.seg[i] = self._getDroneImages(i, segmentation=False)
-                    if self.RECORD:
-                        self._exportImage(img_type=ImageType.RGB,
-                                        img_input=self.rgb[i],
-                                        path=self.ONBOARD_IMG_PATH + "drone_" + str(i),
-                                        frame_num=int(self.step_counter / self.IMG_CAPTURE_FREQ))
-            return np.array([self.rgb[i] for i in range(self.NUM_DRONES)]).astype('float32')
-        elif self.OBS_TYPE == ObservationType.KIN:
-            obs_12 = np.zeros((self.NUM_DRONES, 12))
+        
+        if self.OBS_TYPE == ObservationType.KIN:
+            ############################################################
+            #### OBS SPACE OF SIZE 12
+            obs_21 = np.zeros((self.NUM_DRONES,21))
             for i in range(self.NUM_DRONES):
+                #obs = self._clipAndNormalizeState(self._getDroneStateVector(i))
                 obs = self._getDroneStateVector(i)
-                obs_12[i, :] = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12,)
-            ret = np.array([obs_12[i, :] for i in range(self.NUM_DRONES)]).astype('float32')
+                obs_21[i, :] = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16], obs[16:20], obs[20:25]]).reshape(21,)
+            ret = np.array([obs_21[i, :] for i in range(self.NUM_DRONES)]).astype('float32')
+            #### Add action buffer to observation #######################
             for i in range(self.ACTION_BUFFER_SIZE):
                 ret = np.hstack([ret, np.array([self.action_buffer[i][j, :] for j in range(self.NUM_DRONES)])])
-            #### Add the obstacle matrix to the observation ############
-            # Flatten the obstacle matrix and ensure it has the same number of dimensions
-            obstacle_matrix_flat = self.obstacle_matrix.flatten().reshape(1, -1)
-            obstacle_matrix_repeated = np.repeat(obstacle_matrix_flat, self.NUM_DRONES, axis=0)
-            ret = np.hstack([ret, obstacle_matrix_repeated])
             return ret
+            ############################################################
         else:
             print("[ERROR] in BaseRLAviary._computeObs()")
+
+################################################################################
+
+    def _computeReward(self): #copied from HoverAviary_TestFlo.py
+        """Computes the current reward value.
+
+        Returns
+        -------
+        float
+            The reward.
+
+        """
+        
+        
+        if not hasattr(self, 'reward_grid'):
+            self.reward_grid = np.zeros((int(2 * self.Test_Area_Size_x / 0.05), int(2 * self.Test_Area_Size_y / 0.05)))
+        
+        # wenn die Drohne auf 0,0 gespawned wird, dann ist der Index 0,0 und dann haben wir, wenn Sie nach links fliegt, negative x-Werte und können nicht auf den reward_grid zugreifen (da nur von 0 bis 2*Test_Area_Size_x bzw. 2xTest_Area_Size_y)
+        if self.INIT_XYZS == None:
+            state = self._getDroneStateVector(0) #erste Drohne
+            x_idx = int((state[0] + self.Test_Area_Size_x) / 0.05)
+            y_idx = int((state[1] + self.Test_Area_Size_y) / 0.05)
+        
+        # Wenn das Labyrinth von 0,0 bis SizeX,SizeY geht und die Drohe irgendwo in diesem Raum gespawned wird, können wir immer auf das reward_grid zugreifen da keine Negativen Werte rauskommen
+        if self.INIT_XYZS!=None:
+            state = self._getDroneStateVector(0) #erste Drohne
+            x_idx = int((state[0]) / 0.05)
+            y_idx = int((state[1]) / 0.05)
+        
+        if 0 <= x_idx < self.reward_grid.shape[0] and 0 <= y_idx < self.reward_grid.shape[1]:
+            if self.reward_grid[x_idx, y_idx] == 0:
+                print(f"Reward given for exploring new spot in discrete world: {x_idx}, {y_idx}")
+            self.reward_grid[x_idx, y_idx] = 1
+        
+        # negative reward for crashing into walls
+        state = self._getDroneStateVector(0)
+        if (state[20] < 0.015 or state[21] < 0.015 or state[22] < 0.015 or state[23] < 0.015):
+            neg_reward_wall_crash = -1000
+        
+        '''einbauen, dass der Reward erst kommt, wenn diese Bedingung länger als 3 Sekunden erfüllt ist --> die Drohne muss dann irgendwie geziehlt zurückfliegen oder Teilreward, dadurch, dass sie schon mal den upper belegt bekommen hat und dann endreward, wenn es für mind. 3 Sekunden belegt ist --> muss dann irgendwie in die Observation eingebaut werden'''    
+        # # positive reward for reaching the target (raycast_upper !=None and < 1.5)
+        # if self.raycast_upper != None and self.raycast_upper < 1.5:
+        #     pos_reward_target = 2000
+        
+        reward_SUM = np.sum(self.reward_grid) + neg_reward_wall_crash + pos_reward_target
+        return reward_SUM
+
+    ################################################################################
+    
+    def _computeTerminated(self):
+        """Computes the current terminated value(s).
+
+        Unused as this subclass is not meant for reinforcement learning.
+
+        Returns
+        -------
+        bool
+            Dummy value.
+
+        """
+        return False
+    
+    ################################################################################
+    
+    def _computeTruncated(self): #coppied from HoverAviary_TestFlo.py
+        """Computes the current truncated value.
+
+        Returns
+        -------
+        bool
+            Whether the current episode timed out.
+
+        """
+        state = self._getDroneStateVector(0)
+        if (abs(state[0]) > 1.5 or abs(state[1]) > 1.5 or state[2] > 2.0 # Truncate when the drone is too far away
+             or abs(state[7]) > .4 or abs(state[8]) > .4 # Truncate when the drone is too tilted
+        ):
+            return True
+        if self.step_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC:
+            return True
+        
+        #Wenn an einer Wand gecrashed wird, beenden!
+        if (state[20] < 0.015 or state[21] < 0.015 or state[22] < 0.015 or state[23] < 0.015):
+            return True
+        
+        '''einbauen, dass der Reward erst kommt, wenn diese Bedingung länger als 3 Sekunden erfüllt ist --> die Drohne muss dann irgendwie geziehlt zurückfliegen oder Teilreward, dadurch, dass sie schon mal den upper belegt bekommen hat und dann endreward, wenn es für mind. 3 Sekunden belegt ist --> muss dann irgendwie in die Observation eingebaut werden'''  
+        # #target errreicht
+        # if self.raycast_upper != None and self.raycast_upper < 1.5:
+        #     pos_reward_target = 2000
+        
+        
+        return False
+
+    ################################################################################
+    
+    def _computeInfo(self):
+        """Computes the current info dict(s).
+
+        Unused as this subclass is not meant for reinforcement learning.
+
+        Returns
+        -------
+        dict[str, int]
+            Dummy value.
+
+        """
+        return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
+
+    
