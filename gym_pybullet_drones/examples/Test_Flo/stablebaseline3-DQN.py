@@ -7,7 +7,7 @@ from stable_baselines3.common.env_util import DummyVecEnv
 from stable_baselines3.common.evaluation import evaluate_policy
 
 from gym_pybullet_drones.utils.Logger import Logger
-from gym_pybullet_drones.examples.Test_Flo.BaseRLAviary_TestFlo import HoverAviary
+#from gym_pybullet_drones.examples.Test_Flo.BaseRLAviary_TestFlo import HoverAviary
 from gym_pybullet_drones.utils.utils import sync, str2bool
 from gym_pybullet_drones.utils.enums import ObservationType, ActionType
 from gym_pybullet_drones.examples.Test_Flo.BaseRLAviary_TestFlo import BaseRLAviary

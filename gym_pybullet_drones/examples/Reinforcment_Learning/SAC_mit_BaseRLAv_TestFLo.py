@@ -20,6 +20,7 @@ from gym_pybullet_drones.envs.HoverAviary import HoverAviary
 from gym_pybullet_drones.envs.MultiHoverAviary import MultiHoverAviary
 from gym_pybullet_drones.utils.utils import sync, str2bool
 from gym_pybullet_drones.utils.enums import ObservationType, ActionType
+from gym_pybullet_drones.examples.Test_Flo.BaseRLAviary_TestFlo import BaseRLAviary_TestFlo
 
 DEFAULT_GUI = True
 DEFAULT_RECORD_VIDEO = False
@@ -27,7 +28,6 @@ DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 
 DEFAULT_OBS = ObservationType('kin')  # 'kin' or 'rgb'
-#1D (identical input to all motors) with RPMs
 DEFAULT_ACT = ActionType('one_d_rpm')  # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'one_d_pid'
 DEFAULT_AGENTS = 2
 DEFAULT_MA = False
@@ -40,37 +40,25 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
         os.makedirs(filename + '/')
     #Erstellt die Trainings- und Evaluierungsumgebungen basierend auf dem Einzel- oder Mehragentenmodus.
     if not multiagent:
-        train_env = make_vec_env(HoverAviary,
+        train_env = make_vec_env(BaseRLAviary_TestFlo,
                                  env_kwargs=dict(obs=DEFAULT_OBS, act=DEFAULT_ACT),
                                  n_envs=1,
                                  seed=0
                                  )
-        eval_env = HoverAviary(obs=DEFAULT_OBS, act=DEFAULT_ACT, gui=True)
+        eval_env = BaseRLAviary_TestFlo(obs=DEFAULT_OBS, act=DEFAULT_ACT, gui=True)
     else:
-        train_env = make_vec_env(MultiHoverAviary,
+        train_env = make_vec_env(BaseRLAviary_TestFlo,
                                  env_kwargs=dict(num_drones=DEFAULT_AGENTS, obs=DEFAULT_OBS, act=DEFAULT_ACT),
                                  n_envs=1,
                                  seed=0
                                  )
-        eval_env = MultiHoverAviary(num_drones=DEFAULT_AGENTS, obs=DEFAULT_OBS, act=DEFAULT_ACT, gui=True)
+        eval_env = BaseRLAviary_TestFlo(num_drones=DEFAULT_AGENTS, obs=DEFAULT_OBS, act=DEFAULT_ACT, gui=True)
 
     #### Check the environment's spaces ########################
     # Der Action-Space definiert die Steuerbefehle, die die Drohne an die Umgebung senden kann.
     print('[INFO] Action space:', train_env.action_space)
     #Der Observation-Space beschreibt die Informationen, die die Drohne über die Umgebung erhält.
-    #     Box: Der Beobachtungsraum ist ein kontinuierlicher Raum, der durch eine Box definiert wird.
-    # [[-inf -inf 0. -inf -inf -inf -inf -inf -inf -inf -inf -inf -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1.]]: Die untere Grenze des Beobachtungsraums. 
-    # Die Werte -inf und 0 bedeuten, dass es keine unteren Grenzen für diese Zustandsvariablen gibt, außer für die Höhe (z), die nicht negativ sein kann. Die Werte -1 beziehen sich auf die Aktionen aus dem Aktionspuffer.
-    # [[inf inf inf inf inf inf inf inf inf inf inf inf 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1.]]: Die obere Grenze des Beobachtungsraums. Die Werte inf bedeuten, dass es keine oberen Grenzen für diese Zustandsvariablen gibt. 
-    # Die Werte 1 beziehen sich auf die Aktionen aus dem Aktionspuffer.
-    # (1, 27): Die Form des Beobachtungsraums. In diesem Fall ist es ein 2D-Array mit den Dimensionen (1, 27), was bedeutet, dass es eine einzelne Beobachtung gibt, die 27 Werte hat.
     print('[INFO] Observation space:', train_env.observation_space)
-
-    #     Position (x, y, z): Die ersten drei Werte geben die Position der Drohne in den x-, y- und z-Koordinaten an.
-    # Orientierung (Quaternion q1, q2, q3, q4): Die nächsten vier Werte geben die Orientierung der Drohne als Quaternion an.
-    # Geschwindigkeit (vx, vy, vz): Die nächsten drei Werte geben die Geschwindigkeit der Drohne in den x-, y- und z-Richtungen an.
-    # Winkelgeschwindigkeit (wx, wy, wz): Die nächsten drei Werte geben die Winkelgeschwindigkeit der Drohne um die x-, y- und z-Achsen an.
-    # Aktionen aus dem Aktionspuffer: Die restlichen 17 Werte stammen aus dem Aktionspuffer und geben die letzten Aktionen an, die von der Drohne ausgeführt wurden.
 
     #### Train the model #######################################
     ## CNN Policy wäre bei RBG-Bildern geeignet
@@ -109,13 +97,9 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
     #Belohnungsschwellenwert erreicht wird, und einen Evaluierungs-Callback.
 
     target_reward = 474.15 if not multiagent else 949.5
-    # return True if the mean reward is greater than the threshold
-    # continue_training = bool(self.parent.best_mean_reward < self.reward_threshold)
+
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=target_reward,
                                                      verbose=1)
-    # Die Klasse EvalCallback ermöglicht es, ein trainiertes Modell in regelmäßigen Abständen zu evaluieren, 
-    # um zu überprüfen, wie gut es auf einer Evaluierungsumgebung abschneidet. Dies ist nützlich, um sicherzustellen, dass das Modell während des 
-    # Trainings Fortschritte macht und um das beste Modell basierend auf der Evaluierungsleistung zu speichern.
     eval_callback = EvalCallback(eval_env,
                                  callback_on_new_best=callback_on_best,
                                  verbose=1,
@@ -128,7 +112,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
     model.learn(total_timesteps=int(1e7) if local else int(1e2),
                 callback=eval_callback,
                 log_interval=100)
-     
+
     #### Save the model ########################################
     model.save(filename + '/final_model.zip')
     print(filename)
@@ -146,12 +130,12 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
 
     #### Show (and record a video of) the model's performance ##
     if not multiagent:
-        test_env = HoverAviary(gui=gui,
+        test_env = BaseRLAviary_TestFlo(gui=gui,
                                obs=DEFAULT_OBS,
                                act=DEFAULT_ACT,
                                record=record_video)
     else:
-        test_env = MultiHoverAviary(gui=gui,
+        test_env = BaseRLAviary_TestFlo(gui=gui,
                                     num_drones=DEFAULT_AGENTS,
                                     obs=DEFAULT_OBS,
                                     act=DEFAULT_ACT,
