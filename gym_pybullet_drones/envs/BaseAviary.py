@@ -393,6 +393,7 @@ class BaseAviary(gym.Env):
             #### Step the simulation using the desired physics update ##
             for i in range (self.NUM_DRONES):
                 if self.PHYSICS == Physics.PYB:
+                    # Diese Funktion simuliert die physikalischen Effekte der Motoren einer Drohne in einer PyBullet-Simulation, indem sie die Kräfte und Drehmomente berechnet und auf die Drohne anwendet.
                     self._physics(clipped_action[i, :], i)
                 elif self.PHYSICS == Physics.DYN:
                     self._dynamics(clipped_action[i, :], i)
