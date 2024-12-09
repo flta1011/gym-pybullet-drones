@@ -56,7 +56,18 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
 
     #### Check the environment's spaces ########################
     # Der Action-Space definiert die Steuerbefehle, die die Drohne an die Umgebung senden kann.
+    # Box(-1.0, 1.0, (1, 1), float32):
+    # Box: Der Aktionsraum ist ein kontinuierlicher Raum, der durch eine Box definiert wird.
+    # -1.0: Die untere Grenze des Aktionsraums. Der minimale Wert, den eine Aktion annehmen kann, ist -1.0.
+    # 1.0: Die obere Grenze des Aktionsraums. Der maximale Wert, den eine Aktion annehmen kann, ist 1.0.
+    # (1, 1): Die Form des Aktionsraums. In diesem Fall ist es ein 2D-Array mit den Dimensionen (1, 1), was bedeutet, dass es eine einzelne Aktion gibt, die einen Wert hat.
+    # float32: Der Datentyp der Aktionen. In diesem Fall sind die Aktionen float32-Werte.
     print('[INFO] Action space:', train_env.action_space)
+    # Position (x, y, z): Die ersten drei Werte geben die Position der Drohne in den x-, y- und z-Koordinaten an.
+    # Orientierung (Quaternion q1, q2, q3, q4): Die nächsten vier Werte geben die Orientierung der Drohne als Quaternion an.
+    # Geschwindigkeit (vx, vy, vz): Die nächsten drei Werte geben die Geschwindigkeit der Drohne in den x-, y- und z-Richtungen an.
+    # Winkelgeschwindigkeit (wx, wy, wz): Die nächsten drei Werte geben die Winkelgeschwindigkeit der Drohne um die x-, y- und z-Achsen an.
+    # Aktionen aus dem Aktionspuffer: Die restlichen 17 Werte stammen aus dem Aktionspuffer und geben die letzten Aktionen an, die von der Drohne ausgeführt wurden.
     #Der Observation-Space beschreibt die Informationen, die die Drohne über die Umgebung erhält.
     #     Box: Der Beobachtungsraum ist ein kontinuierlicher Raum, der durch eine Box definiert wird.
     # [[-inf -inf 0. -inf -inf -inf -inf -inf -inf -inf -inf -inf -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1. -1.]]: Die untere Grenze des Beobachtungsraums. 
