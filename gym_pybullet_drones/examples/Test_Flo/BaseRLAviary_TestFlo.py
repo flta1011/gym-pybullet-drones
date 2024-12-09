@@ -129,7 +129,7 @@ class BaseRLAviary_TestFlo(BaseAviary):
 
     ################################################################################
 
-    def _actionSpace(self):
+    def _actionSpace_obersvationSpace(self):
         """Returns the action space of the environment.
 
         Returns
@@ -183,7 +183,7 @@ class BaseRLAviary_TestFlo(BaseAviary):
             for key in low_values
         })
         #
-        return self.observation_space
+        return self._action_to_movement_direction, self.observation_space
         
     ################################################################################
 
@@ -381,6 +381,16 @@ class BaseRLAviary_TestFlo(BaseAviary):
             Dummy value.
 
         """
+        # Wenn die Zeit abgelaufen ist, beenden!
+        if self.step_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC:
+            return True
+        
+         '''einbauen, dass der Reward erst kommt, wenn diese Bedingung länger als 3 Sekunden erfüllt ist --> die Drohne muss dann irgendwie geziehlt zurückfliegen oder Teilreward, dadurch, dass sie schon mal den upper belegt bekommen hat und dann endreward, wenn es für mind. 3 Sekunden belegt ist --> muss dann irgendwie in die Observation eingebaut werden'''  
+        # #target errreicht
+        # if self.raycast_upper != None and self.raycast_upper < 1.5:
+        #     pos_reward_target = 2000
+        
+        
         return False
     
     ################################################################################
@@ -394,23 +404,16 @@ class BaseRLAviary_TestFlo(BaseAviary):
             Whether the current episode timed out.
 
         """
+        # Truncate when the drone is too tilted
         state = self._getDroneStateVector(0)
-        if (abs(state[0]) > 1.5 or abs(state[1]) > 1.5 or state[2] > 2.0 # Truncate when the drone is too far away
-             or abs(state[7]) > .4 or abs(state[8]) > .4 # Truncate when the drone is too tilted
-        ):
+        if abs(state[7]) > .4 or abs(state[8]) > .4: 
             return True
-        if self.step_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC:
-            return True
+        
         
         #Wenn an einer Wand gecrashed wird, beenden!
         if (state[20] < 0.015 or state[21] < 0.015 or state[22] < 0.015 or state[23] < 0.015):
             return True
-        
-        '''einbauen, dass der Reward erst kommt, wenn diese Bedingung länger als 3 Sekunden erfüllt ist --> die Drohne muss dann irgendwie geziehlt zurückfliegen oder Teilreward, dadurch, dass sie schon mal den upper belegt bekommen hat und dann endreward, wenn es für mind. 3 Sekunden belegt ist --> muss dann irgendwie in die Observation eingebaut werden'''  
-        # #target errreicht
-        # if self.raycast_upper != None and self.raycast_upper < 1.5:
-        #     pos_reward_target = 2000
-        
+       
         
         return False
 
@@ -440,6 +443,21 @@ class BaseRLAviary_TestFlo(BaseAviary):
         self.drone = p.loadURDF("drone.urdf")
         return self.state
     
+    def _perform_raycast(self):
+        # Perform raycasting in four directions
+        ray_length = 10  # Define the length of the rays
+        front_ray = p.rayTest([0, 0, 0], [ray_length, 0, 0])
+        back_ray = p.rayTest([0, 0, 0], [-ray_length, 0, 0])
+        left_ray = p.rayTest([0, 0, 0], [0, ray_length, 0])
+        right_ray = p.rayTest([0, 0, 0], [0, -ray_length, 0])
+        
+        return {
+            'front': front_ray[0][2],  # Distance to the first hit object
+            'back': back_ray[0][2],
+            'left': left_ray[0][2],
+            'right': right_ray[0][2],
+        }
+        
     def step(self, action):
         # Apply action
         direction = self._action_to_direction[action]
@@ -469,17 +487,4 @@ class BaseRLAviary_TestFlo(BaseAviary):
         
         return observation, reward, done, info
     
-    def _perform_raycast(self):
-        # Perform raycasting in four directions
-        ray_length = 10  # Define the length of the rays
-        front_ray = p.rayTest([0, 0, 0], [ray_length, 0, 0])
-        back_ray = p.rayTest([0, 0, 0], [-ray_length, 0, 0])
-        left_ray = p.rayTest([0, 0, 0], [0, ray_length, 0])
-        right_ray = p.rayTest([0, 0, 0], [0, -ray_length, 0])
-        
-        return {
-            'front': front_ray[0][2],  # Distance to the first hit object
-            'back': back_ray[0][2],
-            'left': left_ray[0][2],
-            'right': right_ray[0][2],
-        }
+    
