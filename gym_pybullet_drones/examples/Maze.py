@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 import random
 
 class MazeGenerator:
-    def __init__(self, width=3, height=3, discretization=0.05, min_corridor_size=0.3, seed=100):
+    def __init__(self, width=3, height=3, discretization=0.05, min_corridor_size=0.3, seed=30):
         self.width = int(width / discretization)  # Maze width in grid units
         self.height = int(height / discretization)  # Maze height in grid units
         self.discretization = discretization  # Grid resolution
@@ -55,11 +55,12 @@ class MazeGenerator:
             if start_x is None:
                 break  # No valid start position found
 
-            direction = random.choice([(0, 1), (1, 0)])  # Horizontal or vertical
+            direction = random.choice([(0, 1), (1, 0), (0, -1), (-1, 0)])  # Horizontal or vertical
             length = random.randint(self.min_corridor_size, self.width // 2)
 
             if self._can_place_wall(start_x, start_y, direction, length):
                 self._place_wall(start_x, start_y, direction, length)
+                print(start_x, start_y)
             attempts += 1
 
     def _find_valid_wall_start(self):
@@ -139,7 +140,7 @@ class MazeGenerator:
         return True
 
     def _has_adjacent_wall(self, x, y):
-        """Check if a cell has adjacent walls (not diagonal)."""
+        """Check if a cell has adjacent walls (not diagonal).""" # adjacent = benachbart
         neighbors = [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
         for nx, ny in neighbors:
             if self.grid[ny, nx] == 1:
@@ -153,14 +154,47 @@ class MazeGenerator:
             nx, ny = x + i * dx, y + i * dy
             self.grid[ny, nx] = 1
 
-    def visualize(self):
-        """Visualize the generated maze."""
-        plt.figure(figsize=(10, 10))
-        plt.imshow(self.grid, cmap="Greys")
-        plt.title("Generated Maze with Walls")
+    # def visualize_old(self, ax=None):
+    #     """Visualize the generated maze."""
+    #     plt.figure(figsize=(10, 10))
+    #     plt.imshow(self.grid, cmap="Greys")
+    #     plt.title("Generated Maze with Walls")
+    #     plt.show()
+
+    def visualize(self, ax=None):
+        """Visualize the maze using matplotlib."""
+        if ax is None:
+            fig, ax = plt.subplots()
+            ax.imshow(self.grid, cmap='binary')
+            ax.set_title(f'Maze with seed {self.seed}')
+            ax.axis('off')
+            plt.show()
+        else:
+            ax.imshow(self.grid, cmap='binary')
+            ax.set_title(f'Maze with seed {self.seed}')
+            ax.axis('off')
+    
+    def visualize_range_of_mazes(self, start_seed=1, stop_seed=9):
+        """Visualize a range of mazes with different seeds."""
+        n = (stop_seed - start_seed) + 1 # Number of mazes to generate; +1 because range is inclusive
+        max_per_row = 8
+        rows = (n + max_per_row -1) // max_per_row
+        cols = min(n, max_per_row)
+        fig, axes = plt.subplots(rows, cols, figsize=(10 * cols, 10 * rows)) # Create n subplots
+
+        # Flatten axes array if it is 2D
+        if rows > 1:
+            axes = axes.flatten()
+
+        for i, seed in enumerate(range(start_seed, stop_seed+1)):
+            self.seed = seed
+            self.generate()
+            # ax = axes[i] if n > 1 else axes # Handle the case when n is 1
+            ax = axes[i]
+            self.visualize(ax=ax)
         plt.show()
 
 if __name__ == "__main__":
     maze = MazeGenerator()
     maze.generate()
-    maze.visualize()
+    maze.visualize_range_of_mazes(start_seed=1, stop_seed=20)
