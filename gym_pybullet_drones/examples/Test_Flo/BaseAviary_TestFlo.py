@@ -36,7 +36,9 @@ class BaseAviary(gym.Env):
                  obstacles=False,
                  user_debug_gui=True,
                  vision_attributes=False,
-                 output_folder='results'
+                 output_folder='results',
+                 Test_Area_Size_x: int = 10, #hoffentlich 10 Meter, später Größe der Map
+                 Test_Area_Size_y: int = 10, #hoffentlich 10 Meter, später Größe der Map
                  ):
         """Initialization of a generic aviary environment.
 

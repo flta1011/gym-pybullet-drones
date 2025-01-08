@@ -8,6 +8,8 @@ from gym_pybullet_drones.examples.Test_Flo.BaseAviary_TestFlo import BaseAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType, ImageType
 from gym_pybullet_drones.examples.Test_Flo.DSLPIDControl_TestFlo import DSLPIDControl
 
+from stable_baselines3.common.policies import ActorCriticPolicy
+
 class BaseRLAviary_TestFlo(BaseAviary):
     """Base single and multi-agent environment class for reinforcement learning."""
     
@@ -19,8 +21,9 @@ class BaseRLAviary_TestFlo(BaseAviary):
                  neighbourhood_radius: float=np.inf,
                  initial_xyzs=None,
                  initial_rpys=None,
-                 Test_Area_Size_x: int = 10, #hoffentlich 10 Meter, später Größe der Map
-                 Test_Area_Size_y: int = 10, #hoffentlich 10 Meter, später Größe der Map
+                 # In BaseAviary hinzugefügt
+                #  Test_Area_Size_x: int = 10, #hoffentlich 10 Meter, später Größe der Map
+                #  Test_Area_Size_y: int = 10, #hoffentlich 10 Meter, später Größe der Map
                  physics: Physics=Physics.PYB,
                  pyb_freq: int = 240,
                  ctrl_freq: int = 240,
@@ -92,6 +95,8 @@ class BaseRLAviary_TestFlo(BaseAviary):
                          user_debug_gui=False, # Remove of RPM sliders from all single agent learning aviaries
                          vision_attributes=vision_attributes,
                          )
+        self.Test_Area_Size_x = 10
+        self.Test_Area_Size_y = 10
         #### Set a limit on the maximum target speed ###############
         if  act == ActionType.VEL:
             self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000/3600)
@@ -177,8 +182,25 @@ class BaseRLAviary_TestFlo(BaseAviary):
         """
         self.action_buffer.append(action)
         rpm = np.zeros((self.NUM_DRONES,4))
+        # Print the shape of the action array
+        print("Shape of action:", action.shape)
+        # die Action sind die 4 möglichen Bewegungen, die die Drohne machen kann
+        # action_to_movement_direction = {
+        #     0: np.array([1, 0, 0, 0.99]), # Up
+        #     1: np.array([-1, 0, 0, 0.99]), # Down
+        #     2: np.array([0, 1, 0, 0.99]), # Yaw left
+        #     3: np.array([0, -1, 0, 0.99]), # Yaw right
+        # }
+        # Loop through the action array and extract the target TBD alex
+        action = np.atleast_2d(action)
         for k in range(action.shape[0]):
+            # Verify the index k
+            if k < 0 or k >= action.shape[0]:
+                raise IndexError(f"Index k={k} is out of bounds for axis 0 with size {action.shape[0]}")
+
+            # Extract the target from the action array
             target = action[k, :]
+            print(f"Target for index {k}:", target)
             
             if self.ACT_TYPE == ActionType.VEL:
                 state = self._getDroneStateVector(k)
@@ -233,83 +255,218 @@ class BaseRLAviary_TestFlo(BaseAviary):
 
         """
     
-        
         low_values = {
-            'x': -np.inf,
-            'y': -np.inf,
-            'z': 0,
-            'Roll': -np.pi,
-            'Pitch': -np.pi,
-            'Yaw': -np.pi,
-            'Vx': -np.inf,
-            'Vy': -np.inf,
-            'Vz': -np.inf,
-            'angular_velocity_x': -np.inf,
-            'angular_velocity_y': -np.inf,
-            'angular_velocity_z': -np.inf,
-            'Last_Clipped_action_A0': 0,
-            'Last_Clipped_action_A1': 0,
-            'Last_Clipped_action_A2': 0,
-            'Last_Clipped_action_A3': 0,
-            # 'distance_front': 0,
-            # 'distance_back': 0,
-            # 'distance_left': 0,
-            # 'distance_right': 0,
-            # 'flow_sensor_x': 0,
-            # 'flow_sensor_y': 0,
-            # 'pressure_sensor': 0,
-            # 'accelerometer_x': -np.inf,
-            # 'accelerometer_y': -np.inf,
-            'raycast_front': 0,
-            'raycast_back': 0,
-            'raycast_left': 0,
-            'raycast_right': 0,
-            'raycast_top': 0
+            0: -np.inf,  # x
+            1: -np.inf,  # y
+            2: 0,        # z
+            3: -np.pi,   # Roll
+            4: -np.pi,   # Pitch
+            5: -np.pi,   # Yaw
+            6: -np.inf,  # Vx
+            7: -np.inf,  # Vy
+            8: -np.inf,  # Vz
+            9: -np.inf,  # angular_velocity_x
+            10: -np.inf, # angular_velocity_y
+            11: -np.inf, # angular_velocity_z
+            12: 0,       # Last_Clipped_action_A0
+            13: 0,       # Last_Clipped_action_A1
+            14: 0,       # Last_Clipped_action_A2
+            15: 0,       # Last_Clipped_action_A3
+            # 16: 0,      # distance_front
+            # 17: 0,      # distance_back
+            # 18: 0,      # distance_left
+            # 19: 0,      # distance_right
+            # 20: 0,      # flow_sensor_x
+            # 21: 0,      # flow_sensor_y
+            # 22: 0,      # pressure_sensor
+            # 23: -np.inf, # accelerometer_x
+            # 24: -np.inf, # accelerometer_y
+            16: 0,       # raycast_front
+            17: 0,       # raycast_back
+            18: 0,       # raycast_left
+            19: 0,       # raycast_right
+            20: 0        # raycast_top
         }
-        
+
+        # low_values = {
+        #     'x': -np.inf,
+        #     'y': -np.inf,
+        #     'z': 0,
+        #     'Roll': -np.pi,
+        #     'Pitch': -np.pi,
+        #     'Yaw': -np.pi,
+        #     'Vx': -np.inf,
+        #     'Vy': -np.inf,
+        #     'Vz': -np.inf,
+        #     'angular_velocity_x': -np.inf,
+        #     'angular_velocity_y': -np.inf,
+        #     'angular_velocity_z': -np.inf,
+        #     'Last_Clipped_action_A0': 0,
+        #     'Last_Clipped_action_A1': 0,
+        #     'Last_Clipped_action_A2': 0,
+        #     'Last_Clipped_action_A3': 0,
+        #     # 'distance_front': 0,
+        #     # 'distance_back': 0,
+        #     # 'distance_left': 0,
+        #     # 'distance_right': 0,
+        #     # 'flow_sensor_x': 0,
+        #     # 'flow_sensor_y': 0,
+        #     # 'pressure_sensor': 0,
+        #     # 'accelerometer_x': -np.inf,
+        #     # 'accelerometer_y': -np.inf,
+        #     'raycast_front': 0,
+        #     'raycast_back': 0,
+        #     'raycast_left': 0,
+        #     'raycast_right': 0,
+        #     'raycast_top': 0
+        # }
         high_values = {
-            'x': np.inf,
-            'y': np.inf,
-            'z': np.inf,
-            'Roll': np.pi,
-            'Pitch': np.pi,
-            'Yaw': np.pi,
-            'Vx': np.inf,
-            'Vy': np.inf,
-            'Vz': np.inf,
-            'angular_velocity_x': np.inf,
-            'angular_velocity_y': np.inf,
-            'angular_velocity_z': np.inf,
-            'Last_Clipped_action_A0': 3,
-            'Last_Clipped_action_A1': 3,
-            'Last_Clipped_action_A2': 3,
-            'Last_Clipped_action_A3': 3,
-            # 'distance_front': np.inf,
-            # 'distance_back': np.inf,
-            # 'distance_left': np.inf,
-            # 'distance_right': np.inf,
-            # 'flow_sensor_x': np.inf,
-            # 'flow_sensor_y': np.inf,
-            # 'pressure_sensor': np.inf,
-            # 'accelerometer_x': np.inf,
-            # 'accelerometer_y': np.inf,
-            'raycast_front': np.inf,
-            'raycast_back': np.inf,
-            'raycast_left': np.inf,
-            'raycast_right': np.inf,
-            'raycast_top': np.inf
+            0: np.inf,  # x
+            1: np.inf,  # y
+            2: np.inf,  # z
+            3: np.pi,   # Roll
+            4: np.pi,   # Pitch
+            5: np.pi,   # Yaw
+            6: np.inf,  # Vx
+            7: np.inf,  # Vy
+            8: np.inf,  # Vz
+            9: np.inf,  # angular_velocity_x
+            10: np.inf, # angular_velocity_y
+            11: np.inf, # angular_velocity_z
+            12: 3,      # Last_Clipped_action_A0
+            13: 3,      # Last_Clipped_action_A1
+            14: 3,      # Last_Clipped_action_A2
+            15: 3,      # Last_Clipped_action_A3
+            # 16: np.inf, # distance_front
+            # 17: np.inf, # distance_back
+            # 18: np.inf, # distance_left
+            # 19: np.inf, # distance_right
+            # 20: np.inf, # flow_sensor_x
+            # 21: np.inf, # flow_sensor_y
+            # 22: np.inf, # pressure_sensor
+            # 23: np.inf, # accelerometer_x
+            # 24: np.inf, # accelerometer_y
+            16: np.inf, # raycast_front
+            17: np.inf, # raycast_back
+            18: np.inf, # raycast_left
+            19: np.inf, # raycast_right
+            20: np.inf  # raycast_top
         }
+
+        #self.policy_class = ActorCriticPolicy
+        # high_values = {
+        #     'x': np.inf,
+        #     'y': np.inf,
+        #     'z': np.inf,
+        #     'Roll': np.pi,
+        #     'Pitch': np.pi,
+        #     'Yaw': np.pi,
+        #     'Vx': np.inf,
+        #     'Vy': np.inf,
+        #     'Vz': np.inf,
+        #     'angular_velocity_x': np.inf,
+        #     'angular_velocity_y': np.inf,
+        #     'angular_velocity_z': np.inf,
+        #     'Last_Clipped_action_A0': 3,
+        #     'Last_Clipped_action_A1': 3,
+        #     'Last_Clipped_action_A2': 3,
+        #     'Last_Clipped_action_A3': 3,
+        #     # 'distance_front': np.inf,
+        #     # 'distance_back': np.inf,
+        #     # 'distance_left': np.inf,
+        #     # 'distance_right': np.inf,
+        #     # 'flow_sensor_x': np.inf,
+        #     # 'flow_sensor_y': np.inf,
+        #     # 'pressure_sensor': np.inf,
+        #     # 'accelerometer_x': np.inf,
+        #     # 'accelerometer_y': np.inf,
+        #     'raycast_front': np.inf,
+        #     'raycast_back': np.inf,
+        #     'raycast_left': np.inf,
+        #     'raycast_right': np.inf,
+        #     'raycast_top': np.inf
+        # }
+
+        # low_values = [
+        #     -np.inf,  # x
+        #     -np.inf,  # y
+        #     0,        # z
+        #     -np.pi,   # Roll
+        #     -np.pi,   # Pitch
+        #     -np.pi,   # Yaw
+        #     -np.inf,  # Vx
+        #     -np.inf,  # Vy
+        #     -np.inf,  # Vz
+        #     -np.inf,  # angular_velocity_x
+        #     -np.inf,  # angular_velocity_y
+        #     -np.inf,  # angular_velocity_z
+        #     0,        # Last_Clipped_action_A0
+        #     0,        # Last_Clipped_action_A1
+        #     0,        # Last_Clipped_action_A2
+        #     0,        # Last_Clipped_action_A3
+        #     0,        # raycast_front
+        #     0,        # raycast_back
+        #     0,        # raycast_left
+        #     0,        # raycast_right
+        #     0         # raycast_top
+        # ]
+
+        # high_values = [
+        #     np.inf,  # x
+        #     np.inf,  # y
+        #     np.inf,  # z
+        #     np.pi,   # Roll
+        #     np.pi,   # Pitch
+        #     np.pi,   # Yaw
+        #     np.inf,  # Vx
+        #     np.inf,  # Vy
+        #     np.inf,  # Vz
+        #     np.inf,  # angular_velocity_x
+        #     np.inf,  # angular_velocity_y
+        #     np.inf,  # angular_velocity_z
+        #     3,       # Last_Clipped_action_A0
+        #     3,       # Last_Clipped_action_A1
+        #     3,       # Last_Clipped_action_A2
+        #     3,       # Last_Clipped_action_A3
+        #     np.inf,  # raycast_front
+        #     np.inf,  # raycast_back
+        #     np.inf,  # raycast_left
+        #     np.inf,  # raycast_right
+        #     np.inf   # raycast_top
+        # ]
         
         # Using .Dict instead of .Box because we have multiple values and can create a dictionary
         ### TBD TBD TBD Weil die Learn fkt nicht ausgeführt wird, weil mit strings nicht hochzählen
         # Reihenfolge auch weird. Sie Bilder WhatsAPP von Kameraman Alex
         # 09.12.2024 23:50 
-        self.observation_space = spaces.Dict({
-            key: spaces.Box(low=low_values[key], high=high_values[key], shape=(1,), dtype=np.float32)
-            for key in low_values
-        })
+
+        # Convert the low and high values to numpy arrays
+        obs_lower_bound = np.array([low_values[key] for key in low_values], dtype=np.float32)
+        obs_upper_bound = np.array([high_values[key] for key in high_values], dtype=np.float32)
+
+        # self.observation_space = spaces.Dict({
+        #     key: spaces.Box(low=low_values[key], high=high_values[key], shape=(1,), dtype=np.float32)
+        #     for key in low_values
+        # })
         
-        return self.observation_space
+        return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
+        
+
+        # Initializing the observation bounds
+        # obs_lower_bound = np.array([low_values for _ in range(self.NUM_DRONES)])  # Use low_values for lower bound
+        # obs_upper_bound = np.array([high_values for _ in range(self.NUM_DRONES)])  # Use high_values for upper bound
+        # act_lo = -1
+        # act_hi = +1
+        # for i in range(self.ACTION_BUFFER_SIZE):
+        #     if self.ACT_TYPE in [ActionType.RPM, ActionType.VEL]:
+        #         obs_lower_bound = np.hstack([obs_lower_bound, np.array([[act_lo,act_lo,act_lo,act_lo] for i in range(self.NUM_DRONES)])])
+        #         obs_upper_bound = np.hstack([obs_upper_bound, np.array([[act_hi,act_hi,act_hi,act_hi] for i in range(self.NUM_DRONES)])])
+        # return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
+
+
+
+        
+    
     
     ################################################################################
 

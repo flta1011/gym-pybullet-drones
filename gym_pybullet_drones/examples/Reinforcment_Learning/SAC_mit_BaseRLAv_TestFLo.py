@@ -63,7 +63,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
 
     #### Train the model #######################################
     ## CNN Policy wäre bei RBG-Bildern geeignet
-    model = PPO('MultiInputPolicy',
+    model = PPO('MlpPolicy',
                 train_env,
                 verbose=1,
                 #tensorboard_log=filename + '/tb/'
