@@ -4,13 +4,13 @@ import pybullet as p
 from gymnasium import spaces
 from collections import deque
 
-from gym_pybullet_drones.examples.Test_Flo.BaseAviary_TestFlo import BaseAviary_TestFlo
+from gym_pybullet_drones.examples.Test_Flo.BaseAviary_TestFlytoWall import BaseAviary_TestFlytoWall
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType, ImageType
 from gym_pybullet_drones.examples.Test_Flo.DSLPIDControl_TestFlo import DSLPIDControl
 
 from stable_baselines3.common.policies import ActorCriticPolicy
 
-class BaseRLAviary_TestFlo(BaseAviary_TestFlo):
+class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
     """Base single and multi-agent environment class for reinforcement learning."""
     
     ################################################################################
@@ -142,14 +142,14 @@ class BaseRLAviary_TestFlo(BaseAviary_TestFlo):
         Returns
         -------
         spaces.Discrete
-        0: np.array([1, 0, 0, 0.99]), # Up
-        1: np.array([-1, 0, 0, 0.99]), # Down
-        2: np.array([0, 1, 0, 0.99]), # Yaw left
-        3: np.array([0, -1, 0, 0.99]), # Yaw right
+        0: np.array([1, 0, 0, 0.99]), # Fly Forward
+        1: np.array([-1, 0, 0, 0.99]), # Fly Backward
+        2: np.array([0, 1, 0, 0.99]), # Fly left
+        3: np.array([0, -1, 0, 0.99]), # Fly right
 
         """
         
-        return spaces.Discrete(4)
+        return spaces.Discrete(3)
         
     ################################################################################
 

@@ -108,7 +108,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
     model.learn(total_timesteps=int(1e7) if local else int(1e2), # shorter training in GitHub Actions pytest
                 callback=eval_callback,
                 log_interval=100)
-
+    
     #### Save the model ########################################
     model.save(filename+'/final_model.zip')
     print(filename)

@@ -15,7 +15,7 @@ import gymnasium as gym
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ImageType
 
 
-class BaseAviary_TestFlo(gym.Env):
+class BaseAviary_TestFlytoWall(gym.Env):
     """Base class for "drone aviary" Gym environments."""
 
     # metadata = {'render.modes': ['human']}
@@ -341,8 +341,9 @@ class BaseAviary_TestFlo(gym.Env):
         action_to_movement_direction = {
             0: np.array([1, 0, 0, 0.99]), # Vor 
             1: np.array([-1, 0, 0, 0.99]), # Zurück
-            2: np.array([0, 1, 0, 0.99]), # links 
-            3: np.array([0, -1, 0, 0.99]), # rechts
+            2: np.array([0, 0, 0, 0.99]), # bleibe stehen
+            # 2: np.array([0, 1, 0, 0.99]), # links 
+            # 3: np.array([0, -1, 0, 0.99]), # rechts
         }
         action = action_to_movement_direction[actual_action_0_bis_3]
         

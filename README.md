@@ -128,3 +128,18 @@ pytest tests/
 
 -----
 > University of Toronto's [Dynamic Systems Lab](https://github.com/utiasDSL) / [Vector Institute](https://github.com/VectorInstitute) / University of Cambridge's [Prorok Lab](https://github.com/proroklab)
+
+
+
+##### README Gruppe Alex  Flo Moritz
+
+BaseRLAviary_TestFlytoWall enthält den Versuch nur Vorwärts rückwärts und nichts damit wir gegen die Box wand fahren
+
+BaseRLAviary_TestFlo enthält Ansatz mit PPO zu lernen mit den actions vor zurück links rechts
+
+20241109_1300_MS_pid_velocity enthält die Sensorauslesung sowie auch den Versuch Mazes zu laden welche generiert und es kann über Pfeiltasten geflogen werden
+
+Maze.py generiert die unterschiedlichen Maze URDF
+
+
+
