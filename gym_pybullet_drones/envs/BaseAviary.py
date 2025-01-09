@@ -1004,8 +1004,11 @@ class BaseAviary(gym.Env):
         These obstacles are loaded from standard URDF files included in Bullet.
 
         """
-        p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/train_square.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
+        # p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/train_square.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
         
+        #p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/maze_seed_25_formatted.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
+        p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/maze_seed_25.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
+
         p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/target.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
             
         #Wände mit Variablen.. läuft aber irgendwie nicht

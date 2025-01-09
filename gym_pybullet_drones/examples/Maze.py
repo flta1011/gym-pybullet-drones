@@ -250,6 +250,6 @@ class MazeGenerator:
 if __name__ == "__main__":
     maze = MazeGenerator(seed=25)
     maze.generate()
-    maze.visualize()
-    #maze.visualize_range_of_mazes(start_seed=1, stop_seed=48)
+    #maze.visualize()
+    maze.visualize_range_of_mazes(start_seed=50, stop_seed=100)
     maze.generate_urdf_from_maze()
