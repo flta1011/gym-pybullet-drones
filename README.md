@@ -141,5 +141,21 @@ BaseRLAviary_TestFlo enthält Ansatz mit PPO zu lernen mit den actions vor zurü
 
 Maze.py generiert die unterschiedlichen Maze URDF
 
+learn.py verfügt über die funktion die Visualisierung nach dem Training auszugeben und den Trainingsverlauf mit rewards timestamp durchläufe... Sowie auch den Verlauf der ObervationSpace
 
 
+# erster Test
+
+V1: Reward Funktion für gegen die Wand angepasst:
+>Prompt 1 Reward Flytothewall: modify the overall reward function be dependend on the distance in front State(20). Means if state20=9999 the positive-Distance reward should be 0. If the drone in flying backwards, the negative reward is -100. if the drone gets closer to the wall, the values of stat20 gets real means lower down from 10 to theretihcally 0 (means crashed into wall). The Reward should be linearly increased when the drone gets closer to the wall rising for 10 (0 reward) to 0,8 (1500 reward). Then, when the distance is between 0,8 and 0,5 the reward jumps to constant 1800 but if getting closer than 0,5 the reward instantly gets cut to -1500 (crash into wall). If the drone is in between range from 0,8 to 0,5 from the wall and not moving, the drone gets another adding reward for 200/sec. The additional will be reset to 0 if the drone moves. 
+
+
+#### Befehle um es durchzuführen
+python train_flytowall.py --train
+python train_flytowall.py --evaluate results/save-01.09.2025_18.03.25/final_model --gui
+
+#### ENDE Stand 09.01
+
+File "/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/gym_pybullet_drones/examples/Test_Flo/BaseAviary_TestFlytoWall.py", line 96, in __init__
+    self.URDF = self.DRONE_MODEL.value + ".urdf"
+AttributeError: 'str' object has no attribute 'value'
