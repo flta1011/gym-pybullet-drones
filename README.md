@@ -159,3 +159,8 @@ python train_flytowall.py --evaluate results/save-01.09.2025_18.03.25/final_mode
 File "/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/gym_pybullet_drones/examples/Test_Flo/BaseAviary_TestFlytoWall.py", line 96, in __init__
     self.URDF = self.DRONE_MODEL.value + ".urdf"
 AttributeError: 'str' object has no attribute 'value'
+
+
+#### Session 10.01
+
+Wir haben von dem Training und dem Stand vom 09.01 das Problem, dass die Drohne nicht nach vorne oder hinten fliegt sondern einfach nur gerade runter abstürzt

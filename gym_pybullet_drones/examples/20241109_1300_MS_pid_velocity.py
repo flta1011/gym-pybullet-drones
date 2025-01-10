@@ -264,7 +264,7 @@ def run(
         for j in range(DEFAULT_NUM_DRONES):
             action[j, :] = movement
             print(f"Action for drone {action[j, :]}")
-
+        
         
         ############################################################
         # for j in range(3): env._showDroneLocalAxes(j)

@@ -335,16 +335,24 @@ class BaseAviary_TestFlytoWall(gym.Env):
             in each subclass for its format.
 
         """
-        actual_action_0_bis_3 = action
+        #### Preprocess the action and translate it into RPMs 
+
+        # we want the integer item of the tensor
+        # get an error and evaluate funktion but no error in the train funktion TBD
         
+        actual_action_0_bis_3 = int(action.item())
+
         # translate action into movement direction
         action_to_movement_direction = {
-            0: np.array([1, 0, 0, 0.99]), # Vor 
-            1: np.array([-1, 0, 0, 0.99]), # Zurück
-            2: np.array([0, 0, 0, 0.99]), # bleibe stehen
-            # 2: np.array([0, 1, 0, 0.99]), # links 
-            # 3: np.array([0, -1, 0, 0.99]), # rechts
-        }
+            0: np.array([[1, 0, 0, 0.99]]),    # Vor 
+            1: np.array([[-1, 0, 0, 0.99]]),   # Zurück
+            2: np.array([[0, 0, 0, 0.99]]),    # bleibe stehen
+            # 2: np.array([[0, 1, 0, 0.99]]), # links 
+            # 3: np.array([[0, -1, 0, 0.99]]), # rechts
+        
+            }
+            
+        
         action = action_to_movement_direction[actual_action_0_bis_3]
         
         

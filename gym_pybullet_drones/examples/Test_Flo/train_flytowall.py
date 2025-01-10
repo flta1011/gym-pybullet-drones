@@ -15,6 +15,8 @@ from gym_pybullet_drones.utils.utils import sync, str2bool
 from gym_pybullet_drones.utils.enums import ObservationType, ActionType
 from gym_pybullet_drones.examples.Test_Flo.BaseRLAviary_TestFlytoWall import BaseRLAviary_TestFlytoWall
 
+#best_model_save_path = "/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/gym_pybullet_drones/examples/Test_Flo/results/save-01.09.2025_18.03.25"
+
 def train(output_folder="results", gui=False, plot=True):
     # Create output directory
     filename = os.path.join(output_folder, 'save-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
@@ -55,18 +57,22 @@ def train(output_folder="results", gui=False, plot=True):
     )
 
     # Setup callbacks
-    eval_callback = EvalCallback(
-        eval_env,
-        best_model_save_path=filename+'/',
-        log_path=filename+'/',
-        eval_freq=5000,
-        deterministic=True,
-        render=False
-    )
+    target_reward = 2800
+
+    callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=target_reward,
+                                                     verbose=1)
+    eval_callback = EvalCallback(eval_env,
+                                 callback_on_new_best=callback_on_best,
+                                 verbose=1,
+                                 best_model_save_path=filename + '/',
+                                 log_path=filename + '/',
+                                 eval_freq=int(1000),
+                                 deterministic=True,
+                                 render=False)
 
     # Train the model
     model.learn(
-        total_timesteps=int(1e2),
+        total_timesteps=int(1e4),
         callback=eval_callback,
         log_interval=100
     )
@@ -83,7 +89,7 @@ def evaluate(model_path, gui=True):
     
     # Create test environment
     env = BaseRLAviary_TestFlytoWall(
-        drone_model="cf2x",
+        drone_model=DroneModel("cf2x"),
         initial_xyzs=np.array([[0., 0., 0.5]]),
         initial_rpys=np.array([[0., 0., 0.]]),
         gui=gui,
@@ -117,12 +123,18 @@ if __name__ == "__main__":
     parser.add_argument('--train', action='store_true', help='Train a new model')
     parser.add_argument('--evaluate', type=str, help='Path to model to evaluate')
     parser.add_argument('--gui', action='store_true', help='Show GUI during evaluation')
-    args = parser.parse_args()
+    #args = parser.parse_args()
 
-    if args.train:
-        model_path = train(gui=False)
-        print(f"Training completed. Model saved to {model_path}")
+    # if args.train:
+    #     model_path = train(gui=False)
+    #     print(f"Training completed. Model saved to {model_path}")
+
+    # if args.evaluate:
+    #     reward = evaluate(args.evaluate, gui=args.gui)
+    #     print(f"Evaluation complete. Total reward: {reward}")
+
+    model_path = train(gui=False)
+
+    #reward = evaluate(model_path='gym_pybullet_drones/examples/Test_Flo/results/save-01.09.2025_18.03.25/final_model.zip', gui=True) 
+    #reward = evaluate(model_path='/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/gym_pybullet_drones/examples/results/save-01.10.2025_15.57.01/final_model.zip', gui=True)
     
-    if args.evaluate:
-        reward = evaluate(args.evaluate, gui=args.gui)
-        print(f"Evaluation complete. Total reward: {reward}")
