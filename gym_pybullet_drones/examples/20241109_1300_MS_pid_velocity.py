@@ -103,15 +103,15 @@ def visualize_ray(self, start_pos, end_pos, hit_fraction):
         hit_fraction (float): The fraction of the ray that hit an object.
     """
 
-    # Debug-Ausgaben
-    #print(f"Visualizing ray from {start_pos} to {end_pos}, hit_fraction: {hit_fraction}")
-    if hit_fraction < 1:
-        hit_pos = start_pos + hit_fraction * (end_pos - start_pos)
-        print(f"Hit position: {hit_pos}")
-        p.addUserDebugLine(start_pos, hit_pos, [1, 0, 0])  # Red line for hit
-        p.addUserDebugLine(hit_pos, end_pos, [0, 1, 0])    # Green line for remaining ray
-    else:
-        p.addUserDebugLine(start_pos, end_pos, [0, 1, 0])  # Green line for no hit
+    # # Debug-Ausgaben
+    # #print(f"Visualizing ray from {start_pos} to {end_pos}, hit_fraction: {hit_fraction}")
+    # if hit_fraction < 1:
+    #     hit_pos = start_pos + hit_fraction * (end_pos - start_pos)
+    #     print(f"Hit position: {hit_pos}")
+    #     p.addUserDebugLine(start_pos, hit_pos, [1, 0, 0])  # Red line for hit
+    #     p.addUserDebugLine(hit_pos, end_pos, [0, 1, 0])    # Green line for remaining ray
+    # else:
+    #     p.addUserDebugLine(start_pos, end_pos, [0, 1, 0])  # Green line for no hit
 
 # Get Sensor Data
 def check_distance_sensors(self, crazyflie_id):
