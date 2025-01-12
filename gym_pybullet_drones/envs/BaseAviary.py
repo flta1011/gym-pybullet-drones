@@ -1007,9 +1007,8 @@ class BaseAviary(gym.Env):
         # p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/train_square.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
         
         try:
-            #p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/maze_seed_25_formatted.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
+            p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/maze/maze.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
             #p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/maze_seed_25.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
-
             p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/target.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
         except Exception as e:
             print(f"[ERROR] Failed to load URDF: {e}")

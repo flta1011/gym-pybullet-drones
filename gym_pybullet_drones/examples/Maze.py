@@ -23,6 +23,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 import xml.etree.ElementTree as ET
+from xml.dom import minidom
 
 class MazeGenerator:
     def __init__(self, width=3, height=3, discretization=0.05, min_corridor_size=0.3, seed=30):
@@ -195,61 +196,66 @@ class MazeGenerator:
             self.visualize(ax=ax)
         plt.show()
 
-    # def generate_urdf_from_maze(self, filename="maze_urdf_test/maze.urdf", height=0.5):
-    #     """Generate a URDF file from the maze."""
-    #     with open(filename, "w") as f:
-    #         f.write('<?xml version="1.0" ?>\n')
-    #         f.write('<robot name="maze">\n')
-    #         for y in range(self.height):
-    #             for x in range(self.width):
-    #                 if self.grid[y, x] == 1:
-    #                     f.write(f'<link name="wall_{y}_{x}">\n')
-    #                     f.write('  <visual>\n')
-    #                     f.write('    <geometry>\n')
-    #                     f.write('      <box size="0.05 0.05 0.05"/>\n')
-    #                     f.write('    </geometry>\n')
-    #                     f.write('  </visual>\n')
-    #                     f.write(f'  <collision>\n')
-    #                     f.write('    <geometry>\n')
-    #                     f.write('      <box size="0.05 0.05 0.05"/>\n')
-    #                     f.write('    </geometry>\n')
-    #                     f.write('  </collision>\n')
-    #                     f.write('</link>\n')
-    #                     f.write(f'<joint name="joint_{y}_{x}" type="fixed">\n')
-    #                     f.write('  <parent link="world"/>\n')
-    #                     f.write(f'  <child link="wall_{y}_{x}"/>\n')
-    #                     f.write('  <origin xyz="0 0 0"/>\n')
-    #                     f.write('</joint>\n')
-    #         f.write('</robot>\n')
-
-    def generate_urdf_from_maze(self, filename="gym_pybullet_drones/examples/maze_urdf_test/", height=1.0):
+    def generate_urdf_from_maze(self, maze_height, filename="gym_pybullet_drones/assets/maze/maze.urdf"):
         """Generate a URDF file from the maze."""
-        filename = filename + f"maze_seed_{self.seed}.urdf"
+
+        def add_wall_link(root, name, size, xyz, rpy="0 0 0", mass=1):
+            """Add a link to the URDF file."""
+            link = ET.SubElement(root, "link", name=name)
+            visual = ET.SubElement(link, "visual")
+            geometry = ET.SubElement(visual, "geometry")
+            box = ET.SubElement(geometry, "box", size=size)
+            origin = ET.SubElement(visual, "origin", xyz=xyz, rpy=rpy)
+            inertial = ET.SubElement(link, "inertial")
+            mass_element = ET.SubElement(inertial, "mass", value=str(mass))
+            inertia = ET.SubElement(inertial, "inertia", ixx="1", iyy="1", izz="1")
+            collision = ET.SubElement(link, "collision")
+            collision_geometry = ET.SubElement(collision, "geometry")
+            collision_box = ET.SubElement(collision_geometry, "box", size=size)
+            collision_origin = ET.SubElement(collision, "origin", xyz=xyz, rpy=rpy)
+
+        def add_joint(root, name, parent, child, xyz="0 0 0", rpy="0 0 0"):
+            """Add a joint to the URDF file."""
+            joint = ET.SubElement(root, "joint", name=name, type="fixed")
+            ET.SubElement(joint, "parent", link=parent)
+            ET.SubElement(joint, "child", link=child)
+            ET.SubElement(joint, "origin", xyz=xyz, rpy=rpy)
+
         root = ET.Element("robot", name="maze")
 
+        # Add the base link
+        base_link = ET.SubElement(root, "link", name="base_link")
+
         # Add the floor
-        floor_link = ET.SubElement(root, "link", name="floor")
-        floor_visual = ET.SubElement(floor_link, "visual")
-        floor_geometry = ET.SubElement(floor_visual, "geometry")
-        floor_box = ET.SubElement(floor_geometry, "box", size=f"{self.width * self.discretization} {self.height * self.discretization} 0.1")
-        floor_origin = ET.SubElement(floor_visual, "origin", xyz=f"{self.width * self.discretization / 2} {self.height * self.discretization / 2} -0.05")
+        floor_size = f"{self.width * self.discretization} {self.height * self.discretization} {self.discretization}"
+        floor_xyz = f"{self.width * self.discretization / 2} {self.height * self.discretization / 2} -{self.discretization / 2}"
+        
+        add_wall_link(root, "floor", floor_size, floor_xyz)
+        add_joint(root, "floor_joint", "base_link", "floor")
 
         # Add the walls
+        wall_size = "0.05 0.05 1.0"  # Wall dimensions in meters
+
         for y in range(self.grid.shape[0]):
             for x in range(self.grid.shape[1]):
-                if self.grid[y, x] == 1:  # Assuming 1 represents a wall
-                    link = ET.SubElement(root, "link", name=f"wall_{x}_{y}")
-                    visual = ET.SubElement(link, "visual")
-                    geometry = ET.SubElement(visual, "geometry")
-                    box = ET.SubElement(geometry, "box", size=f"{self.discretization} {self.discretization} {height}")
-                    origin = ET.SubElement(visual, "origin", xyz=f"{x * self.discretization} {y * self.discretization} {height / 2}")
+                if self.grid[y, x] == 1:
+                    wall_name = f"wall_{x}_{y}"
+                    wall_size = f"{self.discretization} {self.discretization} {maze_height}"
+                    wall_xyz = f"{x * self.discretization + self.discretization / 2} {y * self.discretization + self.discretization / 2} {maze_height / 2}"
+                    add_wall_link(root, wall_name, wall_size, wall_xyz)
+                    add_joint(root, f"joint_{x}_{y}", "base_link", wall_name, xyz="0 0 0")
 
+        # Write the URDF file
         tree = ET.ElementTree(root)
-        tree.write(filename)
+        xml_str = ET.tostring(root, encoding="unicode")
+        pretty_xml_str = minidom.parseString(xml_str).toprettyxml(indent="  ")
+        with open(filename, "w") as f:
+            f.write(pretty_xml_str)
+
 
 if __name__ == "__main__":
     maze = MazeGenerator(seed=25)
     maze.generate()
-    #maze.visualize()
-    maze.visualize_range_of_mazes(start_seed=50, stop_seed=100)
-    maze.generate_urdf_from_maze()
+    maze.visualize()
+    #maze.visualize_range_of_mazes(start_seed=50, stop_seed=100)
+    maze.generate_urdf_from_maze(maze_height=1)
