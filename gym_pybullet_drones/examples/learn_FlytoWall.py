@@ -32,6 +32,9 @@ from gym_pybullet_drones.envs.HoverAviary import HoverAviary
 from gym_pybullet_drones.envs.MultiHoverAviary import MultiHoverAviary
 from gym_pybullet_drones.utils.utils import sync, str2bool
 from gym_pybullet_drones.utils.enums import ObservationType, ActionType
+from gym_pybullet_drones.examples.Test_Flo.BaseRLAviary_TestFlytoWall import BaseRLAviary_TestFlytoWall
+from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType
+
 
 DEFAULT_GUI = True
 DEFAULT_RECORD_VIDEO = False
@@ -39,9 +42,19 @@ DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 
 DEFAULT_OBS = ObservationType('kin') # 'kin' or 'rgb'
-DEFAULT_ACT = ActionType('one_d_rpm') # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'one_d_pid'
-DEFAULT_AGENTS = 2
+DEFAULT_ACT = ActionType('vel') # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'one_d_pid'
+DEFAULT_AGENTS = 1
 DEFAULT_MA = False
+
+DEFAULT_ALTITUDE = 0.5
+
+INIT_XYZS = np.array([
+                          [ 0, 0, DEFAULT_ALTITUDE],
+                          ])
+INIT_RPYS = np.array([
+                          [0, 0, 0],
+                          ])
+
 
 def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO, local=True):
 
@@ -49,21 +62,29 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
     if not os.path.exists(filename):
         os.makedirs(filename+'/')
 
-    if not multiagent:
-        # make_vec_env is used to create a vectorized environment. Its part of the stable_baselines3 library.
-        train_env = make_vec_env(HoverAviary,
-                                 env_kwargs=dict(obs=DEFAULT_OBS, act=DEFAULT_ACT),
-                                 n_envs=1,
-                                 seed=0
-                                 )
-        eval_env = HoverAviary(obs=DEFAULT_OBS, act=DEFAULT_ACT)
-    else:
-        train_env = make_vec_env(MultiHoverAviary,
-                                 env_kwargs=dict(num_drones=DEFAULT_AGENTS, obs=DEFAULT_OBS, act=DEFAULT_ACT),
-                                 n_envs=1,
-                                 seed=0
-                                 )
-        eval_env = MultiHoverAviary(num_drones=DEFAULT_AGENTS, obs=DEFAULT_OBS, act=DEFAULT_ACT)
+        train_env = make_vec_env(
+        BaseRLAviary_TestFlytoWall,
+        env_kwargs=dict(
+            drone_model=DroneModel("cf2x"),
+            initial_xyzs=INIT_XYZS,
+            initial_rpys=INIT_RPYS,
+            physics=Physics.PYB,
+            gui=False,
+            ctrl_freq=48,
+            act=ActionType.VEL
+        ),
+        n_envs=1,
+        seed=0
+        )
+        
+        eval_env = BaseRLAviary_TestFlytoWall(
+        drone_model=DroneModel("cf2x"),
+        initial_xyzs=INIT_XYZS,
+        initial_rpys=INIT_RPYS,
+        gui=True,
+        ctrl_freq=48,
+        act=ActionType.VEL
+        )
 
     #### Check the environment's spaces ########################
     print('[INFO] Action space:', train_env.action_space)
@@ -73,13 +94,12 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
     model = PPO('MlpPolicy',
                 train_env,
                 # tensorboard_log=filename+'/tb/',
-                verbose=1)
+                verbose=1,
+                gamma=0.5)  # Set gamma=0 to reduce reward discounting/accumulation
 
     #### Target cumulative rewards (problem-dependent) ##########
-    if DEFAULT_ACT == ActionType.ONE_D_RPM:
-        target_reward = 470 if not multiagent else 949.5
-    else:
-        target_reward = 467 if not multiagent else 920
+    target_reward = 2800
+    print(target_reward)
     #The StopTrainingOnRewardThreshold callback is used to stop the training once a certain reward threshold is reached.
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=target_reward,
                                                      verbose=1)
@@ -105,7 +125,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
     # callback: The callback to use during training, in this case, eval_callback.
     # log_interval: The number of timesteps between logging events.
     # In your code, the model will train for a specified number of timesteps, using the eval_callback for periodic evaluation, and log information every 100 timesteps.
-    model.learn(total_timesteps=int(1e4) if local else int(1e2), # shorter training in GitHub Actions pytest
+    model.learn(total_timesteps=int(1e4), # shorter training in GitHub Actions pytest
                 callback=eval_callback,
                 log_interval=100)
     
@@ -136,19 +156,12 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
     model = PPO.load(path)
 
     #### Show (and record a video of) the model's performance ##
-    if not multiagent:
-        test_env = HoverAviary(gui=gui,
-                               obs=DEFAULT_OBS,
-                               act=DEFAULT_ACT,
-                               record=record_video)
-        test_env_nogui = HoverAviary(obs=DEFAULT_OBS, act=DEFAULT_ACT)
-    else:
-        test_env = MultiHoverAviary(gui=gui,
-                                        num_drones=DEFAULT_AGENTS,
-                                        obs=DEFAULT_OBS,
-                                        act=DEFAULT_ACT,
-                                        record=record_video)
-        test_env_nogui = MultiHoverAviary(num_drones=DEFAULT_AGENTS, obs=DEFAULT_OBS, act=DEFAULT_ACT)
+
+    test_env = BaseRLAviary_TestFlytoWall(gui=gui,
+                            act=DEFAULT_ACT,
+                            record=record_video)
+    test_env_nogui = BaseRLAviary_TestFlytoWall(act=DEFAULT_ACT)
+   
     logger = Logger(logging_freq_hz=int(test_env.CTRL_FREQ),
                 num_drones=DEFAULT_AGENTS if multiagent else 1,
                 output_folder=output_folder,

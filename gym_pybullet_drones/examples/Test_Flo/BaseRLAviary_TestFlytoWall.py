@@ -29,8 +29,7 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
                  ctrl_freq: int = 240,
                  gui=False,
                  record=False,
-                 obs: ObservationType=ObservationType.KIN,
-                 act: ActionType=ActionType.VEL  #wurde rausgenommen
+                 act: ActionType=ActionType.VEL
                  ):
         """Initialization of a generic single and multi-agent RL environment.
 
@@ -61,8 +60,6 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
             Whether to use PyBullet's GUI.
         record : bool, optional
             Whether to save a video of the simulation.
-        obs : ObservationType, optional
-            The type of observation space (kinematic information or vision)
         act : ActionType, optional
             The type of action space (1 or 3D; RPMS, thurst and torques, waypoint or velocity with PID control; etc.)
 
@@ -71,18 +68,18 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         self.ACTION_BUFFER_SIZE = int(ctrl_freq//2)
         self.action_buffer = deque(maxlen=self.ACTION_BUFFER_SIZE)
         ####
-        vision_attributes = True if obs == ObservationType.RGB else False
-        self.OBS_TYPE = obs
+        
         self.ACT_TYPE = act
         self.still_time = 0
-        self.EPISODE_LEN_SEC = 10
+        self.EPISODE_LEN_SEC = 20
+        
+        
         #### Create integrated controllers #########################
-        if act in [ActionType.PID, ActionType.VEL, ActionType.ONE_D_PID]:
-            os.environ['KMP_DUPLICATE_LIB_OK']='True'
-            if drone_model in [DroneModel.CF2X, DroneModel.CF2P]:
-                self.ctrl = [DSLPIDControl(drone_model=DroneModel.CF2X) for i in range(num_drones)]
-            else:
-                print("[ERROR] in BaseRLAviary.__init()__, no controller is available for the specified drone_model")
+        os.environ['KMP_DUPLICATE_LIB_OK']='True'
+        if drone_model in [DroneModel.CF2X, DroneModel.CF2P]:
+            self.ctrl = [DSLPIDControl(drone_model=DroneModel.CF2X) for i in range(num_drones)]
+        else:
+            print("[ERROR] in BaseRLAviary.__init()__, no controller is available for the specified drone_model")
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
                          neighbourhood_radius=neighbourhood_radius,
@@ -95,46 +92,16 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
                          record=record, 
                          obstacles=True, # Add obstacles for RGB observations and/or FlyThruGate
                          user_debug_gui=False, # Remove of RPM sliders from all single agent learning aviaries
-                         vision_attributes=vision_attributes,
                          )
-        self.Test_Area_Size_x = 10
-        self.Test_Area_Size_y = 10
+        
         #### Set a limit on the maximum target speed ###############
         if  act == ActionType.VEL:
             self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000/3600)
 
     ################################################################################
-    # TBD
-    # def _addObstacles(self):
-    #     """Add obstacles to the environment.
+    
+    # def _addObstacles(self): # in BaseAviary_TestFlytoWall implementiert
 
-    #     Only if the observation is of type RGB, 4 landmarks are added.
-    #     Overrides BaseAviary's method.
-
-    #     """
-    #     if self.OBS_TYPE == ObservationType.RGB:
-    #         p.loadURDF("block.urdf",
-    #                    [1, 0, .1],
-    #                    p.getQuaternionFromEuler([0, 0, 0]),
-    #                    physicsClientId=self.CLIENT
-    #                    )
-    #         p.loadURDF("cube_small.urdf",
-    #                    [0, 1, .1],
-    #                    p.getQuaternionFromEuler([0, 0, 0]),
-    #                    physicsClientId=self.CLIENT
-    #                    )
-    #         p.loadURDF("duck_vhacd.urdf",
-    #                    [-1, 0, .1],
-    #                    p.getQuaternionFromEuler([0, 0, 0]),
-    #                    physicsClientId=self.CLIENT
-    #                    )
-    #         p.loadURDF("teddy_vhacd.urdf",
-    #                    [0, -1, .1],
-    #                    p.getQuaternionFromEuler([0, 0, 0]),
-    #                    physicsClientId=self.CLIENT
-    #                    )
-    #     else:
-    #         pass
 
     ################################################################################
 
@@ -146,8 +113,7 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         spaces.Discrete
         0: np.array([1, 0, 0, 0.99]), # Fly Forward
         1: np.array([-1, 0, 0, 0.99]), # Fly Backward
-        2: np.array([0, 1, 0, 0.99]), # Fly left
-        3: np.array([0, -1, 0, 0.99]), # Fly right
+        2: np.array([0, 0, 0, 0.99]), # nothing
 
         """
         
@@ -159,6 +125,8 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         
         """Preprocesses the action from PPO to drone controls.
         Maps discrete actions to movement vectors.
+        
+        12.1.25:FT: gecheckt, ist gleich mit der Standard BaseRLAviary
         """
         # Convert action to movement vector
         # action_to_movement = {
@@ -182,38 +150,11 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
                                                     cur_quat=state[3:7],
                                                     cur_vel=state[10:13],
                                                     cur_ang_vel=state[13:16],
-                                                    target_pos=state[0:3], # same as the current position
+                                                    target_pos=np.concatenate([state[0:2], np.array([0.5])]), # same as the current position
                                                     target_rpy=np.array([0,0,state[9]]), # keep current yaw
                                                     target_vel=self.SPEED_LIMIT * np.abs(target_v[3]) * v_unit_vector # target the desired velocity vector
                                                     )
             rpm[k,:] = temp
-        return rpm
-
-
-
-
-        movement = action
-        rpm = np.zeros((self.NUM_DRONES, 4))
-        
-        if self.ACT_TYPE == ActionType.VEL:
-            for i in range(self.NUM_DRONES):
-                state = self._getDroneStateVector(i)
-                if np.linalg.norm(movement[0:3]) != 0:
-                    v_unit_vector = movement[0:3] / np.linalg.norm(movement[0:3])
-                else:
-                    v_unit_vector = np.zeros(3)
-                
-                rpm[i,:], _, _ = self.ctrl[i].computeControl(
-                    control_timestep=self.CTRL_TIMESTEP,
-                    cur_pos=state[0:3],
-                    cur_quat=state[3:7],
-                    cur_vel=state[10:13],
-                    cur_ang_vel=state[13:16],
-                    target_pos=state[0:3],
-                    target_rpy=np.array([0,0,state[9]]),
-                    target_vel=self.SPEED_LIMIT * movement[3] * v_unit_vector
-                )
-        
         return rpm
 
     ################################################################################
@@ -221,14 +162,49 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
     def _observationSpace(self):
         """Returns the observation space.
         Simplified observation space with key state variables.
-        """
-        # Core state variables
-        obs_dim = 21  # Position (3), Rotation (3), Velocity (3), Angular vel (3), 
-                    # Last action (4), Sensor readings (5)
         
+        Returns
+        -------
+        ndarray
+            A Box() of shape (NUM_DRONES,H,W,4) or (NUM_DRONES,21) depending on the observation type.
+            
+            Information of the self._getDroneStateVector:
+                ndarray
+                (25,)-shaped array of floats containing the state vector of the n-th drone. The state vector includes:
+
+                3x Position (x, y, z) [0:3]                -> -np.inf bis np.inf
+                4x Quaternion (qx, qy, qz, qw) [3:7]       -> nicht verwendet
+                3x Roll, pitch, yaw (r, p, y) [7:10]       -> -np.inf bis np.inf
+                3x Linear velocity (vx, vy, vz) [10:13]    -> -np.inf bis np.inf
+                3x Angular velocity (wx, wy, wz) [13:16]     -> -np.inf bis np.inf
+                4x Last clipped action [16:20]             -> 0 bis 2 (da 3 actions)
+                5x Raycast readings (front, back, left, right, top) [20:25] -> 0 bis 9999
+                
+        """
+       
+                    
+        lo = -np.inf
+        hi = np.inf
+        obs_lower_bound = np.array([lo,lo,lo, #Position
+                                     lo,lo,lo, #Roll, pitch, yaw
+                                     lo,lo,lo, #Linear velocity
+                                     lo,lo,lo, #Angular velocity
+                                     0,0,0,0, #Last clipped action = Action buffer
+                                     0,0,0,0,0] #Raycast readings
+                                    )
+        
+        obs_upper_bound = np.array([hi,hi,hi, #Position
+                                     hi,hi,hi, #Roll, pitch, yaw
+                                     hi,hi,hi, #Linear velocity
+                                     hi,hi,hi, #Angular velocity
+                                     2,2,2,2, #Last clipped action = Action buffer
+                                     9999,9999,9999,9999,9999] #Raycast readings
+                                    )
+        
+       
         return spaces.Box(
-            low=np.full(obs_dim, -np.inf, dtype=np.float32),
-            high=np.full(obs_dim, np.inf, dtype=np.float32),
+            low=obs_lower_bound,
+            high=obs_upper_bound,
             dtype=np.float32
         )
 
@@ -244,13 +220,33 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         -------
         ndarray
             A Box() of shape (NUM_DRONES,H,W,4) or (NUM_DRONES,21) depending on the observation type.
+            
+            Information of the self._getDroneStateVector:
+                ndarray
+                (25,)-shaped array of floats containing the state vector of the n-th drone. The state vector includes:
+
+                3x Position (x, y, z) [0:3]                -> -np.inf bis np.inf
+                4x Quaternion (qx, qy, qz, qw) [3:7]       -> nicht verwendet
+                3x Roll, pitch, yaw (r, p, y) [7:10]       -> -np.inf bis np.inf
+                3x Linear velocity (vx, vy, vz) [10:13]    -> -np.inf bis np.inf
+                3x Angular velocity (wx, wy, wz) [13:16]     -> -np.inf bis np.inf
+                4x Last clipped action [16:20]             -> 0 bis 2 (da 3 actions)
+                5x Raycast readings (front, back, left, right, top) [20:25] -> 0 bis 9999
 
         """
         # TBD letzer Wert ist weg
-        obs_21 = np.zeros(21)
+        
+        
         obs = self._getDroneStateVector(0)
-        obs_21[:21] = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16], obs[16:20], obs[20:25]])
-     
+        # Select specific values from obs and concatenate them directly
+        obs_21 = np.concatenate([
+            obs[0:3],    # Position x,y,z
+            obs[7:10],   # Roll, pitch, yaw
+            obs[10:13],  # Linear velocity
+            obs[13:16],  # Angular velocity  
+            obs[16:20],  # Last clipped action
+            obs[20:25]   # Raycast readings
+        ])
         return obs_21
             ############################################################
        
@@ -282,41 +278,36 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
 
         """
 
-        neg_reward_wall_crash = 0
-        pos_reward_target = 0
+        reward = 0
         state = self._getDroneStateVector(0) #erste Drohne
         
-        
-        #tbd FLORIAN:
-        '''einbauen, dass der Reward erst kommt, wenn diese Bedingung länger als 3 Sekunden erfüllt ist --> die Drohne muss dann irgendwie geziehlt zurückfliegen oder Teilreward, dadurch, dass sie schon mal den upper belegt bekommen hat und dann endreward, wenn es für mind. 3 Sekunden belegt ist --> muss dann irgendwie in die Observation eingebaut werden'''    
-        # positive reward for reaching the target (raycast_upper !=None and < 1.5)
-        # Calculate distance-based reward
-
         startOfLinearRewardMETER=2.5
         if state[20] == 9999:  # No wall detected in front
-            pos_reward_target = 0
+            reward = 0
         elif state[10] < 0:  # Flying backwards
-            pos_reward_target = -100
+            reward = -100
         elif state[20] < 0.5:  # Too close to wall
-            pos_reward_target = -1500
+            reward = -1500
         elif 0.5 <= state[20] and state[20]<= 0.8:  # Sweet spot
-            pos_reward_target = 1800
+            reward = 1800
             # Additional reward for staying still in sweet spot
             if np.all(np.abs(state[10:13]) < 0.01):  # Check if velocity is close to zero
                 if not hasattr(self, 'still_time'):
                     self.still_time = 0
                 self.still_time += self.CTRL_TIMESTEP
-                pos_reward_target += 200 * self.still_time
+                # Cap the still time bonus at 5 seconds (1000 additional reward)
+                still_time_bonus = min(200 * self.still_time, 1000)
+                reward += still_time_bonus
             else:
-                if hasattr(self, 'still_time'):
-                    self.still_time = 0
-                    pos_reward_target += 200 * self.still_time
+                self.still_time = 0
         elif 0.8 < state[20] <= startOfLinearRewardMETER:  # Linear reward zone
-            pos_reward_target = 1500 * (1 - (state[20] - 0.8) / (startOfLinearRewardMETER - 0.8))
+            reward = 1500 * (1 - (state[20] - 0.8) / (startOfLinearRewardMETER - 0.8))
         else:  # Beyond detection range
-            pos_reward_target = 0
+            reward = 0
         
-        return pos_reward_target
+        print("Reward:", reward)
+        print("Abstand zur Wand:", state[20])
+        return reward
 
     ################################################################################
     
@@ -333,12 +324,11 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         """
         state = self._getDroneStateVector(0)
 
-        if self.still_time > 5 and np.all(np.abs(state[10:13]) < 0.01):
+        #Wenn die Drohne im sweet spot ist und seit 5 sekunden still ist, beenden!
+        if 0.5 <= state[20] and state[20]<= 0.8 and np.all(np.abs(state[10:13]) < 0.01) and self.still_time > 5:
             return True
 
-        # Wenn die Zeit abgelaufen ist, beenden!
-        if self.step_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC:
-            return True
+        
         
         
         return False
@@ -364,7 +354,11 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
             return True
 
         #Wenn an einer Wand gecrashed wird, beenden!
-        if (state[20] < 0.5 or state[21] < 0.015 or state[22] < 0.015 or state[23] < 0.015):
+        if (state[20] < 0.15 or state[21] < 0.15 or state[22] < 0.15 or state[23] < 0.15):
+            return True
+        
+        # Wenn die Zeit abgelaufen ist, beenden!
+        if self.step_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC:
             return True
        
         
