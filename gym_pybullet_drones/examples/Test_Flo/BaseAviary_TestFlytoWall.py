@@ -36,9 +36,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
                  obstacles=False,
                  user_debug_gui=True,
                  vision_attributes=False,
-                 output_folder='results',
-                 Test_Area_Size_x: int = 10, #hoffentlich 10 Meter, später Größe der Map
-                 Test_Area_Size_y: int = 10, #hoffentlich 10 Meter, später Größe der Map
+                 output_folder='results_FlytoWall',
                  ):
         """Initialization of a generic aviary environment.
 
@@ -149,24 +147,31 @@ class BaseAviary_TestFlytoWall(gym.Env):
         #### Connect to PyBullet ###################################
         if self.GUI:
             #### With debug GUI ########################################
-            self.CLIENT = p.connect(p.GUI) # p.connect(p.GUI, options="--opengl2")
-            for i in [p.COV_ENABLE_RGB_BUFFER_PREVIEW, p.COV_ENABLE_DEPTH_BUFFER_PREVIEW, p.COV_ENABLE_SEGMENTATION_MARK_PREVIEW]:
-                p.configureDebugVisualizer(i, 0, physicsClientId=self.CLIENT)
-            p.resetDebugVisualizerCamera(cameraDistance=3,
-                                         cameraYaw=-30,
-                                         cameraPitch=-30,
-                                         cameraTargetPosition=[0, 0, 0],
-                                         physicsClientId=self.CLIENT
-                                         )
-            ret = p.getDebugVisualizerCamera(physicsClientId=self.CLIENT)
-            print("viewMatrix", ret[2])
-            print("projectionMatrix", ret[3])
-            if self.USER_DEBUG:
-                #### Add input sliders to the GUI ##########################
-                self.SLIDERS = -1*np.ones(4)
-                for i in range(4):
-                    self.SLIDERS[i] = p.addUserDebugParameter("Propeller "+str(i)+" RPM", 0, self.MAX_RPM, self.HOVER_RPM, physicsClientId=self.CLIENT)
-                self.INPUT_SWITCH = p.addUserDebugParameter("Use GUI RPM", 9999, -1, 0, physicsClientId=self.CLIENT)
+            try:
+                self.CLIENT = p.connect(p.DIRECT) if p.getConnectionInfo() else p.connect(p.GUI) # Use existing GUI server or DIRECT
+            except p.error:
+                print("[INFO] GUI connection failed, running without GUI")
+                self.GUI = False
+                self.CLIENT = p.connect(p.DIRECT)
+            else:
+                # Only configure GUI if connection succeeded
+                for i in [p.COV_ENABLE_RGB_BUFFER_PREVIEW, p.COV_ENABLE_DEPTH_BUFFER_PREVIEW, p.COV_ENABLE_SEGMENTATION_MARK_PREVIEW]:
+                    p.configureDebugVisualizer(i, 0, physicsClientId=self.CLIENT)
+                p.resetDebugVisualizerCamera(cameraDistance=3,
+                                             cameraYaw=-30,
+                                             cameraPitch=-30,
+                                             cameraTargetPosition=[0, 0, 0],
+                                             physicsClientId=self.CLIENT
+                                             )
+                ret = p.getDebugVisualizerCamera(physicsClientId=self.CLIENT)
+                print("viewMatrix", ret[2])
+                print("projectionMatrix", ret[3])
+                if self.USER_DEBUG:
+                    #### Add input sliders to the GUI ##########################
+                    self.SLIDERS = -1*np.ones(4)
+                    for i in range(4):
+                        self.SLIDERS[i] = p.addUserDebugParameter("Propeller "+str(i)+" RPM", 0, self.MAX_RPM, self.HOVER_RPM, physicsClientId=self.CLIENT)
+                    self.INPUT_SWITCH = p.addUserDebugParameter("Use GUI RPM", 9999, -1, 0, physicsClientId=self.CLIENT)
         else:
             #### Without debug GUI #####################################
             self.CLIENT = p.connect(p.DIRECT)
@@ -337,9 +342,11 @@ class BaseAviary_TestFlytoWall(gym.Env):
         """
         #### Preprocess the action and translate it into RPMs 
 
-        # we want the integer item of the tensor
-        # get an error and evaluate funktion but no error in the train funktion TBD
-        
+        # # Find wheter and what sort of action is taken
+        # print(action)
+   
+            
+            
         actual_action_0_bis_3 = int(action.item())
 
         # translate action into movement direction
@@ -468,6 +475,8 @@ class BaseAviary_TestFlytoWall(gym.Env):
             Unused.
 
         """
+        drone_state = self._getDroneStateVector(0)
+        
         if self.first_render_call and not self.GUI:
             print("[WARNING] BaseAviary.render() is implemented as text-only, re-initialize the environment using Aviary(gui=True) to use PyBullet's graphical interface")
             self.first_render_call = False
@@ -479,7 +488,9 @@ class BaseAviary_TestFlytoWall(gym.Env):
                   "——— x {:+06.2f}, y {:+06.2f}, z {:+06.2f}".format(self.pos[i, 0], self.pos[i, 1], self.pos[i, 2]),
                   "——— velocity {:+06.2f}, {:+06.2f}, {:+06.2f}".format(self.vel[i, 0], self.vel[i, 1], self.vel[i, 2]),
                   "——— roll {:+06.2f}, pitch {:+06.2f}, yaw {:+06.2f}".format(self.rpy[i, 0]*self.RAD2DEG, self.rpy[i, 1]*self.RAD2DEG, self.rpy[i, 2]*self.RAD2DEG),
-                  "——— angular velocity {:+06.4f}, {:+06.4f}, {:+06.4f} ——— ".format(self.ang_v[i, 0], self.ang_v[i, 1], self.ang_v[i, 2]))
+                  "——— angular velocity {:+06.4f}, {:+06.4f}, {:+06.4f} ——— ".format(self.ang_v[i, 0], self.ang_v[i, 1], self.ang_v[i, 2]),
+                  "——— ray_front {:+06.4f}\t ray_back {:+06.4f}\t ray_left {:+06.4f}\t ray_right {:+06.4f}\t ray_top {:+06.4f} ——— ".format(drone_state[20], drone_state[21], drone_state[22], drone_state[23], drone_state[24]),
+                  )
     
     ################################################################################
 
@@ -621,13 +632,13 @@ class BaseAviary_TestFlytoWall(gym.Env):
         ndarray 
             (25,)-shaped array of floats containing the state vector of the n-th drone.
             The state vector includes:
-            - Position (x, y, z) [0:3]
-            - Quaternion (qx, qy, qz, qw) [3:7]
-            - Roll, pitch, yaw (r, p, y) [7:10]
-            - Linear velocity (vx, vy, vz) [10:13]
-            - Angular velocity (wx, wy, wz) [13:16]
-            - Last clipped action [16:20]
-            - Raycast readings (front, back, left, right, top) [20:25]
+            - 3x Position (x, y, z) [0:3]                -> -np.inf bis np.inf
+            - 4x Quaternion (qx, qy, qz, qw) [3:7]       -> nicht verwendet
+            - 3x Roll, pitch, yaw (r, p, y) [7:10]       -> -np.inf bis np.inf
+            - 3x Linear velocity (vx, vy, vz) [10:13]    -> -np.inf bis np.inf
+            - 3x Angular velocity (wx, wy, wz) [13:16]     -> -np.inf bis np.inf
+            - 4x Last clipped action [16:20]             -> 0 bis 2 (da 3 actions)
+            - 5x Raycast readings (front, back, left, right, top) [20:25] -> 0 bis 9999
 
         """
         ## tbd prüfen ALEX, FLORIAN, MORITZ

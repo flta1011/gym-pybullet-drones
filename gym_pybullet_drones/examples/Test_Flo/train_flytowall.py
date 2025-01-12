@@ -17,7 +17,16 @@ from gym_pybullet_drones.examples.Test_Flo.BaseRLAviary_TestFlytoWall import Bas
 
 #best_model_save_path = "/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/gym_pybullet_drones/examples/Test_Flo/results/save-01.09.2025_18.03.25"
 
-def train(output_folder="results", gui=False, plot=True):
+DEFAULT_ALTITUDE = 0.5
+
+INIT_XYZS = np.array([
+                          [ 0, 0, DEFAULT_ALTITUDE],
+                          ])
+INIT_RPYS = np.array([
+                          [0, 0, 0],
+                          ])
+
+def train(output_folder="results", guiAfterTraining=False, plot=True):
     # Create output directory
     filename = os.path.join(output_folder, 'save-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
     if not os.path.exists(filename):
@@ -28,11 +37,12 @@ def train(output_folder="results", gui=False, plot=True):
         BaseRLAviary_TestFlytoWall,
         env_kwargs=dict(
             drone_model=DroneModel("cf2x"),
-            initial_xyzs=np.array([[0., 0., 0.5]]),
-            initial_rpys=np.array([[0., 0., 0.]]),
+            initial_xyzs=INIT_XYZS,
+            initial_rpys=INIT_RPYS,
+            physics=Physics.PYB,
             gui=False,
-            physics="PYB",
-            ctrl_freq=48
+            ctrl_freq=48,
+            act=ActionType.VEL
         ),
         n_envs=1,
         seed=0
@@ -41,12 +51,17 @@ def train(output_folder="results", gui=False, plot=True):
     # Create evaluation environment
     eval_env = BaseRLAviary_TestFlytoWall(
         drone_model=DroneModel("cf2x"),
-        initial_xyzs=np.array([[0., 0., 0.5]]),
-        initial_rpys=np.array([[0., 0., 0.]]),
+        initial_xyzs=INIT_XYZS,
+        initial_rpys=INIT_RPYS,
+        physics=Physics.PYB,
         gui=False,
-        physics="PYB",
-        ctrl_freq=48
+        ctrl_freq=48,
+        act=ActionType.VEL
     )
+    
+    #### Check the environment's spaces ########################
+    print('[INFO] Action space:', train_env.action_space)
+    print('[INFO] Observation space:', train_env.observation_space)
 
     # Initialize PPO model
     model = PPO(
@@ -61,6 +76,15 @@ def train(output_folder="results", gui=False, plot=True):
 
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=target_reward,
                                                      verbose=1)
+    #The EvalCallback is used to evaluate the agent periodically during training.
+    # eval_env: The environment used for evaluation.
+    # callback_on_new_best: Callback to trigger when a new best model is found.
+    # verbose=1: Info messages will be printed during evaluation.
+    # best_model_save_path: Path to save the best model.
+    # log_path: Path to save evaluation logs.
+    # eval_freq: Frequency of evaluations (every 1000 steps in this case).
+    # deterministic=True: Use deterministic actions during evaluation.
+    # render=False: Do not render the environment during evaluation.
     eval_callback = EvalCallback(eval_env,
                                  callback_on_new_best=callback_on_best,
                                  verbose=1,
@@ -69,17 +93,30 @@ def train(output_folder="results", gui=False, plot=True):
                                  eval_freq=int(1000),
                                  deterministic=True,
                                  render=False)
-
+     #The model.learn function is used to train the model.
+    # total_timesteps: The total number of timesteps to train for. It is set to 1e7 (10 million) if local is True, otherwise 1e2 (100) for shorter training in GitHub Actions pytest.
+    # callback: The callback to use during training, in this case, eval_callback.
+    # log_interval: The number of timesteps between logging events.
+    # In your code, the model will train for a specified number of timesteps, using the eval_callback for periodic evaluation, and log information every 100 timesteps.
+    
     # Train the model
     model.learn(
-        total_timesteps=int(1e4),
+        total_timesteps=int(3000),
         callback=eval_callback,
         log_interval=100
     )
 
+    # Create results directory if it doesn't exist
+    results_dir = os.path.join(os.path.dirname(__file__), 'results')
+    os.makedirs(results_dir, exist_ok=True)
+    
     # Save final model
-    model.save(filename+'/final_model.zip')
-    print(f"Training completed. Model saved to {filename}")
+    model_path = os.path.join(results_dir, 'final_model.zip')
+    model.save(model_path)
+    print(f"Training completed. Model saved to {model_path}")
+    
+    if guiAfterTraining:
+        evaluate(model_path=model_path, gui=True)
     
     return filename
 
@@ -133,8 +170,8 @@ if __name__ == "__main__":
     #     reward = evaluate(args.evaluate, gui=args.gui)
     #     print(f"Evaluation complete. Total reward: {reward}")
 
-    model_path = train(gui=False)
+    model_path = train(guiAfterTraining=True)
 
-    #reward = evaluate(model_path='gym_pybullet_drones/examples/Test_Flo/results/save-01.09.2025_18.03.25/final_model.zip', gui=True) 
+    #reward = evaluate(model_path="/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/examples/Test_Flo/results/final_model.zip", gui=True) 
     #reward = evaluate(model_path='/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/gym_pybullet_drones/examples/results/save-01.10.2025_15.57.01/final_model.zip', gui=True)
     

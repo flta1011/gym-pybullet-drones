@@ -164,3 +164,10 @@ AttributeError: 'str' object has no attribute 'value'
 #### Session 10.01
 
 Wir haben von dem Training und dem Stand vom 09.01 das Problem, dass die Drohne nicht nach vorne oder hinten fliegt sondern einfach nur gerade runter abstürzt
+
+12.1.25: FT: einige Versuche gemacht, um die Drohne auf 0.5m hovern zu lassen
+
+- Weil nichts geklappt hat, habe ich die learn.py kopiert und die BaseRLAviary_TestFlytoWall angewendet. Es lernt etwas, aber es gibt folgende Probleme:
+    - wenn vorwärts an die Wand geflogen wird, wird die Env. nicht sauber zurückgesetzt
+    - PPO addiert immer den ganzen Reward auf, dadurch wird der Reward viel größer als wir wollen
+    - die Rewards und abstand zu wand werden geplottet: Abstand zur Wand bleibt irgendwie immer gleich...

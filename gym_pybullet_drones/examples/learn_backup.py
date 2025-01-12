@@ -34,7 +34,7 @@ from gym_pybullet_drones.utils.utils import sync, str2bool
 from gym_pybullet_drones.utils.enums import ObservationType, ActionType
 
 DEFAULT_GUI = True
-DEFAULT_RECORD_VIDEO = False
+DEFAULT_RECORD_VIDEO = True
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 
@@ -77,9 +77,9 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
 
     #### Target cumulative rewards (problem-dependent) ##########
     if DEFAULT_ACT == ActionType.ONE_D_RPM:
-        target_reward = 470 if not multiagent else 949.5
+        target_reward = 474.15 if not multiagent else 949.5
     else:
-        target_reward = 467 if not multiagent else 920
+        target_reward = 467. if not multiagent else 920.
     #The StopTrainingOnRewardThreshold callback is used to stop the training once a certain reward threshold is reached.
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=target_reward,
                                                      verbose=1)
@@ -97,7 +97,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
                                  verbose=1,
                                  best_model_save_path=filename+'/',
                                  log_path=filename+'/',
-                                 eval_freq=int(500),
+                                 eval_freq=int(1000),
                                  deterministic=True,
                                  render=False)
     #The model.learn function is used to train the model.
@@ -105,7 +105,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
     # callback: The callback to use during training, in this case, eval_callback.
     # log_interval: The number of timesteps between logging events.
     # In your code, the model will train for a specified number of timesteps, using the eval_callback for periodic evaluation, and log information every 100 timesteps.
-    model.learn(total_timesteps=int(1e4) if local else int(1e2), # shorter training in GitHub Actions pytest
+    model.learn(total_timesteps=int(1e7) if local else int(1e2), # shorter training in GitHub Actions pytest
                 callback=eval_callback,
                 log_interval=100)
     
@@ -197,8 +197,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
                                         obs2[3:15],
                                         act2
                                         ]),
-                    control=np.zeros(12
-                                     )
+                    control=np.zeros(12)
                     )
             else:
                 for d in range(DEFAULT_AGENTS):
