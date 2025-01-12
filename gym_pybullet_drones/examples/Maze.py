@@ -196,7 +196,7 @@ class MazeGenerator:
             self.visualize(ax=ax)
         plt.show()
 
-    def generate_urdf_from_maze(self, maze_height, filename="gym_pybullet_drones/assets/maze/maze.urdf"):
+    def generate_urdf_from_maze(self, maze_height, filename="gym_pybullet_drones/assets/maze/maze_single_wall_link.urdf"):
         """Generate a URDF file from the maze."""
 
         def add_wall_link(root, name, size, xyz, rpy="0 0 0", mass=1):
@@ -229,21 +229,31 @@ class MazeGenerator:
         # Add the floor
         floor_size = f"{self.width * self.discretization} {self.height * self.discretization} {self.discretization}"
         floor_xyz = f"{self.width * self.discretization / 2} {self.height * self.discretization / 2} -{self.discretization / 2}"
-        
         add_wall_link(root, "floor", floor_size, floor_xyz)
         add_joint(root, "floor_joint", "base_link", "floor")
 
-        # Add the walls
-        wall_size = "0.05 0.05 1.0"  # Wall dimensions in meters
-
+        # Add the walls as a single link
+        wall_link = ET.SubElement(root, "link", name="walls")
         for y in range(self.grid.shape[0]):
             for x in range(self.grid.shape[1]):
                 if self.grid[y, x] == 1:
-                    wall_name = f"wall_{x}_{y}"
                     wall_size = f"{self.discretization} {self.discretization} {maze_height}"
                     wall_xyz = f"{x * self.discretization + self.discretization / 2} {y * self.discretization + self.discretization / 2} {maze_height / 2}"
-                    add_wall_link(root, wall_name, wall_size, wall_xyz)
-                    add_joint(root, f"joint_{x}_{y}", "base_link", wall_name, xyz="0 0 0")
+                    
+                    # Add visual geometry
+                    visual = ET.SubElement(wall_link, "visual")
+                    geometry = ET.SubElement(visual, "geometry")
+                    box = ET.SubElement(geometry, "box", size=wall_size)
+                    origin = ET.SubElement(visual, "origin", xyz=wall_xyz, rpy="0 0 0")
+                    
+                    # Add collision geometry
+                    collision = ET.SubElement(wall_link, "collision")
+                    collision_geometry = ET.SubElement(collision, "geometry")
+                    collision_box = ET.SubElement(collision_geometry, "box", size=wall_size)
+                    collision_origin = ET.SubElement(collision, "origin", xyz=wall_xyz, rpy="0 0 0")
+
+        # Add a joint for the walls
+        add_joint(root, "walls_joint", "base_link", "walls", xyz="0 0 0")
 
         # Write the URDF file
         tree = ET.ElementTree(root)
