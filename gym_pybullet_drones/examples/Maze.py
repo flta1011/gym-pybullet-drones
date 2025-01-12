@@ -264,8 +264,15 @@ class MazeGenerator:
 
 
 if __name__ == "__main__":
-    maze = MazeGenerator(seed=25)
+    rs = 42 # Random seed
+    maze = MazeGenerator(seed=rs)
     maze.generate()
-    maze.visualize()
-    #maze.visualize_range_of_mazes(start_seed=50, stop_seed=100)
-    maze.generate_urdf_from_maze(maze_height=1)
+    #maze.visualize()
+    #maze.visualize_range_of_mazes(start_seed=1, stop_seed=104)
+
+    Maze_Name = f"gym_pybullet_drones/assets/maze/maze_rs_{rs}.urdf"
+    maze.generate_urdf_from_maze(maze_height=1, filename=Maze_Name)
+
+
+
+    # best usable mazes -> 1, 6, 7, 8, 12, 42, 
