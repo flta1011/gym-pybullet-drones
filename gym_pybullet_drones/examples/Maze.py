@@ -267,11 +267,11 @@ if __name__ == "__main__":
     rs = 42 # Random seed
     maze = MazeGenerator(seed=rs)
     maze.generate()
-    #maze.visualize()
-    #maze.visualize_range_of_mazes(start_seed=1, stop_seed=104)
+    maze.visualize()
+    maze.visualize_range_of_mazes(start_seed=1, stop_seed=104)
 
-    Maze_Name = f"gym_pybullet_drones/assets/maze/maze_rs_{rs}.urdf"
-    maze.generate_urdf_from_maze(maze_height=1, filename=Maze_Name)
+    #Maze_Name = f"gym_pybullet_drones/assets/maze/maze_rs_{rs}.urdf"
+    #maze.generate_urdf_from_maze(maze_height=1, filename=Maze_Name)
 
 
 
