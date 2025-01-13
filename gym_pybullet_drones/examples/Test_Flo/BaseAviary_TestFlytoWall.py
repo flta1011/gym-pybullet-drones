@@ -147,31 +147,24 @@ class BaseAviary_TestFlytoWall(gym.Env):
         #### Connect to PyBullet ###################################
         if self.GUI:
             #### With debug GUI ########################################
-            try:
-                self.CLIENT = p.connect(p.DIRECT) if p.getConnectionInfo() else p.connect(p.GUI) # Use existing GUI server or DIRECT
-            except p.error:
-                print("[INFO] GUI connection failed, running without GUI")
-                self.GUI = False
-                self.CLIENT = p.connect(p.DIRECT)
-            else:
-                # Only configure GUI if connection succeeded
-                for i in [p.COV_ENABLE_RGB_BUFFER_PREVIEW, p.COV_ENABLE_DEPTH_BUFFER_PREVIEW, p.COV_ENABLE_SEGMENTATION_MARK_PREVIEW]:
-                    p.configureDebugVisualizer(i, 0, physicsClientId=self.CLIENT)
-                p.resetDebugVisualizerCamera(cameraDistance=3,
-                                             cameraYaw=-30,
-                                             cameraPitch=-30,
-                                             cameraTargetPosition=[0, 0, 0],
-                                             physicsClientId=self.CLIENT
-                                             )
-                ret = p.getDebugVisualizerCamera(physicsClientId=self.CLIENT)
-                print("viewMatrix", ret[2])
-                print("projectionMatrix", ret[3])
-                if self.USER_DEBUG:
-                    #### Add input sliders to the GUI ##########################
-                    self.SLIDERS = -1*np.ones(4)
-                    for i in range(4):
-                        self.SLIDERS[i] = p.addUserDebugParameter("Propeller "+str(i)+" RPM", 0, self.MAX_RPM, self.HOVER_RPM, physicsClientId=self.CLIENT)
-                    self.INPUT_SWITCH = p.addUserDebugParameter("Use GUI RPM", 9999, -1, 0, physicsClientId=self.CLIENT)
+            self.CLIENT = p.connect(p.GUI) # p.connect(p.GUI, options="--opengl2")
+            for i in [p.COV_ENABLE_RGB_BUFFER_PREVIEW, p.COV_ENABLE_DEPTH_BUFFER_PREVIEW, p.COV_ENABLE_SEGMENTATION_MARK_PREVIEW]:
+                p.configureDebugVisualizer(i, 0, physicsClientId=self.CLIENT)
+            p.resetDebugVisualizerCamera(cameraDistance=3,
+                                         cameraYaw=-30,
+                                         cameraPitch=-30,
+                                         cameraTargetPosition=[0, 0, 0],
+                                         physicsClientId=self.CLIENT
+                                         )
+            ret = p.getDebugVisualizerCamera(physicsClientId=self.CLIENT)
+            print("viewMatrix", ret[2])
+            print("projectionMatrix", ret[3])
+            if self.USER_DEBUG:
+                #### Add input sliders to the GUI ##########################
+                self.SLIDERS = -1*np.ones(4)
+                for i in range(4):
+                    self.SLIDERS[i] = p.addUserDebugParameter("Propeller "+str(i)+" RPM", 0, self.MAX_RPM, self.HOVER_RPM, physicsClientId=self.CLIENT)
+                self.INPUT_SWITCH = p.addUserDebugParameter("Use GUI RPM", 9999, -1, 0, physicsClientId=self.CLIENT)
         else:
             #### Without debug GUI #####################################
             self.CLIENT = p.connect(p.DIRECT)
