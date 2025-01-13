@@ -636,7 +636,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
         """
         ## tbd prüfen ALEX, FLORIAN, MORITZ
         #ray_results = self._getToFSensorReadings(nth_drone)
-        self.ray_results = self.check_distance_sensors(nth_drone)[0]
+        self.ray_results = self.check_distance_sensors(1)
         state = np.hstack([self.pos[nth_drone, :], self.quat[nth_drone, :], self.rpy[nth_drone, :],
                         self.vel[nth_drone, :], self.ang_v[nth_drone, :], self.last_clipped_action[nth_drone, :],
                         self.ray_results[0], self.ray_results[1], self.ray_results[2], self.ray_results[3], self.ray_results[4]])
@@ -1276,7 +1276,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
             [0, 0, 1],   # Down
         ])
         
-        max_distance = 4  # meters
+        max_distance = 5  # meters
         sensor_readings = []
         
         # Convert quaternion to rotation matrix using NumPy
@@ -1321,4 +1321,5 @@ class BaseAviary_TestFlytoWall(gym.Env):
         # hit_fraction_list = [hit_fraction_forward, hit_fraction_backward, hit_fraction_left, hit_fraction_right, hit_fraction_up, hit_fraction_down]
 
         
-        return sensor_readings, pos, to_pos, hit_fraction_list
+        #return sensor_readings, pos, to_pos, hit_fraction_list
+        return sensor_readings

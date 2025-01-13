@@ -70,7 +70,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
             initial_rpys=INIT_RPYS,
             physics=Physics.PYB,
             gui=False,
-            ctrl_freq=48,
+            ctrl_freq=30,
             act=ActionType.VEL
         ),
         n_envs=1,
@@ -82,7 +82,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
         initial_xyzs=INIT_XYZS,
         initial_rpys=INIT_RPYS,
         gui=True,
-        ctrl_freq=48,
+        ctrl_freq=30,
         act=ActionType.VEL
         )
 
@@ -95,10 +95,10 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
                 train_env,
                 # tensorboard_log=filename+'/tb/',
                 verbose=1,
-                gamma=0.5)  # Set gamma=0 to reduce reward discounting/accumulation
+                        )  # Set gamma=0 to reduce reward discounting/accumulation
 
     #### Target cumulative rewards (problem-dependent) ##########
-    target_reward = 2800
+    target_reward = 1000000
     print(target_reward)
     #The StopTrainingOnRewardThreshold callback is used to stop the training once a certain reward threshold is reached.
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=target_reward,
@@ -117,7 +117,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
                                  verbose=1,
                                  best_model_save_path=filename+'/',
                                  log_path=filename+'/',
-                                 eval_freq=int(500),
+                                 eval_freq=int(4000),
                                  deterministic=True,
                                  render=False)
     #The model.learn function is used to train the model.
@@ -125,7 +125,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
     # callback: The callback to use during training, in this case, eval_callback.
     # log_interval: The number of timesteps between logging events.
     # In your code, the model will train for a specified number of timesteps, using the eval_callback for periodic evaluation, and log information every 100 timesteps.
-    model.learn(total_timesteps=int(1e4), # shorter training in GitHub Actions pytest
+    model.learn(total_timesteps=int(1e6), # shorter training in GitHub Actions pytest
                 callback=eval_callback,
                 log_interval=100)
     

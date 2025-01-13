@@ -285,9 +285,9 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         if state[20] == 9999:  # No wall detected in front
             reward = 0
         elif state[10] < 0:  # Flying backwards
-            reward = -100
+            reward = -1000
         elif state[20] < 0.5:  # Too close to wall
-            reward = -1500
+            reward = -10000
         elif 0.5 <= state[20] and state[20]<= 0.8:  # Sweet spot
             reward = 1800
             # Additional reward for staying still in sweet spot
@@ -305,8 +305,8 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         else:  # Beyond detection range
             reward = 0
         
-        print("Reward:", reward)
-        print("Abstand zur Wand:", state[20])
+        #print("Reward:", reward)
+        #print("Abstand zur Wand:", state[20])
         return reward
 
     ################################################################################
@@ -327,9 +327,6 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         #Wenn die Drohne im sweet spot ist und seit 5 sekunden still ist, beenden!
         if 0.5 <= state[20] and state[20]<= 0.8 and np.all(np.abs(state[10:13]) < 0.01) and self.still_time > 5:
             return True
-
-        
-        
         
         return False
     

@@ -198,7 +198,7 @@ def run(
         ):
         #### Initialize the simulation #############################
     INIT_XYZS = np.array([
-                          [ 0, 0, DEFAULT_ALTITUDE],
+                          [ 1, 1, DEFAULT_ALTITUDE],
                           ])
     INIT_RPYS = np.array([
                           [0, 0, 0],
@@ -268,7 +268,7 @@ def run(
         
         ############################################################
         # for j in range(3): env._showDroneLocalAxes(j)
-
+        
         #### Step the simulation ###################################
         obs, reward, terminated, truncated, info = env.step(action)
 
