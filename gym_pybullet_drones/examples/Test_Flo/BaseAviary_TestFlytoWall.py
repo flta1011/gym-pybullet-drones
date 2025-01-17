@@ -349,7 +349,15 @@ class BaseAviary_TestFlytoWall(gym.Env):
             2: np.array([[0, 0, 0, 0.99]]),    # bleibe stehen
             # 2: np.array([[0, 1, 0, 0.99]]), # links 
             # 3: np.array([[0, -1, 0, 0.99]]), # rechts
+            }
         
+        #17.1.25: neue Tests mit reduzierter Geschwindigkeit, da die Drohne sehr schnell an die Wand fliegt
+        action_to_movement_direction = {
+            0: np.array([[1, 0, 0, 0.5]]),    # Vor 
+            1: np.array([[-1, 0, 0, 0.5]]),   # Zurück
+            2: np.array([[0, 0, 0, 0.5]]),    # bleibe stehen
+            # 2: np.array([[0, 1, 0, 0.99]]), # links 
+            # 3: np.array([[0, -1, 0, 0.99]]), # rechts
             }
             
         
@@ -448,6 +456,13 @@ class BaseAviary_TestFlytoWall(gym.Env):
         terminated = self._computeTerminated()
         truncated = self._computeTruncated()
         info = self._computeInfo()
+        ###Debugging Plots
+        state = self._getDroneStateVector(0)
+        print("Reward:", reward)
+        print("Abstand zur Wand:", state[21])
+        print("Input Action:", actual_action_0_bis_3)
+        print("Action übersetzt:", action)
+        
         #### Advance the step counter ##############################
         self.step_counter = self.step_counter + (1 * self.PYB_STEPS_PER_CTRL)
         return obs, reward, terminated, truncated, info
@@ -634,8 +649,11 @@ class BaseAviary_TestFlytoWall(gym.Env):
             - 5x actual raycast readings (front, back, left, right, top) [21:26] -> 0 bis 9999
             - 4x Last clipped action [26:30]             -> 0 bis 2 (da 3 actions)
         """
-        ## tbd prüfen ALEX, FLORIAN, MORITZ
-        #ray_results = self._getToFSensorReadings(nth_drone)
+        
+        #initialisierung der ray_results_actual
+        if not hasattr(self, 'ray_results_actual'):
+            self.ray_results_actual = self.check_distance_sensors(1)
+            
         self.ray_results_previous = self.ray_results_actual #safe old actual raycast readings to previous raycast readings
         self.ray_results_actual = self.check_distance_sensors(1) # get new actual raycast readings
         

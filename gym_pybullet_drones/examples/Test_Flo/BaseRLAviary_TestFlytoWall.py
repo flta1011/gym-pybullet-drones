@@ -71,7 +71,7 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         
         self.ACT_TYPE = act
         self.still_time = 0
-        self.EPISODE_LEN_SEC = 20
+        self.EPISODE_LEN_SEC = 5*60 #increased from 20 to 100
         
         
         #### Create integrated controllers #########################
@@ -185,21 +185,21 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
                     
         lo = -np.inf
         hi = np.inf
-        obs_lower_bound = np.array([lo,lo,lo, #Position
+        obs_lower_bound = np.array([#lo,lo,lo, #Position, weil die Drohne nicht auf die Position zugreifen kann
                                      lo,lo,lo, #Roll, pitch, yaw
                                      lo,lo,lo, #Linear velocity
                                      lo,lo,lo, #Angular velocity
+                                     #0,0,0,0,0, #previous raycast readings
                                      0,0,0,0,0, #actual raycast readings
-                                     0,0,0,0,0, #previous raycast readings
                                      0,0,0,0] #Last clipped action = Action buffer
                                     )
         
-        obs_upper_bound = np.array([hi,hi,hi, #Position
+        obs_upper_bound = np.array([#hi,hi,hi, #Position, weil die Drohne nicht auf die Position zugreifen kann
                                      hi,hi,hi, #Roll, pitch, yaw
                                      hi,hi,hi, #Linear velocity
                                      hi,hi,hi, #Angular velocity
+                                     #9999,9999,9999,9999,9999, # previous raycast readings
                                      9999,9999,9999,9999,9999, # actual raycast readings
-                                     9999,9999,9999,9999,9999, # previous raycast readings
                                      2,2,2,2] #Last clipped action = Action buffer
                                    
                                     )
@@ -231,25 +231,24 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
                 3x Roll, pitch, yaw (r, p, y)                               [0:3]      -> -np.inf bis np.inf
                 3x Linear velocity (vx, vy, vz)                             [3:6]      -> -np.inf bis np.inf
                 3x Angular velocity (wx, wy, wz)                            [6:9]      -> -np.inf bis np.inf
-                5x previous raycast readings (front, back, left, right, top)[9:14]     -> 0 bis 9999
-                5x actual raycast readings (front, back, left, right, top)  [14:19]    -> 0 bis 9999
-                4x Last clipped action                                      [19:23]    -> 0 bis 2 (da 3 actions)
+                5x actual raycast readings (front, back, left, right, top)  [9:14]    -> 0 bis 9999
+                4x Last clipped action                                      [14:18]    -> 0 bis 2 (da 3 actions)
         """
 
         
         
         obs = self._getDroneStateVector(0)
         # Select specific values from obs and concatenate them directly
-        obs_23 = np.concatenate([
+        obs_18 = np.concatenate([
             #obs[0:3],    # Position x,y,z (Drohne kann in echt auch nicht auf die Position zugreifen)
             obs[7:10],   # Roll, pitch, yaw
             obs[10:13],  # Linear velocity
             obs[13:16],  # Angular velocity  
-            obs[16:21],  # previous raycast readings
+            #obs[16:21],  # previous raycast readings, ist für das RL vielleicht gar nicht so hilfreich
             obs[21:26],  # actual raycast readings
             obs[26:30]   # last clipped action
         ])
-        return obs_23
+        return obs_18
             ############################################################
        
         
@@ -283,27 +282,44 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         reward = 0
         state = self._getDroneStateVector(0) #erste Drohne
         
-        startOfLinearRewardMETER=2.5
         
         #wenn vorheringer Raycastreading = Actual Raycastreading = 9999, dann abstand zu groß -> Vx > 0 (vorne fliegen ist gut, rückwärts fliegen ist schlecht)
         if state[16] == 9999 and state[21] == 9999 and state[10] > 0:
-            reward = 10
+            reward = 5
         elif state[16] == 9999 and state[21] == 9999 and state[10] < 0:
-            reward = -10
-        #sweet spot größere Belohnung
+            reward = -5
+        #wenn die Werte unterschiedlich sind und er kommt der Wand näher: Reward positiv, wenn die Distanz größer wird, Reward negativ:
+        if state[16] != state[21] and state[21] < state[16]:
+            reward = 5
+        elif state[16] != state[21] and state[21] > state[16]:
+            reward = -5
         
-        #sweet spot und stillstand --> größte Belohnung
+        Ende_Crash = 0.2
+        Beginn_sweetspot = 0.5
+        Ende_sweetspot = 0.8
         
-        # zu nah dran größere Straße
-        
-        # zu nah dran und zurückfliegen -> belohnung
-        
-        
+        #im Stillstand und nicht im sweetspot: leicht negativ
+        if (state[10] < 0.01) and state[21] > Ende_sweetspot:
+            reward = -2.5
+        #im Stillstand und im sweetspot: größere Belohnung
+        elif (state[10] < 0.01) and state[21] > Beginn_sweetspot and state[21] < Ende_sweetspot:
+            reward = 200
             
+       
+         # zu nah dran und vorwärts fliegen: Bestrafung; zu nah dran und zurückfliegen -> Belohnung (näher als 0,5 aber weiter weg als 0,20)
+        if state[21] < Beginn_sweetspot and state[21] > Ende_Crash and state[10] > 0:
+            reward = -1000
+        elif state[21] < Beginn_sweetspot and state[21] > Ende_Crash and state[10] < 0:
+            reward = 1000
+        
+        # zu nah dran aka. gecrasht: maximale Bestrafung
+        if state[21] < Ende_Crash:
+            reward = -10000
+            
+      
         
         
-        #print("Reward:", reward)
-        #print("Abstand zur Wand:", state[20])
+        
         return reward
 
     ################################################################################
@@ -320,9 +336,15 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
 
         """
         state = self._getDroneStateVector(0)
+        
+        #starte einen Timer, wenn die Drohne im sweet spot ist
+        if 0.5 <= state[21] and state[21]<= 0.8 and np.all(np.abs(state[10:13]) < 0.01):
+            self.still_time += self.CTRL_FREQ# Increment by simulation timestep (in seconds) # TBD: funktioniert das richtig?
+        else:
+            self.still_time = 0.0 # Reset timer to 0 seconds
 
         #Wenn die Drohne im sweet spot ist (bezogen auf Sensor vorne, Sensor und seit 5 sekunden still ist, beenden!
-        if 0.5 <= state[21] and state[21]<= 0.8 and np.all(np.abs(state[10:13]) < 0.01) and self.still_time > 5:
+        if 0.5 <= state[21] and state[21]<= 0.8 and self.still_time >= 5:
             return True
         
         return False
@@ -348,7 +370,7 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
             return True
 
         #Wenn an einer Wand gecrashed wird, beenden!
-        if (state[21] < 0.15 or state[22] < 0.15 or state[23] < 0.15 or state[24] < 0.15):
+        if (state[21] < 0.2 or state[22] < 0.2 or state[23] < 0.2 or state[24] < 0.2):
             return True
         
         # Wenn die Zeit abgelaufen ist, beenden!
@@ -369,8 +391,20 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         -------
         dict[str, int]
             Dummy value.
+            
+        print("Reward:", reward)
+        print("Abstand zur Wand:", state[20])
 
         """
+        # state = self._getDroneStateVector(0) #getDroneStateVector braucht die 0 
+        
+        # print("Reward:", self.reward_buffer)
+        # #Plotting infos zum Zeitpunkt der Episode, Raycasts(vorne) der Drohne und Geschwindigkeiten der Drohne
+        # print("Abstand zur Wand:", state[21])
+        # print("Linear velocity Vx:", state[10])
+        # #print raycasts
+        # print("Raycast vorne:", state[21])
+ 
         return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
 
     #########################################################################################
