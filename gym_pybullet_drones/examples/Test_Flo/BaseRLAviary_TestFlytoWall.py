@@ -189,16 +189,19 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
                                      lo,lo,lo, #Roll, pitch, yaw
                                      lo,lo,lo, #Linear velocity
                                      lo,lo,lo, #Angular velocity
-                                     0,0,0,0, #Last clipped action = Action buffer
-                                     0,0,0,0,0] #Raycast readings
+                                     0,0,0,0,0, #actual raycast readings
+                                     0,0,0,0,0, #previous raycast readings
+                                     0,0,0,0] #Last clipped action = Action buffer
                                     )
         
         obs_upper_bound = np.array([hi,hi,hi, #Position
                                      hi,hi,hi, #Roll, pitch, yaw
                                      hi,hi,hi, #Linear velocity
                                      hi,hi,hi, #Angular velocity
-                                     2,2,2,2, #Last clipped action = Action buffer
-                                     9999,9999,9999,9999,9999] #Raycast readings
+                                     9999,9999,9999,9999,9999, # actual raycast readings
+                                     9999,9999,9999,9999,9999, # previous raycast readings
+                                     2,2,2,2] #Last clipped action = Action buffer
+                                   
                                     )
         
        
@@ -225,29 +228,28 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
                 ndarray
                 (25,)-shaped array of floats containing the state vector of the n-th drone. The state vector includes:
 
-                3x Position (x, y, z) [0:3]                -> -np.inf bis np.inf
-                4x Quaternion (qx, qy, qz, qw) [3:7]       -> nicht verwendet
-                3x Roll, pitch, yaw (r, p, y) [7:10]       -> -np.inf bis np.inf
-                3x Linear velocity (vx, vy, vz) [10:13]    -> -np.inf bis np.inf
-                3x Angular velocity (wx, wy, wz) [13:16]     -> -np.inf bis np.inf
-                4x Last clipped action [16:20]             -> 0 bis 2 (da 3 actions)
-                5x Raycast readings (front, back, left, right, top) [20:25] -> 0 bis 9999
-
+                3x Roll, pitch, yaw (r, p, y)                               [0:3]      -> -np.inf bis np.inf
+                3x Linear velocity (vx, vy, vz)                             [3:6]      -> -np.inf bis np.inf
+                3x Angular velocity (wx, wy, wz)                            [6:9]      -> -np.inf bis np.inf
+                5x previous raycast readings (front, back, left, right, top)[9:14]     -> 0 bis 9999
+                5x actual raycast readings (front, back, left, right, top)  [14:19]    -> 0 bis 9999
+                4x Last clipped action                                      [19:23]    -> 0 bis 2 (da 3 actions)
         """
-        # TBD letzer Wert ist weg
+
         
         
         obs = self._getDroneStateVector(0)
         # Select specific values from obs and concatenate them directly
-        obs_21 = np.concatenate([
-            obs[0:3],    # Position x,y,z
+        obs_23 = np.concatenate([
+            #obs[0:3],    # Position x,y,z (Drohne kann in echt auch nicht auf die Position zugreifen)
             obs[7:10],   # Roll, pitch, yaw
             obs[10:13],  # Linear velocity
             obs[13:16],  # Angular velocity  
-            obs[16:20],  # Last clipped action
-            obs[20:25]   # Raycast readings
+            obs[16:21],  # previous raycast readings
+            obs[21:26],  # actual raycast readings
+            obs[26:30]   # last clipped action
         ])
-        return obs_21
+        return obs_23
             ############################################################
        
         
@@ -282,28 +284,23 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         state = self._getDroneStateVector(0) #erste Drohne
         
         startOfLinearRewardMETER=2.5
-        if state[20] == 9999:  # No wall detected in front
-            reward = 0
-        elif state[10] < 0:  # Flying backwards
-            reward = -1000
-        elif state[20] < 0.5:  # Too close to wall
-            reward = -10000
-        elif 0.5 <= state[20] and state[20]<= 0.8:  # Sweet spot
-            reward = 1800
-            # Additional reward for staying still in sweet spot
-            if np.all(np.abs(state[10:13]) < 0.01):  # Check if velocity is close to zero
-                if not hasattr(self, 'still_time'):
-                    self.still_time = 0
-                self.still_time += self.CTRL_TIMESTEP
-                # Cap the still time bonus at 5 seconds (1000 additional reward)
-                still_time_bonus = min(200 * self.still_time, 1000)
-                reward += still_time_bonus
-            else:
-                self.still_time = 0
-        elif 0.8 < state[20] <= startOfLinearRewardMETER:  # Linear reward zone
-            reward = 1500 * (1 - (state[20] - 0.8) / (startOfLinearRewardMETER - 0.8))
-        else:  # Beyond detection range
-            reward = 0
+        
+        #wenn vorheringer Raycastreading = Actual Raycastreading = 9999, dann abstand zu groß -> Vx > 0 (vorne fliegen ist gut, rückwärts fliegen ist schlecht)
+        if state[16] == 9999 and state[21] == 9999 and state[10] > 0:
+            reward = 10
+        elif state[16] == 9999 and state[21] == 9999 and state[10] < 0:
+            reward = -10
+        #sweet spot größere Belohnung
+        
+        #sweet spot und stillstand --> größte Belohnung
+        
+        # zu nah dran größere Straße
+        
+        # zu nah dran und zurückfliegen -> belohnung
+        
+        
+            
+        
         
         #print("Reward:", reward)
         #print("Abstand zur Wand:", state[20])
@@ -324,8 +321,8 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         """
         state = self._getDroneStateVector(0)
 
-        #Wenn die Drohne im sweet spot ist und seit 5 sekunden still ist, beenden!
-        if 0.5 <= state[20] and state[20]<= 0.8 and np.all(np.abs(state[10:13]) < 0.01) and self.still_time > 5:
+        #Wenn die Drohne im sweet spot ist (bezogen auf Sensor vorne, Sensor und seit 5 sekunden still ist, beenden!
+        if 0.5 <= state[21] and state[21]<= 0.8 and np.all(np.abs(state[10:13]) < 0.01) and self.still_time > 5:
             return True
         
         return False
@@ -351,7 +348,7 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
             return True
 
         #Wenn an einer Wand gecrashed wird, beenden!
-        if (state[20] < 0.15 or state[21] < 0.15 or state[22] < 0.15 or state[23] < 0.15):
+        if (state[21] < 0.15 or state[22] < 0.15 or state[23] < 0.15 or state[24] < 0.15):
             return True
         
         # Wenn die Zeit abgelaufen ist, beenden!

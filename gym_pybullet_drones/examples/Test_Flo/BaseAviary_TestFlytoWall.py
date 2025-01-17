@@ -630,17 +630,21 @@ class BaseAviary_TestFlytoWall(gym.Env):
             - 3x Roll, pitch, yaw (r, p, y) [7:10]       -> -np.inf bis np.inf
             - 3x Linear velocity (vx, vy, vz) [10:13]    -> -np.inf bis np.inf
             - 3x Angular velocity (wx, wy, wz) [13:16]     -> -np.inf bis np.inf
-            - 4x Last clipped action [16:20]             -> 0 bis 2 (da 3 actions)
-            - 5x Raycast readings (front, back, left, right, top) [20:25] -> 0 bis 9999
-
+            - 5x previous raycast readings (front, back, left, right, top) [16:21] -> 0 bis 9999    
+            - 5x actual raycast readings (front, back, left, right, top) [21:26] -> 0 bis 9999
+            - 4x Last clipped action [26:30]             -> 0 bis 2 (da 3 actions)
         """
         ## tbd prüfen ALEX, FLORIAN, MORITZ
         #ray_results = self._getToFSensorReadings(nth_drone)
-        self.ray_results = self.check_distance_sensors(1)
+        self.ray_results_previous = self.ray_results_actual #safe old actual raycast readings to previous raycast readings
+        self.ray_results_actual = self.check_distance_sensors(1) # get new actual raycast readings
+        
         state = np.hstack([self.pos[nth_drone, :], self.quat[nth_drone, :], self.rpy[nth_drone, :],
-                        self.vel[nth_drone, :], self.ang_v[nth_drone, :], self.last_clipped_action[nth_drone, :],
-                        self.ray_results[0], self.ray_results[1], self.ray_results[2], self.ray_results[3], self.ray_results[4]])
-        return state.reshape(25,)
+                        self.vel[nth_drone, :], self.ang_v[nth_drone, :], 
+                        self.ray_results_previous[0], self.ray_results_previous[1], self.ray_results_previous[2], self.ray_results_previous[3], self.ray_results_previous[4], 
+                        self.ray_results_actual[0], self.ray_results_actual[1], self.ray_results_actual[2], self.ray_results_actual[3], self.ray_results_actual[4], 
+                        self.last_clipped_action[nth_drone, :]])
+        return state.reshape(30,)
 
     ################################################################################
 
