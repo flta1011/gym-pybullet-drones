@@ -35,11 +35,16 @@ from gym_pybullet_drones.utils.enums import ObservationType, ActionType
 from gym_pybullet_drones.examples.Test_Flo.BaseRLAviary_TestFlytoWall import BaseRLAviary_TestFlytoWall
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType
 
+# ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden!
+DEFAULT_GUI_TRAIN = True
+DEFAULT_GUI_TEST = False
 
-DEFAULT_GUI = True
 DEFAULT_RECORD_VIDEO = False
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
+DEFAULT_PYB_FREQ = 240
+DEFAULT_CTRL_FREQ = 60
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10
 
 DEFAULT_OBS = ObservationType('kin') # 'kin' or 'rgb'
 DEFAULT_ACT = ActionType('vel') # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'one_d_pid'
@@ -56,7 +61,10 @@ INIT_RPYS = np.array([
                           ])
 
 
-def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO, local=True):
+
+
+
+def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DEFAULT_GUI_TRAIN, gui_Test=DEFAULT_GUI_TEST, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO, local=True, pyb_freq=DEFAULT_PYB_FREQ, ctrl_freq=DEFAULT_CTRL_FREQ, reward_and_action_change_freq=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ):
 
     filename = os.path.join(output_folder, 'save-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
     if not os.path.exists(filename):
@@ -69,8 +77,10 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
             initial_xyzs=INIT_XYZS,
             initial_rpys=INIT_RPYS,
             physics=Physics.PYB,
-            gui=True,
-            ctrl_freq=60,
+            gui=gui_Train,
+            pyb_freq=pyb_freq,
+            ctrl_freq=ctrl_freq, # Ansatz: von 60 auf 10 reduzieren, damit die gewählte Action länger wirkt
+            reward_and_action_change_freq=reward_and_action_change_freq, # Ansatz: neu hinzugefügt, da die Step-Funktion vorher mit der ctrl_freq aufgerufen wurde, Problem war dann, dass bei hoher Frequenz die Raycasts keine Änderung hatten, dafür die Drohne aber sauber geflogen ist (60). Wenn der Wert niedriger war, hat es mit den Geschwindigkeiten und Actions besser gepasst, dafür ist die Drohne nicht sauber geflogen, weil die Ctrl-Frequenz für das erreichen der gewählten Action zu niedrig war (10/20).
             act=ActionType.VEL
         ),
         n_envs=1,
@@ -81,8 +91,10 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
         drone_model=DroneModel("cf2x"),
         initial_xyzs=INIT_XYZS,
         initial_rpys=INIT_RPYS,
-        gui=False,
-        ctrl_freq=60,
+        gui=gui_Test,
+        pyb_freq=pyb_freq,
+        ctrl_freq=ctrl_freq,
+        reward_and_action_change_freq=reward_and_action_change_freq,
         act=ActionType.VEL
         )
 
@@ -158,7 +170,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
 
     #### Show (and record a video of) the model's performance ##
 
-    test_env = BaseRLAviary_TestFlytoWall(gui=gui,
+    test_env = BaseRLAviary_TestFlytoWall(gui=gui_Test,
                             act=DEFAULT_ACT,
                             record=record_video)
     test_env_nogui = BaseRLAviary_TestFlytoWall(act=DEFAULT_ACT)
@@ -239,10 +251,14 @@ if __name__ == '__main__':
     #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script')
     parser.add_argument('--multiagent',         default=DEFAULT_MA,            type=str2bool,      help='Whether to use example LeaderFollower instead of Hover (default: False)', metavar='')
-    parser.add_argument('--gui',                default=DEFAULT_GUI,           type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
+    parser.add_argument('--gui_Train',                default=DEFAULT_GUI_TRAIN,           type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
+    parser.add_argument('--gui_Test',                default=DEFAULT_GUI_TEST,           type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
     parser.add_argument('--record_video',       default=DEFAULT_RECORD_VIDEO,  type=str2bool,      help='Whether to record a video (default: False)', metavar='')
     parser.add_argument('--output_folder',      default=DEFAULT_OUTPUT_FOLDER, type=str,           help='Folder where to save logs (default: "results")', metavar='')
     parser.add_argument('--colab',              default=DEFAULT_COLAB,         type=bool,          help='Whether example is being run by a notebook (default: "False")', metavar='')
+    parser.add_argument('--pyb_freq',          default=DEFAULT_PYB_FREQ,    type=int,           help='Physics frequency (default: 240)', metavar='')
+    parser.add_argument('--ctrl_freq',          default=DEFAULT_CTRL_FREQ,    type=int,           help='Control frequency (default: 60)', metavar='')
+    parser.add_argument('--reward_and_action_change_freq',          default=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,    type=int,           help='Control frequency (default: 60)', metavar='')
     ARGS = parser.parse_args()
 
     run(**vars(ARGS))

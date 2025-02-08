@@ -26,7 +26,8 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
                 #  Test_Area_Size_y: int = 10, #hoffentlich 10 Meter, später Größe der Map
                  physics: Physics=Physics.PYB,
                  pyb_freq: int = 240,
-                 ctrl_freq: int = 240,
+                 ctrl_freq: int = 60,
+                 reward_and_action_change_freq: int = 10,
                  gui=False,
                  record=False,
                  act: ActionType=ActionType.VEL
@@ -88,6 +89,7 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
                          physics=physics,
                          pyb_freq=pyb_freq,
                          ctrl_freq=ctrl_freq,
+                         reward_and_action_change_freq=reward_and_action_change_freq,
                          gui=gui,
                          record=record, 
                          obstacles=True, # Add obstacles for RGB observations and/or FlyThruGate
