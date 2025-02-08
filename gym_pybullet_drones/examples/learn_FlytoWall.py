@@ -45,6 +45,7 @@ DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 240
 DEFAULT_CTRL_FREQ = 60
 DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10
+DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 
 DEFAULT_OBS = ObservationType('kin') # 'kin' or 'rgb'
 DEFAULT_ACT = ActionType('vel') # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'one_d_pid'
@@ -54,17 +55,17 @@ DEFAULT_MA = False
 DEFAULT_ALTITUDE = 0.5
 
 INIT_XYZS = np.array([
-                          [ 0, 0, DEFAULT_ALTITUDE],
+                          [0, 0, DEFAULT_ALTITUDE],
                           ])
 INIT_RPYS = np.array([
-                          [0, 0, 0],
+                          [0, 0, np.pi/2],
                           ])
 
 
 
 
 
-def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DEFAULT_GUI_TRAIN, gui_Test=DEFAULT_GUI_TEST, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO, local=True, pyb_freq=DEFAULT_PYB_FREQ, ctrl_freq=DEFAULT_CTRL_FREQ, reward_and_action_change_freq=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ):
+def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DEFAULT_GUI_TRAIN, gui_Test=DEFAULT_GUI_TEST, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO, local=True, pyb_freq=DEFAULT_PYB_FREQ, ctrl_freq=DEFAULT_CTRL_FREQ, reward_and_action_change_freq=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ, drone_model=DEFAULT_DRONE_MODEL):
 
     filename = os.path.join(output_folder, 'save-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
     if not os.path.exists(filename):
@@ -73,7 +74,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
         train_env = make_vec_env(
         BaseRLAviary_TestFlytoWall,
         env_kwargs=dict(
-            drone_model=DroneModel("cf2x"),
+            drone_model=drone_model,
             initial_xyzs=INIT_XYZS,
             initial_rpys=INIT_RPYS,
             physics=Physics.PYB,
@@ -88,7 +89,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
         )
         
         eval_env = BaseRLAviary_TestFlytoWall(
-        drone_model=DroneModel("cf2x"),
+        drone_model=drone_model,
         initial_xyzs=INIT_XYZS,
         initial_rpys=INIT_RPYS,
         gui=gui_Test,
@@ -259,6 +260,7 @@ if __name__ == '__main__':
     parser.add_argument('--pyb_freq',          default=DEFAULT_PYB_FREQ,    type=int,           help='Physics frequency (default: 240)', metavar='')
     parser.add_argument('--ctrl_freq',          default=DEFAULT_CTRL_FREQ,    type=int,           help='Control frequency (default: 60)', metavar='')
     parser.add_argument('--reward_and_action_change_freq',          default=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,    type=int,           help='Control frequency (default: 60)', metavar='')
+    parser.add_argument('--drone_model',          default=DEFAULT_DRONE_MODEL,    type=str,           help='Control frequency (default: 60)', metavar='')
     ARGS = parser.parse_args()
 
     run(**vars(ARGS))

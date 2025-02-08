@@ -535,6 +535,14 @@ class BaseAviary_TestFlytoWall(gym.Env):
         print("Timestamp previous:", timestamp_previous)
         print("Timestamp actual:", timestamp_actual)
         print("Timediff (s):", "{:.3f}".format(timestamp_actual - timestamp_previous)) #Timediff in Sekunden
+        print(" Abstand zur Wand front:", state[21])
+        print(" Abstand zur Wand back:", state[22])
+        print(" Abstand zur Wand left:", state[23])
+        print(" Abstand zur Wand right:", state[24])
+        print(" Abstand zur Wand top:", state[25])
+        
+        ray_cast_readings = self.check_distance_sensors(self.DRONE_IDS[0])
+        print(f"Sensor Readings: \n forward {ray_cast_readings[0]} \n backwards {ray_cast_readings[1]} \n left {ray_cast_readings[2]} \n right {ray_cast_readings[3]} \n up {ray_cast_readings[4]} \n down {ray_cast_readings[5]}")
         
         print("aktueller Abstand zur Wand:", state[21])
         print("vorheriger Abstand zur Wand:", state[16])
@@ -733,22 +741,33 @@ class BaseAviary_TestFlytoWall(gym.Env):
         
         #initialisierung der ray_results_actual
         if not hasattr(self, 'ray_results_actual'):
-            self.ray_results_actual = self.check_distance_sensors(1)
+            self.ray_results_actual = self.check_distance_sensors(nth_drone)
             self.ray_results_previous = self.ray_results_actual #fürs initialisieren die Werte gleich setzen
             self.step_counter_last_actual_raycast = self.step_counter
-        
+        print("nth_drone:", nth_drone)
         #nur die Raycasts Readings aktualisieren, wenn wirklich ein Physics-Step gerechnet wurde!
         if self.step_counter > self.step_counter_last_actual_raycast:
             self.ray_results_previous = self.ray_results_actual #safe old actual raycast readings to previous raycast readings
-            self.ray_results_actual = self.check_distance_sensors(1) # get new actual raycast readings
+            self.ray_results_actual = self.check_distance_sensors(nth_drone) # get new actual raycast readings
             self.step_counter_last_actual_raycast = self.step_counter
         
         
-        state = np.hstack([self.pos[nth_drone, :], self.quat[nth_drone, :], self.rpy[nth_drone, :],
-                        self.vel[nth_drone, :], self.ang_v[nth_drone, :], 
-                        self.ray_results_previous[0], self.ray_results_previous[1], self.ray_results_previous[2], self.ray_results_previous[3], self.ray_results_previous[4], 
-                        self.ray_results_actual[0], self.ray_results_actual[1], self.ray_results_actual[2], self.ray_results_actual[3], self.ray_results_actual[4], 
-                        self.last_clipped_action[nth_drone, :]])
+        state = np.hstack([self.pos[nth_drone, :], #[0:3]
+                           self.quat[nth_drone, :], #[3:7]
+                           self.rpy[nth_drone, :], #[7:10]
+                           self.vel[nth_drone, :], #[10:13]
+                           self.ang_v[nth_drone, :], #[13:16]
+                        self.ray_results_previous[0], #forward [16]
+                        self.ray_results_previous[1], #backward [17]
+                        self.ray_results_previous[2], #left [18]
+                        self.ray_results_previous[3], #right [19]
+                        self.ray_results_previous[4], #up [20]
+                        self.ray_results_actual[0], #forward [21]
+                        self.ray_results_actual[1], #backward [22]
+                        self.ray_results_actual[2], #left [23]
+                        self.ray_results_actual[3], #right [24]
+                        self.ray_results_actual[4], #up [25]
+                        self.last_clipped_action[nth_drone, :]]) #last clipped action [26:30]
         return state.reshape(30,)
 
     ################################################################################
@@ -1381,8 +1400,8 @@ class BaseAviary_TestFlytoWall(gym.Env):
             [-1, 0, 0],   # Backward
             [0, 1, 0],    # Left
             [0, -1, 0],   # Right
-            [0, 0, -1],    # Up die Z-Achse zeigt anscheinend nach unten
-            [0, 0, 1],   # Down
+            [0, 0, 1],    # Up die Z-Achse zeigt anscheinend nach unten
+            [0, 0, -1],   # Down
         ])
         
         max_distance = 5  # meters
@@ -1391,9 +1410,9 @@ class BaseAviary_TestFlytoWall(gym.Env):
         # Convert quaternion to rotation matrix using NumPy
         rot_matrix = np.array(p.getMatrixFromQuaternion(ori)).reshape(3, 3)
 
-        # Vorbereitung Visualisierung
-        p.removeAllUserDebugItems() # Entferne alle vergangenen Linien
-        # Benötigt, damit die Linien nur den akutellen Ray zeigen
+        # # Vorbereitung Visualisierung
+        # p.removeAllUserDebugItems() # Entferne alle vergangenen Linien
+        # # Benötigt, damit die Linien nur den akutellen Ray zeigen
         
         hit_fraction_list = []
 
@@ -1409,7 +1428,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
             hit_fraction_list.append(hit_fraction)
 
             if hit_object_id != -1 and hit_fraction > 0:
-                distance = hit_fraction * max_distance
+                distance = round(hit_fraction * max_distance, 3)
                 
                 #if distance < 0.2:
                     # Visualize the ray
