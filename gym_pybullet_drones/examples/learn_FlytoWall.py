@@ -58,7 +58,7 @@ INIT_XYZS = np.array([
                           [0, 0, DEFAULT_ALTITUDE],
                           ])
 INIT_RPYS = np.array([
-                          [0, 0, np.pi/2],
+                          [0, 0, 0],
                           ])
 
 

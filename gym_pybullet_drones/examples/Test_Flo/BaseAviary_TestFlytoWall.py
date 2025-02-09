@@ -154,9 +154,9 @@ class BaseAviary_TestFlytoWall(gym.Env):
             self.CLIENT = p.connect(p.GUI) # p.connect(p.GUI, options="--opengl2")
             for i in [p.COV_ENABLE_RGB_BUFFER_PREVIEW, p.COV_ENABLE_DEPTH_BUFFER_PREVIEW, p.COV_ENABLE_SEGMENTATION_MARK_PREVIEW]:
                 p.configureDebugVisualizer(i, 0, physicsClientId=self.CLIENT)
-            p.resetDebugVisualizerCamera(cameraDistance=3,
-                                         cameraYaw=-30,
-                                         cameraPitch=-30,
+            p.resetDebugVisualizerCamera(cameraDistance=5,
+                                         cameraYaw=-90,
+                                         cameraPitch=-60,
                                          cameraTargetPosition=[0, 0, 0],
                                          physicsClientId=self.CLIENT
                                          )
@@ -348,7 +348,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
 
         # translate action into movement direction
         action_to_movement_direction = {
-            0: np.array([[1, 0, 0, 0.99]]),    # Vor 
+            0: np.array([[1, 0, 0, 0.99]]),    # Vor
             1: np.array([[-1, 0, 0, 0.99]]),   # Zurück
             2: np.array([[0, 0, 0, 0.99]]),    # bleibe stehen
             # 2: np.array([[0, 1, 0, 0.99]]), # links 
@@ -460,7 +460,13 @@ class BaseAviary_TestFlytoWall(gym.Env):
                 self.last_clipped_action = clipped_action
             #### Update and store the drones kinematic information #####
             self._updateAndStoreKinematicInformation()
-        
+            p.resetDebugVisualizerCamera(cameraDistance=3,
+                                         cameraYaw=self.rpy[0][2]-30,
+                                         cameraPitch=self.rpy[0][1]-30,
+                                         cameraRoll=self.rpy[0][0],
+                                         cameraTargetPosition=self.pos,
+                                         physicsClientId=self.CLIENT
+                                         )
         
         
 
@@ -514,6 +520,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
                         break
                 #### Update and store the drones kinematic information #####
                 self._updateAndStoreKinematicInformation()
+                
             
             
             
@@ -541,15 +548,42 @@ class BaseAviary_TestFlytoWall(gym.Env):
         print(" Abstand zur Wand right:", state[24])
         print(" Abstand zur Wand top:", state[25])
         
-        ray_cast_readings = self.check_distance_sensors(self.DRONE_IDS[0])
+        ray_cast_readings = self.check_distance_sensors(0)
         print(f"Sensor Readings: \n forward {ray_cast_readings[0]} \n backwards {ray_cast_readings[1]} \n left {ray_cast_readings[2]} \n right {ray_cast_readings[3]} \n up {ray_cast_readings[4]} \n down {ray_cast_readings[5]}")
         
+        ###Debugging Plots
+        state = self._getDroneStateVector(0) #Einführung neuste 
+        
+        #print timestamp
+        if not hasattr(self, 'timestamp_actual'):
+            self.timestamp_actual = time.time()
+        timestamp_previous = self.timestamp_actual
+        timestamp_actual = time.time()
+        print("Timestamp previous:", timestamp_previous)
+        print("Timestamp actual:", timestamp_actual)
+        print("Timediff (s):", "{:.3f}".format(timestamp_actual - timestamp_previous)) #Timediff in Sekunden
+        print(" Abstand zur Wand front:", state[21])
+        print(" Abstand zur Wand back:", state[22])
+        print(" Abstand zur Wand left:", state[23])
+        print(" Abstand zur Wand right:", state[24])
+        print(" Abstand zur Wand top:", state[25])
+
+
         print("aktueller Abstand zur Wand:", state[21])
         print("vorheriger Abstand zur Wand:", state[16])
         print("Differenz Wand nachher-vorher:", state[21] - state[16])
         
         print(f"Input Action: {actual_action_0_bis_3}, Action übersetzt: {action}\n Reward: {reward}\n\n")
         
+
+
+
+
+
+
+
+
+
         #### Advance the step counter (for physics-steps) ##############################
         if self.CTRL_FREQ <= self.REWARD_AND_ACTION_CHANGE_FREQ:
             self.step_counter = self.step_counter + (1 * self.PYB_STEPS_PER_CTRL)
@@ -1384,7 +1418,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
     ################################################################################
 
     # Get Sensor Data
-    def check_distance_sensors(self, crazyflie_id):
+    def check_distance_sensors(self, nth_drone):
         """
         Check the distance sensors of the Crazyflie drone.
         Args:
@@ -1393,17 +1427,27 @@ class BaseAviary_TestFlytoWall(gym.Env):
             list: Sensor readings for each direction (forward, backward, left, right, up, down).
                 Each reading is the distance to the nearest obstacle or max_distance if no obstacle is detected.
         """
-        pos, ori = p.getBasePositionAndOrientation(crazyflie_id)
+        drone_id = nth_drone + 1 # nth_drone is 0-based, but the drone IDs are 1-based
+        pos, ori = p.getBasePositionAndOrientation(drone_id, physicsClientId=self.CLIENT)
+        
+        # local_directions = np.array([
+        #     [1, 0, 0],    # Forward
+        #     [-1, 0, 0],   # Backward
+        #     [0, 1, 0],    # Left
+        #     [0, -1, 0],   # Right
+        #     [0, 0, 1],    # Up
+        #     [0, 0, -1],   # Down
+        # ])
         
         local_directions = np.array([
             [1, 0, 0],    # Forward
             [-1, 0, 0],   # Backward
-            [0, 1, 0],    # Left
-            [0, -1, 0],   # Right
-            [0, 0, 1],    # Up die Z-Achse zeigt anscheinend nach unten
-            [0, 0, -1],   # Down
-        ])
-        
+            [0, -1, 0],    # Left
+            [0, 1, 0],   # Right
+            [0, 0, -1],    # Up
+            [0, 0, 1],   # Down
+        ]) # Oriented according to the Crazyflie's local frame
+
         max_distance = 5  # meters
         sensor_readings = []
         
@@ -1428,7 +1472,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
             hit_fraction_list.append(hit_fraction)
 
             if hit_object_id != -1 and hit_fraction > 0:
-                distance = round(hit_fraction * max_distance, 3)
+                distance = round(hit_fraction * max_distance, 4)
                 
                 #if distance < 0.2:
                     # Visualize the ray

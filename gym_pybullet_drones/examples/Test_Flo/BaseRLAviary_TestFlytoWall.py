@@ -93,7 +93,7 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
                          gui=gui,
                          record=record, 
                          obstacles=True, # Add obstacles for RGB observations and/or FlyThruGate
-                         user_debug_gui=False, # Remove of RPM sliders from all single agent learning aviaries
+                         user_debug_gui=True, # Remove of RPM sliders from all single agent learning aviaries
                          )
         
         #### Set a limit on the maximum target speed ###############
@@ -153,7 +153,7 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
                                                     cur_vel=state[10:13],
                                                     cur_ang_vel=state[13:16],
                                                     target_pos=np.concatenate([state[0:2], np.array([0.5])]), # same as the current position
-                                                    target_rpy=np.array([0,0,state[9]]), # keep current yaw
+                                                    target_rpy=np.array([0,0,0]), # keep orientation to base
                                                     target_vel=self.SPEED_LIMIT * np.abs(target_v[3]) * v_unit_vector # target the desired velocity vector
                                                     )
             rpm[k,:] = temp
