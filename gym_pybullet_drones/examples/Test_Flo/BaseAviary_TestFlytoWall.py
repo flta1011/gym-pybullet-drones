@@ -773,29 +773,47 @@ class BaseAviary_TestFlytoWall(gym.Env):
             - 4x Last clipped action [26:30]             -> 0 bis 2 (da 3 actions)
         """
         
-        #initialisierung der ray_results_actual
-        if not hasattr(self, 'ray_results_actual'):
-            self.ray_results_actual = self.check_distance_sensors(nth_drone)
-            self.ray_results_previous = self.ray_results_actual #fürs initialisieren die Werte gleich setzen
-            self.step_counter_last_actual_raycast = self.step_counter
-        print("nth_drone:", nth_drone)
-        #nur die Raycasts Readings aktualisieren, wenn wirklich ein Physics-Step gerechnet wurde!
-        if self.step_counter > self.step_counter_last_actual_raycast:
-            self.ray_results_previous = self.ray_results_actual #safe old actual raycast readings to previous raycast readings
-            self.ray_results_actual = self.check_distance_sensors(nth_drone) # get new actual raycast readings
-            self.step_counter_last_actual_raycast = self.step_counter
+        # #initialisierung der ray_results_actual
+        # if not hasattr(self, 'ray_results_actual'):
+        #     self.ray_results_actual = self.check_distance_sensors(nth_drone)
+        #     self.ray_results_previous = self.ray_results_actual #fürs initialisieren die Werte gleich setzen
+        #     self.step_counter_last_actual_raycast = self.step_counter
+        # print("nth_drone:", nth_drone)
+        # #nur die Raycasts Readings aktualisieren, wenn wirklich ein Physics-Step gerechnet wurde!
+        # if self.step_counter > self.step_counter_last_actual_raycast:
+        #     self.ray_results_previous = self.ray_results_actual #safe old actual raycast readings to previous raycast readings
+        #     self.ray_results_actual = self.check_distance_sensors(nth_drone) # get new actual raycast readings
+        #     self.step_counter_last_actual_raycast = self.step_counter
         
-        
+        self.ray_results_actual = self.check_distance_sensors(nth_drone) # get new actual raycast readings
+        # state = np.hstack([self.pos[nth_drone, :], #[0:3]
+        #                    self.quat[nth_drone, :], #[3:7]
+        #                    self.rpy[nth_drone, :], #[7:10]
+        #                    self.vel[nth_drone, :], #[10:13]
+        #                    self.ang_v[nth_drone, :], #[13:16]
+        #                 self.ray_results_previous[0], #forward [16]
+        #                 self.ray_results_previous[1], #backward [17]
+        #                 self.ray_results_previous[2], #left [18]
+        #                 self.ray_results_previous[3], #right [19]
+        #                 self.ray_results_previous[4], #up [20]
+        #                 self.ray_results_actual[0], #forward [21]
+        #                 self.ray_results_actual[1], #backward [22]
+        #                 self.ray_results_actual[2], #left [23]
+        #                 self.ray_results_actual[3], #right [24]
+        #                 self.ray_results_actual[4], #up [25]
+        #                 self.last_clipped_action[nth_drone, :]]) #last clipped action [26:30]
+        # return state.reshape(30,)
+
         state = np.hstack([self.pos[nth_drone, :], #[0:3]
                            self.quat[nth_drone, :], #[3:7]
                            self.rpy[nth_drone, :], #[7:10]
                            self.vel[nth_drone, :], #[10:13]
                            self.ang_v[nth_drone, :], #[13:16]
-                        self.ray_results_previous[0], #forward [16]
-                        self.ray_results_previous[1], #backward [17]
-                        self.ray_results_previous[2], #left [18]
-                        self.ray_results_previous[3], #right [19]
-                        self.ray_results_previous[4], #up [20]
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
                         self.ray_results_actual[0], #forward [21]
                         self.ray_results_actual[1], #backward [22]
                         self.ray_results_actual[2], #left [23]
@@ -1430,23 +1448,14 @@ class BaseAviary_TestFlytoWall(gym.Env):
         drone_id = nth_drone + 1 # nth_drone is 0-based, but the drone IDs are 1-based
         pos, ori = p.getBasePositionAndOrientation(drone_id, physicsClientId=self.CLIENT)
         
-        # local_directions = np.array([
-        #     [1, 0, 0],    # Forward
-        #     [-1, 0, 0],   # Backward
-        #     [0, 1, 0],    # Left
-        #     [0, -1, 0],   # Right
-        #     [0, 0, 1],    # Up
-        #     [0, 0, -1],   # Down
-        # ])
-        
         local_directions = np.array([
             [1, 0, 0],    # Forward
             [-1, 0, 0],   # Backward
-            [0, -1, 0],    # Left
-            [0, 1, 0],   # Right
-            [0, 0, -1],    # Up
-            [0, 0, 1],   # Down
-        ]) # Oriented according to the Crazyflie's local frame
+            [0, 1, 0],    # Left
+            [0, -1, 0],   # Right
+            [0, 0, 1],    # Up
+            [0, 0, -1],   # Down
+        ])
 
         max_distance = 5  # meters
         sensor_readings = []
