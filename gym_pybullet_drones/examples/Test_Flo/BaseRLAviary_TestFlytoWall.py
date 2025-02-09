@@ -29,6 +29,7 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
                  ctrl_freq: int = 60,
                  reward_and_action_change_freq: int = 10,
                  gui=False,
+                 user_debug_gui=False,
                  record=False,
                  act: ActionType=ActionType.VEL
                  ):
@@ -93,7 +94,7 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
                          gui=gui,
                          record=record, 
                          obstacles=True, # Add obstacles for RGB observations and/or FlyThruGate
-                         user_debug_gui=True, # Remove of RPM sliders from all single agent learning aviaries
+                         user_debug_gui=user_debug_gui, # Remove of RPM sliders from all single agent learning aviaries
                          )
         
         #### Set a limit on the maximum target speed ###############
@@ -152,7 +153,7 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
                                                     cur_quat=state[3:7],
                                                     cur_vel=state[10:13],
                                                     cur_ang_vel=state[13:16],
-                                                    target_pos=np.concatenate([state[0:2], np.array([0.5])]), # same as the current position
+                                                    target_pos=np.concatenate([state[0:1],np.array([0]), np.array([0.5])]), # same as the current position on X, but should stay 0 on y and z = 0.5
                                                     target_rpy=np.array([0,0,0]), # keep orientation to base
                                                     target_vel=self.SPEED_LIMIT * np.abs(target_v[3]) * v_unit_vector # target the desired velocity vector
                                                     )
@@ -284,70 +285,65 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         reward = 0
         state = self._getDroneStateVector(0) #erste Drohne
         
-        # ####mit vorherigem Raycastreading vergleichen - am 9.2.25 rausgenommen, da es Probleme mit den vorherigen Werten und der Aktualisierung gab #####
+        
+        
         # #wenn vorheringer Raycastreading = Actual Raycastreading = 9999, dann abstand zu groß -> Vx > 0 (vorne fliegen ist gut, rückwärts fliegen ist schlecht)
-        # if state[16] == 9999 and state[21] == 9999 and state[10] > 0:
+        # if state[10] > 0:
         #     reward = 5
-        # elif state[16] == 9999 and state[21] == 9999 and state[10] < 0:
-        #     reward = -5
-        # #wenn die Werte unterschiedlich sind und er kommt der Wand näher: Reward positiv, wenn die Distanz größer wird, Reward negativ:
-        # if state[16] != state[21] and state[21] < state[16]:
-        #     reward = 5
-        # elif state[16] != state[21] and state[21] > state[16]:
-        #     reward = -5
+        # elif state[10] < 0:
+        #     reward = -3 # von -5 auf -3 reduziert (9.2)
+     
+        # self.Ende_Crash = 0.2
+        # self.Beginn_sweetspot = 0.5
+        # self.Ende_sweetspot = 0.6
         
-        # Ende_Crash = 0.2
-        # Beginn_sweetspot = 0.5
-        # Ende_sweetspot = 0.8
-        
-        # #im Stillstand und nicht im sweetspot: leicht negativ
-        # if (state[10] < 0.01) and state[21] > Ende_sweetspot:
-        #     reward = -2.5
-        # #im Stillstand und im sweetspot: größere Belohnung
-        # elif (state[10] < 0.01) and state[21] > Beginn_sweetspot and state[21] < Ende_sweetspot:
-        #     reward = 200
+        # #im Stillstand und nicht im sweetspot (weiter als 0,8m von der Wand entfernt): leicht negativ: Bestrafung für Stillstand
+        # if (state[10] < 0.01) and state[21] > self.Ende_sweetspot:
+        #     reward = -0.5 # von -2,5 auf -0,5 reduziert
+        # #im Stillstand und im sweetspot (zwischen 0,5m und 0,8m von der Wand entfernt): Belohnung für Stillstand im Sweetspot
+        # elif (state[10] < 0.01) and state[21] > self.Beginn_sweetspot and state[21] < self.Ende_sweetspot:
+        #     reward = 20 # von 50 auf 20 reduziert (9.2)
             
        
         #  # zu nah dran und vorwärts fliegen: Bestrafung; zu nah dran und zurückfliegen -> Belohnung (näher als 0,5 aber weiter weg als 0,20)
-        # if state[21] < Beginn_sweetspot and state[21] > Ende_Crash and state[10] > 0:
-        #     reward = -1000
-        # elif state[21] < Beginn_sweetspot and state[21] > Ende_Crash and state[10] < 0:
-        #     reward = 1000
+        # if state[21] < self.Beginn_sweetspot and state[21] > self.Ende_Crash and state[10] > 0:
+        #     reward = -20
+        # elif state[21] < self.Beginn_sweetspot and state[21] > self.Ende_Crash and state[10] < 0:
+        #     reward = 20
         
         # # zu nah dran aka. gecrasht: maximale Bestrafung
-        # if state[21] < Ende_Crash:
-        #     reward = -10000
-        
-        
+        # if state[21] < self.Ende_Crash:
+        #     reward = -300    # reward von -1000 auf -300 verringert, da die Drohne sonst nicht mehr lernt bzw. durch den Zusammenprall insgesamt negatives gesamtergebnis bekommt und dann ableitet, dass alles schlecht war und dann danach nur noch stehenbleibt
+
+        '''Anpassung: Umstellung auf die Belohnung auf die Gewählte Action'''
         #wenn vorheringer Raycastreading = Actual Raycastreading = 9999, dann abstand zu groß -> Vx > 0 (vorne fliegen ist gut, rückwärts fliegen ist schlecht)
-        if state[10] > 0:
+        #self.action[0][0] ist der Wert der Velocity in SOLL: x-Richtung
+        if self.action[0][0] == 1: 
             reward = 5
-        elif state[10] < 0:
-            reward = -5
+        elif self.action[0][0] == -1:
+            reward = -3 # von -5 auf -3 reduziert (9.2)
      
         self.Ende_Crash = 0.2
-        self.Beginn_sweetspot = 0.5
-        self.Ende_sweetspot = 0.6
+        self.Beginn_sweetspot = 0.4
+        self.Ende_sweetspot = 0.7
         
         #im Stillstand und nicht im sweetspot (weiter als 0,8m von der Wand entfernt): leicht negativ: Bestrafung für Stillstand
-        if (state[10] < 0.01) and state[21] > self.Ende_sweetspot:
-            reward = -2.5
+        if self.action[0][0] == 0 and state[21] > self.Ende_sweetspot:
+            reward = -0.5 # von -2,5 auf -0,5 reduziert
         #im Stillstand und im sweetspot (zwischen 0,5m und 0,8m von der Wand entfernt): Belohnung für Stillstand im Sweetspot
-        elif (state[10] < 0.01) and state[21] > self.Beginn_sweetspot and state[21] < self.Ende_sweetspot:
-            reward = 50
+        elif self.action[0][0] == 0 and state[21] > self.Beginn_sweetspot and state[21] < self.Ende_sweetspot:
+            reward = 20 # von 50 auf 20 reduziert (9.2)
             
        
          # zu nah dran und vorwärts fliegen: Bestrafung; zu nah dran und zurückfliegen -> Belohnung (näher als 0,5 aber weiter weg als 0,20)
-        if state[21] < self.Beginn_sweetspot and state[21] > self.Ende_Crash and state[10] > 0:
+        if self.action[0][0] == 1 and state[21] < self.Beginn_sweetspot and state[21] > self.Ende_Crash and state[10] > 0:
             reward = -20
-        elif state[21] < self.Beginn_sweetspot and state[21] > self.Ende_Crash and state[10] < 0:
+        elif self.action[0][0] == -1 and state[21] < self.Beginn_sweetspot and state[21] > self.Ende_Crash and state[10] < 0:
             reward = 20
         
         # zu nah dran aka. gecrasht: maximale Bestrafung
-        if state[21] < self.Ende_Crash:
-            reward = -1000    
-      
-        
+        if state[21] <= self.Ende_Crash:
+            reward = -300    # reward von -1000 auf -300 verringert, da die Drohne sonst nicht mehr lernt bzw. durch den Zusammenprall insgesamt negatives gesamtergebnis bekommt und dann ableitet, dass alles schlecht war und dann danach nur noch stehenbleibt
         
         
         return reward
@@ -431,8 +427,7 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         dict[str, int]
             Dummy value.
             
-        print("Reward:", reward)
-        print("Abstand zur Wand:", state[20])
+    
 
         """
         # state = self._getDroneStateVector(0) #getDroneStateVector braucht die 0 

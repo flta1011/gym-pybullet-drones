@@ -36,15 +36,18 @@ from gym_pybullet_drones.examples.Test_Flo.BaseRLAviary_TestFlytoWall import Bas
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType
 
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden!
-DEFAULT_GUI_TRAIN = True
-DEFAULT_GUI_TEST = False
+DEFAULT_GUI_TRAIN = False
+DEFAULT_USER_DEBUG_GUI = True
+
+DEFAULT_GUI_TEST = True
+
 
 DEFAULT_RECORD_VIDEO = False
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
-DEFAULT_PYB_FREQ = 240
-DEFAULT_CTRL_FREQ = 60
-DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10
+DEFAULT_PYB_FREQ = 200
+DEFAULT_CTRL_FREQ = 100
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 4
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 
 DEFAULT_OBS = ObservationType('kin') # 'kin' or 'rgb'
@@ -65,7 +68,7 @@ INIT_RPYS = np.array([
 
 
 
-def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DEFAULT_GUI_TRAIN, gui_Test=DEFAULT_GUI_TEST, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO, local=True, pyb_freq=DEFAULT_PYB_FREQ, ctrl_freq=DEFAULT_CTRL_FREQ, reward_and_action_change_freq=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ, drone_model=DEFAULT_DRONE_MODEL):
+def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DEFAULT_GUI_TRAIN, gui_Test=DEFAULT_GUI_TEST, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO, local=True, pyb_freq=DEFAULT_PYB_FREQ, ctrl_freq=DEFAULT_CTRL_FREQ, user_debug_gui=DEFAULT_USER_DEBUG_GUI, reward_and_action_change_freq=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ, drone_model=DEFAULT_DRONE_MODEL):
 
     filename = os.path.join(output_folder, 'save-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
     if not os.path.exists(filename):
@@ -79,6 +82,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
             initial_rpys=INIT_RPYS,
             physics=Physics.PYB,
             gui=gui_Train,
+            user_debug_gui=user_debug_gui,
             pyb_freq=pyb_freq,
             ctrl_freq=ctrl_freq, # Ansatz: von 60 auf 10 reduzieren, damit die gewählte Action länger wirkt
             reward_and_action_change_freq=reward_and_action_change_freq, # Ansatz: neu hinzugefügt, da die Step-Funktion vorher mit der ctrl_freq aufgerufen wurde, Problem war dann, dass bei hoher Frequenz die Raycasts keine Änderung hatten, dafür die Drohne aber sauber geflogen ist (60). Wenn der Wert niedriger war, hat es mit den Geschwindigkeiten und Actions besser gepasst, dafür ist die Drohne nicht sauber geflogen, weil die Ctrl-Frequenz für das erreichen der gewählten Action zu niedrig war (10/20).
@@ -93,6 +97,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
         initial_xyzs=INIT_XYZS,
         initial_rpys=INIT_RPYS,
         gui=gui_Test,
+        user_debug_gui=user_debug_gui,
         pyb_freq=pyb_freq,
         ctrl_freq=ctrl_freq,
         reward_and_action_change_freq=reward_and_action_change_freq,
@@ -108,11 +113,11 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
                 train_env,
                 # tensorboard_log=filename+'/tb/',
                 verbose=1,
-                learning_rate=0.0003,  # Increased from default 0.0003
+                learning_rate=0.0001,  # Increased from default 0.0003
                 )
 
     #### Target cumulative rewards (problem-dependent) ##########
-    target_reward = 1000000
+    target_reward = 2000
     print(target_reward)
     #The StopTrainingOnRewardThreshold callback is used to stop the training once a certain reward threshold is reached.
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=target_reward,
@@ -131,15 +136,16 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
                                  verbose=1,
                                  best_model_save_path=filename+'/',
                                  log_path=filename+'/',
-                                 eval_freq=int(10000),
+                                 eval_freq=int(1*1e4),
                                  deterministic=True,
-                                 render=False)
+                                 render=False,
+                                 n_eval_episodes=1)# neu eingefügt, dass es schneller durch ist mit der Visu
     #The model.learn function is used to train the model.
     # total_timesteps: The total number of timesteps to train for. It is set to 1e7 (10 million) if local is True, otherwise 1e2 (100) for shorter training in GitHub Actions pytest.
     # callback: The callback to use during training, in this case, eval_callback.
     # log_interval: The number of timesteps between logging events.
     # In your code, the model will train for a specified number of timesteps, using the eval_callback for periodic evaluation, and log information every 100 timesteps.
-    model.learn(total_timesteps=int(1e7), # shorter training in GitHub Actions pytest
+    model.learn(total_timesteps=int(3*1e6), # shorter training in GitHub Actions pytest
                 callback=eval_callback,
                 log_interval=1000)
     
@@ -261,6 +267,7 @@ if __name__ == '__main__':
     parser.add_argument('--ctrl_freq',          default=DEFAULT_CTRL_FREQ,    type=int,           help='Control frequency (default: 60)', metavar='')
     parser.add_argument('--reward_and_action_change_freq',          default=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,    type=int,           help='Control frequency (default: 60)', metavar='')
     parser.add_argument('--drone_model',          default=DEFAULT_DRONE_MODEL,    type=str,           help='Control frequency (default: 60)', metavar='')
+    parser.add_argument('--user_debug_gui',          default=DEFAULT_USER_DEBUG_GUI,    type=str2bool,           help='set to True if you want to see the debug GUI, only for showing the frame in training!(default: False)', metavar='')
     ARGS = parser.parse_args()
 
     run(**vars(ARGS))

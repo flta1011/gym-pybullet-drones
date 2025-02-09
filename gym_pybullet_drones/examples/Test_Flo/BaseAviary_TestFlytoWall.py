@@ -35,7 +35,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
                  gui=False,
                  record=False,
                  obstacles=False,
-                 user_debug_gui=True,
+                 user_debug_gui=False,
                  vision_attributes=False,
                  output_folder='results_FlytoWall',
                  ):
@@ -346,14 +346,14 @@ class BaseAviary_TestFlytoWall(gym.Env):
             
         actual_action_0_bis_3 = int(action.item())
 
-        # translate action into movement direction
-        action_to_movement_direction = {
-            0: np.array([[1, 0, 0, 0.99]]),    # Vor
-            1: np.array([[-1, 0, 0, 0.99]]),   # Zurück
-            2: np.array([[0, 0, 0, 0.99]]),    # bleibe stehen
-            # 2: np.array([[0, 1, 0, 0.99]]), # links 
-            # 3: np.array([[0, -1, 0, 0.99]]), # rechts
-            }
+        # # translate action into movement direction
+        # action_to_movement_direction = {
+        #     0: np.array([[1, 0, 0, 0.99]]),    # Vor
+        #     1: np.array([[-1, 0, 0, 0.99]]),   # Zurück
+        #     2: np.array([[0, 0, 0, 0.99]]),    # bleibe stehen
+        #     # 2: np.array([[0, 1, 0, 0.99]]), # links 
+        #     # 3: np.array([[0, -1, 0, 0.99]]), # rechts
+        #     }
         
         #17.1.25: neue Tests mit reduzierter Geschwindigkeit, da die Drohne sehr schnell an die Wand fliegt
         action_to_movement_direction = {
@@ -363,10 +363,11 @@ class BaseAviary_TestFlytoWall(gym.Env):
             # 2: np.array([[0, 1, 0, 0.99]]), # links 
             # 3: np.array([[0, -1, 0, 0.99]]), # rechts
             }
-            
-        
+  
+        self.action = None
+        # Get movement direction based on action
         action = action_to_movement_direction[actual_action_0_bis_3]
-        
+        self.action = action
         
         #### Save PNG video frames if RECORD=True and GUI=False ####
         if self.RECORD and not self.GUI and self.step_counter%self.CAPTURE_FREQ == 0:
@@ -514,11 +515,12 @@ class BaseAviary_TestFlytoWall(gym.Env):
                     #### Save the last applied action (e.g. to compute drag) ###
                     self.last_clipped_action = clipped_action
                     
+                    
+                    
                     self.PYB_STEPS_IN_ACTUAL_STEP_CALL +=1
-                    
-                    
                     if self.PYB_STEPS_IN_ACTUAL_STEP_CALL == self.PYB_STEPS_PER_REWARD_AND_ACTION_CHANGE:
-                        
+                        #### Update and store the drones kinematic information #####
+                        self._updateAndStoreKinematicInformation()
                         break
                 #### Update and store the drones kinematic information #####
                 self._updateAndStoreKinematicInformation()
@@ -536,35 +538,53 @@ class BaseAviary_TestFlytoWall(gym.Env):
         ###Debugging Plots
         state = self._getDroneStateVector(0) #Einführung neuste 
         
+        
+        
         if self.step_counter == 0:
             self.time_start_trainrun = time.time()
             self.timestamp_previous = time.time()
             self.timestamp_actual = time.time()
             self.RewardCounterActualTrainRun = 0
+            self.List_Of_Tuples_Of_Reward_And_Action = []
             timediff = 0
         else:
             self.timestamp_previous = self.timestamp_actual
             self.timestamp_actual = time.time()
             timediff = self.timestamp_actual - self.timestamp_previous
             self.RewardCounterActualTrainRun += reward
-       
- 
-        print("Timediff of Step to previous Step (s):", "{:.3f}".format(timediff)) #Timediff in Sekunden
-        print("Gesamtlaufzeit aktueller Trainingslauf (s):", "{:.3f}".format(time.time() - self.time_start_trainrun))
-        print(" Abstand zur Wand front:", state[21])
-        print(" Abstand zur Wand back:", state[22])
-        print(f"aktuelle Action: {action}")
-        print(f"aktueller Reward für Action: {reward}")
-        print(f"Gesamte Reward des aktuellen Trainingslaufs: {self.RewardCounterActualTrainRun}")
-        print(f"current step: {self.step_counter}")
-        if truncated:
-            print(f"Grund für Truncated: {Grund_Truncated}")
-        if terminated:
-            print(f"Grund für Terminated: {Grund_Terminated}")
-        print("\n")
+            self.List_Of_Tuples_Of_Reward_And_Action.append((action[0][0], reward))
+        #plotting im Trainings-Plot
+        if self.GUI and self.USER_DEBUG:
+            print("Timediff of Step to previous Step (s):", "{:.3f}".format(timediff)) #Timediff in Sekunden
+            print("Gesamtlaufzeit aktueller Trainingslauf (s):", "{:.3f}".format(time.time() - self.time_start_trainrun))
+            print(" Abstand zur Wand front:", state[21])
+            print(" Abstand zur Wand back:", state[22])
+            print(f"aktuelle Action: {action}")
+            print(f"aktueller Reward für Action: {reward}")
+            print(f"Gesamte Reward des aktuellen Trainingslaufs: {self.RewardCounterActualTrainRun}")
+            print(f"current step: {self.step_counter}")
+            if truncated:
+                print(f"Grund für Truncated: {Grund_Truncated}")
+                print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
+            if terminated:
+                print(f"Grund für Terminated: {Grund_Terminated}")
+                print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
         # print(" Abstand zur Wand left:", state[23])
         # print(" Abstand zur Wand right:", state[24])
         # print(" Abstand zur Wand top:", state[25])
+        
+        if self.GUI:
+            if truncated:
+                print(" Abstand zur Wand front:", state[21])
+                print(" Abstand zur Wand back:", state[22])
+                print(f"Grund für Truncated: {Grund_Truncated}\n")
+                print(f"Gesamte Reward bei Abbruch oder Ende des Trainingslaufs: {self.RewardCounterActualTrainRun}")
+            if terminated:
+                print(" Abstand zur Wand front:", state[21])
+                print(" Abstand zur Wand back:", state[22])
+                print(f"Grund für Terminated: {Grund_Terminated}\n")
+                print(f"Gesamte Reward bei Abbruch oder Ende des Trainingslaufs: {self.RewardCounterActualTrainRun}")
+        
         
         #nachfolgendes war nur zum Debugging der getDroneStateVector Funktion genutzt worden
         # ray_cast_readings = self.check_distance_sensors(0)
@@ -797,11 +817,11 @@ class BaseAviary_TestFlytoWall(gym.Env):
                            self.rpy[nth_drone, :], #[7:10]
                            self.vel[nth_drone, :], #[10:13]
                            self.ang_v[nth_drone, :], #[13:16]
-                            0,
-                            0,
-                            0,
-                            0,
-                            0,
+                            0, # [16]
+                            0, # [17]
+                            0, # [18]
+                            0, # [19]
+                            0, # [20]
                         self.ray_results_actual[0], #forward [21]
                         self.ray_results_actual[1], #backward [22]
                         self.ray_results_actual[2], #left [23]
