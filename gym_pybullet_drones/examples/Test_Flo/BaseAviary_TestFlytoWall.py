@@ -460,13 +460,15 @@ class BaseAviary_TestFlytoWall(gym.Env):
                 self.last_clipped_action = clipped_action
             #### Update and store the drones kinematic information #####
             self._updateAndStoreKinematicInformation()
-            p.resetDebugVisualizerCamera(cameraDistance=3,
-                                         cameraYaw=self.rpy[0][2]-30,
-                                         cameraPitch=self.rpy[0][1]-30,
-                                         cameraRoll=self.rpy[0][0],
-                                         cameraTargetPosition=self.pos,
-                                         physicsClientId=self.CLIENT
-                                         )
+            
+            #### Kamera-Einstellungen, scheint aber nicht zu funktionieren (9.2)####
+            # p.resetDebugVisualizerCamera(cameraDistance=3,
+            #                              cameraYaw=self.rpy[0][2]-30,
+            #                              cameraPitch=self.rpy[0][1]-30,
+            #                              cameraRoll=self.rpy[0][0],
+            #                              cameraTargetPosition=self.pos,
+            #                              physicsClientId=self.CLIENT
+            #                              )
         
         
 
@@ -528,60 +530,46 @@ class BaseAviary_TestFlytoWall(gym.Env):
         #### Prepare the return values #############################
         obs = self._computeObs()
         reward = self._computeReward()
-        terminated = self._computeTerminated()
-        truncated = self._computeTruncated()
+        terminated, Grund_Terminated = self._computeTerminated()
+        truncated, Grund_Truncated = self._computeTruncated()
         info = self._computeInfo()
         ###Debugging Plots
         state = self._getDroneStateVector(0) #Einführung neuste 
         
-        #print timestamp
-        if not hasattr(self, 'timestamp_actual'):
+        if self.step_counter == 0:
+            self.time_start_trainrun = time.time()
+            self.timestamp_previous = time.time()
             self.timestamp_actual = time.time()
-        timestamp_previous = self.timestamp_actual
-        timestamp_actual = time.time()
-        print("Timestamp previous:", timestamp_previous)
-        print("Timestamp actual:", timestamp_actual)
-        print("Timediff (s):", "{:.3f}".format(timestamp_actual - timestamp_previous)) #Timediff in Sekunden
+            self.RewardCounterActualTrainRun = 0
+            timediff = 0
+        else:
+            self.timestamp_previous = self.timestamp_actual
+            self.timestamp_actual = time.time()
+            timediff = self.timestamp_actual - self.timestamp_previous
+            self.RewardCounterActualTrainRun += reward
+       
+ 
+        print("Timediff of Step to previous Step (s):", "{:.3f}".format(timediff)) #Timediff in Sekunden
+        print("Gesamtlaufzeit aktueller Trainingslauf (s):", "{:.3f}".format(time.time() - self.time_start_trainrun))
         print(" Abstand zur Wand front:", state[21])
         print(" Abstand zur Wand back:", state[22])
-        print(" Abstand zur Wand left:", state[23])
-        print(" Abstand zur Wand right:", state[24])
-        print(" Abstand zur Wand top:", state[25])
+        print(f"aktuelle Action: {action}")
+        print(f"aktueller Reward für Action: {reward}")
+        print(f"Gesamte Reward des aktuellen Trainingslaufs: {self.RewardCounterActualTrainRun}")
+        print(f"current step: {self.step_counter}")
+        if truncated:
+            print(f"Grund für Truncated: {Grund_Truncated}")
+        if terminated:
+            print(f"Grund für Terminated: {Grund_Terminated}")
+        print("\n")
+        # print(" Abstand zur Wand left:", state[23])
+        # print(" Abstand zur Wand right:", state[24])
+        # print(" Abstand zur Wand top:", state[25])
         
-        ray_cast_readings = self.check_distance_sensors(0)
-        print(f"Sensor Readings: \n forward {ray_cast_readings[0]} \n backwards {ray_cast_readings[1]} \n left {ray_cast_readings[2]} \n right {ray_cast_readings[3]} \n up {ray_cast_readings[4]} \n down {ray_cast_readings[5]}")
+        #nachfolgendes war nur zum Debugging der getDroneStateVector Funktion genutzt worden
+        # ray_cast_readings = self.check_distance_sensors(0)
+        # print(f"Sensor Readings: \n forward {ray_cast_readings[0]} \n backwards {ray_cast_readings[1]} \n left {ray_cast_readings[2]} \n right {ray_cast_readings[3]} \n up {ray_cast_readings[4]} \n down {ray_cast_readings[5]}")
         
-        ###Debugging Plots
-        state = self._getDroneStateVector(0) #Einführung neuste 
-        
-        #print timestamp
-        if not hasattr(self, 'timestamp_actual'):
-            self.timestamp_actual = time.time()
-        timestamp_previous = self.timestamp_actual
-        timestamp_actual = time.time()
-        print("Timestamp previous:", timestamp_previous)
-        print("Timestamp actual:", timestamp_actual)
-        print("Timediff (s):", "{:.3f}".format(timestamp_actual - timestamp_previous)) #Timediff in Sekunden
-        print(" Abstand zur Wand front:", state[21])
-        print(" Abstand zur Wand back:", state[22])
-        print(" Abstand zur Wand left:", state[23])
-        print(" Abstand zur Wand right:", state[24])
-        print(" Abstand zur Wand top:", state[25])
-
-
-        print("aktueller Abstand zur Wand:", state[21])
-        print("vorheriger Abstand zur Wand:", state[16])
-        print("Differenz Wand nachher-vorher:", state[21] - state[16])
-        
-        print(f"Input Action: {actual_action_0_bis_3}, Action übersetzt: {action}\n Reward: {reward}\n\n")
-        
-
-
-
-
-
-
-
 
 
         #### Advance the step counter (for physics-steps) ##############################
