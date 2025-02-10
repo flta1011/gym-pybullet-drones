@@ -36,10 +36,10 @@ from gym_pybullet_drones.examples.Test_Flo.BaseRLAviary_TestFlytoWall import Bas
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType
 
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden!
-DEFAULT_GUI_TRAIN = False
+DEFAULT_GUI_TRAIN = True
 DEFAULT_USER_DEBUG_GUI = True
 
-DEFAULT_GUI_TEST = True
+DEFAULT_GUI_TEST = False
 
 
 DEFAULT_RECORD_VIDEO = False

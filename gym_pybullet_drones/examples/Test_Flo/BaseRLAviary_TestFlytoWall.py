@@ -271,7 +271,7 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         #     print("[ERROR] in BaseRLAviary._computeObs()")
 
 ################################################################################
-    # ANCHOR - def computeReward
+    # ANCHOR - computeReward
     def _computeReward(self): #copied from HoverAviary_TestFlo.py
         """Computes the current reward value.
 
@@ -315,34 +315,47 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         # if state[21] < self.Ende_Crash:
         #     reward = -300    # reward von -1000 auf -300 verringert, da die Drohne sonst nicht mehr lernt bzw. durch den Zusammenprall insgesamt negatives gesamtergebnis bekommt und dann ableitet, dass alles schlecht war und dann danach nur noch stehenbleibt
 
-        '''Anpassung: Umstellung auf die Belohnung auf die Gewählte Action'''
-        #wenn vorheringer Raycastreading = Actual Raycastreading = 9999, dann abstand zu groß -> Vx > 0 (vorne fliegen ist gut, rückwärts fliegen ist schlecht)
-        #self.action[0][0] ist der Wert der Velocity in SOLL: x-Richtung
-        if self.action[0][0] == 1: 
-            reward = 5
-        elif self.action[0][0] == -1:
-            reward = -3 # von -5 auf -3 reduziert (9.2)
-     
         self.Ende_Crash = 0.2
         self.Beginn_sweetspot = 0.4
         self.Ende_sweetspot = 0.7
         
-        #im Stillstand und nicht im sweetspot (weiter als 0,8m von der Wand entfernt): leicht negativ: Bestrafung für Stillstand
-        if self.action[0][0] == 0 and state[21] > self.Ende_sweetspot:
-            reward = -0.5 # von -2,5 auf -0,5 reduziert
-        #im Stillstand und im sweetspot (zwischen 0,5m und 0,8m von der Wand entfernt): Belohnung für Stillstand im Sweetspot
-        elif self.action[0][0] == 0 and state[21] > self.Beginn_sweetspot and state[21] < self.Ende_sweetspot:
-            reward = 20 # von 50 auf 20 reduziert (9.2)
-            
-       
-         # zu nah dran und vorwärts fliegen: Bestrafung; zu nah dran und zurückfliegen -> Belohnung (näher als 0,5 aber weiter weg als 0,20)
-        if self.action[0][0] == 1 and state[21] < self.Beginn_sweetspot and state[21] > self.Ende_Crash and state[10] > 0:
-            reward = -20
-        elif self.action[0][0] == -1 and state[21] < self.Beginn_sweetspot and state[21] > self.Ende_Crash and state[10] < 0:
-            reward = 20
+        '''Anpassung: Umstellung auf die Belohnung auf die Gewählte Action'''
         
-        # zu nah dran aka. gecrasht: maximale Bestrafung
-        if state[21] <= self.Ende_Crash:
+        #####VOR DEM SWEETSPOT#############
+        #wenn vorheringer Raycastreading = Actual Raycastreading = 9999, dann abstand zu groß -> Vx > 0 (vorne fliegen ist gut, rückwärts fliegen ist schlecht)
+        #self.action[0][0] ist der Wert der Velocity in SOLL: x-Richtung
+        if self.action[0][0] == 1 and state[21] > self.Beginn_sweetspot: 
+            reward = 5
+        elif self.action[0][0] == -1 and state[21] > self.Beginn_sweetspot:
+            reward = -5 # von -5 auf -3 reduziert (9.2), von -3 auf -7 reduziert (10.2), damit Reward hacking entgegengewirkt wird (+/- immer abwechselnd), wieder zurück auf -5 (10.2), damit er beim fliegen nach vorne (was gut ist) nicht unnötig bestraft wird.
+     
+        #####Im SWEETSPOT######################
+        #stillstand und im sweetspot: Belohnung
+        
+        if self.action[0][0] == 0 and state[21] > self.Ende_sweetspot and state[21] < self.Beginn_sweetspot:
+            reward = 50
+        #vorwärts fliegen und im sweetspot: Neutral
+        elif self.action[0][0] == 1 and state[21] > self.Beginn_sweetspot and state[21] < self.Ende_sweetspot:
+            reward = 10
+        #Rückwärts im Sweetspot: Neutral
+        elif self.action[0][0] == -1 and state[21] > self.Beginn_sweetspot and state[21] < self.Ende_sweetspot:
+            reward = 10
+       
+        #####NACH DEM SWEETSPOT, zu nah an der Wand#####################
+         # zu nah dran und vorwärts fliegen: Bestrafung; zu nah dran und zurückfliegen -> Belohnung (näher als 0,5 aber weiter weg als 0,20)
+        #stehen bleiben:
+        elif self.action[0][0] == 0 and state[21] < self.Beginn_sweetspot and state[21] > self.Ende_Crash:
+            reward = -3
+        #vorwärts fliegen:
+        if self.action[0][0] == 1 and state[21] < self.Beginn_sweetspot and state[21] > self.Ende_Crash and state[10] > 0:
+            reward = -3
+        #rückwärts fliegen:
+        elif self.action[0][0] == -1 and state[21] < self.Beginn_sweetspot and state[21] > self.Ende_Crash and state[10] < 0:
+            reward = 5
+            
+            
+       ##############Gecrasht, aka zu nah dran########################
+        elif state[21] <= self.Ende_Crash:
             reward = -300    # reward von -1000 auf -300 verringert, da die Drohne sonst nicht mehr lernt bzw. durch den Zusammenprall insgesamt negatives gesamtergebnis bekommt und dann ableitet, dass alles schlecht war und dann danach nur noch stehenbleibt
         
         
