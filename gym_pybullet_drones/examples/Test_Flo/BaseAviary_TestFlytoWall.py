@@ -287,7 +287,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
 
         """
 
-        # TODO : initialize random number generator with seed
+       
 
         p.resetSimulation(physicsClientId=self.CLIENT)
         #### Housekeeping ##########################################
@@ -304,10 +304,10 @@ class BaseAviary_TestFlytoWall(gym.Env):
     
 
     ################################################################################
-
+    # NOTE - hier ist die Step
     def step(self,
              action
-             ):
+             ): 
         """Advances the environment by one simulation step.
 
         Parameters

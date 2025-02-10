@@ -242,7 +242,7 @@ class Crazyradio:
 
     def _has_fw_scan(self):
         # return self.version >= 0.5
-        # FIXME: Mitigation for Crazyradio firmware bug #9
+        # : Mitigation for Crazyradio firmware bug #9
         return False
 
     def scan_selected(self, selected, packet):

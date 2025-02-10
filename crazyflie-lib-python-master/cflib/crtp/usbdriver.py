@@ -183,7 +183,7 @@ class UsbDriver(CRTPDriver):
         else:
             raise Exception('Cannot scan for links while the link is open!')
 
-        # FIXME: implements serial number in the Crazyradio driver!
+        # : implements serial number in the Crazyradio driver!
         # serial = "N/A"
 
         found = self.cfusb.scan()

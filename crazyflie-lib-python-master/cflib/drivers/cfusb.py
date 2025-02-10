@@ -124,7 +124,7 @@ class CfUsb:
         self.dev = None
 
     def scan(self):
-        # TODO: Currently only supports one device
+        # : Currently only supports one device
         if self.dev:
             return [('usb://0', '')]
         return []

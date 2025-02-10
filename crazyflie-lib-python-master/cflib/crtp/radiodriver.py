@@ -621,7 +621,7 @@ class _RadioDriverThread(threading.Thread):
 
             # If there is a copter in range, the packet is analysed and the
             # next packet to send is prepared
-            # TODO: This does not seem to work since there is always a byte filled in the data even with null packets
+            # : This does not seem to work since there is always a byte filled in the data even with null packets
             if (len(data) > 0):
                 inPacket = CRTPPacket(data[0], list(data[1:]))
                 self._in_queue.put(inPacket)

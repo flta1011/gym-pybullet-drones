@@ -89,7 +89,7 @@ class Localization():
         data = packet.data[1:]
 
         # Decoding the known packet types
-        # TODO: more generic decoding scheme?
+        # : more generic decoding scheme?
         decoded_data = None
         if pk_type == self.RANGE_STREAM_REPORT:
             if len(data) % 5 != 0:

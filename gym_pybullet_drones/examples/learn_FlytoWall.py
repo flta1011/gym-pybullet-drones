@@ -74,6 +74,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
     if not os.path.exists(filename):
         os.makedirs(filename+'/')
 
+        # ANCHOR - learn_FlytoWall ENVS
         train_env = make_vec_env(
         BaseRLAviary_TestFlytoWall,
         env_kwargs=dict(

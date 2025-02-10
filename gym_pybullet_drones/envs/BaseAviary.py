@@ -283,7 +283,7 @@ class BaseAviary(gym.Env):
 
         """
 
-        # TODO : initialize random number generator with seed
+        # : initialize random number generator with seed
 
         p.resetSimulation(physicsClientId=self.CLIENT)
         #### Housekeeping ##########################################

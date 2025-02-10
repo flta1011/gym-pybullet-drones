@@ -86,7 +86,7 @@ def mat_run(U, Q, hEstMethod='DLT'):
         Mcorrective = modelRotation.dot(MCenter)
         U = Mcorrective[0:2, :].dot(np.vstack((U, np.ones((1, U.shape[1])))))
 
-    # TODO: Add support for Harker function
+    # : Add support for Harker function
     # Compute the model to image homography
     if hEstMethod == 'DLT':
         _U = np.vstack((U, np.ones((1, n))))

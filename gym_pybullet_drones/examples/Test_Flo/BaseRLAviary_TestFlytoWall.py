@@ -123,7 +123,7 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         return spaces.Discrete(3)
         
     ################################################################################
-
+    # ANCHOR - def preprocessAction
     def _preprocessAction(self, action):
         
         """Preprocesses the action from PPO to drone controls.
@@ -271,7 +271,7 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         #     print("[ERROR] in BaseRLAviary._computeObs()")
 
 ################################################################################
-
+    # ANCHOR - def computeReward
     def _computeReward(self): #copied from HoverAviary_TestFlo.py
         """Computes the current reward value.
 

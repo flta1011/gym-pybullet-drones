@@ -285,7 +285,7 @@ class BaseAviary_TestFlo(gym.Env):
 
         """
 
-        # TODO : initialize random number generator with seed
+        # : initialize random number generator with seed
 
         p.resetSimulation(physicsClientId=self.CLIENT)
         #### Housekeeping ##########################################
@@ -302,7 +302,7 @@ class BaseAviary_TestFlo(gym.Env):
     
 
     ################################################################################
-
+    # ANCHOR - def Step
     def step(self,
              action
              ):
@@ -598,7 +598,7 @@ class BaseAviary_TestFlo(gym.Env):
             os.makedirs(os.path.dirname(self.IMG_PATH), exist_ok=True)
     
     ################################################################################
-
+    # ANCHOR - def getDroneStateVector
     def _getDroneStateVector(self, nth_drone):
         """Returns the state vector of the n-th drone.
 
@@ -1242,7 +1242,7 @@ class BaseAviary_TestFlo(gym.Env):
     
     ################################################################################
 
-    # Get Sensor Data
+    # ANCHOR - Get Sensor Data
     def check_distance_sensors(self, crazyflie_id):
         """
         Check the distance sensors of the Crazyflie drone.

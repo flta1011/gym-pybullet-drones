@@ -113,7 +113,7 @@ class BetaAviary(BaseAviary):
 
         t = i/self.CTRL_FREQ
 
-        for j in range(self.NUM_DRONES): #TODO: add multi-drone support
+        for j in range(self.NUM_DRONES): # add multi-drone support
 
             #### State message to Betaflight ###########################
             o = obs[j,:] # p, q, euler, v, w, rpm (all in world frame)
