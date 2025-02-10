@@ -31,10 +31,11 @@ class BaseAviary_TestFlytoWall(gym.Env):
                  physics: Physics=Physics.PYB,
                  pyb_freq: int = 240, #simulation frequency
                  ctrl_freq: int = 240,
+                 reward_and_action_change_freq: int = 10,
                  gui=False,
                  record=False,
                  obstacles=False,
-                 user_debug_gui=True,
+                 user_debug_gui=False,
                  vision_attributes=False,
                  output_folder='results_FlytoWall',
                  ):
@@ -76,11 +77,14 @@ class BaseAviary_TestFlytoWall(gym.Env):
         self.DEG2RAD = np.pi/180
         self.CTRL_FREQ = ctrl_freq
         self.PYB_FREQ = pyb_freq
+        self.REWARD_AND_ACTION_CHANGE_FREQ = reward_and_action_change_freq
         if self.PYB_FREQ % self.CTRL_FREQ != 0:
             raise ValueError('[ERROR] in BaseAviary.__init__(), pyb_freq is not divisible by env_freq.')
         self.PYB_STEPS_PER_CTRL = int(self.PYB_FREQ / self.CTRL_FREQ)
+        self.PYB_STEPS_PER_REWARD_AND_ACTION_CHANGE = int(self.PYB_FREQ / self.REWARD_AND_ACTION_CHANGE_FREQ)
         self.CTRL_TIMESTEP = 1. / self.CTRL_FREQ
         self.PYB_TIMESTEP = 1. / self.PYB_FREQ
+        self.REWARD_AND_ACTION_CHANGE_TIMESTEP = 1. / self.REWARD_AND_ACTION_CHANGE_FREQ
         #### Parameters ############################################
         self.NUM_DRONES = num_drones
         self.NEIGHBOURHOOD_RADIUS = neighbourhood_radius
@@ -150,9 +154,9 @@ class BaseAviary_TestFlytoWall(gym.Env):
             self.CLIENT = p.connect(p.GUI) # p.connect(p.GUI, options="--opengl2")
             for i in [p.COV_ENABLE_RGB_BUFFER_PREVIEW, p.COV_ENABLE_DEPTH_BUFFER_PREVIEW, p.COV_ENABLE_SEGMENTATION_MARK_PREVIEW]:
                 p.configureDebugVisualizer(i, 0, physicsClientId=self.CLIENT)
-            p.resetDebugVisualizerCamera(cameraDistance=3,
-                                         cameraYaw=-30,
-                                         cameraPitch=-30,
+            p.resetDebugVisualizerCamera(cameraDistance=5,
+                                         cameraYaw=-90,
+                                         cameraPitch=-60,
                                          cameraTargetPosition=[0, 0, 0],
                                          physicsClientId=self.CLIENT
                                          )
@@ -209,9 +213,13 @@ class BaseAviary_TestFlytoWall(gym.Env):
         self.action_space = self._actionSpace()
         self.observation_space = self._observationSpace()
         #### Housekeeping ##########################################
+
         self._housekeeping()
+
         #### Update and store the drones kinematic information #####
+
         self._updateAndStoreKinematicInformation()
+
         #### Start video recording #################################
         self._startVideoRecording()
     
@@ -283,27 +291,76 @@ class BaseAviary_TestFlytoWall(gym.Env):
 
         """
 
-        # TODO : initialize random number generator with seed
+       
 
         p.resetSimulation(physicsClientId=self.CLIENT)
-        #### Housekeeping ##########################################
-        self._housekeeping()
-        #### Update and store the drones kinematic information #####
-        self._updateAndStoreKinematicInformation()
-        #### Start video recording #################################
-        self._startVideoRecording()
-        #### Return the initial observation ########################
-        initial_obs = self._computeObs()
-        initial_info = self._computeInfo()
-        return initial_obs, initial_info
+        
+        if self.USER_DEBUG:
+            #### Housekeeping ##########################################
+            print("Start housekeeping - INIT_XYZS:", self.INIT_XYZS)
+            self._housekeeping()
+            print("End housekeeping - INIT_XYZS:", self.INIT_XYZS)
+                
+            #### Start video recording #################################
+            self._startVideoRecording()
+            #### Update and store the drones kinematic information #####
+            print("Start kinematic update - INIT_XYZS:", self.INIT_XYZS)
+            print(f"self.pos vor Update: {self.pos}")
+            self._updateAndStoreKinematicInformation()
+            print(f"self.pos nach Update: {self.pos}")
+            print("End kinematic update - INIT_XYZS:", self.INIT_XYZS)
+            #### Start video recording #################################
+            self._startVideoRecording()
+            #### Return the initial observation ########################
+            initial_obs = None
+            initial_obs = self._computeObs()
+            nth_drone = 0 #weil das so standardmäßig im computeObs festegelegt ist
+            print(f"Getting state for nth_drone: {nth_drone}")
+        
+            # Get all bodies in simulation
+            all_bodies = p.getNumBodies(physicsClientId=self.CLIENT)
+            print(f"Bodies in simulation: {all_bodies}")
+            
+            # Get the actual drone ID
+            drone_id = nth_drone + 1  # If this is the issue, you might need to adjust this
+            print(f"Accessing drone ID: {drone_id}")
+            
+            # Verify the body is actually a drone
+            body_info = p.getBodyInfo(drone_id, physicsClientId=self.CLIENT)
+            print(f"Body info for ID {drone_id}: {body_info}")
+
+            
+            print(f"Environment resettet, initial_obs: {initial_obs}\n")
+        
+        
+        
+            initial_info = self._computeInfo()
+            
+            return initial_obs, initial_info
+        
+        else:
+            #### Housekeeping ##########################################
+            self._housekeeping()
+            #### Start video recording #################################
+            self._startVideoRecording()
+            #### Update and store the drones kinematic information #####
+            self._updateAndStoreKinematicInformation()
+            #### Start video recording #################################
+            self._startVideoRecording()
+            #### Return the initial observation ########################
+            initial_obs = None
+            initial_obs = self._computeObs()
+            initial_info = self._computeInfo()
+            
+            return initial_obs, initial_info
     
     
 
     ################################################################################
-
+    # ANCHOR - STEP
     def step(self,
              action
-             ):
+             ): 
         """Advances the environment by one simulation step.
 
         Parameters
@@ -342,19 +399,37 @@ class BaseAviary_TestFlytoWall(gym.Env):
             
         actual_action_0_bis_3 = int(action.item())
 
-        # translate action into movement direction
+        # # translate action into movement direction
+        # action_to_movement_direction = {
+        #     0: np.array([[1, 0, 0, 0.99]]),    # Vor
+        #     1: np.array([[-1, 0, 0, 0.99]]),   # Zurück
+        #     2: np.array([[0, 0, 0, 0.99]]),    # bleibe stehen
+        #     # 2: np.array([[0, 1, 0, 0.99]]), # links 
+        #     # 3: np.array([[0, -1, 0, 0.99]]), # rechts
+        #     }
+        
+        #17.1.25: neue Tests mit reduzierter Geschwindigkeit, da die Drohne sehr schnell an die Wand fliegt
         action_to_movement_direction = {
-            0: np.array([[1, 0, 0, 0.99]]),    # Vor 
-            1: np.array([[-1, 0, 0, 0.99]]),   # Zurück
-            2: np.array([[0, 0, 0, 0.99]]),    # bleibe stehen
+            0: np.array([[+1, 0, 0, 0.25]]),    # Vor 
+            1: np.array([[-1, 0, 0, 0.25]]),   # Zurück
+            2: np.array([[+0, 0, 0, 0.25]]),    # bleibe stehen
             # 2: np.array([[0, 1, 0, 0.99]]), # links 
             # 3: np.array([[0, -1, 0, 0.99]]), # rechts
-        
             }
+        
+        if self.step_counter == 0:
+            self.time_start_trainrun = 0
+            self.timestamp_previous = 0
+            self.timestamp_actual = 0
+            self.RewardCounterActualTrainRun = 0
+            self.List_Of_Tuples_Of_Reward_And_Action = []
+            timediff = 0
             
         
+        self.action = None
+        # Get movement direction based on action
         action = action_to_movement_direction[actual_action_0_bis_3]
-        
+        self.action = action
         
         #### Save PNG video frames if RECORD=True and GUI=False ####
         if self.RECORD and not self.GUI and self.step_counter%self.CAPTURE_FREQ == 0:
@@ -407,53 +482,174 @@ class BaseAviary_TestFlytoWall(gym.Env):
         
         
         #### Save, preprocess, and clip the action to the max. RPM #
-        else:
-            clipped_action = np.reshape(self._preprocessAction(action), (self.NUM_DRONES, 4))
-        #### Repeat for as many as the aggregate physics steps #####
-        for _ in range(self.PYB_STEPS_PER_CTRL):
-            #### Update and store the drones kinematic info for certain
-            #### Between aggregate steps for certain types of update ###
-            if self.PYB_STEPS_PER_CTRL > 1 and self.PHYSICS in [Physics.DYN, Physics.PYB_GND, Physics.PYB_DRAG, Physics.PYB_DW, Physics.PYB_GND_DRAG_DW]:
+        
+        if self.CTRL_FREQ <= self.REWARD_AND_ACTION_CHANGE_FREQ:
+            print("Ctrl-Frequenz ist kleiner oder gleich als die Reward-/Action-Änderungsfrequenz -> Reward-Frequenz wird auf Ctrl-Frequenz gesetzt")
+                
+            if not self.USE_GUI_RPM:
+                clipped_action = np.reshape(self._preprocessAction(action), (self.NUM_DRONES, 4))
+                    
+            #### Repeat for as many as the aggregate physics steps #####
+            # loope Nachfolgend so oft, dass genau 1x die Ctrl-Frequenz erreicht wird und 1x der Controll aufgerufen wird
+            for _ in range(self.PYB_STEPS_PER_CTRL):
+                #### Update and store the drones kinematic info for certain
+                #### Between aggregate steps for certain types of update ###
+                if self.PYB_STEPS_PER_CTRL > 1 and self.PHYSICS in [Physics.DYN, Physics.PYB_GND, Physics.PYB_DRAG, Physics.PYB_DW, Physics.PYB_GND_DRAG_DW]:
+                    self._updateAndStoreKinematicInformation()
+                #### Step the simulation using the desired physics update ##
+                for i in range (self.NUM_DRONES):
+                    if self.PHYSICS == Physics.PYB:
+                        self._physics(clipped_action[i, :], i)
+                    elif self.PHYSICS == Physics.DYN:
+                        self._dynamics(clipped_action[i, :], i)
+                    elif self.PHYSICS == Physics.PYB_GND:
+                        self._physics(clipped_action[i, :], i)
+                        self._groundEffect(clipped_action[i, :], i)
+                    elif self.PHYSICS == Physics.PYB_DRAG:
+                        self._physics(clipped_action[i, :], i)
+                        self._drag(self.last_clipped_action[i, :], i)
+                    elif self.PHYSICS == Physics.PYB_DW:
+                        self._physics(clipped_action[i, :], i)
+                        self._downwash(i)
+                    elif self.PHYSICS == Physics.PYB_GND_DRAG_DW:
+                        self._physics(clipped_action[i, :], i)
+                        self._groundEffect(clipped_action[i, :], i)
+                        self._drag(self.last_clipped_action[i, :], i)
+                        self._downwash(i)
+                #### PyBullet computes the new state, unless Physics.DYN ###
+                if self.PHYSICS != Physics.DYN:
+                    p.stepSimulation(physicsClientId=self.CLIENT)
+                #### Save the last applied action (e.g. to compute drag) ###
+                self.last_clipped_action = clipped_action
+            #### Update and store the drones kinematic information #####
+            self._updateAndStoreKinematicInformation()
+            
+            #### Kamera-Einstellungen, scheint aber nicht zu funktionieren (9.2)####
+            # p.resetDebugVisualizerCamera(cameraDistance=3,
+            #                              cameraYaw=self.rpy[0][2]-30,
+            #                              cameraPitch=self.rpy[0][1]-30,
+            #                              cameraRoll=self.rpy[0][0],
+            #                              cameraTargetPosition=self.pos,
+            #                              physicsClientId=self.CLIENT
+            #                              )
+        
+        
+
+        else: # Reward-/Action-Änderungsfrequenz ist kleiner als die Ctrl-Frequenz --> Loop muss öfters durch die Contrl-Freq bzw. Physics-Frequenz durchlaufen werden
+            #setzte den Step-Counter für die Zählung der Physics-Frequenz auf 0
+            self.PYB_STEPS_IN_ACTUAL_STEP_CALL = 0
+            
+            #wiederhole so lange die nachfolgende Loop, wie wir noch nicht an dem Zeitpunkt angekommen sind, dass wir den Reward an das RL zurückgeben        
+            while self.PYB_STEPS_IN_ACTUAL_STEP_CALL < self.PYB_STEPS_PER_REWARD_AND_ACTION_CHANGE:    # Get new control action if needed
+                
+                if not self.USE_GUI_RPM:
+                    clipped_action = np.reshape(self._preprocessAction(action), (self.NUM_DRONES, 4))
+                
+                # Loop for physics frequency so oft, dass wir nach X-Physics-Schritten die Control-Frequenz erreichen und den Controller erneut aufrufen (eins höher in der Loop)
+                for _ in range(self.PYB_STEPS_PER_CTRL):
+                    #### Update and store the drones kinematic info for certain
+                    #### Between aggregate steps for certain types of update ###
+                    if self.PYB_STEPS_PER_CTRL > 1 and self.PHYSICS in [Physics.DYN, Physics.PYB_GND, Physics.PYB_DRAG, Physics.PYB_DW, Physics.PYB_GND_DRAG_DW]:
+                        self._updateAndStoreKinematicInformation()
+                    #### Step the simulation using the desired physics update ##
+                    for i in range (self.NUM_DRONES):
+                        if self.PHYSICS == Physics.PYB:
+                            self._physics(clipped_action[i, :], i)
+                        elif self.PHYSICS == Physics.DYN:
+                            self._dynamics(clipped_action[i, :], i)
+                        elif self.PHYSICS == Physics.PYB_GND:
+                            self._physics(clipped_action[i, :], i)
+                            self._groundEffect(clipped_action[i, :], i)
+                        elif self.PHYSICS == Physics.PYB_DRAG:
+                            self._physics(clipped_action[i, :], i)
+                            self._drag(self.last_clipped_action[i, :], i)
+                        elif self.PHYSICS == Physics.PYB_DW:
+                            self._physics(clipped_action[i, :], i)
+                            self._downwash(i)
+                        elif self.PHYSICS == Physics.PYB_GND_DRAG_DW:
+                            self._physics(clipped_action[i, :], i)
+                            self._groundEffect(clipped_action[i, :], i)
+                            self._drag(self.last_clipped_action[i, :], i)
+                            self._downwash(i)
+                    #### PyBullet computes the new state, unless Physics.DYN ###
+                    if self.PHYSICS != Physics.DYN:
+                        p.stepSimulation(physicsClientId=self.CLIENT)
+                    #### Save the last applied action (e.g. to compute drag) ###
+                    self.last_clipped_action = clipped_action
+                    
+                    
+                    
+                    self.PYB_STEPS_IN_ACTUAL_STEP_CALL +=1
+                    if self.PYB_STEPS_IN_ACTUAL_STEP_CALL == self.PYB_STEPS_PER_REWARD_AND_ACTION_CHANGE:
+                        #### Update and store the drones kinematic information #####
+                        self._updateAndStoreKinematicInformation()
+                        break
+                #### Update and store the drones kinematic information #####
                 self._updateAndStoreKinematicInformation()
-            #### Step the simulation using the desired physics update ##
-            for i in range (self.NUM_DRONES):
-                if self.PHYSICS == Physics.PYB:
-                    self._physics(clipped_action[i, :], i)
-                elif self.PHYSICS == Physics.DYN:
-                    self._dynamics(clipped_action[i, :], i)
-                elif self.PHYSICS == Physics.PYB_GND:
-                    self._physics(clipped_action[i, :], i)
-                    self._groundEffect(clipped_action[i, :], i)
-                elif self.PHYSICS == Physics.PYB_DRAG:
-                    self._physics(clipped_action[i, :], i)
-                    self._drag(self.last_clipped_action[i, :], i)
-                elif self.PHYSICS == Physics.PYB_DW:
-                    self._physics(clipped_action[i, :], i)
-                    self._downwash(i)
-                elif self.PHYSICS == Physics.PYB_GND_DRAG_DW:
-                    self._physics(clipped_action[i, :], i)
-                    self._groundEffect(clipped_action[i, :], i)
-                    self._drag(self.last_clipped_action[i, :], i)
-                    self._downwash(i)
-            #### PyBullet computes the new state, unless Physics.DYN ###
-            if self.PHYSICS != Physics.DYN:
-                p.stepSimulation(physicsClientId=self.CLIENT)
-            #### Save the last applied action (e.g. to compute drag) ###
-            self.last_clipped_action = clipped_action
-        #### Update and store the drones kinematic information #####
-        self._updateAndStoreKinematicInformation()
+                
+            
+            
+            
+        
         #### Prepare the return values #############################
         obs = self._computeObs()
         reward = self._computeReward()
-        terminated = self._computeTerminated()
-        truncated = self._computeTruncated()
+        terminated, Grund_Terminated = self._computeTerminated()
+        truncated, Grund_Truncated = self._computeTruncated()
         info = self._computeInfo()
-        #### Advance the step counter ##############################
-        self.step_counter = self.step_counter + (1 * self.PYB_STEPS_PER_CTRL)
+        ###Debugging Plots
+        state = self._getDroneStateVector(0) #Einführung neuste 
+        
+        
+        self.timestamp_actual = self.step_counter * self.PYB_TIMESTEP  # Use simulation time instead of real time
+        self.RewardCounterActualTrainRun += reward
+        self.List_Of_Tuples_Of_Reward_And_Action.append((action[0][0], reward))
+            
+        # ANCHOR - Debugging-Plots STEP
+        #plotting im Trainings-Plot
+        if self.GUI and self.USER_DEBUG:
+            
+            print("Trainingszeit aktueller Run(s):", "{:.3f}".format(self.timestamp_actual))
+            print(f" Observationspace (forward,backward, letzte Action (Velocity in X-Richtung!)):\t {state[21]} \t{state[22]} \t{state[26]}")
+            print(f"aktuelle Action (Velocity in X-Richtung!) / Reward für Action: {self.action[0][0]} / {reward}")
+            print(f"Reward aktueller Trainingslauf: {self.RewardCounterActualTrainRun}")
+            print(f"current Physics-Step / Reward-Steps: {self.step_counter} / {self.timestamp_actual/(1/self.REWARD_AND_ACTION_CHANGE_FREQ)}")
+            if truncated:
+                print(f"Grund für Truncated: {Grund_Truncated}")
+                print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
+            if terminated:
+                print(f"Grund für Terminated: {Grund_Terminated}")
+                print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
+        # print(" Abstand zur Wand left:", state[23])
+        # print(" Abstand zur Wand right:", state[24])
+        # print(" Abstand zur Wand top:", state[25])
+        
+        if self.GUI:
+            if truncated:
+                #Zusammenfassung Trainingslauf
+                print(f"Zusammenfassung Trainingslauf Truncated (Grund: {Grund_Truncated}):")
+                print(f"Abstand zur Wand front/back: {state[21]} / {state[22]}")
+                print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
+            if terminated:
+                print(f"Zusammenfassung Trainingslauf Terminated (Grund: {Grund_Terminated}):")
+                print(f"Abstand zur Wand front/back: {state[21]} / {state[22]}")
+                print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
+        
+        
+        #nachfolgendes war nur zum Debugging der getDroneStateVector Funktion genutzt worden
+        # ray_cast_readings = self.check_distance_sensors(0)
+        # print(f"Sensor Readings: \n forward {ray_cast_readings[0]} \n backwards {ray_cast_readings[1]} \n left {ray_cast_readings[2]} \n right {ray_cast_readings[3]} \n up {ray_cast_readings[4]} \n down {ray_cast_readings[5]}")
+        
+
+
+        #### Advance the step counter (for physics-steps) ##############################
+        if self.CTRL_FREQ <= self.REWARD_AND_ACTION_CHANGE_FREQ:
+            self.step_counter = self.step_counter + (1 * self.PYB_STEPS_PER_CTRL)
+        else:
+            self.step_counter = self.step_counter + (1 * self.PYB_STEPS_IN_ACTUAL_STEP_CALL) #umgeändert auf den neuen Zähler, weil wir in einem Step in diesem Fall mehr Physics-Schritte durchlaufen, als PYB_STEPS_PER_CTRL
+            
         return obs, reward, terminated, truncated, info
-    
-    ################################################################################
-    
+            
     def render(self,
                mode='human',
                close=False
@@ -532,6 +728,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
         #### Initialize/reset counters and zero-valued variables ###
         self.RESET_TIME = time.time()
         self.step_counter = 0
+        self.action = np.zeros((self.NUM_DRONES, 1))
         self.first_render_call = True
         self.X_AX = -1*np.ones(self.NUM_DRONES)
         self.Y_AX = -1*np.ones(self.NUM_DRONES)
@@ -539,7 +736,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
         self.GUI_INPUT_TEXT = -1*np.ones(self.NUM_DRONES)
         self.USE_GUI_RPM=False
         self.last_input_switch = 0
-        self.last_clipped_action = np.zeros((self.NUM_DRONES, 4))
+        self.last_clipped_action = np.zeros((self.NUM_DRONES, 4)) # 4 Werte da das die PRMs der 4 Motoren der letzten Aktion sind
         self.gui_input = np.zeros(4)
         #### Initialize the drones kinemaatic information ##########
         self.pos = np.zeros((self.NUM_DRONES, 3))
@@ -611,7 +808,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
             os.makedirs(os.path.dirname(self.IMG_PATH), exist_ok=True)
     
     ################################################################################
-
+    # ANCHOR - getDroneStateVector
     def _getDroneStateVector(self, nth_drone):
         """Returns the state vector of the n-th drone.
 
@@ -630,17 +827,65 @@ class BaseAviary_TestFlytoWall(gym.Env):
             - 3x Roll, pitch, yaw (r, p, y) [7:10]       -> -np.inf bis np.inf
             - 3x Linear velocity (vx, vy, vz) [10:13]    -> -np.inf bis np.inf
             - 3x Angular velocity (wx, wy, wz) [13:16]     -> -np.inf bis np.inf
-            - 4x Last clipped action [16:20]             -> 0 bis 2 (da 3 actions)
-            - 5x Raycast readings (front, back, left, right, top) [20:25] -> 0 bis 9999
-
+            - 5x previous raycast readings (front, back, left, right, top) [16:21] -> 0 bis 9999    
+            - 5x actual raycast readings (front, back, left, right, top) [21:26] -> 0 bis 9999
+            - 4x Last clipped action [26:30]             -> 0 bis 2 (da 3 actions)
         """
-        ## tbd prüfen ALEX, FLORIAN, MORITZ
-        #ray_results = self._getToFSensorReadings(nth_drone)
-        self.ray_results = self.check_distance_sensors(1)
-        state = np.hstack([self.pos[nth_drone, :], self.quat[nth_drone, :], self.rpy[nth_drone, :],
-                        self.vel[nth_drone, :], self.ang_v[nth_drone, :], self.last_clipped_action[nth_drone, :],
-                        self.ray_results[0], self.ray_results[1], self.ray_results[2], self.ray_results[3], self.ray_results[4]])
-        return state.reshape(25,)
+        
+        # #initialisierung der ray_results_actual
+        # if not hasattr(self, 'ray_results_actual'):
+        #     self.ray_results_actual = self.check_distance_sensors(nth_drone)
+        #     self.ray_results_previous = self.ray_results_actual #fürs initialisieren die Werte gleich setzen
+        #     self.step_counter_last_actual_raycast = self.step_counter
+        # print("nth_drone:", nth_drone)
+        # #nur die Raycasts Readings aktualisieren, wenn wirklich ein Physics-Step gerechnet wurde!
+        # if self.step_counter > self.step_counter_last_actual_raycast:
+        #     self.ray_results_previous = self.ray_results_actual #safe old actual raycast readings to previous raycast readings
+        #     self.ray_results_actual = self.check_distance_sensors(nth_drone) # get new actual raycast readings
+        #     self.step_counter_last_actual_raycast = self.step_counter
+        
+        
+        self.ray_results_actual = self.check_distance_sensors(nth_drone) # get new actual raycast readings
+        # state = np.hstack([self.pos[nth_drone, :], #[0:3]
+        #                    self.quat[nth_drone, :], #[3:7]
+        #                    self.rpy[nth_drone, :], #[7:10]
+        #                    self.vel[nth_drone, :], #[10:13]
+        #                    self.ang_v[nth_drone, :], #[13:16]
+        #                 self.ray_results_previous[0], #forward [16]
+        #                 self.ray_results_previous[1], #backward [17]
+        #                 self.ray_results_previous[2], #left [18]
+        #                 self.ray_results_previous[3], #right [19]
+        #                 self.ray_results_previous[4], #up [20]
+        #                 self.ray_results_actual[0], #forward [21]
+        #                 self.ray_results_actual[1], #backward [22]
+        #                 self.ray_results_actual[2], #left [23]
+        #                 self.ray_results_actual[3], #right [24]
+        #                 self.ray_results_actual[4], #up [25]
+        #                 self.last_clipped_action[nth_drone, :]]) #last clipped action [26:30]
+        # return state.reshape(30,)
+        
+        if hasattr(self, 'action'):
+            last_action_VEL_X = self.action[0][0]
+        else:
+            last_action_VEL_X = 0
+            
+        state = np.hstack([self.pos[nth_drone, :], #[0:3]
+                           self.quat[nth_drone, :], #[3:7]
+                           self.rpy[nth_drone, :], #[7:10]
+                           self.vel[nth_drone, :], #[10:13]
+                           self.ang_v[nth_drone, :], #[13:16]
+                            0, # [16]
+                            0, # [17]
+                            0, # [18]
+                            0, # [19]
+                            0, # [20]
+                        self.ray_results_actual[0], #forward [21]
+                        self.ray_results_actual[1], #backward [22]
+                        self.ray_results_actual[2], #left [23]
+                        self.ray_results_actual[3], #right [24]
+                        self.ray_results_actual[4], #up [25]
+                        last_action_VEL_X]) #last clipped action [26]: jetzt nur noch 1 Wert (10.2.25)
+        return state.reshape(27,) # von 30 auf 27 geändert, da nur 1 Wert in lastClipppedACtion (10.2.25)
 
     ################################################################################
 
@@ -1256,7 +1501,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
     ################################################################################
 
     # Get Sensor Data
-    def check_distance_sensors(self, crazyflie_id):
+    def check_distance_sensors(self, nth_drone):
         """
         Check the distance sensors of the Crazyflie drone.
         Args:
@@ -1265,26 +1510,27 @@ class BaseAviary_TestFlytoWall(gym.Env):
             list: Sensor readings for each direction (forward, backward, left, right, up, down).
                 Each reading is the distance to the nearest obstacle or max_distance if no obstacle is detected.
         """
-        pos, ori = p.getBasePositionAndOrientation(crazyflie_id)
+        drone_id = nth_drone + 1 # nth_drone is 0-based, but the drone IDs are 1-based
+        pos, ori = p.getBasePositionAndOrientation(drone_id, physicsClientId=self.CLIENT)
         
         local_directions = np.array([
             [1, 0, 0],    # Forward
             [-1, 0, 0],   # Backward
             [0, 1, 0],    # Left
             [0, -1, 0],   # Right
-            [0, 0, -1],    # Up die Z-Achse zeigt anscheinend nach unten
-            [0, 0, 1],   # Down
+            [0, 0, 1],    # Up
+            [0, 0, -1],   # Down
         ])
-        
+
         max_distance = 5  # meters
         sensor_readings = []
         
         # Convert quaternion to rotation matrix using NumPy
         rot_matrix = np.array(p.getMatrixFromQuaternion(ori)).reshape(3, 3)
 
-        # Vorbereitung Visualisierung
-        p.removeAllUserDebugItems() # Entferne alle vergangenen Linien
-        # Benötigt, damit die Linien nur den akutellen Ray zeigen
+        # # Vorbereitung Visualisierung
+        # p.removeAllUserDebugItems() # Entferne alle vergangenen Linien
+        # # Benötigt, damit die Linien nur den akutellen Ray zeigen
         
         hit_fraction_list = []
 
@@ -1300,7 +1546,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
             hit_fraction_list.append(hit_fraction)
 
             if hit_object_id != -1 and hit_fraction > 0:
-                distance = hit_fraction * max_distance
+                distance = round(hit_fraction * max_distance, 4)
                 
                 #if distance < 0.2:
                     # Visualize the ray

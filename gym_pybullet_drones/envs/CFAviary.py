@@ -484,7 +484,7 @@ class CFAviary(BaseAviary):
         self.setpoint.mode.pitch = firm.modeDisable
         self.setpoint.mode.yaw = firm.modeDisable
 
-        self.setpoint.timestamp = int(timestep*1000) # TODO: This may end up skipping control loops 
+        self.setpoint.timestamp = int(timestep*1000) # This may end up skipping control loops 
         self.full_state_cmd_override = True
 
     def sendTakeoffCmd(self, height, duration):

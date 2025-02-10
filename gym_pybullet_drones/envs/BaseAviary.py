@@ -283,7 +283,7 @@ class BaseAviary(gym.Env):
 
         """
 
-        # TODO : initialize random number generator with seed
+        # : initialize random number generator with seed
 
         p.resetSimulation(physicsClientId=self.CLIENT)
         #### Housekeeping ##########################################
@@ -1004,11 +1004,12 @@ class BaseAviary(gym.Env):
         These obstacles are loaded from standard URDF files included in Bullet.
 
         """
-        # p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/train_square.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
+        p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/train_square.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
         
         try:
             #p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/maze/maze.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
-            p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/maze/maze_single_wall_link.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
+            #p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/maze/maze_single_wall_link.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
+            
 
             #p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/maze_seed_25.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
             p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/target.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)

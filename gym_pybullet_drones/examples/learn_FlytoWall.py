@@ -35,11 +35,23 @@ from gym_pybullet_drones.utils.enums import ObservationType, ActionType
 from gym_pybullet_drones.examples.Test_Flo.BaseRLAviary_TestFlytoWall import BaseRLAviary_TestFlytoWall
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType
 
+# ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden!
+DEFAULT_GUI_TRAIN = True
+DEFAULT_USER_DEBUG_GUI = False
 
-DEFAULT_GUI = True
-DEFAULT_RECORD_VIDEO = False
+DEFAULT_GUI_TEST = False
+
+DEFAULT_USE_PRETRAINED_MODEL = True
+
+DEFAULT_PRETRAINED_MODEL_PATH = 'results/save-02.10.2025_18.43.31/best_model.zip'
+
+DEFAULT_RECORD_VIDEO = True
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
+DEFAULT_PYB_FREQ = 100
+DEFAULT_CTRL_FREQ = 50
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 4
+DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 
 DEFAULT_OBS = ObservationType('kin') # 'kin' or 'rgb'
 DEFAULT_ACT = ActionType('vel') # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'one_d_pid'
@@ -49,56 +61,78 @@ DEFAULT_MA = False
 DEFAULT_ALTITUDE = 0.5
 
 INIT_XYZS = np.array([
-                          [ 0, 0, DEFAULT_ALTITUDE],
+                          [0, 0, DEFAULT_ALTITUDE],
                           ])
 INIT_RPYS = np.array([
                           [0, 0, 0],
                           ])
 
 
-def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO, local=True):
+
+
+
+def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DEFAULT_GUI_TRAIN, gui_Test=DEFAULT_GUI_TEST, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO, local=True, pyb_freq=DEFAULT_PYB_FREQ, ctrl_freq=DEFAULT_CTRL_FREQ, user_debug_gui=DEFAULT_USER_DEBUG_GUI, reward_and_action_change_freq=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ, drone_model=DEFAULT_DRONE_MODEL):
 
     filename = os.path.join(output_folder, 'save-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
     if not os.path.exists(filename):
         os.makedirs(filename+'/')
-
-        train_env = make_vec_env(
-        BaseRLAviary_TestFlytoWall,
-        env_kwargs=dict(
-            drone_model=DroneModel("cf2x"),
-            initial_xyzs=INIT_XYZS,
-            initial_rpys=INIT_RPYS,
-            physics=Physics.PYB,
-            gui=False,
-            ctrl_freq=30,
-            act=ActionType.VEL
-        ),
-        n_envs=1,
-        seed=0
-        )
         
-        eval_env = BaseRLAviary_TestFlytoWall(
-        drone_model=DroneModel("cf2x"),
-        initial_xyzs=INIT_XYZS,
-        initial_rpys=INIT_RPYS,
-        gui=True,
-        ctrl_freq=30,
-        act=ActionType.VEL
-        )
+        # ANCHOR - learn_FlytoWall ENVS
+        train_env = make_vec_env(BaseRLAviary_TestFlytoWall,
+                        env_kwargs=dict(
+                            drone_model=drone_model,
+                            initial_xyzs=INIT_XYZS,
+                            initial_rpys=INIT_RPYS,
+                            physics=Physics.PYB,
+                            gui=gui_Train,
+                            user_debug_gui=user_debug_gui,
+                            pyb_freq=pyb_freq,
+                            ctrl_freq=ctrl_freq, # Ansatz: von 60 auf 10 reduzieren, damit die gewählte Action länger wirkt
+                            reward_and_action_change_freq=reward_and_action_change_freq, # Ansatz: neu hinzugefügt, da die Step-Funktion vorher mit der ctrl_freq aufgerufen wurde, Problem war dann, dass bei hoher Frequenz die Raycasts keine Änderung hatten, dafür die Drohne aber sauber geflogen ist (60). Wenn der Wert niedriger war, hat es mit den Geschwindigkeiten und Actions besser gepasst, dafür ist die Drohne nicht sauber geflogen, weil die Ctrl-Frequenz für das erreichen der gewählten Action zu niedrig war (10/20).
+                            act=ActionType.VEL
+                            ),
+                        n_envs=1,
+                        seed=0
+                        )
+        #if 'train_env' in locals():
+            #train_env.close()
+        
+        eval_env = make_vec_env(BaseRLAviary_TestFlytoWall,
+                        env_kwargs=dict(
+                            drone_model=drone_model,
+                            initial_xyzs=INIT_XYZS,
+                            initial_rpys=INIT_RPYS,
+                            gui=gui_Test,
+                            physics=Physics.PYB,
+                            user_debug_gui=user_debug_gui,
+                            pyb_freq=pyb_freq,
+                            ctrl_freq=ctrl_freq,
+                            reward_and_action_change_freq=reward_and_action_change_freq,
+                            act=ActionType.VEL
+                            ),
+                        n_envs=1,
+                        seed=0
+                        )
+        #if 'eval_env' in locals():
+           # eval_env.close()
 
     #### Check the environment's spaces ########################
     print('[INFO] Action space:', train_env.action_space)
     print('[INFO] Observation space:', train_env.observation_space)
 
-    #### Train the model #######################################
-    model = PPO('MlpPolicy',
-                train_env,
-                # tensorboard_log=filename+'/tb/',
-                verbose=1,
-                        )  # Set gamma=0 to reduce reward discounting/accumulation
-
+    #### Load existing model or create new one ###################
+    if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
+        print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
+        model = PPO.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
+    else:
+        print("[INFO] Creating new model")
+        model = PPO('MlpPolicy',
+                   train_env,
+                   verbose=1,
+                   learning_rate=0.0005,
+                   )
     #### Target cumulative rewards (problem-dependent) ##########
-    target_reward = 1000000
+    target_reward = 2000
     print(target_reward)
     #The StopTrainingOnRewardThreshold callback is used to stop the training once a certain reward threshold is reached.
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=target_reward,
@@ -117,17 +151,19 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
                                  verbose=1,
                                  best_model_save_path=filename+'/',
                                  log_path=filename+'/',
-                                 eval_freq=int(4000),
-                                 deterministic=True,
-                                 render=False)
+                                 eval_freq=int(5*1e3), # alle 10000 Schritte wird die Evaluation durchgeführt (mit Frequenz reward_and_action_change_freq)
+                                 deterministic=True, 
+                                 render=False , # nicht auf True setzbar, da dem RL-Environment keine render_mode="human"übergeben werden kann
+                                 n_eval_episodes=1)# neu eingefügt, dass es schneller durch ist mit der Visu
     #The model.learn function is used to train the model.
     # total_timesteps: The total number of timesteps to train for. It is set to 1e7 (10 million) if local is True, otherwise 1e2 (100) for shorter training in GitHub Actions pytest.
     # callback: The callback to use during training, in this case, eval_callback.
     # log_interval: The number of timesteps between logging events.
     # In your code, the model will train for a specified number of timesteps, using the eval_callback for periodic evaluation, and log information every 100 timesteps.
-    model.learn(total_timesteps=int(1e6), # shorter training in GitHub Actions pytest
+    model.learn(total_timesteps=int(5*1e5), # shorter training in GitHub Actions pytest
                 callback=eval_callback,
-                log_interval=100)
+                log_interval=1000,
+                progress_bar=True)
     
     #### Save the model ########################################
     model.save(filename+'/final_model.zip')
@@ -157,7 +193,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
 
     #### Show (and record a video of) the model's performance ##
 
-    test_env = BaseRLAviary_TestFlytoWall(gui=gui,
+    test_env = BaseRLAviary_TestFlytoWall(gui=gui_Test,
                             act=DEFAULT_ACT,
                             record=record_video)
     test_env_nogui = BaseRLAviary_TestFlytoWall(act=DEFAULT_ACT)
@@ -238,10 +274,16 @@ if __name__ == '__main__':
     #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script')
     parser.add_argument('--multiagent',         default=DEFAULT_MA,            type=str2bool,      help='Whether to use example LeaderFollower instead of Hover (default: False)', metavar='')
-    parser.add_argument('--gui',                default=DEFAULT_GUI,           type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
+    parser.add_argument('--gui_Train',                default=DEFAULT_GUI_TRAIN,           type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
+    parser.add_argument('--gui_Test',                default=DEFAULT_GUI_TEST,           type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
     parser.add_argument('--record_video',       default=DEFAULT_RECORD_VIDEO,  type=str2bool,      help='Whether to record a video (default: False)', metavar='')
     parser.add_argument('--output_folder',      default=DEFAULT_OUTPUT_FOLDER, type=str,           help='Folder where to save logs (default: "results")', metavar='')
     parser.add_argument('--colab',              default=DEFAULT_COLAB,         type=bool,          help='Whether example is being run by a notebook (default: "False")', metavar='')
+    parser.add_argument('--pyb_freq',          default=DEFAULT_PYB_FREQ,    type=int,           help='Physics frequency (default: 240)', metavar='')
+    parser.add_argument('--ctrl_freq',          default=DEFAULT_CTRL_FREQ,    type=int,           help='Control frequency (default: 60)', metavar='')
+    parser.add_argument('--reward_and_action_change_freq',          default=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,    type=int,           help='Control frequency (default: 60)', metavar='')
+    parser.add_argument('--drone_model',          default=DEFAULT_DRONE_MODEL,    type=str,           help='Control frequency (default: 60)', metavar='')
+    parser.add_argument('--user_debug_gui',          default=DEFAULT_USER_DEBUG_GUI,    type=str2bool,           help='set to True if you want to see the debug GUI, only for showing the frame in training!(default: False)', metavar='')
     ARGS = parser.parse_args()
 
     run(**vars(ARGS))

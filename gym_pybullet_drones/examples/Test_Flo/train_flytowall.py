@@ -42,6 +42,7 @@ def train(output_folder="results", guiAfterTraining=False, plot=True):
             physics=Physics.PYB,
             gui=False,
             ctrl_freq=48,
+            reward_and_action_change_freq=0,
             act=ActionType.VEL
         ),
         n_envs=1,
@@ -53,9 +54,10 @@ def train(output_folder="results", guiAfterTraining=False, plot=True):
         drone_model=DroneModel("cf2x"),
         initial_xyzs=INIT_XYZS,
         initial_rpys=INIT_RPYS,
-        physics=Physics.PYB,
         gui=False,
+        physics=Physics.PYB,
         ctrl_freq=48,
+        reward_and_action_change_freq=0,
         act=ActionType.VEL
     )
     
@@ -130,8 +132,10 @@ def evaluate(model_path, gui=True):
         initial_xyzs=np.array([[0., 0., 0.5]]),
         initial_rpys=np.array([[0., 0., 0.]]),
         gui=gui,
-        physics="PYB",
-        ctrl_freq=48
+        physics=Physics.PYB,
+        ctrl_freq=48,
+        reward_and_action_change_freq=0,
+        act=ActionType.VEL
     )
     
     # Run evaluation episodes
@@ -140,7 +144,11 @@ def evaluate(model_path, gui=True):
     steps = 0
     
     while steps < env.EPISODE_LEN_SEC * env.CTRL_FREQ:
-        action, _ = model.predict(obs, deterministic=True)
+        action, _states = model.predict(obs,
+                                      deterministic=True)
+        print(f"Raw action from model: {action}")
+        action = env._preprocessAction(action)
+        print(f"Processed action: {action}")
         obs, reward, terminated, truncated, _ = env.step(action)
         total_reward += reward
         steps += 1
