@@ -68,7 +68,7 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         """
         #### Create a buffer for the last .5 sec of actions ########
         self.ACTION_BUFFER_SIZE = int(ctrl_freq//2)
-        self.action_buffer = deque(maxlen=self.ACTION_BUFFER_SIZE)
+        self.action_buffer = deque(maxlen=self.ACTION_BUFFER_SIZE) 
         ####
         self.reward_and_action_change_freq = reward_and_action_change_freq
         self.ACT_TYPE = act
@@ -183,12 +183,12 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
                     
         lo = -np.inf
         hi = np.inf
-        obs_lower_bound = np.array([0,0,0,0,0, #actual raycast readings
-                                     0,0,0,0] #Last clipped action = Action buffer
+        obs_lower_bound = np.array([0,0, #actual raycast readings
+                                     0,] #Last clipped action = Action buffer (nur 1 Wert, deshalb auf 1 Wert statt 4 veränder (10.2.25))
                                     )
         
-        obs_upper_bound = np.array([9999,9999,9999,9999,9999, # actual raycast readings
-                                     2,2,2,2] #Last clipped action = Action buffer
+        obs_upper_bound = np.array([9999,9999, # actual raycast readings
+                                     2] #Last clipped action = Action buffer (nur 1 Wert, deshalb auf 1 Wert statt 4 veränder (10.2.25))
                                    
                                     )
         
@@ -203,7 +203,7 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
     
     
     ################################################################################
-
+    # ANCHOR - computeObs
     def _computeObs(self):
         """Returns the current observation of the environment.
         10.2.25: deutlich vereinfachte Observation Space, damit es für den PPO einfacher ist, die Zuammenhänge zwischen den relevanten Observations und dem dafür erhaltenen Reward zu erkennen.
@@ -221,13 +221,14 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
                 4x Last clipped action                                      [14:18]    -> 0 bis 2 (da 3 actions)
         """
 
-        
+    
         
         state = self._getDroneStateVector(0)
+        
         # Select specific values from obs and concatenate them directly
         obs_9 = np.concatenate([
-            state[21:26],  # actual raycast readings
-            state[26:30]   # last clipped action
+            state[21:23],  # actual raycast readings (forward,backward)
+            [state[26]]   # last  action (Velocity in X-Richtung!)
         ])
         return obs_9
             ############################################################
@@ -259,7 +260,9 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
             The reward.
 
         """
-
+        if 'lastaction' not in locals():
+            lastaction = self.action
+        
         reward = 0
         state = self._getDroneStateVector(0) #erste Drohne
         
@@ -294,10 +297,8 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         #     reward = -300    # reward von -1000 auf -300 verringert, da die Drohne sonst nicht mehr lernt bzw. durch den Zusammenprall insgesamt negatives gesamtergebnis bekommt und dann ableitet, dass alles schlecht war und dann danach nur noch stehenbleibt
 
         self.Ende_Crash = 0.2
-        self.Beginn_sweetspot = 0.4
-        self.Ende_sweetspot = 0.7
-        
-        '''Anpassung: Umstellung auf die Belohnung auf die Gewählte Action'''
+        self.Beginn_sweetspot = 0.5
+        self.Ende_sweetspot = 0.6
         
         #####VOR DEM SWEETSPOT#############
         #wenn vorheringer Raycastreading = Actual Raycastreading = 9999, dann abstand zu groß -> Vx > 0 (vorne fliegen ist gut, rückwärts fliegen ist schlecht)
@@ -311,31 +312,30 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         #stillstand und im sweetspot: Belohnung
         
         if self.action[0][0] == 0 and state[21] > self.Ende_sweetspot and state[21] < self.Beginn_sweetspot:
-            reward = 25
+            reward = 50
         #vorwärts fliegen und im sweetspot: Neutral
         elif self.action[0][0] == 1 and state[21] > self.Beginn_sweetspot and state[21] < self.Ende_sweetspot:
-            reward = 5
+            reward = 0
         #Rückwärts im Sweetspot: Neutral
         elif self.action[0][0] == -1 and state[21] > self.Beginn_sweetspot and state[21] < self.Ende_sweetspot:
-            reward = 5
+            reward = 0
        
         #####NACH DEM SWEETSPOT, zu nah an der Wand#####################
-         # zu nah dran und vorwärts fliegen: Bestrafung; zu nah dran und zurückfliegen -> Belohnung (näher als 0,5 aber weiter weg als 0,20)
-        #stehen bleiben:
-        elif self.action[0][0] == 0 and state[21] < self.Beginn_sweetspot and state[21] > self.Ende_Crash:
-            reward = -1
-        #vorwärts fliegen:
-        if self.action[0][0] == 1 and state[21] < self.Beginn_sweetspot and state[21] > self.Ende_Crash and state[10] > 0:
-            reward = -1
-        #rückwärts fliegen:
-        elif self.action[0][0] == -1 and state[21] < self.Beginn_sweetspot and state[21] > self.Ende_Crash and state[10] < 0:
-            reward = 1
-            
+        elif state[21] < self.Beginn_sweetspot and state[21] > self.Ende_Crash:
+            reward = -5
             
        ##############Gecrasht, aka zu nah dran########################
         elif state[21] <= self.Ende_Crash:
             reward = -300    # reward von -1000 auf -300 verringert, da die Drohne sonst nicht mehr lernt bzw. durch den Zusammenprall insgesamt negatives gesamtergebnis bekommt und dann ableitet, dass alles schlecht war und dann danach nur noch stehenbleibt
         
+        #Belohnung, wenn der Abstand der Actionen 1 und nicht 2 beträgt
+        if abs(self.action[0][0] - lastaction[0][0]) == 1:
+            reward += 5
+        elif abs(self.action[0][0] - lastaction[0][0]) == 2:
+            reward += -2
+        
+        #nachdem der Unterschied verwendet wurde, nun die letzte Action mit der neusten Action überschreiben
+        lastaction = self.action
         
         return reward
 

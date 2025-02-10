@@ -36,11 +36,14 @@ from gym_pybullet_drones.examples.Test_Flo.BaseRLAviary_TestFlytoWall import Bas
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType
 
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden!
-DEFAULT_GUI_TRAIN = False
+DEFAULT_GUI_TRAIN = True
 DEFAULT_USER_DEBUG_GUI = False
 
-DEFAULT_GUI_TEST = True
+DEFAULT_GUI_TEST = False
 
+DEFAULT_USE_PRETRAINED_MODEL = True
+
+DEFAULT_PRETRAINED_MODEL_PATH = 'results/save-02.10.2025_18.43.31/best_model.zip'
 
 DEFAULT_RECORD_VIDEO = True
 DEFAULT_OUTPUT_FOLDER = 'results'
@@ -117,14 +120,17 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
     print('[INFO] Action space:', train_env.action_space)
     print('[INFO] Observation space:', train_env.observation_space)
 
-    #### Train the model #######################################
-    model = PPO('MlpPolicy',
-                train_env,
-                # tensorboard_log=filename+'/tb/',
-                verbose=1,
-                learning_rate=0.0001,  # Increased from default 0.0003
-                )
-
+    #### Load existing model or create new one ###################
+    if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
+        print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
+        model = PPO.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
+    else:
+        print("[INFO] Creating new model")
+        model = PPO('MlpPolicy',
+                   train_env,
+                   verbose=1,
+                   learning_rate=0.0005,
+                   )
     #### Target cumulative rewards (problem-dependent) ##########
     target_reward = 2000
     print(target_reward)
@@ -154,7 +160,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
     # callback: The callback to use during training, in this case, eval_callback.
     # log_interval: The number of timesteps between logging events.
     # In your code, the model will train for a specified number of timesteps, using the eval_callback for periodic evaluation, and log information every 100 timesteps.
-    model.learn(total_timesteps=int(1*1e5), # shorter training in GitHub Actions pytest
+    model.learn(total_timesteps=int(5*1e5), # shorter training in GitHub Actions pytest
                 callback=eval_callback,
                 log_interval=1000,
                 progress_bar=True)

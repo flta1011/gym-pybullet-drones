@@ -294,48 +294,65 @@ class BaseAviary_TestFlytoWall(gym.Env):
        
 
         p.resetSimulation(physicsClientId=self.CLIENT)
-        #### Housekeeping ##########################################
-        #### Housekeeping ##########################################
-        print("Start housekeeping - INIT_XYZS:", self.INIT_XYZS)
-        self._housekeeping()
-        print("End housekeeping - INIT_XYZS:", self.INIT_XYZS)
         
-        #### Start video recording #################################
-        self._startVideoRecording()
-        #### Update and store the drones kinematic information #####
-        print("Start kinematic update - INIT_XYZS:", self.INIT_XYZS)
-        print(f"self.pos vor Update: {self.pos}")
-        self._updateAndStoreKinematicInformation()
-        print(f"self.pos nach Update: {self.pos}")
-        print("End kinematic update - INIT_XYZS:", self.INIT_XYZS)
-        #### Start video recording #################################
-        self._startVideoRecording()
-        #### Return the initial observation ########################
-        initial_obs = None
-        initial_obs = self._computeObs()
-        nth_drone = 0 #weil das so standardmäßig im computeObs festegelegt ist
-        print(f"Getting state for nth_drone: {nth_drone}")
-    
-        # Get all bodies in simulation
-        all_bodies = p.getNumBodies(physicsClientId=self.CLIENT)
-        print(f"Bodies in simulation: {all_bodies}")
+        if self.USER_DEBUG:
+            #### Housekeeping ##########################################
+            print("Start housekeeping - INIT_XYZS:", self.INIT_XYZS)
+            self._housekeeping()
+            print("End housekeeping - INIT_XYZS:", self.INIT_XYZS)
+                
+            #### Start video recording #################################
+            self._startVideoRecording()
+            #### Update and store the drones kinematic information #####
+            print("Start kinematic update - INIT_XYZS:", self.INIT_XYZS)
+            print(f"self.pos vor Update: {self.pos}")
+            self._updateAndStoreKinematicInformation()
+            print(f"self.pos nach Update: {self.pos}")
+            print("End kinematic update - INIT_XYZS:", self.INIT_XYZS)
+            #### Start video recording #################################
+            self._startVideoRecording()
+            #### Return the initial observation ########################
+            initial_obs = None
+            initial_obs = self._computeObs()
+            nth_drone = 0 #weil das so standardmäßig im computeObs festegelegt ist
+            print(f"Getting state for nth_drone: {nth_drone}")
         
-        # Get the actual drone ID
-        drone_id = nth_drone + 1  # If this is the issue, you might need to adjust this
-        print(f"Accessing drone ID: {drone_id}")
-        
-        # Verify the body is actually a drone
-        body_info = p.getBodyInfo(drone_id, physicsClientId=self.CLIENT)
-        print(f"Body info for ID {drone_id}: {body_info}")
+            # Get all bodies in simulation
+            all_bodies = p.getNumBodies(physicsClientId=self.CLIENT)
+            print(f"Bodies in simulation: {all_bodies}")
+            
+            # Get the actual drone ID
+            drone_id = nth_drone + 1  # If this is the issue, you might need to adjust this
+            print(f"Accessing drone ID: {drone_id}")
+            
+            # Verify the body is actually a drone
+            body_info = p.getBodyInfo(drone_id, physicsClientId=self.CLIENT)
+            print(f"Body info for ID {drone_id}: {body_info}")
 
+            
+            print(f"Environment resettet, initial_obs: {initial_obs}\n")
         
-        print(f"Reset druchgeführt, initial_obs: {initial_obs}\n")
-    
-    
-    
-        initial_info = self._computeInfo()
         
-        return initial_obs, initial_info
+        
+            initial_info = self._computeInfo()
+            
+            return initial_obs, initial_info
+        
+        else:
+            #### Housekeeping ##########################################
+            self._housekeeping()
+            #### Start video recording #################################
+            self._startVideoRecording()
+            #### Update and store the drones kinematic information #####
+            self._updateAndStoreKinematicInformation()
+            #### Start video recording #################################
+            self._startVideoRecording()
+            #### Return the initial observation ########################
+            initial_obs = None
+            initial_obs = self._computeObs()
+            initial_info = self._computeInfo()
+            
+            return initial_obs, initial_info
     
     
 
@@ -393,17 +410,17 @@ class BaseAviary_TestFlytoWall(gym.Env):
         
         #17.1.25: neue Tests mit reduzierter Geschwindigkeit, da die Drohne sehr schnell an die Wand fliegt
         action_to_movement_direction = {
-            0: np.array([[1, 0, 0, 0.25]]),    # Vor 
+            0: np.array([[+1, 0, 0, 0.25]]),    # Vor 
             1: np.array([[-1, 0, 0, 0.25]]),   # Zurück
-            2: np.array([[0, 0, 0, 0.25]]),    # bleibe stehen
+            2: np.array([[+0, 0, 0, 0.25]]),    # bleibe stehen
             # 2: np.array([[0, 1, 0, 0.99]]), # links 
             # 3: np.array([[0, -1, 0, 0.99]]), # rechts
             }
         
         if self.step_counter == 0:
-            self.time_start_trainrun = time.time()
-            self.timestamp_previous = time.time()
-            self.timestamp_actual = time.time()
+            self.time_start_trainrun = 0
+            self.timestamp_previous = 0
+            self.timestamp_actual = 0
             self.RewardCounterActualTrainRun = 0
             self.List_Of_Tuples_Of_Reward_And_Action = []
             timediff = 0
@@ -584,24 +601,19 @@ class BaseAviary_TestFlytoWall(gym.Env):
         state = self._getDroneStateVector(0) #Einführung neuste 
         
         
-        
-        self.timestamp_previous = self.timestamp_actual
-        self.timestamp_actual = time.time()
-        timediff = self.timestamp_actual - self.timestamp_previous
+        self.timestamp_actual = self.step_counter * self.PYB_TIMESTEP  # Use simulation time instead of real time
         self.RewardCounterActualTrainRun += reward
         self.List_Of_Tuples_Of_Reward_And_Action.append((action[0][0], reward))
             
-    
+        # ANCHOR - Debugging-Plots STEP
         #plotting im Trainings-Plot
         if self.GUI and self.USER_DEBUG:
-            print("Timediff of Step to previous Step (s):", "{:.3f}".format(timediff)) #Timediff in Sekunden
-            print("Gesamtlaufzeit aktueller Trainingslauf (s):", "{:.3f}".format(time.time() - self.time_start_trainrun))
-            print(" Abstand zur Wand front:", state[21])
-            print(" Abstand zur Wand back:", state[22])
-            print(f"aktuelle Action: {action}")
-            print(f"aktueller Reward für Action: {reward}")
-            print(f"Gesamte Reward des aktuellen Trainingslaufs: {self.RewardCounterActualTrainRun}")
-            print(f"current step: {self.step_counter}")
+            
+            print("Trainingszeit aktueller Run(s):", "{:.3f}".format(self.timestamp_actual))
+            print(f" Observationspace (forward,backward, letzte Action (Velocity in X-Richtung!)):\t {state[21]} \t{state[22]} \t{state[26]}")
+            print(f"aktuelle Action (Velocity in X-Richtung!) / Reward für Action: {self.action[0][0]} / {reward}")
+            print(f"Reward aktueller Trainingslauf: {self.RewardCounterActualTrainRun}")
+            print(f"current Physics-Step / Reward-Steps: {self.step_counter} / {self.timestamp_actual/(1/self.REWARD_AND_ACTION_CHANGE_FREQ)}")
             if truncated:
                 print(f"Grund für Truncated: {Grund_Truncated}")
                 print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
@@ -614,15 +626,14 @@ class BaseAviary_TestFlytoWall(gym.Env):
         
         if self.GUI:
             if truncated:
-                print(" Abstand zur Wand front:", state[21])
-                print(" Abstand zur Wand back:", state[22])
-                print(f"Grund für Truncated: {Grund_Truncated}")
-                print(f"Gesamte Reward bei Abbruch oder Ende des Trainingslaufs: {self.RewardCounterActualTrainRun}")
+                #Zusammenfassung Trainingslauf
+                print(f"Zusammenfassung Trainingslauf Truncated (Grund: {Grund_Truncated}):")
+                print(f"Abstand zur Wand front/back: {state[21]} / {state[22]}")
+                print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
             if terminated:
-                print(" Abstand zur Wand front:", state[21])
-                print(" Abstand zur Wand back:", state[22])
-                print(f"Grund für Terminated: {Grund_Terminated}")
-                print(f"Gesamte Reward bei Abbruch oder Ende des Trainingslaufs: {self.RewardCounterActualTrainRun}")
+                print(f"Zusammenfassung Trainingslauf Terminated (Grund: {Grund_Terminated}):")
+                print(f"Abstand zur Wand front/back: {state[21]} / {state[22]}")
+                print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
         
         
         #nachfolgendes war nur zum Debugging der getDroneStateVector Funktion genutzt worden
@@ -717,6 +728,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
         #### Initialize/reset counters and zero-valued variables ###
         self.RESET_TIME = time.time()
         self.step_counter = 0
+        self.action = np.zeros((self.NUM_DRONES, 1))
         self.first_render_call = True
         self.X_AX = -1*np.ones(self.NUM_DRONES)
         self.Y_AX = -1*np.ones(self.NUM_DRONES)
@@ -724,7 +736,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
         self.GUI_INPUT_TEXT = -1*np.ones(self.NUM_DRONES)
         self.USE_GUI_RPM=False
         self.last_input_switch = 0
-        self.last_clipped_action = np.zeros((self.NUM_DRONES, 4))
+        self.last_clipped_action = np.zeros((self.NUM_DRONES, 4)) # 4 Werte da das die PRMs der 4 Motoren der letzten Aktion sind
         self.gui_input = np.zeros(4)
         #### Initialize the drones kinemaatic information ##########
         self.pos = np.zeros((self.NUM_DRONES, 3))
@@ -851,7 +863,12 @@ class BaseAviary_TestFlytoWall(gym.Env):
         #                 self.ray_results_actual[4], #up [25]
         #                 self.last_clipped_action[nth_drone, :]]) #last clipped action [26:30]
         # return state.reshape(30,)
-
+        
+        if hasattr(self, 'action'):
+            last_action_VEL_X = self.action[0][0]
+        else:
+            last_action_VEL_X = 0
+            
         state = np.hstack([self.pos[nth_drone, :], #[0:3]
                            self.quat[nth_drone, :], #[3:7]
                            self.rpy[nth_drone, :], #[7:10]
@@ -867,8 +884,8 @@ class BaseAviary_TestFlytoWall(gym.Env):
                         self.ray_results_actual[2], #left [23]
                         self.ray_results_actual[3], #right [24]
                         self.ray_results_actual[4], #up [25]
-                        self.last_clipped_action[nth_drone, :]]) #last clipped action [26:30]
-        return state.reshape(30,)
+                        last_action_VEL_X]) #last clipped action [26]: jetzt nur noch 1 Wert (10.2.25)
+        return state.reshape(27,) # von 30 auf 27 geändert, da nur 1 Wert in lastClipppedACtion (10.2.25)
 
     ################################################################################
 
