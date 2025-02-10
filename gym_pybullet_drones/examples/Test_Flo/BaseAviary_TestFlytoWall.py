@@ -213,9 +213,13 @@ class BaseAviary_TestFlytoWall(gym.Env):
         self.action_space = self._actionSpace()
         self.observation_space = self._observationSpace()
         #### Housekeeping ##########################################
+
         self._housekeeping()
+
         #### Update and store the drones kinematic information #####
+
         self._updateAndStoreKinematicInformation()
+
         #### Start video recording #################################
         self._startVideoRecording()
     
@@ -291,20 +295,52 @@ class BaseAviary_TestFlytoWall(gym.Env):
 
         p.resetSimulation(physicsClientId=self.CLIENT)
         #### Housekeeping ##########################################
+        #### Housekeeping ##########################################
+        print("Start housekeeping - INIT_XYZS:", self.INIT_XYZS)
         self._housekeeping()
+        print("End housekeeping - INIT_XYZS:", self.INIT_XYZS)
+        
+        #### Start video recording #################################
+        self._startVideoRecording()
         #### Update and store the drones kinematic information #####
+        print("Start kinematic update - INIT_XYZS:", self.INIT_XYZS)
+        print(f"self.pos vor Update: {self.pos}")
         self._updateAndStoreKinematicInformation()
+        print(f"self.pos nach Update: {self.pos}")
+        print("End kinematic update - INIT_XYZS:", self.INIT_XYZS)
         #### Start video recording #################################
         self._startVideoRecording()
         #### Return the initial observation ########################
+        initial_obs = None
         initial_obs = self._computeObs()
+        nth_drone = 0 #weil das so standardmäßig im computeObs festegelegt ist
+        print(f"Getting state for nth_drone: {nth_drone}")
+    
+        # Get all bodies in simulation
+        all_bodies = p.getNumBodies(physicsClientId=self.CLIENT)
+        print(f"Bodies in simulation: {all_bodies}")
+        
+        # Get the actual drone ID
+        drone_id = nth_drone + 1  # If this is the issue, you might need to adjust this
+        print(f"Accessing drone ID: {drone_id}")
+        
+        # Verify the body is actually a drone
+        body_info = p.getBodyInfo(drone_id, physicsClientId=self.CLIENT)
+        print(f"Body info for ID {drone_id}: {body_info}")
+
+        
+        print(f"Reset druchgeführt, initial_obs: {initial_obs}\n")
+    
+    
+    
         initial_info = self._computeInfo()
+        
         return initial_obs, initial_info
     
     
 
     ################################################################################
-    # NOTE - hier ist die Step
+    # ANCHOR - STEP
     def step(self,
              action
              ): 
@@ -357,13 +393,22 @@ class BaseAviary_TestFlytoWall(gym.Env):
         
         #17.1.25: neue Tests mit reduzierter Geschwindigkeit, da die Drohne sehr schnell an die Wand fliegt
         action_to_movement_direction = {
-            0: np.array([[1, 0, 0, 0.5]]),    # Vor 
-            1: np.array([[-1, 0, 0, 0.5]]),   # Zurück
-            2: np.array([[0, 0, 0, 0.5]]),    # bleibe stehen
+            0: np.array([[1, 0, 0, 0.25]]),    # Vor 
+            1: np.array([[-1, 0, 0, 0.25]]),   # Zurück
+            2: np.array([[0, 0, 0, 0.25]]),    # bleibe stehen
             # 2: np.array([[0, 1, 0, 0.99]]), # links 
             # 3: np.array([[0, -1, 0, 0.99]]), # rechts
             }
-  
+        
+        if self.step_counter == 0:
+            self.time_start_trainrun = time.time()
+            self.timestamp_previous = time.time()
+            self.timestamp_actual = time.time()
+            self.RewardCounterActualTrainRun = 0
+            self.List_Of_Tuples_Of_Reward_And_Action = []
+            timediff = 0
+            
+        
         self.action = None
         # Get movement direction based on action
         action = action_to_movement_direction[actual_action_0_bis_3]
@@ -540,19 +585,13 @@ class BaseAviary_TestFlytoWall(gym.Env):
         
         
         
-        if self.step_counter == 0:
-            self.time_start_trainrun = time.time()
-            self.timestamp_previous = time.time()
-            self.timestamp_actual = time.time()
-            self.RewardCounterActualTrainRun = 0
-            self.List_Of_Tuples_Of_Reward_And_Action = []
-            timediff = 0
-        else:
-            self.timestamp_previous = self.timestamp_actual
-            self.timestamp_actual = time.time()
-            timediff = self.timestamp_actual - self.timestamp_previous
-            self.RewardCounterActualTrainRun += reward
-            self.List_Of_Tuples_Of_Reward_And_Action.append((action[0][0], reward))
+        self.timestamp_previous = self.timestamp_actual
+        self.timestamp_actual = time.time()
+        timediff = self.timestamp_actual - self.timestamp_previous
+        self.RewardCounterActualTrainRun += reward
+        self.List_Of_Tuples_Of_Reward_And_Action.append((action[0][0], reward))
+            
+    
         #plotting im Trainings-Plot
         if self.GUI and self.USER_DEBUG:
             print("Timediff of Step to previous Step (s):", "{:.3f}".format(timediff)) #Timediff in Sekunden
@@ -577,12 +616,12 @@ class BaseAviary_TestFlytoWall(gym.Env):
             if truncated:
                 print(" Abstand zur Wand front:", state[21])
                 print(" Abstand zur Wand back:", state[22])
-                print(f"Grund für Truncated: {Grund_Truncated}\n")
+                print(f"Grund für Truncated: {Grund_Truncated}")
                 print(f"Gesamte Reward bei Abbruch oder Ende des Trainingslaufs: {self.RewardCounterActualTrainRun}")
             if terminated:
                 print(" Abstand zur Wand front:", state[21])
                 print(" Abstand zur Wand back:", state[22])
-                print(f"Grund für Terminated: {Grund_Terminated}\n")
+                print(f"Grund für Terminated: {Grund_Terminated}")
                 print(f"Gesamte Reward bei Abbruch oder Ende des Trainingslaufs: {self.RewardCounterActualTrainRun}")
         
         
@@ -757,7 +796,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
             os.makedirs(os.path.dirname(self.IMG_PATH), exist_ok=True)
     
     ################################################################################
-
+    # ANCHOR - getDroneStateVector
     def _getDroneStateVector(self, nth_drone):
         """Returns the state vector of the n-th drone.
 
@@ -792,6 +831,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
         #     self.ray_results_previous = self.ray_results_actual #safe old actual raycast readings to previous raycast readings
         #     self.ray_results_actual = self.check_distance_sensors(nth_drone) # get new actual raycast readings
         #     self.step_counter_last_actual_raycast = self.step_counter
+        
         
         self.ray_results_actual = self.check_distance_sensors(nth_drone) # get new actual raycast readings
         # state = np.hstack([self.pos[nth_drone, :], #[0:3]

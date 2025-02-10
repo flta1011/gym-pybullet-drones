@@ -302,7 +302,7 @@ class BaseAviary_TestFlo(gym.Env):
     
 
     ################################################################################
-    # ANCHOR - def Step
+   
     def step(self,
              action
              ):
@@ -598,7 +598,7 @@ class BaseAviary_TestFlo(gym.Env):
             os.makedirs(os.path.dirname(self.IMG_PATH), exist_ok=True)
     
     ################################################################################
-    # ANCHOR - def getDroneStateVector
+    
     def _getDroneStateVector(self, nth_drone):
         """Returns the state vector of the n-th drone.
 
@@ -621,6 +621,22 @@ class BaseAviary_TestFlo(gym.Env):
             - Raycast readings (front, back, left, right, top) [20:25]
 
         """
+        """Get the state vector for the specified drone."""
+        # Debug print
+        print(f"Getting state for nth_drone: {nth_drone}")
+        
+        # Get all bodies in simulation
+        all_bodies = p.getNumBodies(physicsClientId=self.CLIENT)
+        print(f"Bodies in simulation: {all_bodies}")
+        
+        # Get the actual drone ID
+        drone_id = nth_drone + 1  # If this is the issue, you might need to adjust this
+        print(f"Accessing drone ID: {drone_id}")
+        
+        # Verify the body is actually a drone
+        body_info = p.getBodyInfo(drone_id, physicsClientId=self.CLIENT)
+        print(f"Body info for ID {drone_id}: {body_info}")
+    
         ## tbd prüfen ALEX, FLORIAN, MORITZ
         #ray_results = self._getToFSensorReadings(nth_drone)
         self.ray_results = self.check_distance_sensors(nth_drone)[0]
@@ -1242,7 +1258,7 @@ class BaseAviary_TestFlo(gym.Env):
     
     ################################################################################
 
-    # ANCHOR - Get Sensor Data
+
     def check_distance_sensors(self, crazyflie_id):
         """
         Check the distance sensors of the Crazyflie drone.

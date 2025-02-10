@@ -36,17 +36,17 @@ from gym_pybullet_drones.examples.Test_Flo.BaseRLAviary_TestFlytoWall import Bas
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType
 
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden!
-DEFAULT_GUI_TRAIN = True
-DEFAULT_USER_DEBUG_GUI = True
+DEFAULT_GUI_TRAIN = False
+DEFAULT_USER_DEBUG_GUI = False
 
-DEFAULT_GUI_TEST = False
+DEFAULT_GUI_TEST = True
 
 
-DEFAULT_RECORD_VIDEO = False
+DEFAULT_RECORD_VIDEO = True
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
-DEFAULT_PYB_FREQ = 200
-DEFAULT_CTRL_FREQ = 100
+DEFAULT_PYB_FREQ = 100
+DEFAULT_CTRL_FREQ = 50
 DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 4
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 
@@ -91,6 +91,8 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
                         n_envs=1,
                         seed=0
                         )
+        #if 'train_env' in locals():
+            #train_env.close()
         
         eval_env = make_vec_env(BaseRLAviary_TestFlytoWall,
                         env_kwargs=dict(
@@ -108,6 +110,8 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
                         n_envs=1,
                         seed=0
                         )
+        #if 'eval_env' in locals():
+           # eval_env.close()
 
     #### Check the environment's spaces ########################
     print('[INFO] Action space:', train_env.action_space)
@@ -142,8 +146,8 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
                                  best_model_save_path=filename+'/',
                                  log_path=filename+'/',
                                  eval_freq=int(5*1e3), # alle 10000 Schritte wird die Evaluation durchgeführt (mit Frequenz reward_and_action_change_freq)
-                                 deterministic=True,
-                                 render=False,
+                                 deterministic=True, 
+                                 render=False , # nicht auf True setzbar, da dem RL-Environment keine render_mode="human"übergeben werden kann
                                  n_eval_episodes=1)# neu eingefügt, dass es schneller durch ist mit der Visu
     #The model.learn function is used to train the model.
     # total_timesteps: The total number of timesteps to train for. It is set to 1e7 (10 million) if local is True, otherwise 1e2 (100) for shorter training in GitHub Actions pytest.

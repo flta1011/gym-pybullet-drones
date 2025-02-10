@@ -166,6 +166,8 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         """Returns the observation space.
         Simplified observation space with key state variables.
         
+        10.2.25: deutlich vereinfachte Observation Space, damit es für den PPO einfacher ist, die Zuammenhänge zwischen den relevanten Observations und dem dafür erhaltenen Reward zu erkennen.
+        
         Returns
         -------
         ndarray
@@ -173,13 +175,6 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
             
             Information of the self._getDroneStateVector:
                 ndarray
-                (25,)-shaped array of floats containing the state vector of the n-th drone. The state vector includes:
-
-                3x Position (x, y, z) [0:3]                -> -np.inf bis np.inf
-                4x Quaternion (qx, qy, qz, qw) [3:7]       -> nicht verwendet
-                3x Roll, pitch, yaw (r, p, y) [7:10]       -> -np.inf bis np.inf
-                3x Linear velocity (vx, vy, vz) [10:13]    -> -np.inf bis np.inf
-                3x Angular velocity (wx, wy, wz) [13:16]     -> -np.inf bis np.inf
                 4x Last clipped action [16:20]             -> 0 bis 2 (da 3 actions)
                 5x Raycast readings (front, back, left, right, top) [20:25] -> 0 bis 9999
                 
@@ -188,21 +183,11 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
                     
         lo = -np.inf
         hi = np.inf
-        obs_lower_bound = np.array([#lo,lo,lo, #Position, weil die Drohne nicht auf die Position zugreifen kann
-                                     lo,lo,lo, #Roll, pitch, yaw
-                                     lo,lo,lo, #Linear velocity
-                                     lo,lo,lo, #Angular velocity
-                                     #0,0,0,0,0, #previous raycast readings
-                                     0,0,0,0,0, #actual raycast readings
+        obs_lower_bound = np.array([0,0,0,0,0, #actual raycast readings
                                      0,0,0,0] #Last clipped action = Action buffer
                                     )
         
-        obs_upper_bound = np.array([#hi,hi,hi, #Position, weil die Drohne nicht auf die Position zugreifen kann
-                                     hi,hi,hi, #Roll, pitch, yaw
-                                     hi,hi,hi, #Linear velocity
-                                     hi,hi,hi, #Angular velocity
-                                     #9999,9999,9999,9999,9999, # previous raycast readings
-                                     9999,9999,9999,9999,9999, # actual raycast readings
+        obs_upper_bound = np.array([9999,9999,9999,9999,9999, # actual raycast readings
                                      2,2,2,2] #Last clipped action = Action buffer
                                    
                                     )
@@ -221,6 +206,7 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
 
     def _computeObs(self):
         """Returns the current observation of the environment.
+        10.2.25: deutlich vereinfachte Observation Space, damit es für den PPO einfacher ist, die Zuammenhänge zwischen den relevanten Observations und dem dafür erhaltenen Reward zu erkennen.
 
         Returns
         -------
@@ -229,29 +215,21 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
             
             Information of the self._getDroneStateVector:
                 ndarray
-                (25,)-shaped array of floats containing the state vector of the n-th drone. The state vector includes:
+                (9,)-shaped array of floats containing the state vector of the n-th drone. The state vector includes:
 
-                3x Roll, pitch, yaw (r, p, y)                               [0:3]      -> -np.inf bis np.inf
-                3x Linear velocity (vx, vy, vz)                             [3:6]      -> -np.inf bis np.inf
-                3x Angular velocity (wx, wy, wz)                            [6:9]      -> -np.inf bis np.inf
                 5x actual raycast readings (front, back, left, right, top)  [9:14]    -> 0 bis 9999
                 4x Last clipped action                                      [14:18]    -> 0 bis 2 (da 3 actions)
         """
 
         
         
-        obs = self._getDroneStateVector(0)
+        state = self._getDroneStateVector(0)
         # Select specific values from obs and concatenate them directly
-        obs_18 = np.concatenate([
-            #obs[0:3],    # Position x,y,z (Drohne kann in echt auch nicht auf die Position zugreifen)
-            obs[7:10],   # Roll, pitch, yaw
-            obs[10:13],  # Linear velocity
-            obs[13:16],  # Angular velocity  
-            #obs[16:21],  # previous raycast readings, ist für das RL vielleicht gar nicht so hilfreich
-            obs[21:26],  # actual raycast readings
-            obs[26:30]   # last clipped action
+        obs_9 = np.concatenate([
+            state[21:26],  # actual raycast readings
+            state[26:30]   # last clipped action
         ])
-        return obs_18
+        return obs_9
             ############################################################
        
         
@@ -325,33 +303,33 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         #wenn vorheringer Raycastreading = Actual Raycastreading = 9999, dann abstand zu groß -> Vx > 0 (vorne fliegen ist gut, rückwärts fliegen ist schlecht)
         #self.action[0][0] ist der Wert der Velocity in SOLL: x-Richtung
         if self.action[0][0] == 1 and state[21] > self.Beginn_sweetspot: 
-            reward = 5
+            reward = 2
         elif self.action[0][0] == -1 and state[21] > self.Beginn_sweetspot:
-            reward = -5 # von -5 auf -3 reduziert (9.2), von -3 auf -7 reduziert (10.2), damit Reward hacking entgegengewirkt wird (+/- immer abwechselnd), wieder zurück auf -5 (10.2), damit er beim fliegen nach vorne (was gut ist) nicht unnötig bestraft wird.
+            reward = -2 # von -5 auf -3 reduziert (9.2), von -3 auf -7 reduziert (10.2), damit Reward hacking entgegengewirkt wird (+/- immer abwechselnd), wieder zurück auf -5 (10.2), damit er beim fliegen nach vorne (was gut ist) nicht unnötig bestraft wird.
      
         #####Im SWEETSPOT######################
         #stillstand und im sweetspot: Belohnung
         
         if self.action[0][0] == 0 and state[21] > self.Ende_sweetspot and state[21] < self.Beginn_sweetspot:
-            reward = 50
+            reward = 25
         #vorwärts fliegen und im sweetspot: Neutral
         elif self.action[0][0] == 1 and state[21] > self.Beginn_sweetspot and state[21] < self.Ende_sweetspot:
-            reward = 10
+            reward = 5
         #Rückwärts im Sweetspot: Neutral
         elif self.action[0][0] == -1 and state[21] > self.Beginn_sweetspot and state[21] < self.Ende_sweetspot:
-            reward = 10
+            reward = 5
        
         #####NACH DEM SWEETSPOT, zu nah an der Wand#####################
          # zu nah dran und vorwärts fliegen: Bestrafung; zu nah dran und zurückfliegen -> Belohnung (näher als 0,5 aber weiter weg als 0,20)
         #stehen bleiben:
         elif self.action[0][0] == 0 and state[21] < self.Beginn_sweetspot and state[21] > self.Ende_Crash:
-            reward = -3
+            reward = -1
         #vorwärts fliegen:
         if self.action[0][0] == 1 and state[21] < self.Beginn_sweetspot and state[21] > self.Ende_Crash and state[10] > 0:
-            reward = -3
+            reward = -1
         #rückwärts fliegen:
         elif self.action[0][0] == -1 and state[21] < self.Beginn_sweetspot and state[21] > self.Ende_Crash and state[10] < 0:
-            reward = 5
+            reward = 1
             
             
        ##############Gecrasht, aka zu nah dran########################
@@ -455,16 +433,6 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
 
     #########################################################################################
-
-    # def reset(self):
-    #     self.state = np.zeros(14)
-    #     self.current_step = 0
-    #     p.resetSimulation(self.client)
-    #     p.setGravity(0, 0, -9.8, physicsClientId=self.client)
-    #     p.loadURDF("plane.urdf")
-    #     self.drone = p.loadURDF("drone.urdf")
-    #     return self.state
-    
     
         
    
