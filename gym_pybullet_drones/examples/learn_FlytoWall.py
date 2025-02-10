@@ -73,37 +73,41 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
     filename = os.path.join(output_folder, 'save-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
     if not os.path.exists(filename):
         os.makedirs(filename+'/')
-
-        # ANCHOR - learn_FlytoWall ENVS
-        train_env = make_vec_env(
-        BaseRLAviary_TestFlytoWall,
-        env_kwargs=dict(
-            drone_model=drone_model,
-            initial_xyzs=INIT_XYZS,
-            initial_rpys=INIT_RPYS,
-            physics=Physics.PYB,
-            gui=gui_Train,
-            user_debug_gui=user_debug_gui,
-            pyb_freq=pyb_freq,
-            ctrl_freq=ctrl_freq, # Ansatz: von 60 auf 10 reduzieren, damit die gewählte Action länger wirkt
-            reward_and_action_change_freq=reward_and_action_change_freq, # Ansatz: neu hinzugefügt, da die Step-Funktion vorher mit der ctrl_freq aufgerufen wurde, Problem war dann, dass bei hoher Frequenz die Raycasts keine Änderung hatten, dafür die Drohne aber sauber geflogen ist (60). Wenn der Wert niedriger war, hat es mit den Geschwindigkeiten und Actions besser gepasst, dafür ist die Drohne nicht sauber geflogen, weil die Ctrl-Frequenz für das erreichen der gewählten Action zu niedrig war (10/20).
-            act=ActionType.VEL
-        ),
-        n_envs=1,
-        seed=0
-        )
         
-        eval_env = BaseRLAviary_TestFlytoWall(
-        drone_model=drone_model,
-        initial_xyzs=INIT_XYZS,
-        initial_rpys=INIT_RPYS,
-        gui=gui_Test,
-        user_debug_gui=user_debug_gui,
-        pyb_freq=pyb_freq,
-        ctrl_freq=ctrl_freq,
-        reward_and_action_change_freq=reward_and_action_change_freq,
-        act=ActionType.VEL
-        )
+        # ANCHOR - learn_FlytoWall ENVS
+        train_env = make_vec_env(BaseRLAviary_TestFlytoWall,
+                        env_kwargs=dict(
+                            drone_model=drone_model,
+                            initial_xyzs=INIT_XYZS,
+                            initial_rpys=INIT_RPYS,
+                            physics=Physics.PYB,
+                            gui=gui_Train,
+                            user_debug_gui=user_debug_gui,
+                            pyb_freq=pyb_freq,
+                            ctrl_freq=ctrl_freq, # Ansatz: von 60 auf 10 reduzieren, damit die gewählte Action länger wirkt
+                            reward_and_action_change_freq=reward_and_action_change_freq, # Ansatz: neu hinzugefügt, da die Step-Funktion vorher mit der ctrl_freq aufgerufen wurde, Problem war dann, dass bei hoher Frequenz die Raycasts keine Änderung hatten, dafür die Drohne aber sauber geflogen ist (60). Wenn der Wert niedriger war, hat es mit den Geschwindigkeiten und Actions besser gepasst, dafür ist die Drohne nicht sauber geflogen, weil die Ctrl-Frequenz für das erreichen der gewählten Action zu niedrig war (10/20).
+                            act=ActionType.VEL
+                            ),
+                        n_envs=1,
+                        seed=0
+                        )
+        
+        eval_env = make_vec_env(BaseRLAviary_TestFlytoWall,
+                        env_kwargs=dict(
+                            drone_model=drone_model,
+                            initial_xyzs=INIT_XYZS,
+                            initial_rpys=INIT_RPYS,
+                            gui=gui_Test,
+                            physics=Physics.PYB,
+                            user_debug_gui=user_debug_gui,
+                            pyb_freq=pyb_freq,
+                            ctrl_freq=ctrl_freq,
+                            reward_and_action_change_freq=reward_and_action_change_freq,
+                            act=ActionType.VEL
+                            ),
+                        n_envs=1,
+                        seed=0
+                        )
 
     #### Check the environment's spaces ########################
     print('[INFO] Action space:', train_env.action_space)
@@ -137,7 +141,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
                                  verbose=1,
                                  best_model_save_path=filename+'/',
                                  log_path=filename+'/',
-                                 eval_freq=int(1*1e4),
+                                 eval_freq=int(5*1e3), # alle 10000 Schritte wird die Evaluation durchgeführt (mit Frequenz reward_and_action_change_freq)
                                  deterministic=True,
                                  render=False,
                                  n_eval_episodes=1)# neu eingefügt, dass es schneller durch ist mit der Visu
@@ -146,9 +150,10 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
     # callback: The callback to use during training, in this case, eval_callback.
     # log_interval: The number of timesteps between logging events.
     # In your code, the model will train for a specified number of timesteps, using the eval_callback for periodic evaluation, and log information every 100 timesteps.
-    model.learn(total_timesteps=int(3*1e6), # shorter training in GitHub Actions pytest
+    model.learn(total_timesteps=int(1*1e5), # shorter training in GitHub Actions pytest
                 callback=eval_callback,
-                log_interval=1000)
+                log_interval=1000,
+                progress_bar=True)
     
     #### Save the model ########################################
     model.save(filename+'/final_model.zip')
