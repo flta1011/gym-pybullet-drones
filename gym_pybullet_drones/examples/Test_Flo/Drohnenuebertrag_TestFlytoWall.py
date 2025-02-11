@@ -4,6 +4,7 @@ import sys
 import time
 
 import numpy as np
+from stable_baselines3 import PPO
 from vispy import scene
 from vispy.scene import visuals
 from vispy.scene.cameras import TurntableCamera
@@ -30,13 +31,18 @@ if len(sys.argv) > 1:
     URI = sys.argv[1]
 
 # Enable plotting of Crazyflie
-PLOT_CF = False
+PLOT_CF = True
 # Enable plotting of down sensor
 PLOT_SENSOR_DOWN = False
 # Set the sensor threshold (in mm)
 SENSOR_TH = 4000
 # Set the speed factor for moving and rotating
-SPEED_FACTOR = 0.3
+SPEED_FACTOR = 0.5
+
+# Modell laden
+pathV1 = '/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/save-02.11.2025_16.29.19_V1_basic-Test_2D-Observation/final_model.zip'
+modelV1 = PPO.load(pathV1)
+
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -180,9 +186,14 @@ class Canvas(scene.SceneCanvas):
 
         self.keyCB = keyupdateCB
 
-        self.freeze()
+        # # Create a label to display the measurements
+        # self.label = QtWidgets.QLabel(self.native)
+        # self.label.setGeometry(10, 10, 300, 100)
+        # self.label.setText("Measurements: N/A")
 
-        scene.visuals.XYZAxis(parent=self.view.scene)
+        # self.freeze()
+
+        # scene.visuals.XYZAxis(parent=self.view.scene)
 
     def on_key_press(self, event):
         if (not event.native.isAutoRepeat()):
@@ -211,28 +222,32 @@ class Canvas(scene.SceneCanvas):
 
     def on_key_release(self, event):
         if (not event.native.isAutoRepeat()):
-            if (event.native.key() == QtCore.Qt.Key.Key_Left):
-                self.keyCB('y', 0)
-            if (event.native.key() == QtCore.Qt.Key.Key_Right):
-                self.keyCB('y', 0)
-            if (event.native.key() == QtCore.Qt.Key.Key_Up):
-                self.keyCB('x', 0)
-            if (event.native.key() == QtCore.Qt.Key.Key_Down):
-                self.keyCB('x', 0)
-            if (event.native.key() == QtCore.Qt.Key.Key_A):
-                self.keyCB('yaw', 0)
-            if (event.native.key() == QtCore.Qt.Key.Key_D):
-                self.keyCB('yaw', 0)
-            if (event.native.key() == QtCore.Qt.Key.Key_W):
-                self.keyCB('height', 0)
-            if (event.native.key() == QtCore.Qt.Key.Key_S):
-                self.keyCB('height', 0)
-            if (event.native.key() == QtCore.Qt.Key.Key_Z):
-                self.keyCB('yaw', 0)
-            if (event.native.key() == QtCore.Qt.Key.Key_X):
-                self.keyCB('yaw', 0)
+            # if (event.native.key() == QtCore.Qt.Key.Key_Left):
+            #     self.keyCB('y', 0)
+            # if (event.native.key() == QtCore.Qt.Key.Key_Right):
+            #     self.keyCB('y', 0)
+            # if (event.native.key() == QtCore.Qt.Key.Key_Up):
+            #     self.keyCB('x', 0)
+            # if (event.native.key() == QtCore.Qt.Key.Key_Down):
+            #     self.keyCB('x', 0)
+            # if (event.native.key() == QtCore.Qt.Key.Key_A):
+            #     self.keyCB('yaw', 0)
+            # if (event.native.key() == QtCore.Qt.Key.Key_D):
+            #     self.keyCB('yaw', 0)
+            # if (event.native.key() == QtCore.Qt.Key.Key_W):
+            #     self.keyCB('height', 0)
+            # if (event.native.key() == QtCore.Qt.Key.Key_S):
+            #     self.keyCB('height', 0)
+            # if (event.native.key() == QtCore.Qt.Key.Key_Z):
+            #     self.keyCB('yaw', 0)
+            # if (event.native.key() == QtCore.Qt.Key.Key_X):
+            #     self.keyCB('yaw', 0)
             if (event.native.key() == QtCore.Qt.Key.Key_Space):
                 print("Emergency stop")
+
+    def action_prediction(self):
+        observation = data['range.front']
+        actionV1, _states = modelV1.predict(observation, deterministic=True)
 
     def set_position(self, pos):
         self.last_pos = pos
@@ -301,6 +316,7 @@ class Canvas(scene.SceneCanvas):
             data.append(self.rot(roll, pitch, yaw, o, back))
 
         return data
+    
 
     def set_measurement(self, measurements):
         data = self.rotate_and_create_points(measurements)
@@ -315,6 +331,22 @@ class Canvas(scene.SceneCanvas):
         if (len(data) > 0):
             self.meas_data = np.append(self.meas_data, data, axis=0)
         self.meas_markers.set_data(self.meas_data, face_color='blue', size=5)
+
+
+    def show_measurement(self, measurements):
+        # Update the label with the new measurements
+        measurement_text = (
+            f"Roll: {measurements['roll']:.2f}\n"
+            f"Pitch: {measurements['pitch']:.2f}\n"
+            f"Yaw: {measurements['yaw']:.2f}\n"
+            f"Front: {measurements['front']:.2f} mm\n"
+            f"Back: {measurements['back']:.2f} mm\n"
+            f"Up: {measurements['up']:.2f} mm\n"
+            f"Down: {measurements['down']:.2f} mm\n"
+            f"Left: {measurements['left']:.2f} mm\n"
+            f"Right: {measurements['right']:.2f} mm"
+        )
+        self.label.setText(measurement_text)
 
 
 if __name__ == '__main__':
