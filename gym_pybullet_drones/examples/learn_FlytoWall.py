@@ -27,7 +27,7 @@ from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from stable_baselines3.common.evaluation import evaluate_policy
 
-from gym_pybullet_drones.utils.Logger import Logger
+from gym_pybullet_drones.examples.Test_Flo.Logger_TestFlytoWall import Logger
 from gym_pybullet_drones.envs.HoverAviary import HoverAviary
 from gym_pybullet_drones.envs.MultiHoverAviary import MultiHoverAviary
 from gym_pybullet_drones.utils.utils import sync, str2bool
@@ -38,19 +38,26 @@ from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, Obs
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden!
 DEFAULT_GUI_TRAIN = True
 DEFAULT_USER_DEBUG_GUI = False
+DEFAULT_ADVANCED_STATUS_PLOT = True
 
 DEFAULT_GUI_TEST = False
 
-DEFAULT_USE_PRETRAINED_MODEL = True
+DEFAULT_USE_PRETRAINED_MODEL = False
 
-DEFAULT_PRETRAINED_MODEL_PATH = 'results/save-02.10.2025_18.43.31/best_model.zip'
+DEFAULT_PRETRAINED_MODEL_PATH = 'results/save-02.11.2025_14.17.10/final_model.zip'
 
-DEFAULT_RECORD_VIDEO = True
+DEFAULT_EVAL_FREQ = 5*1e4
+DEFAULT_EVAL_EPISODES = 1
+
+DEFAULT_TRAIN_TIMESTEPS = 1*1e5 # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
+DEFAULT_TARGET_REWARD = 20000
+
+DEFAULT_RECORD_VIDEO = False
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
-DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 4
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 5
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 
 DEFAULT_OBS = ObservationType('kin') # 'kin' or 'rgb'
@@ -71,7 +78,7 @@ INIT_RPYS = np.array([
 
 
 
-def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DEFAULT_GUI_TRAIN, gui_Test=DEFAULT_GUI_TEST, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO, local=True, pyb_freq=DEFAULT_PYB_FREQ, ctrl_freq=DEFAULT_CTRL_FREQ, user_debug_gui=DEFAULT_USER_DEBUG_GUI, reward_and_action_change_freq=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ, drone_model=DEFAULT_DRONE_MODEL):
+def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DEFAULT_GUI_TRAIN, gui_Test=DEFAULT_GUI_TEST, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO, local=True, pyb_freq=DEFAULT_PYB_FREQ, ctrl_freq=DEFAULT_CTRL_FREQ, user_debug_gui=DEFAULT_USER_DEBUG_GUI, reward_and_action_change_freq=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ, drone_model=DEFAULT_DRONE_MODEL, advanced_status_plot=DEFAULT_ADVANCED_STATUS_PLOT):
 
     filename = os.path.join(output_folder, 'save-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
     if not os.path.exists(filename):
@@ -129,10 +136,10 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
         model = PPO('MlpPolicy',
                    train_env,
                    verbose=1,
-                   learning_rate=0.0005,
+                   learning_rate=0.0004, # 0,0002 zu gering -> auf 0.0004 erhöht -> auf 0.0005 erhöht --> auf 0.0004 reduziert, da die Policy zu stark angepasst wurde, obwohl es schon 5s am Ziel war..
                    )
     #### Target cumulative rewards (problem-dependent) ##########
-    target_reward = 2000
+    target_reward = DEFAULT_TARGET_REWARD
     print(target_reward)
     #The StopTrainingOnRewardThreshold callback is used to stop the training once a certain reward threshold is reached.
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=target_reward,
@@ -151,7 +158,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
                                  verbose=1,
                                  best_model_save_path=filename+'/',
                                  log_path=filename+'/',
-                                 eval_freq=int(5*1e3), # alle 10000 Schritte wird die Evaluation durchgeführt (mit Frequenz reward_and_action_change_freq)
+                                 eval_freq=DEFAULT_EVAL_FREQ, # alle 10000 Schritte wird die Evaluation durchgeführt (mit Frequenz reward_and_action_change_freq)
                                  deterministic=True, 
                                  render=False , # nicht auf True setzbar, da dem RL-Environment keine render_mode="human"übergeben werden kann
                                  n_eval_episodes=1)# neu eingefügt, dass es schneller durch ist mit der Visu
@@ -160,7 +167,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
     # callback: The callback to use during training, in this case, eval_callback.
     # log_interval: The number of timesteps between logging events.
     # In your code, the model will train for a specified number of timesteps, using the eval_callback for periodic evaluation, and log information every 100 timesteps.
-    model.learn(total_timesteps=int(5*1e5), # shorter training in GitHub Actions pytest
+    model.learn(total_timesteps=DEFAULT_TRAIN_TIMESTEPS, # shorter training in GitHub Actions pytest
                 callback=eval_callback,
                 log_interval=1000,
                 progress_bar=True)
@@ -284,6 +291,7 @@ if __name__ == '__main__':
     parser.add_argument('--reward_and_action_change_freq',          default=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,    type=int,           help='Control frequency (default: 60)', metavar='')
     parser.add_argument('--drone_model',          default=DEFAULT_DRONE_MODEL,    type=str,           help='Control frequency (default: 60)', metavar='')
     parser.add_argument('--user_debug_gui',          default=DEFAULT_USER_DEBUG_GUI,    type=str2bool,           help='set to True if you want to see the debug GUI, only for showing the frame in training!(default: False)', metavar='')
+    parser.add_argument('--advanced_status_plot',          default=DEFAULT_ADVANCED_STATUS_PLOT,    type=str2bool,           help='set to True if you want to see the advanced status plot, only for showing the frame in training!(default: False)', metavar='')
     ARGS = parser.parse_args()
 
     run(**vars(ARGS))

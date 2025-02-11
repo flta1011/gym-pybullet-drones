@@ -13,6 +13,7 @@ import pybullet as p
 import pybullet_data
 import gymnasium as gym
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ImageType
+import matplotlib.pyplot as plt
 
 
 class BaseAviary_TestFlytoWall(gym.Env):
@@ -35,6 +36,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
                  gui=False,
                  record=False,
                  obstacles=False,
+                 advanced_status_plot=False,
                  user_debug_gui=False,
                  vision_attributes=False,
                  output_folder='results_FlytoWall',
@@ -65,6 +67,8 @@ class BaseAviary_TestFlytoWall(gym.Env):
             Whether to save a video of the simulation.
         obstacles : bool, optional
             Whether to add obstacles to the simulation.
+        advanced_status_plot : bool, optional
+            Whether to plot the advanced status of the simulation.
         user_debug_gui : bool, optional
             Whether to draw the drones' axes and the GUI RPMs sliders.
         vision_attributes : bool, optional
@@ -95,6 +99,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
         self.PHYSICS = physics
         self.OBSTACLES = obstacles
         self.USER_DEBUG = user_debug_gui
+        self.ADVANCED_STATUS_PLOT = advanced_status_plot
         self.URDF = self.DRONE_MODEL.value + ".urdf"
         self.OUTPUT_FOLDER = output_folder
         #### Load the drone properties from the .urdf file #########
@@ -194,6 +199,28 @@ class BaseAviary_TestFlytoWall(gym.Env):
                                                             nearVal=0.1,
                                                             farVal=1000.0
                                                             )
+                
+        if self.ADVANCED_STATUS_PLOT:
+            # Matplotlib Setup für Live-Plot
+            self.fig, self.ax = plt.subplots()
+            self.time_vals = []
+            self.wall_distance_vals = []  # Abstand zur Wand
+            self.action_vals = []  # Gewählte Aktion (-1, 0, 1)
+            self.step_reward_vals = []  # Reward des aktuellen Schritts
+            self.total_reward_vals = []  # Gesamtreward
+
+            (self.line_wall_distance,) = self.ax.plot([], [], 'b-', label="Abstand zur Wand [m]")
+            (self.line_action,) = self.ax.plot([], [], 'g-', label="Aktion (1, 0, -1)")
+            (self.line_step_reward,) = self.ax.plot([], [], 'r-', label="Step Reward")
+            (self.line_total_reward,) = self.ax.plot([], [], 'orange', label="Gesamtreward")
+
+            self.ax.set_xlim(0, 100)  # X-Achse für 100 Zeitschritte
+            self.ax.set_ylim(-5, 5)  # Skalierung für die verschiedenen Werte
+            self.ax.set_xlabel("Zeitschritt")
+            self.ax.set_ylabel("Werte")
+            self.ax.legend()
+            plt.ion()  # Interaktiver Modus für Live-Update
+                
         #### Set initial poses #####################################
         if initial_xyzs is None:
             self.INIT_XYZS = np.vstack([np.array([x*4*self.L for x in range(self.NUM_DRONES)]), \
@@ -648,6 +675,26 @@ class BaseAviary_TestFlytoWall(gym.Env):
         else:
             self.step_counter = self.step_counter + (1 * self.PYB_STEPS_IN_ACTUAL_STEP_CALL) #umgeändert auf den neuen Zähler, weil wir in einem Step in diesem Fall mehr Physics-Schritte durchlaufen, als PYB_STEPS_PER_CTRL
             
+        if self.ADVANCED_STATUS_PLOT:
+            # Daten für den Plot speichern
+            self.time_vals.append(self.step_counter)
+            self.wall_distance_vals.append(state[21])
+            self.action_vals.append(self.action[0][0])
+            self.step_reward_vals.append(reward)
+            self.total_reward_vals.append(self.RewardCounterActualTrainRun)
+
+            # Graph aktualisieren
+            self.line_wall_distance.set_data(self.time_vals, self.wall_distance_vals)
+            self.line_action.set_data(self.time_vals, self.action_vals)
+            self.line_step_reward.set_data(self.time_vals, self.step_reward_vals)
+            self.line_total_reward.set_data(self.time_vals, self.total_reward_vals)
+
+            self.ax.set_xlim(0, max(100, len(self.time_vals)))  # Dynamische X-Achse
+
+            plt.pause(0.01)  # Kurze Pause für das Update
+            plt.draw()  # Manuelles Neuzeichnen erzwingen
+        
+            
         return obs, reward, terminated, truncated, info
             
     def render(self,
@@ -820,7 +867,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
         Returns
         -------
         ndarray 
-            (25,)-shaped array of floats containing the state vector of the n-th drone.
+            (27,)-shaped array of floats containing the state vector of the n-th drone.
             The state vector includes:
             - 3x Position (x, y, z) [0:3]                -> -np.inf bis np.inf
             - 4x Quaternion (qx, qy, qz, qw) [3:7]       -> nicht verwendet
@@ -829,7 +876,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
             - 3x Angular velocity (wx, wy, wz) [13:16]     -> -np.inf bis np.inf
             - 5x previous raycast readings (front, back, left, right, top) [16:21] -> 0 bis 9999    
             - 5x actual raycast readings (front, back, left, right, top) [21:26] -> 0 bis 9999
-            - 4x Last clipped action [26:30]             -> 0 bis 2 (da 3 actions)
+            - 1x Last action [26]             -> 0 bis 2 (da 3 actions zur Auswahl)
         """
         
         # #initialisierung der ray_results_actual
@@ -1522,7 +1569,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
             [0, 0, -1],   # Down
         ])
 
-        max_distance = 5  # meters
+        max_distance = 4  # meters
         sensor_readings = []
         
         # Convert quaternion to rotation matrix using NumPy
@@ -1546,7 +1593,7 @@ class BaseAviary_TestFlytoWall(gym.Env):
             hit_fraction_list.append(hit_fraction)
 
             if hit_object_id != -1 and hit_fraction > 0:
-                distance = round(hit_fraction * max_distance, 4)
+                distance = round(hit_fraction * max_distance, 5)
                 
                 #if distance < 0.2:
                     # Visualize the ray
