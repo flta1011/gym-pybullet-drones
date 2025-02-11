@@ -656,10 +656,12 @@ class BaseAviary_TestFlytoWall(gym.Env):
                 #Zusammenfassung Trainingslauf
                 print(f"Zusammenfassung Trainingslauf Truncated (Grund: {Grund_Truncated}):")
                 print(f"Abstand zur Wand front/back: {state[21]} / {state[22]}")
+                print(f"Observations: {obs}")
                 print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
             if terminated:
                 print(f"Zusammenfassung Trainingslauf Terminated (Grund: {Grund_Terminated}):")
                 print(f"Abstand zur Wand front/back: {state[21]} / {state[22]}")
+                print(f"Observations: {obs}")
                 print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
         
         

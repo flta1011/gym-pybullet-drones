@@ -177,24 +177,17 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
             
             Information of the self._getDroneStateVector:
                 ndarray
-                4x Last clipped action [16:20]             -> 0 bis 2 (da 3 actions)
-                5x Raycast readings (front, back, left, right, top) [20:25] -> 0 bis 9999
+                1x Raycast reading (forward) [21]          -> 0 bis 9999
                 
         """
        
                     
         lo = -np.inf
         hi = np.inf
-        obs_lower_bound = np.array([0,0, #actual raycast readings
-                                     0,] #Last clipped action = Action buffer (nur 1 Wert, deshalb auf 1 Wert statt 4 veränder (10.2.25))
-                                    )
+        obs_lower_bound = np.array([0]) #Raycast reading forward
         
-        obs_upper_bound = np.array([9999,9999, # actual raycast readings
-                                     2] #Last clipped action = Action buffer (nur 1 Wert, deshalb auf 1 Wert statt 4 veränder (10.2.25))
-                                   
-                                    )
-        
-       
+        obs_upper_bound = np.array([9999]) #Raycast reading forward
+                                    
         return spaces.Box(
             low=obs_lower_bound,
             high=obs_upper_bound,
@@ -217,10 +210,9 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
             
             Information of the self._getDroneStateVector:
                 ndarray
-                (9,)-shaped array of floats containing the state vector of the n-th drone. The state vector includes:
+                The state vector includes:
 
-                5x actual raycast readings (front, back, left, right, top)  [9:14]    -> 0 bis 9999
-                4x Last clipped action                                      [14:18]    -> 0 bis 2 (da 3 actions)
+                1x actual raycast reading (forward)  [21]    -> 0 bis 9999
         """
 
     
@@ -228,11 +220,8 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         state = self._getDroneStateVector(0)
         
         # Select specific values from obs and concatenate them directly
-        obs_9 = np.concatenate([
-            state[21:23],  # actual raycast readings (forward,backward)
-            [state[26]]   # last  action (Velocity in X-Richtung!)
-        ])
-        return obs_9
+        obs = [state[21]]  # Raycast reading forward
+        return obs
             ############################################################
        
         
@@ -256,10 +245,10 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
     
     
     # ANCHOR - computeReward
-    def _computeReward(self): # Funktioniert und die Drohne lernt, nahe an die Wand, aber nicht an die Wand zu fliegen. Problem: die Drohne bleibt nicht sauber im Sweetspot stehen.
+    def _computeReward_Backup_20250211_First_Version_with_mixed_reward_cases(self): # Funktioniert und die Drohne lernt, nahe an die Wand, aber nicht an die Wand zu fliegen. Problem: die Drohne bleibt nicht sauber im Sweetspot stehen.
         """Computes the current reward value.
 
-        # _Backup_20250211_First Version with mixed reward cases
+        # _Backup_20250211_First_Version_with_mixed_reward_cases
         Returns
         -------
         float
@@ -316,10 +305,10 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         return reward
 
 
-    def _computeReward_Backup_20250211_1300_Squared_Reward_Function(self):
+    def _computeReward_V2_Backup_20250211_1300_Squared_Reward_Function(self):
         """ Ergebnis: nicht sehr gut.. und Rewardergebnisse sind nicht wirklich predictbar!!
         
-        # _Backup_20250211_1300_Squared_Reward_Function
+        # V2_Backup_20250211_1300_Squared_Reward_Function
         
         Computes the current reward value based on distance to wall and actions.
         
@@ -366,9 +355,9 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
                 
         return 0
 
-    def _computeReward_BACKUP_20250211_Discrete_Rewards(self):
+    def _computeReward(self):
         """
-        #BACKUP_2025-02-11_Discrete_Rewards: Discretized Reward-Values: depeding on the distance an Action: konkret Reward!
+        #_V3_BACKUP_20250211_Discrete_Rewards: Discretized Reward-Values: depeding on the distance an Action: konkret Reward!
         
         Computes the current reward value based on distance to wall and actions.
 
