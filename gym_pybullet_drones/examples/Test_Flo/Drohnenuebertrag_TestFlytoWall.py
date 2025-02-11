@@ -4,7 +4,6 @@ import sys
 import time
 
 import numpy as np
-from stable_baselines3 import PPO
 from vispy import scene
 from vispy.scene import visuals
 from vispy.scene.cameras import TurntableCamera
@@ -13,6 +12,9 @@ import cflib.crtp
 from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.log import LogConfig
 from cflib.utils import uri_helper
+
+from stable_baselines3 import PPO
+from preparation_prediction_model_for_real_flight import get_PPO_Predcitions_1D_Observation
 
 try:
     from sip import setapi
@@ -40,7 +42,7 @@ SENSOR_TH = 4000
 SPEED_FACTOR = 0.5
 
 # Modell laden
-pathV1 = '/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/save-02.11.2025_16.29.19_V1_basic-Test_2D-Observation/final_model.zip'
+pathV1 = 'gym_pybullet_drones/Saved-Models_FlyToWall/save-02.11.2025_16.51.09_V1_1D-Observation/best_model.zip'
 modelV1 = PPO.load(pathV1)
 
 
@@ -73,12 +75,32 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cf.platform.send_arming_request(True)
         time.sleep(1.0)
 
-        self.hover = {'x': 0.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0, 'height': 0.5}
+        self.hover = {'x': 0.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0, 'height': 0.05}
 
         self.hoverTimer = QtCore.QTimer()
         self.hoverTimer.timeout.connect(self.sendHoverCommand)
         self.hoverTimer.setInterval(100)
         self.hoverTimer.start()
+
+        time.sleep(1.0)
+
+        # self.actionTimer = QtCore.QTimer()
+        # self.actionTimer.timeout.connect(self.flycommands)
+        # self.actionTimer.setInterval(10)  # 100 times per second
+        # self.actionTimer.start()
+
+    def flycommands(self, observation):
+        action, _states = modelV1.predict(observation, deterministic=True)
+
+        # Übersetzer
+        if action == 0:
+            self.hover = {'x': 1.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0, 'height': 0.05}
+        elif action == 1:
+            self.hover = {'x': -1.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0, 'height': 0.05}
+        elif action == 2:
+            self.hover = {'x': 0.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0, 'height': 0.05}
+        else:
+            print("Error: Action not found")
 
     def sendHoverCommand(self):
         self.cf.commander.send_hover_setpoint(
@@ -98,7 +120,7 @@ class MainWindow(QtWidgets.QMainWindow):
         print('We are now connected to {}'.format(URI))
 
         # The definition of the logconfig can be made before connecting
-        lpos = LogConfig(name='Position', period_in_ms=100)
+        lpos = LogConfig(name='Position', period_in_ms=50)
         lpos.add_variable('stateEstimate.x')
         lpos.add_variable('stateEstimate.y')
         lpos.add_variable('stateEstimate.z')
@@ -113,7 +135,7 @@ class MainWindow(QtWidgets.QMainWindow):
         except AttributeError:
             print('Could not add Position log config, bad configuration.')
 
-        lmeas = LogConfig(name='Meas', period_in_ms=100)
+        lmeas = LogConfig(name='Meas', period_in_ms=50)
         lmeas.add_variable('range.front')
         lmeas.add_variable('range.back')
         lmeas.add_variable('range.up')
@@ -154,6 +176,7 @@ class MainWindow(QtWidgets.QMainWindow):
             'left': data['range.left'],
             'right': data['range.right']
         }
+        self.flycommands([measurement['front']])
         self.canvas.set_measurement(measurement)
 
     def closeEvent(self, event):
@@ -245,10 +268,6 @@ class Canvas(scene.SceneCanvas):
             if (event.native.key() == QtCore.Qt.Key.Key_Space):
                 print("Emergency stop")
 
-    def action_prediction(self):
-        observation = data['range.front']
-        actionV1, _states = modelV1.predict(observation, deterministic=True)
-
     def set_position(self, pos):
         self.last_pos = pos
         if (PLOT_CF):
@@ -317,6 +336,21 @@ class Canvas(scene.SceneCanvas):
 
         return data
     
+    def show_measurement(self, measurement):
+        # Update the label with the new measurements
+        measurement_text = (
+            f"Roll: {measurement['roll']:.2f}\n"
+            f"Pitch: {measurement['pitch']:.2f}\n"
+            f"Yaw: {measurement['yaw']:.2f}\n"
+            f"Front: {measurement['front']:.2f} mm\n"
+            f"Back: {measurement['back']:.2f} mm\n"
+            f"Up: {measurement['up']:.2f} mm\n"
+            f"Down: {measurement['down']:.2f} mm\n"
+            f"Left: {measurement['left']:.2f} mm\n"
+            f"Right: {measurement['right']:.2f} mm"
+        )
+        self.label.setText(measurement_text)
+    
 
     def set_measurement(self, measurements):
         data = self.rotate_and_create_points(measurements)
@@ -331,23 +365,6 @@ class Canvas(scene.SceneCanvas):
         if (len(data) > 0):
             self.meas_data = np.append(self.meas_data, data, axis=0)
         self.meas_markers.set_data(self.meas_data, face_color='blue', size=5)
-
-
-    def show_measurement(self, measurements):
-        # Update the label with the new measurements
-        measurement_text = (
-            f"Roll: {measurements['roll']:.2f}\n"
-            f"Pitch: {measurements['pitch']:.2f}\n"
-            f"Yaw: {measurements['yaw']:.2f}\n"
-            f"Front: {measurements['front']:.2f} mm\n"
-            f"Back: {measurements['back']:.2f} mm\n"
-            f"Up: {measurements['up']:.2f} mm\n"
-            f"Down: {measurements['down']:.2f} mm\n"
-            f"Left: {measurements['left']:.2f} mm\n"
-            f"Right: {measurements['right']:.2f} mm"
-        )
-        self.label.setText(measurement_text)
-
 
 if __name__ == '__main__':
     appQt = QtWidgets.QApplication(sys.argv)
