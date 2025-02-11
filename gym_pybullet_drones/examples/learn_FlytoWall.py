@@ -35,16 +35,16 @@ from gym_pybullet_drones.utils.enums import ObservationType, ActionType
 from gym_pybullet_drones.examples.Test_Flo.BaseRLAviary_TestFlytoWall import BaseRLAviary_TestFlytoWall
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType
 
-# ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden!
+# ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
 DEFAULT_GUI_TRAIN = True
 DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_ADVANCED_STATUS_PLOT = True
 
 DEFAULT_GUI_TEST = False
 
-DEFAULT_USE_PRETRAINED_MODEL = False
+DEFAULT_USE_PRETRAINED_MODEL = True
 
-DEFAULT_PRETRAINED_MODEL_PATH = 'results/save-02.11.2025_14.17.10/final_model.zip'
+DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Saved-Models_FlyToWall/save-02.11.2025_16.51.09_V1_1D-Observation/best_model.zip'
 
 DEFAULT_EVAL_FREQ = 5*1e4
 DEFAULT_EVAL_EPISODES = 1
