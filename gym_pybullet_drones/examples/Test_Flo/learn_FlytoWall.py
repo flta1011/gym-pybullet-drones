@@ -44,7 +44,7 @@ DEFAULT_GUI_TEST = False
 
 DEFAULT_USE_PRETRAINED_MODEL = True
 
-DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Saved-Models_FlyToWall/save-02.11.2025_16.51.09_V1_1D-Observation/best_model.zip'
+DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Saved-Models_FlyToWall/save-02.11.2025_14.08.05_OLD-Backup_good-Results/best_model.zip'
 
 DEFAULT_EVAL_FREQ = 5*1e4
 DEFAULT_EVAL_EPISODES = 1

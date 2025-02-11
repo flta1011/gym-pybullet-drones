@@ -4,13 +4,13 @@ import pybullet as p
 from gymnasium import spaces
 from collections import deque
 
-from gym_pybullet_drones.examples.Test_Flo.BaseAviary_TestFlytoWall import BaseAviary_TestFlytoWall
+from gym_pybullet_drones.examples.MAZE_TRAINING.BaseAviary_MAZE_TRAINING import BaseAviary_MAZE_TRAINING
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType, ImageType
 from gym_pybullet_drones.examples.Test_Flo.DSLPIDControl_TestFlo import DSLPIDControl
 
 from stable_baselines3.common.policies import ActorCriticPolicy
 
-class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
+class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
     """Base single and multi-agent environment class for reinforcement learning."""
     
     ################################################################################
@@ -116,13 +116,21 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         Returns
         -------
         spaces.Discrete
-        0: np.array([1, 0, 0, 0.99]), # Fly Forward
-        1: np.array([-1, 0, 0, 0.99]), # Fly Backward
-        2: np.array([0, 0, 0, 0.99]), # nothing
+        DREHUNG MATHEMATISCH POSITIV (GEGEN DEN UHRZEIGER)
+        0: np.array([1, 0, 0, 0.99]), # Fly 0° (Forward)
+        1: np.array([1, 1, 0, 0.99]), # Fly 45° Diagonal (Forward-Left)
+        2: np.array([0, 1, 0, 0.99]), # Fly 90° (Left)
+        3: np.array([-1, 1, 0, 0.99]), # Fly 135° Diagonal (Backward-Left)
+        4: np.array([-1, 0, 0, 0.99]), # Fly 180° (Backward)
+        5: np.array([-1, -1, 0, 0.99]), # Fly 225° Diagonal (Backward-Right)
+        6: np.array([0, -1, 0, 0.99]), # Fly 270° (Right)
+        7: np.array([1, -1, 0, 0.99]), # Fly 315° Diagonal (Forward-Left)
+    
+        
 
         """
         
-        return spaces.Discrete(3)
+        return spaces.Discrete(8)
         
     ################################################################################
     # ANCHOR - def preprocessAction
@@ -197,9 +205,9 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         
         lo = -np.inf
         hi = np.inf
-        obs_lower_bound = np.array([0]) #Raycast reading forward
+        obs_lower_bound = np.array([0,0,0,0,0]) #Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
     
-        obs_upper_bound = np.array([9999]) #Raycast reading forward
+        obs_upper_bound = np.array([9999,9999,9999,9999,9999]) #Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
                                     
         return spaces.Box(
             low=obs_lower_bound,
@@ -253,13 +261,14 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         #     [state[26]]   # last  action (Velocity in X-Richtung!)
         # ])
         # return obs_9
-        #     ############################################################
-            
+    
         state = self._getDroneStateVector(0)
         
         # Select specific values from obs and concatenate them directly
-        obs = [state[21]]  # Raycast reading forward
+        obs = [state[21],state[22],state[23],state[24],state[25]]  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
         return obs
+    
+            ############################################################
        
         
         # '''für mehrere Drohnen'''
@@ -342,126 +351,6 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         return reward
 
 
-    def _computeReward_V2_Backup_20250211_1300_Squared_Reward_Function(self):
-        """ Ergebnis: nicht sehr gut.. und Rewardergebnisse sind nicht wirklich predictbar!!
-        
-        # V2_Backup_20250211_1300_Squared_Reward_Function
-        
-        Computes the current reward value based on distance to wall and actions.
-        
-        Returns
-        -------
-        float
-            The reward based on the distance-reward function from the image.
-        """
-        state = self._getDroneStateVector(0)
-        distance = state[21]  # Forward raycast distance
-        
-        # Constants
-        self.DISTANCE_SENSOR_THRESHOLD = 4.0
-        self.SWEET_SPOT_DISTANCE = 0.4  # Center of sweet spot
-        self.SWEET_SPOT_MAX_REWARD = 3
-        self.MIN_REWARD_LINEAR_DECLINE_TO_WALL = -6
-        self.PUNISHMENT_WALLHIT = 3000 #muss positiv sein, da es unten abgezogen wird
-        self.CRASH_DISTANCE = 0.2
-        self.REWARD_FORWARD = 0.1
-        self.REWARD_BACKWARD = -0.1
-
-        
-        # If distance is greater than threshold (9999 in practice)
-        if distance > self.DISTANCE_SENSOR_THRESHOLD:
-            if self.action[0][0] == 1:  # Forward motion
-                return self.REWARD_FORWARD
-            elif self.action[0][0] == -1:  # Backward motion
-                return self.REWARD_BACKWARD
-            elif self.action[0][0] == 0:
-                return 0
-            
-            
-        # Distance-based reward function for distance <= 4
-        if distance <= self.DISTANCE_SENSOR_THRESHOLD:
-            if distance <= self.SWEET_SPOT_DISTANCE:
-                # Linear decline from sweet spot to wall (0 distance)
-                slope = (self.SWEET_SPOT_MAX_REWARD+self.MIN_REWARD_LINEAR_DECLINE_TO_WALL) / (self.SWEET_SPOT_DISTANCE)
-                return self.SWEET_SPOT_MAX_REWARD + slope * (distance)
-                
-            else:  # distance > SWEET_SPOT_DISTANCE
-                # Exponential increase from threshold to sweet spot
-                normalized_dist = (self.DISTANCE_SENSOR_THRESHOLD - distance) / (self.DISTANCE_SENSOR_THRESHOLD - self.SWEET_SPOT_DISTANCE)
-                return self.SWEET_SPOT_MAX_REWARD * (normalized_dist ** 2)
-                
-        return 0
-
-    def _computeReward_V3_BACKUP_20250211_Discrete_Rewards(self):
-        """
-        #_V3_BACKUP_20250211_Discrete_Rewards: Discretized Reward-Values: depeding on the distance an Action: konkret Reward!
-        
-        Computes the current reward value based on distance to wall and actions.
-
-        Returns
-        -------
-        float
-            The reward based on the distance-reward function from the image.
-        """
-        # Constants
-        self.DISTANCE_SENSOR_THRESHOLD = 4.0
-        self.SWEET_SPOT_DISTANCE = 0.4  # Center of sweet spot
-        self.SWEET_SPOT_DISTANCE_TOLERANCE = 0.03
-        self.CRASH_DISTANCE = 0.2
-        
-        
-        
-        state = self._getDroneStateVector(0)
-        distance = state[21]  # Forward raycast distance
-        last_action = state[26]
-        
-        #starte einen Timer, wenn die Drohne im sweet spot ist
-        if abs(state[21]-self.SWEET_SPOT_DISTANCE) < 0.03 and state[26] == 0:
-            self.still_time += (1/self.reward_and_action_change_freq)# Increment by simulation timestep (in seconds) # TBD: funktioniert das richtig?
-        else:
-            self.still_time = 0.0 # Reset timer to 0 seconds
-        
-        # Ziel erreicht (5s im Sweetspot)
-        if self.still_time >= 5:
-                return 5000
-        
-        # NOTE: nicht mehr nötig, da die Drohne sich nicht mehr an die Wand traut und den Sweetspot nicht mehr entdeckt
-        if distance < self.CRASH_DISTANCE:
-            return -150   # von -300 auf -150 erhöht, damit die Strafe niedriger ist und die Drohne sich noch mehr an die Wand traut und den Sweetspot entdeckt, sonst scheint es eine lokales Minimum bei ca 0,9 m zu geben
-        
-        # zu nah an der Wand
-        if distance < self.SWEET_SPOT_DISTANCE - self.SWEET_SPOT_DISTANCE_TOLERANCE:
-            if last_action == 1:
-                return -1 # Bestrafung für vorne muss leicht größer sein, damit ein Fliegen zu nah bestraft ist und sich ins Gedächtnis brennt
-            elif last_action == -1:
-                return +0.5
-            elif last_action == 0:
-                return -0.1
-        
-
-        #Distance innerhalb der Sweetspot-Range
-        if abs(distance-self.SWEET_SPOT_DISTANCE) <= self.SWEET_SPOT_DISTANCE_TOLERANCE:
-             # Belohnung fürs erreichen des Ziels
-            if last_action == 1:
-                return -0.25
-            elif last_action == -1:
-                return -0.25
-            elif last_action == 0:
-                return +10
-        
-        #zu weit entfernt
-        if distance > self.SWEET_SPOT_DISTANCE + self.SWEET_SPOT_DISTANCE_TOLERANCE:
-            if last_action == 1:
-                return 0.2
-            elif last_action == -1:
-                return -0.2
-            elif last_action == 0:
-                return -0.02
-            
-        
-        print("Distanz, die Probleme macht:", distance)
-        
-        return 0
         
         
         
@@ -480,12 +369,16 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
             Dummy value.
 
         """
-    
-        
+        state = self._getDroneStateVector(0)
+        #starte einen Timer, wenn die Drohne im sweet spot ist
+        if state[25] <= 1:
+            self.still_time += (1/self.reward_and_action_change_freq)# Increment by simulation timestep (in seconds) # TBD: funktioniert das richtig?
+        else:
+            self.still_time = 0.0 # Reset timer to 0 seconds
 
         #Wenn die Drohne im sweet spot ist (bezogen auf Sensor vorne, Sensor und seit 5 sekunden still ist, beenden!
-        if self.still_time >= 5:
-            Grund_Terminated = "Drohne ist im sweet spot für 5 sekunden Stillstand und wird erfolgreich beendet"
+        if self.still_time >= 0.25:
+            Grund_Terminated = "Drohne hat nicht nur durch einen Bug da Objekt gefunden (Sensor oben ist belegt)"
             return True, Grund_Terminated
         
         Grund_Terminated = None

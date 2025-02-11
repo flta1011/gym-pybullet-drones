@@ -52,7 +52,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
                                  n_envs=1,
                                  seed=0
                                  )
-        eval_env = MultiHoverAviary(num_drones=DEFAULT_AGENTS, obs=DEFAULT_OBS, act=DEFAULT_ACT, gui=True)
+        eval_env = MultiHoverAviary(num_drones=DEFAULT_AGENTS, obs=DEFAULT_OBS, act=DEFAULT_ACT, gui=False)
 
     #### Check the environment's spaces ########################
     # Der Action-Space definiert die Steuerbefehle, die die Drohne an die Umgebung senden kann.
