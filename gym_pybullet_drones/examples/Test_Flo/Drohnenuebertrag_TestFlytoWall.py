@@ -1,52 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-#
-#     ||          ____  _ __
-#  +------+      / __ )(_) /_______________ _____  ___
-#  | 0xBC |     / __  / / __/ ___/ ___/ __ `/_  / / _ \
-#  +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
-#   ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
-#
-#  Copyright (C) 2018 Bitcraze AB
-#
-#  Crazyflie Python Library
-#
-#  This program is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU General Public License
-#  as published by the Free Software Foundation; either version 2
-#  of the License, or (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <https://www.gnu.org/licenses/>.
-"""
-Example script that plots the output ranges from the Multiranger and Flow
-deck in a 3D plot.
-
-When the application is started the Crazyflie will hover at 0.3 m. The
-Crazyflie can then be controlled by using keyboard input:
- * Move by using the arrow keys (left/right/forward/backwards)
- * Adjust the right with w/s (0.1 m for each keypress)
- * Yaw slowly using a/d (CCW/CW)
- * Yaw fast using z/x (CCW/CW)
-
-There's additional setting for (see constants below):
- * Plotting the downwards sensor
- * Plotting the estimated Crazyflie position
- * Max threshold for sensors
- * Speed factor that set's how fast the Crazyflie moves
-
-The demo is ended by either closing the graph window.
-
-For the example to run the following hardware is needed:
- * Crazyflie 2.0
- * Crazyradio PA
- * Flow deck
- * Multiranger deck
-"""
 import logging
 import math
 import sys
@@ -83,7 +34,7 @@ PLOT_CF = False
 # Enable plotting of down sensor
 PLOT_SENSOR_DOWN = False
 # Set the sensor threshold (in mm)
-SENSOR_TH = 2000
+SENSOR_TH = 4000
 # Set the speed factor for moving and rotating
 SPEED_FACTOR = 0.3
 
@@ -94,7 +45,7 @@ class MainWindow(QtWidgets.QMainWindow):
         QtWidgets.QMainWindow.__init__(self)
 
         self.resize(700, 500)
-        self.setWindowTitle('Multi-ranger point cloud')
+        self.setWindowTitle('Test Fly to Wall')
 
         self.canvas = Canvas(self.updateHover)
         self.canvas.create_native()
@@ -116,7 +67,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cf.platform.send_arming_request(True)
         time.sleep(1.0)
 
-        self.hover = {'x': 0.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0, 'height': 0.3}
+        self.hover = {'x': 0.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0, 'height': 0.5}
 
         self.hoverTimer = QtCore.QTimer()
         self.hoverTimer.timeout.connect(self.sendHoverCommand)
@@ -235,26 +186,28 @@ class Canvas(scene.SceneCanvas):
 
     def on_key_press(self, event):
         if (not event.native.isAutoRepeat()):
-            if (event.native.key() == QtCore.Qt.Key.Key_Left):
-                self.keyCB('y', 1)
-            if (event.native.key() == QtCore.Qt.Key.Key_Right):
-                self.keyCB('y', -1)
-            if (event.native.key() == QtCore.Qt.Key.Key_Up):
-                self.keyCB('x', 1)
-            if (event.native.key() == QtCore.Qt.Key.Key_Down):
-                self.keyCB('x', -1)
-            if (event.native.key() == QtCore.Qt.Key.Key_A):
-                self.keyCB('yaw', -70)
-            if (event.native.key() == QtCore.Qt.Key.Key_D):
-                self.keyCB('yaw', 70)
-            if (event.native.key() == QtCore.Qt.Key.Key_Z):
-                self.keyCB('yaw', -200)
-            if (event.native.key() == QtCore.Qt.Key.Key_X):
-                self.keyCB('yaw', 200)
-            if (event.native.key() == QtCore.Qt.Key.Key_W):
-                self.keyCB('height', 0.1)
-            if (event.native.key() == QtCore.Qt.Key.Key_S):
-                self.keyCB('height', -0.1)
+            # if (event.native.key() == QtCore.Qt.Key.Key_Left):
+            #     self.keyCB('y', 1)
+            # if (event.native.key() == QtCore.Qt.Key.Key_Right):
+            #     self.keyCB('y', -1)
+            # if (event.native.key() == QtCore.Qt.Key.Key_Up):
+            #     self.keyCB('x', 1)
+            # if (event.native.key() == QtCore.Qt.Key.Key_Down):
+            #     self.keyCB('x', -1)
+            # if (event.native.key() == QtCore.Qt.Key.Key_A):
+            #     self.keyCB('yaw', -70)
+            # if (event.native.key() == QtCore.Qt.Key.Key_D):
+            #     self.keyCB('yaw', 70)
+            # if (event.native.key() == QtCore.Qt.Key.Key_Z):
+            #     self.keyCB('yaw', -200)
+            # if (event.native.key() == QtCore.Qt.Key.Key_X):
+            #     self.keyCB('yaw', 200)
+            # if (event.native.key() == QtCore.Qt.Key.Key_W):
+            #     self.keyCB('height', 0.1)
+            # if (event.native.key() == QtCore.Qt.Key.Key_S):
+            #     self.keyCB('height', -0.1)
+            if (event.native.key() == QtCore.Qt.Key.Key_Space):
+                self.cf.commander.send_stop_setpoint()
 
     def on_key_release(self, event):
         if (not event.native.isAutoRepeat()):
@@ -278,6 +231,8 @@ class Canvas(scene.SceneCanvas):
                 self.keyCB('yaw', 0)
             if (event.native.key() == QtCore.Qt.Key.Key_X):
                 self.keyCB('yaw', 0)
+            if (event.native.key() == QtCore.Qt.Key.Key_Space):
+                print("Emergency stop")
 
     def set_position(self, pos):
         self.last_pos = pos
