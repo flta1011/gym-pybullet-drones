@@ -75,18 +75,21 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cf.platform.send_arming_request(True)
         time.sleep(1.0)
 
-        self.hover = {'x': 0.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0, 'height': 0.05}
+        self.hover = {'x': 0.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0, 'height': 0.5}
+
+        self.sendHoverCommand
+        time.sleep(1.0)
 
         self.hoverTimer = QtCore.QTimer()
         self.hoverTimer.timeout.connect(self.sendHoverCommand)
-        self.hoverTimer.setInterval(100)
+        self.hoverTimer.setInterval(10)
         self.hoverTimer.start()
 
         time.sleep(1.0)
 
         # self.actionTimer = QtCore.QTimer()
         # self.actionTimer.timeout.connect(self.flycommands)
-        # self.actionTimer.setInterval(10)  # 100 times per second
+        # self.actionTimer.setInterval(10)  # 10 times per second
         # self.actionTimer.start()
 
     def flycommands(self, observation):
@@ -94,11 +97,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Übersetzer
         if action == 0:
-            self.hover = {'x': 1.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0, 'height': 0.05}
+            self.hover = {'x': 1.0*SPEED_FACTOR, 'y': 0.0, 'z': 0.0, 'yaw': 0.0, 'height': 0.05}
         elif action == 1:
-            self.hover = {'x': -1.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0, 'height': 0.05}
+            self.hover = {'x': -1.0*SPEED_FACTOR, 'y': 0.0, 'z': 0.0, 'yaw': 0.0, 'height': 0.05}
         elif action == 2:
-            self.hover = {'x': 0.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0, 'height': 0.05}
+            self.hover = {'x': 0.0*SPEED_FACTOR, 'y': 0.0, 'z': 0.0, 'yaw': 0.0, 'height': 0.05}
         else:
             print("Error: Action not found")
 
