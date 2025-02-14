@@ -83,7 +83,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "Position:": QLabel("Position:"),
             "StateEstimate X:": QLabel("StateEstimate X: ___.__ mm"),
             "StateEstimate Y:": QLabel("StateEstimate Y: ___.__ mm"),
-            "StateEstimate Z:": QLabel("StateEstimate Z: ___.__ mm")
+            "StateEstimate Z:": QLabel("StateEstimate Z: ___.__ mm"),
+            "AI Control Action:": QLabel("AI Control Action: ___")
         }
 
         # Create the buttons
@@ -91,7 +92,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.start_button = QPushButton("Start")
         self.emergency_stop_button = QPushButton("Emergency stop")
         self.toggle_ai_control = QtWidgets.QCheckBox("AI Control")
-        self.reset_emergency_stop_button = QPushButton("Reset Emergency Stop")
+        #self.reset_emergency_stop_button = QPushButton("Reset Emergency Stop")
 
         # Create the layout
         layout = QtWidgets.QVBoxLayout()
@@ -115,7 +116,7 @@ class MainWindow(QtWidgets.QMainWindow):
         bottom_layout.addWidget(self.start_button)
         bottom_layout.addWidget(self.emergency_stop_button)
         bottom_layout.addWidget(self.toggle_ai_control)
-        bottom_layout.addWidget(self.reset_emergency_stop_button)
+        #bottom_layout.addWidget(self.reset_emergency_stop_button)
         bottom_layout.addStretch()
 
         # Create the main layout
@@ -136,10 +137,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.start_button.clicked.connect(self.start_fly)
         self.emergency_stop_button.clicked.connect(self.emergency_stop)
         self.toggle_ai_control.stateChanged.connect(self.toggle_ai_control_changed)
-        self.reset_emergency_stop_button.clicked.connect(self.reset_emergency_stop)
+        #self.reset_emergency_stop_button.clicked.connect(self.reset_emergency_stop)
 
     def toggle_ai_control_changed(self, state):
-        self.ai_control_active = state == QtCore.Qt.CheckState.Checked
+        self.ai_control_active = (state == 2) # (state == QtCore.Qt.CheckState.Checked)
+        # print("DEBUG: state =", state)
+        # print("DEBUG: self.ai_control_active =", self.ai_control_active)
 
     def connect(self):
         cflib.crtp.init_drivers()
@@ -168,6 +171,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def sendHoverCommand(self):
         if not self.emergency_stop_active:
+            if self.ai_control_active:
+                self.AIFlycommands()
+
             self.cf.commander.send_hover_setpoint(
                 self.hover['x'], self.hover['y'], self.hover['yaw'],
                 self.hover['height'])
@@ -265,54 +271,54 @@ class MainWindow(QtWidgets.QMainWindow):
         event.accept()
         sys.exit(0)
 
-    def on_key_press(self, event):
-        if (not event.native.isAutoRepeat()):
-            if (event.native.key() == QtCore.Qt.Key.Key_Space):
+    def keyPressEvent(self, event):
+        if (not event.isAutoRepeat()):
+            if (event.key() == QtCore.Qt.Key.Key_Space):
                 self.emergency_stop()
             if not self.ai_control_active:
-                if (event.native.key() == QtCore.Qt.Key.Key_Left):
+                if (event.key() == QtCore.Qt.Key.Key_Left):
                     self.updateHover('y', 1)
-                if (event.native.key() == QtCore.Qt.Key.Key_Right):
+                if (event.key() == QtCore.Qt.Key.Key_Right):
                     self.updateHover('y', -1)
-                if (event.native.key() == QtCore.Qt.Key.Key_Up):
+                if (event.key() == QtCore.Qt.Key.Key_Up):
                     self.updateHover('x', 1)
-                if (event.native.key() == QtCore.Qt.Key.Key_Down):
+                if (event.key() == QtCore.Qt.Key.Key_Down):
                     self.updateHover('x', -1)
-                if (event.native.key() == QtCore.Qt.Key.Key_A):
+                if (event.key() == QtCore.Qt.Key.Key_A):
                     self.updateHover('yaw', -70)
-                if (event.native.key() == QtCore.Qt.Key.Key_D):
+                if (event.key() == QtCore.Qt.Key.Key_D):
                     self.updateHover('yaw', 70)
-                if (event.native.key() == QtCore.Qt.Key.Key_Z):
+                if (event.key() == QtCore.Qt.Key.Key_Z):
                     self.updateHover('yaw', -200)
-                if (event.native.key() == QtCore.Qt.Key.Key_X):
+                if (event.key() == QtCore.Qt.Key.Key_X):
                     self.updateHover('yaw', 200)
-                if (event.native.key() == QtCore.Qt.Key.Key_W):
+                if (event.key() == QtCore.Qt.Key.Key_W):
                     self.updateHover('height', 0.1)
-                if (event.native.key() == QtCore.Qt.Key.Key_S):
+                if (event.key() == QtCore.Qt.Key.Key_S):
                     self.updateHover('height', -0.1)
 
-    def on_key_release(self, event):
-        if (not event.native.isAutoRepeat()):
+    def keyReleaseEvent(self, event):
+        if (not event.isAutoRepeat()):
             if not self.ai_control_active:
-                if (event.native.key() == QtCore.Qt.Key.Key_Left):
+                if (event.key() == QtCore.Qt.Key.Key_Left):
                     self.updateHover('y', 0)
-                if (event.native.key() == QtCore.Qt.Key.Key_Right):
+                if (event.key() == QtCore.Qt.Key.Key_Right):
                     self.updateHover('y', 0)
-                if (event.native.key() == QtCore.Qt.Key.Key_Up):
+                if (event.key() == QtCore.Qt.Key.Key_Up):
                     self.updateHover('x', 0)
-                if (event.native.key() == QtCore.Qt.Key.Key_Down):
+                if (event.key() == QtCore.Qt.Key.Key_Down):
                     self.updateHover('x', 0)
-                if (event.native.key() == QtCore.Qt.Key.Key_A):
+                if (event.key() == QtCore.Qt.Key.Key_A):
                     self.updateHover('yaw', 0)
-                if (event.native.key() == QtCore.Qt.Key.Key_D):
+                if (event.key() == QtCore.Qt.Key.Key_D):
                     self.updateHover('yaw', 0)
-                if (event.native.key() == QtCore.Qt.Key.Key_W):
+                if (event.key() == QtCore.Qt.Key.Key_W):
                     self.updateHover('height', 0)
-                if (event.native.key() == QtCore.Qt.Key.Key_S):
+                if (event.key() == QtCore.Qt.Key.Key_S):
                     self.updateHover('height', 0)
-                if (event.native.key() == QtCore.Qt.Key.Key_Z):
+                if (event.key() == QtCore.Qt.Key.Key_Z):
                     self.updateHover('yaw', 0)
-                if (event.native.key() == QtCore.Qt.Key.Key_X):
+                if (event.key() == QtCore.Qt.Key.Key_X):
                     self.updateHover('yaw', 0)
 
     def emergency_stop(self):
@@ -320,27 +326,27 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cf.commander.send_stop_setpoint()
         print("Emergency stop")
 
-    def reset_emergency_stop(self):
-        self.emergency_stop_active = False
-        self.hover = {'x': 0.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0, 'height': 0.0}
-        self.hoverTimer.stop()
+    # def reset_emergency_stop(self):
+    #     self.emergency_stop_active = False
+    #     self.hover = {'x': 0.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0, 'height': 0.0}
+    #     self.hoverTimer.stop()
         
-    def AIFlycommands(self, observation):
+    def AIFlycommands(self):
         if self.ai_control_active:
             if self.latest_measurement is not None:
                 observation = [self.latest_measurement['front']] # 1D observation
                 action, _states = modelV1.predict(observation, deterministic=True)
+                self.labels["AI Control Action:"].setText(f"AI Control Action: {action}")
 
             # Übersetzer
             if action == 0:
-                self.updateHover('x', 1.0)
+                self.updateHover('x', 1)
             elif action == 1:
-                self.updateHover('x', -1.0)
+                self.updateHover('x', -1)
             elif action == 2:
-                self.updateHover('x', 0.0)
+                self.updateHover('x', 0)
             else:
                 print("Error: Action not found")
-
 
 if __name__ == '__main__':
     appQt = QtWidgets.QApplication(sys.argv)
