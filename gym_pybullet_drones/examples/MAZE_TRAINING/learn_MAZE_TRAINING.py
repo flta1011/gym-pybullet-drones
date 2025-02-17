@@ -53,8 +53,8 @@ DEFAULT_TARGET_REWARD = 20000
 DEFAULT_RECORD_VIDEO = False
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
-DEFAULT_PYB_FREQ = 100
-DEFAULT_CTRL_FREQ = 50
+DEFAULT_PYB_FREQ = 200
+DEFAULT_CTRL_FREQ = 100
 DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 5
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 
@@ -198,10 +198,10 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
 
     #### Show (and record a video of) the model's performance ##
 
-    test_env = BaseRLAviary_TestFlytoWall(gui=gui_Test,
+    test_env = BaseRLAviary_MAZE_TRAINING(gui=gui_Test,
                             act=DEFAULT_ACT,
                             record=record_video)
-    test_env_nogui = BaseRLAviary_TestFlytoWall(act=DEFAULT_ACT)
+    test_env_nogui = BaseRLAviary_MAZE_TRAINING(act=DEFAULT_ACT)
    
     logger = Logger(logging_freq_hz=int(test_env.CTRL_FREQ),
                 num_drones=DEFAULT_AGENTS if multiagent else 1,

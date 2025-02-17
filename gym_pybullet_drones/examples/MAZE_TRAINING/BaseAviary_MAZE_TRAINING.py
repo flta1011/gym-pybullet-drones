@@ -424,19 +424,20 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
    
             
             
-        actual_action_0_bis_7 = int(action.item())
+        actual_action_0_bis_8 = int(action.item())
 
         
         #Für die Maze-Trainings-Umgebung 8 Möglichkeiten
         action_to_movement_direction = {
-            0: np.array([1, 0, 0, 0.5]), # Fly 0° (Forward)
-            1: np.array([1, 1, 0, 0.5]), # Fly 45° Diagonal (Forward-Right)
-            2: np.array([0, 1, 0, 0.5]), # Fly 90° (Right)
-            3: np.array([-1, 1, 0, 0.5]), # Fly 135° Diagonal (Backward-Right)
-            4: np.array([-1, 0, 0, 0.5]), # Fly 180° (Backward)
-            5: np.array([-1, -1, 0, 0.5]), # Fly 225° Diagonal (Backward-Left)
-            6: np.array([0, -1, 0, 0.5]), # Fly 270° (Left)
-            7: np.array([1, -1, 0, 0.5]), # Fly 315° Diagonal (Forward-Left)
+            0: np.array([[0, 0, 0, 0.5]]), # Stay
+            1: np.array([[1, 0, 0, 0.5]]), # Fly 0° (Forward)
+            2: np.array([[1, 1, 0, 0.5]]), # Fly 45° Diagonal (Forward-Right)
+            3: np.array([[0, 1, 0, 0.5]]), # Fly 90° (Right)
+            4: np.array([[-1, 1, 0, 0.5]]), # Fly 135° Diagonal (Backward-Right)
+            5: np.array([[-1, 0, 0, 0.5]]), # Fly 180° (Backward)
+            6: np.array([[-1, -1, 0, 0.5]]), # Fly 225° Diagonal (Backward-Left)
+            7: np.array([[0, -1, 0, 0.5]]), # Fly 270° (Left)
+            8: np.array([[1, -1, 0, 0.5]]), # Fly 315° Diagonal (Forward-Left)
             }
         
         if self.step_counter == 0:
@@ -446,15 +447,20 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
             self.RewardCounterActualTrainRun = 0
             self.List_Of_Tuples_Of_Reward_And_Action = []
             
-        self.action = None
+        # self.action = np.zeros((self.NUM_DRONES, 4))
         self.action_change_because_of_Collision_Danger = False
         
         # Get movement direction based on action
-        action = action_to_movement_direction[actual_action_0_bis_7]
+        input_action = action_to_movement_direction[actual_action_0_bis_8]
+        #self.action = np.tile(action, (self.NUM_DRONES, 1))
+        # if not hasattr(self, 'action'):
+        #     self.action = input_action
         
         # New Function to check for Collision Danger and change the action if necessary
-        self.action_change_because_of_Collision_Danger, action = self._check_for_Collision_Danger(action)
+        self.action_change_because_of_Collision_Danger, action = self._check_for_Collision_Danger(input_action)
         self.action = action
+
+
         
         
         #### Save PNG video frames if RECORD=True and GUI=False ####
@@ -708,20 +714,29 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
             action: If no danger, input action is returned, otherwise a new action (halts) is returned
         """
         actionInput = action
-        Danger_Threshold = 0.3
+        Danger_Threshold = 0.15
         state = self._getDroneStateVector(0)
         action_change_because_of_Collision_Danger = False
         
-        if  (state[21] <= Danger_Threshold and actionInput[0][0] ==1) or (state[22] <= Danger_Threshold and actionInput[0][0] ==-1) or (state[23] <= Danger_Threshold and actionInput[0][1] ==1) or (state[24] <= Danger_Threshold and actionInput[0][1] ==-1):
-            
-            action = np.array([0, 0, 0, 0.5])
+        # wenn front,back,left,right distance kleiner als Threshold und action in die Richtung der Wand -> action = halt
+        if state[21] <= Danger_Threshold and actionInput[0][0] == 1:
+            action = np.array([[-1, 0, 0, 0.5]])  # Move backward
             action_change_because_of_Collision_Danger = True
-            print(f"Action changed because of Collision Danger, Action Input: {actionInput}, Distance to Wall: {state[21]} / {state[22]} / {state[23]} / {state[24]} / {state[25]}")
-            
-            return action_change_because_of_Collision_Danger, action
+            print(f"Action changed to move backward because of front collision danger, Action Input: {actionInput} and Action Output: {action}, Distance to Wall: {state[21]}")
+        elif state[22] <= Danger_Threshold and actionInput[0][0] == -1:
+            action = np.array([[1, 0, 0, 0.5]])  # Move forward
+            action_change_because_of_Collision_Danger = True
+            print(f"Action changed to move forward because of back collision danger, Action Input: {actionInput} and Action Output: {action}, Distance to Wall: {state[22]}")
+        elif state[23] <= Danger_Threshold and actionInput[0][1] == 1:
+            action = np.array([[0, -1, 0, 0.5]])  # Move right
+            action_change_because_of_Collision_Danger = True
+            print(f"Action changed to move left because of right collision danger, Action Input: {actionInput} and Action Output: {action}, Distance to Wall: {state[23]}")
+        elif state[24] <= Danger_Threshold and actionInput[0][1] == -1:
+            action = np.array([[0, 1, 0, 0.5]])  # Move left
+            action_change_because_of_Collision_Danger = True
+            print(f"Action changed to move right because of left collision danger, Action Input: {actionInput} and Action Output: {action}, Distance to Wall: {state[24]}")
         
-        else:
-            return action_change_because_of_Collision_Danger, action
+        return action_change_because_of_Collision_Danger, action
             
             
             
@@ -803,7 +818,7 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         #### Initialize/reset counters and zero-valued variables ###
         self.RESET_TIME = time.time()
         self.step_counter = 0
-        self.action = np.zeros((self.NUM_DRONES, 1))
+        self.action = np.zeros((self.NUM_DRONES, 4))
         self.first_render_call = True
         self.X_AX = -1*np.ones(self.NUM_DRONES)
         self.Y_AX = -1*np.ones(self.NUM_DRONES)

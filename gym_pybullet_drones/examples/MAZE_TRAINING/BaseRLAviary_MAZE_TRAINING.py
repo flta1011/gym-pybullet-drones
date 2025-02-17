@@ -130,7 +130,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
 
         """
         
-        return spaces.Discrete(8)
+        return spaces.Discrete(9)
         
     ################################################################################
     # ANCHOR - def preprocessAction
@@ -307,46 +307,13 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         reward = 0
         state = self._getDroneStateVector(0) #erste Drohne
         
-        self.Ende_Crash = 0.2
-        self.Beginn_sweetspot = 0.4
-        self.Ende_sweetspot = 0.5
-        
-        #####VOR DEM SWEETSPOT#############
-        #wenn vorheringer Raycastreading = Actual Raycastreading = 9999, dann abstand zu groß -> Vx > 0 (vorne fliegen ist gut, rückwärts fliegen ist schlecht)
-        #self.action[0][0] ist der Wert der Velocity in SOLL: x-Richtung
-        if self.action[0][0] == 1 and state[21] > self.Beginn_sweetspot: 
-            reward = 2  # von 2 auf 10 erhöht, dass 
-        elif self.action[0][0] == -1 and state[21] > self.Beginn_sweetspot:
-            reward = -2 # von -5 auf -3 reduziert (9.2), von -3 auf -7 reduziert (10.2), damit Reward hacking entgegengewirkt wird (+/- immer abwechselnd), wieder zurück auf -5 (10.2), damit er beim fliegen nach vorne (was gut ist) nicht unnötig bestraft wird.
-     
-        #####Im SWEETSPOT######################
-        #stillstand und im sweetspot: Belohnung
-        
-        if self.action[0][0] == 0 and state[21] > self.Ende_sweetspot and state[21] < self.Beginn_sweetspot:
-            reward = 50
-        #vorwärts fliegen und im sweetspot: Neutral
-        elif self.action[0][0] == 1 and state[21] > self.Beginn_sweetspot and state[21] < self.Ende_sweetspot:
-            reward = 0
-        #Rückwärts im Sweetspot: Neutral
-        elif self.action[0][0] == -1 and state[21] > self.Beginn_sweetspot and state[21] < self.Ende_sweetspot:
-            reward = 0
-       
-        #####NACH DEM SWEETSPOT, zu nah an der Wand#####################
-        elif state[21] < self.Beginn_sweetspot and state[21] > self.Ende_Crash:
-            reward = -5
-            
-       ##############Gecrasht, aka zu nah dran########################
-        elif state[21] <= self.Ende_Crash:
-            reward = -300    # reward von -1000 auf -300 verringert, da die Drohne sonst nicht mehr lernt bzw. durch den Zusammenprall insgesamt negatives gesamtergebnis bekommt und dann ableitet, dass alles schlecht war und dann danach nur noch stehenbleibt
-        
-        #Belohnung, wenn der Abstand der Actionen 1 und nicht 2 beträgt
-        if abs(self.action[0][0] - lastaction[0][0]) == 1:
-            reward += 5
-        elif abs(self.action[0][0] - lastaction[0][0]) == 2:
-            reward += -2
-        
-        #nachdem der Unterschied verwendet wurde, nun die letzte Action mit der neusten Action überschreiben
-        lastaction = self.action
+
+        if self.action_change_because_of_Collision_Danger == True:
+            reward = -10
+
+        if self.action[0][0] != 0 and self.action[0][1] != 0:
+            reward = 10            
+
         
         return reward
 
