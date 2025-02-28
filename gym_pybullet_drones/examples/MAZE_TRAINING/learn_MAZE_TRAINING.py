@@ -35,26 +35,27 @@ from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, Obs
 
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
 DEFAULT_GUI_TRAIN = True
-DEFAULT_USER_DEBUG_GUI = False
+DEFAULT_USER_DEBUG_GUI = True
 DEFAULT_ADVANCED_STATUS_PLOT = True
 
 DEFAULT_GUI_TEST = False
 
 DEFAULT_USE_PRETRAINED_MODEL = False
 
-DEFAULT_PRETRAINED_MODEL_PATH = ''
+DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/best_model_2.28.2025_Scheibe-gut-getroffen-100-Reward.zip'
 
 DEFAULT_EVAL_FREQ = 5*1e4
 DEFAULT_EVAL_EPISODES = 1
 
-DEFAULT_TRAIN_TIMESTEPS = 1*1e5 # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
+DEFAULT_TRAIN_TIMESTEPS = 3*1e5 # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULT_TARGET_REWARD = 20000
+DEFAULT_TARGET_POSITION = np.array([1.8, 1.8, 1.0])
 
 DEFAULT_RECORD_VIDEO = False
-DEFAULT_OUTPUT_FOLDER = 'results'
+DEFAULT_OUTPUT_FOLDER = 'results' 
 DEFAULT_COLAB = False
-DEFAULT_PYB_FREQ = 200
-DEFAULT_CTRL_FREQ = 100
+DEFAULT_PYB_FREQ = 100
+DEFAULT_CTRL_FREQ = 50
 DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 5
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 
@@ -76,7 +77,7 @@ INIT_RPYS = np.array([
 
 
 
-def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DEFAULT_GUI_TRAIN, gui_Test=DEFAULT_GUI_TEST, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO, local=True, pyb_freq=DEFAULT_PYB_FREQ, ctrl_freq=DEFAULT_CTRL_FREQ, user_debug_gui=DEFAULT_USER_DEBUG_GUI, reward_and_action_change_freq=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ, drone_model=DEFAULT_DRONE_MODEL, advanced_status_plot=DEFAULT_ADVANCED_STATUS_PLOT):
+def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DEFAULT_GUI_TRAIN, gui_Test=DEFAULT_GUI_TEST, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO, local=True, pyb_freq=DEFAULT_PYB_FREQ, ctrl_freq=DEFAULT_CTRL_FREQ, user_debug_gui=DEFAULT_USER_DEBUG_GUI, reward_and_action_change_freq=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ, drone_model=DEFAULT_DRONE_MODEL, advanced_status_plot=DEFAULT_ADVANCED_STATUS_PLOT, target_position=DEFAULT_TARGET_POSITION):
 
     filename = os.path.join(output_folder, 'save-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
     if not os.path.exists(filename):
@@ -94,7 +95,8 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
                             pyb_freq=pyb_freq,
                             ctrl_freq=ctrl_freq, # Ansatz: von 60 auf 10 reduzieren, damit die gewählte Action länger wirkt
                             reward_and_action_change_freq=reward_and_action_change_freq, # Ansatz: neu hinzugefügt, da die Step-Funktion vorher mit der ctrl_freq aufgerufen wurde, Problem war dann, dass bei hoher Frequenz die Raycasts keine Änderung hatten, dafür die Drohne aber sauber geflogen ist (60). Wenn der Wert niedriger war, hat es mit den Geschwindigkeiten und Actions besser gepasst, dafür ist die Drohne nicht sauber geflogen, weil die Ctrl-Frequenz für das erreichen der gewählten Action zu niedrig war (10/20).
-                            act=ActionType.VEL
+                            act=ActionType.VEL,
+                            target_position=target_position
                             ),
                         n_envs=1,
                         seed=0
@@ -113,7 +115,8 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
                             pyb_freq=pyb_freq,
                             ctrl_freq=ctrl_freq,
                             reward_and_action_change_freq=reward_and_action_change_freq,
-                            act=ActionType.VEL
+                            act=ActionType.VEL,
+                            target_position=target_position
                             ),
                         n_envs=1,
                         seed=0
@@ -131,11 +134,14 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
         model = PPO.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
     else:
         print("[INFO] Creating new model")
+        # model = PPO('MlpPolicy',
+        #            train_env,
+        #            verbose=1,
+        #            learning_rate=0.0004, # 0,0002 zu gering -> auf 0.0004 erhöht -> auf 0.0005 erhöht --> auf 0.0004 reduziert, da die Policy zu stark angepasst wurde, obwohl es schon 5s am Ziel war..
+        #            )
         model = PPO('MlpPolicy',
                    train_env,
-                   verbose=1,
-                   learning_rate=0.0004, # 0,0002 zu gering -> auf 0.0004 erhöht -> auf 0.0005 erhöht --> auf 0.0004 reduziert, da die Policy zu stark angepasst wurde, obwohl es schon 5s am Ziel war..
-                   )
+                   verbose=1)
     #### Target cumulative rewards (problem-dependent) ##########
     target_reward = DEFAULT_TARGET_REWARD
     print(target_reward)
@@ -290,6 +296,7 @@ if __name__ == '__main__':
     parser.add_argument('--drone_model',          default=DEFAULT_DRONE_MODEL,    type=str,           help='Control frequency (default: 60)', metavar='')
     parser.add_argument('--user_debug_gui',          default=DEFAULT_USER_DEBUG_GUI,    type=str2bool,           help='set to True if you want to see the debug GUI, only for showing the frame in training!(default: False)', metavar='')
     parser.add_argument('--advanced_status_plot',          default=DEFAULT_ADVANCED_STATUS_PLOT,    type=str2bool,           help='set to True if you want to see the advanced status plot, only for showing the frame in training!(default: False)', metavar='')
+    parser.add_argument('--target_position',          default=DEFAULT_TARGET_POSITION,    type=str,           help='set to True if you want to see the advanced status plot, only for showing the frame in training!(default: False)', metavar='')
     ARGS = parser.parse_args()
 
     run(**vars(ARGS))

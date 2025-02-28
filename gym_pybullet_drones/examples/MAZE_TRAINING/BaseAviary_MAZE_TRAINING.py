@@ -40,6 +40,8 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
                  user_debug_gui=False,
                  vision_attributes=False,
                  output_folder='results_FlytoWall',
+                 target_position=np.array([0, 0, 0]),
+                 Danger_Threshold_Wall=0.15
                  ):
         """Initialization of a generic aviary environment.
 
@@ -92,6 +94,8 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         #### Parameters ############################################
         self.NUM_DRONES = num_drones
         self.NEIGHBOURHOOD_RADIUS = neighbourhood_radius
+        self.TARGET_POSITION = target_position
+        self.Danger_Threshold_Wall = Danger_Threshold_Wall
         #### Options ###############################################
         self.DRONE_MODEL = drone_model
         self.GUI = gui
@@ -322,64 +326,64 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
 
         p.resetSimulation(physicsClientId=self.CLIENT)
         
-        if self.USER_DEBUG:
-            #### Housekeeping ##########################################
-            print("Start housekeeping - INIT_XYZS:", self.INIT_XYZS)
-            self._housekeeping()
-            print("End housekeeping - INIT_XYZS:", self.INIT_XYZS)
-                
-            #### Start video recording #################################
-            self._startVideoRecording()
-            #### Update and store the drones kinematic information #####
-            print("Start kinematic update - INIT_XYZS:", self.INIT_XYZS)
-            print(f"self.pos vor Update: {self.pos}")
-            self._updateAndStoreKinematicInformation()
-            print(f"self.pos nach Update: {self.pos}")
-            print("End kinematic update - INIT_XYZS:", self.INIT_XYZS)
-            #### Start video recording #################################
-            self._startVideoRecording()
-            #### Return the initial observation ########################
-            initial_obs = None
-            initial_obs = self._computeObs()
-            nth_drone = 0 #weil das so standardmäßig im computeObs festegelegt ist
-            print(f"Getting state for nth_drone: {nth_drone}")
         
-            # Get all bodies in simulation
-            all_bodies = p.getNumBodies(physicsClientId=self.CLIENT)
-            print(f"Bodies in simulation: {all_bodies}")
+        # if self.USER_DEBUG:
+        #     #### Housekeeping ##########################################
+        #     print("Start housekeeping - INIT_XYZS:", self.INIT_XYZS)
+        #     self._housekeeping()
+        #     print("End housekeeping - INIT_XYZS:", self.INIT_XYZS)
+                
+        #     #### Start video recording #################################
+        #     self._startVideoRecording()
+        #     #### Update and store the drones kinematic information #####
+        #     print("Start kinematic update - INIT_XYZS:", self.INIT_XYZS)
+        #     print(f"self.pos vor Update: {self.pos}")
+        #     self._updateAndStoreKinematicInformation()
+        #     print(f"self.pos nach Update: {self.pos}")
+        #     print("End kinematic update - INIT_XYZS:", self.INIT_XYZS)
+        #     #### Start video recording #################################
+        #     self._startVideoRecording()
+        #     #### Return the initial observation ########################
+        #     initial_obs = None
+        #     initial_obs = self._computeObs()
+        #     nth_drone = 0 #weil das so standardmäßig im computeObs festegelegt ist
+        #     print(f"Getting state for nth_drone: {nth_drone}")
+        
+        #     # Get all bodies in simulation
+        #     all_bodies = p.getNumBodies(physicsClientId=self.CLIENT)
+        #     print(f"Bodies in simulation: {all_bodies}")
             
-            # Get the actual drone ID
-            drone_id = nth_drone + 1  # If this is the issue, you might need to adjust this
-            print(f"Accessing drone ID: {drone_id}")
+        #     # Get the actual drone ID
+        #     drone_id = nth_drone + 1  # If this is the issue, you might need to adjust this
+        #     print(f"Accessing drone ID: {drone_id}")
             
-            # Verify the body is actually a drone
-            body_info = p.getBodyInfo(drone_id, physicsClientId=self.CLIENT)
-            print(f"Body info for ID {drone_id}: {body_info}")
+        #     # Verify the body is actually a drone
+        #     body_info = p.getBodyInfo(drone_id, physicsClientId=self.CLIENT)
+        #     print(f"Body info for ID {drone_id}: {body_info}")
 
             
-            print(f"Environment resettet, initial_obs: {initial_obs}\n")
+        #     print(f"Environment resettet, initial_obs: {initial_obs}\n")
         
         
         
-            initial_info = self._computeInfo()
+        #     initial_info = self._computeInfo()
             
-            return initial_obs, initial_info
+        #     return initial_obs, initial_info
         
-        else:
-            #### Housekeeping ##########################################
-            self._housekeeping()
-            #### Start video recording #################################
-            self._startVideoRecording()
-            #### Update and store the drones kinematic information #####
-            self._updateAndStoreKinematicInformation()
-            #### Start video recording #################################
-            self._startVideoRecording()
-            #### Return the initial observation ########################
-            initial_obs = None
-            initial_obs = self._computeObs()
-            initial_info = self._computeInfo()
-            
-            return initial_obs, initial_info
+        #### Housekeeping ##########################################
+        self._housekeeping()
+        #### Start video recording #################################
+        self._startVideoRecording()
+        #### Update and store the drones kinematic information #####
+        self._updateAndStoreKinematicInformation()
+        #### Start video recording #################################
+        self._startVideoRecording()
+        #### Return the initial observation ########################
+        initial_obs = None
+        initial_obs = self._computeObs()
+        initial_info = self._computeInfo()
+        
+        return initial_obs, initial_info
     
     
 
@@ -426,19 +430,19 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
             
         actual_action_0_bis_8 = int(action.item())
 
-        
+        # Lokale Koordinaten auf der Drohne
         #Für die Maze-Trainings-Umgebung 8 Möglichkeiten
-        action_to_movement_direction = {
-            0: np.array([[0, 0, 0, 0.5]]), # Stay
-            1: np.array([[1, 0, 0, 0.5]]), # Fly 0° (Forward)
-            2: np.array([[1, 1, 0, 0.5]]), # Fly 45° Diagonal (Forward-Right)
-            3: np.array([[0, 1, 0, 0.5]]), # Fly 90° (Right)
-            4: np.array([[-1, 1, 0, 0.5]]), # Fly 135° Diagonal (Backward-Right)
-            5: np.array([[-1, 0, 0, 0.5]]), # Fly 180° (Backward)
-            6: np.array([[-1, -1, 0, 0.5]]), # Fly 225° Diagonal (Backward-Left)
-            7: np.array([[0, -1, 0, 0.5]]), # Fly 270° (Left)
-            8: np.array([[1, -1, 0, 0.5]]), # Fly 315° Diagonal (Forward-Left)
+        action_to_movement_direction_local = {
+            0: np.array([[0, 0, 0, 0.99, 0]]), # Fly 0° (Stay)
+            1: np.array([[1, 0, 0, 0.99, 0]]), # Fly 90° (Forward)
+            2: np.array([[-1, 0, 0, 0.99, 0]]), # Fly 180° (Backward)
+            3: np.array([[0, 1, 0, 0.99, 0]]), # Fly 90° (Left)
+            4: np.array([[0, -1, 0, 0.99, 0]]), # Fly 270° (Right)
+            5: np.array([[0, 0, 0, 0.99, 1/4*np.pi]]), # 45° Left-Turn # NOTE - Tests mit 1/36*np.pi waren nicht so gut, da die Drohne scheinbar nicht verstanden hat, dass bei einer Drehung vorwärtsfliegen bedeutet
+            6: np.array([[0, 0, 0, 0.99, -1/4*np.pi]]), # 45° Right-Turn
             }
+        
+        
         
         if self.step_counter == 0:
             self.time_start_trainrun = 0
@@ -446,18 +450,29 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
             self.timestamp_actual = 0
             self.RewardCounterActualTrainRun = 0
             self.List_Of_Tuples_Of_Reward_And_Action = []
+        
+        
             
         # self.action = np.zeros((self.NUM_DRONES, 4))
         self.action_change_because_of_Collision_Danger = False
         
         # Get movement direction based on action
-        input_action = action_to_movement_direction[actual_action_0_bis_8]
-        #self.action = np.tile(action, (self.NUM_DRONES, 1))
-        # if not hasattr(self, 'action'):
-        #     self.action = input_action
+        input_action_local = action_to_movement_direction_local[actual_action_0_bis_8]
+        
+        # Übersetzten in World-Koordinaten
+        state = self._getDroneStateVector(0)
+        # Convert quaternion to rotation matrix using NumPy
+        rot_matrix = np.array(p.getMatrixFromQuaternion(state[3:7])).reshape(3, 3)
+        
+    
+        input_action_Velocity_World = rot_matrix.dot(input_action_local[0][0:3])
+        
+        input_action_complete_world = np.array([np.concatenate((input_action_Velocity_World[0:2],np.array([0]), input_action_local[0][3:5]))]) # gedrehte x,y-Werte, z-Wert 0, yaw-Wert bleibt gleich
+        
+        
         
         # New Function to check for Collision Danger and change the action if necessary
-        self.action_change_because_of_Collision_Danger, action = self._check_for_Collision_Danger(input_action)
+        self.action_change_because_of_Collision_Danger, action = self._check_for_Collision_Danger(input_action_complete_world)
         self.action = action
 
 
@@ -638,35 +653,33 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         self.List_Of_Tuples_Of_Reward_And_Action.append((action[0][0], reward))
             
         # ANCHOR - Debugging-Plots STEP
-        #plotting im Trainings-Plot
-        if self.GUI and self.USER_DEBUG:
-            
-            print("Trainingszeit aktueller Run(s):", "{:.3f}".format(self.timestamp_actual))
-            print(f" Observationspace (forward,backward, letzte Action (Velocity in X-Richtung!)):\t {state[21]} \t{state[22]} \t{state[26]}")
-            print(f"aktuelle Action (Velocity in X-Richtung!) / Reward für Action: {self.action[0][0]} / {reward}")
-            print(f"Reward aktueller Trainingslauf: {self.RewardCounterActualTrainRun}")
-            print(f"current Physics-Step / Reward-Steps: {self.step_counter} / {self.timestamp_actual/(1/self.REWARD_AND_ACTION_CHANGE_FREQ)}")
-            if truncated:
-                print(f"Grund für Truncated: {Grund_Truncated}")
-                print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
-            if terminated:
-                print(f"Grund für Terminated: {Grund_Terminated}")
-                print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
-        # print(" Abstand zur Wand left:", state[23])
-        # print(" Abstand zur Wand right:", state[24])
-        # print(" Abstand zur Wand top:", state[25])
         
-        if self.GUI:
+        # NOTE - plotting im Trainings-Plot mit zusätzlichen Informationen deaktiviert (28.2.25)
+        # if self.GUI and self.USER_DEBUG:
+            
+        #     print("Trainingszeit aktueller Run(s):", "{:.3f}".format(self.timestamp_actual))
+        #     print(f" Observationspace (forward,backward, letzte Action (Velocity in X-Richtung!)):\t {state[21]} \t{state[22]} \t{state[26]}")
+        #     print(f"aktuelle Action (Velocity in X-Richtung!) / Reward für Action: {self.action[0][0]} / {reward}")
+        #     print(f"Reward aktueller Trainingslauf: {self.RewardCounterActualTrainRun}")
+        #     print(f"current Physics-Step / Reward-Steps: {self.step_counter} / {self.timestamp_actual/(1/self.REWARD_AND_ACTION_CHANGE_FREQ)}")
+        #     if truncated:
+        #         print(f"Grund für Truncated: {Grund_Truncated}")
+        #         print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
+        #     if terminated:
+        #         print(f"Grund für Terminated: {Grund_Terminated}")
+        #         print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
+  
+        
+        #if self.GUI: #deaktiviert, damit der nachfolgende Plot immer kommt, auch wenn keine GUI eingeschaltet ist
+        if True:
             if truncated:
                 #Zusammenfassung Trainingslauf
                 print(f"Zusammenfassung Trainingslauf Truncated (Grund: {Grund_Truncated}):")
-                print(f"Abstand zur Wand front/back: {state[21]} / {state[22]}")
-                print(f"Observations: {obs}")
+                print(f"Observations: x,y,yaw: {state[0]:.4f}, {state[1]:.4f}, {state[9]:.4f}, RayFront/Back: {state[21]:.4f}, {state[22]:.4f}, RayLeft/Right: {state[23]:.4f}, {state[24]:.4f}, RayUp: {state[25]:.4f}")
                 print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
             if terminated:
                 print(f"Zusammenfassung Trainingslauf Terminated (Grund: {Grund_Terminated}):")
-                print(f"Abstand zur Wand front/back: {state[21]} / {state[22]}")
-                print(f"Observations: {obs}")
+                print(f"Observations: x,y,yaw: {state[0]:.4f}, {state[1]:.4f}, {state[9]:.4f}, RayFront/Back: {state[21]:.4f}, {state[22]:.4f}, RayLeft/Right: {state[23]:.4f}, {state[24]:.4f}, RayUp: {state[25]:.4f}")
                 print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
         
         
@@ -703,7 +716,7 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         
             
         return obs, reward, terminated, truncated, info
-    
+    # ANCHOR - check_for_Collision_Danger
     def _check_for_Collision_Danger(self, action):
         """Checks for collision danger and changes the action if necessary. Takes the action and checks the distances to the walls in all directions. If a wall is close (<=0.3) and the alogrithm picked an action in the direction of the wall, the action is changed to an halt. The idea is to punish the drone for the try moving into the wall and giving it a chance to correct its action. (Action not going into the direction of a wall will be passed through with change)
         
@@ -714,27 +727,27 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
             action: If no danger, input action is returned, otherwise a new action (halts) is returned
         """
         actionInput = action
-        Danger_Threshold = 0.15
+        
         state = self._getDroneStateVector(0)
         action_change_because_of_Collision_Danger = False
         
         # wenn front,back,left,right distance kleiner als Threshold und action in die Richtung der Wand -> action = halt
-        if state[21] <= Danger_Threshold and actionInput[0][0] == 1:
-            action = np.array([[-1, 0, 0, 0.5]])  # Move backward
+        if state[21] <= self.Danger_Threshold_Wall and actionInput[0][0] == 1:
+            action = np.array([[-1, 0, 0, 0.5, 0]])  # Move backward
             action_change_because_of_Collision_Danger = True
-            print(f"Action changed to move backward because of front collision danger, Action Input: {actionInput} and Action Output: {action}, Distance to Wall: {state[21]}")
-        elif state[22] <= Danger_Threshold and actionInput[0][0] == -1:
-            action = np.array([[1, 0, 0, 0.5]])  # Move forward
+            print(f"Drohne würde vorwärts gegen die Wand fliegen: Distance to Wall_front: {state[21]} --> angepasst\n")
+        elif state[22] <= self.Danger_Threshold_Wall and actionInput[0][0] == -1:
+            action = np.array([[1, 0, 0, 0.5, 0]])  # Move forward
             action_change_because_of_Collision_Danger = True
-            print(f"Action changed to move forward because of back collision danger, Action Input: {actionInput} and Action Output: {action}, Distance to Wall: {state[22]}")
-        elif state[23] <= Danger_Threshold and actionInput[0][1] == 1:
-            action = np.array([[0, -1, 0, 0.5]])  # Move right
+            print(f"Drohne würde rückwärts gegen die Wand fliegen: Distance to Wall_back: {state[22]} --> angepasst\n")
+        elif state[23] <= self.Danger_Threshold_Wall and actionInput[0][1] == 1:
+            action = np.array([[0, -1, 0, 0.5, 0]])  # Move right
             action_change_because_of_Collision_Danger = True
-            print(f"Action changed to move left because of right collision danger, Action Input: {actionInput} and Action Output: {action}, Distance to Wall: {state[23]}")
-        elif state[24] <= Danger_Threshold and actionInput[0][1] == -1:
-            action = np.array([[0, 1, 0, 0.5]])  # Move left
+            print(f"Drohne würde rechts gegen die Wand fliegen: Distance to Wall_left: {state[23]} --> angepasst\n")
+        elif state[24] <= self.Danger_Threshold_Wall and actionInput[0][1] == -1:
+            action = np.array([[0, 1, 0, 0.5, 0]])  # Move left
             action_change_because_of_Collision_Danger = True
-            print(f"Action changed to move right because of left collision danger, Action Input: {actionInput} and Action Output: {action}, Distance to Wall: {state[24]}")
+            print(f"Drohne würde links gegen die Wand fliegen: Distance to Wall_right: {state[24]} --> angepasst\n")
         
         return action_change_because_of_Collision_Danger, action
             
@@ -910,16 +923,16 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         Returns
         -------
         ndarray 
-            (27,)-shaped array of floats containing the state vector of the n-th drone.
+            (26,)-shaped array of floats containing the state vector of the n-th drone.
             The state vector includes:
-            - 3x Position (x, y, z) [0:3]                -> -np.inf bis np.inf
-            - 4x Quaternion (qx, qy, qz, qw) [3:7]       -> nicht verwendet
-            - 3x Roll, pitch, yaw (r, p, y) [7:10]       -> -np.inf bis np.inf
-            - 3x Linear velocity (vx, vy, vz) [10:13]    -> -np.inf bis np.inf
-            - 3x Angular velocity (wx, wy, wz) [13:16]     -> -np.inf bis np.inf
-            - 5x previous raycast readings (front, back, left, right, top) [16:21] -> 0 bis 9999    
-            - 5x actual raycast readings (front, back, left, right, top) [21:26] -> 0 bis 9999
-            - 1x Last action [26]             -> 0 bis 2 (da 3 actions zur Auswahl)
+            - 3x Position (x, y, z) [0:3]                -> -np.inf to np.inf
+            - 4x Quaternion (qx, qy, qz, qw) [3:7]       -> unused
+            - 3x Roll, pitch, yaw (r, p, y) [7:10]       -> -np.inf to np.inf
+            - 3x Linear velocity (vx, vy, vz) [10:13]    -> -np.inf to np.inf
+            - 3x Angular velocity (wx, wy, wz) [13:16]   -> -np.inf to np.inf
+            - 5x Null [16:21] -> 0 to 9999
+            - 4x actual raycast readings (front, back, left, right,up) [21:26] -> 0 to 9999
+            - 1x Last action [26]             -> -1, 0, or 1 (velocity in x direction)
         """
         
         # #initialisierung der ray_results_actual
@@ -1377,7 +1390,11 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         """
         p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/train_square.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
         
-        p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/target.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
+        p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/target.urdf'), 
+                  self.TARGET_POSITION, # x,y,z position
+                  p.getQuaternionFromEuler([0, 0, 0]), # rotation
+                  physicsClientId=self.CLIENT,
+                  useFixedBase=True)
             
         #Wände mit Variablen.. läuft aber irgendwie nicht
         #p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/train_quader.urdf'), physicsClientId=self.CLIENT)
@@ -1590,6 +1607,7 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
     
     ################################################################################
 
+    # ANCHOR - get Distance Sensors
     # Get Sensor Data
     def check_distance_sensors(self, nth_drone):
         """

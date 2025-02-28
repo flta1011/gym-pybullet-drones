@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import time
 import pybullet as p
 from gymnasium import spaces
 from collections import deque
@@ -33,6 +34,8 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
                  record=False,
                  act: ActionType=ActionType.VEL,
                  advanced_status_plot=False,
+                 target_position=np.array([0, 0, 0]),
+                 Danger_Threshold_Wall=0.15
                  ):
         """Initialization of a generic single and multi-agent RL environment.
 
@@ -75,6 +78,8 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         self.ACT_TYPE = act
         self.still_time = 0
         self.EPISODE_LEN_SEC = 5*60 #increased from 20 to 100
+        self.TARGET_POSITION = target_position
+        self.Danger_Threshold_Wall = Danger_Threshold_Wall
         
         
         #### Create integrated controllers #########################
@@ -97,6 +102,8 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
                          obstacles=True, # Add obstacles for RGB observations and/or FlyThruGate
                          advanced_status_plot=advanced_status_plot,
                          user_debug_gui=user_debug_gui, # Remove of RPM sliders from all single agent learning aviaries
+                         target_position=target_position,
+                         Danger_Threshold_Wall=Danger_Threshold_Wall
                          )
         
         #### Set a limit on the maximum target speed ###############
@@ -117,20 +124,20 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         -------
         spaces.Discrete
         DREHUNG MATHEMATISCH POSITIV (GEGEN DEN UHRZEIGER)
-        0: np.array([1, 0, 0, 0.99]), # Fly 0° (Forward)
-        1: np.array([1, 1, 0, 0.99]), # Fly 45° Diagonal (Forward-Left)
-        2: np.array([0, 1, 0, 0.99]), # Fly 90° (Left)
-        3: np.array([-1, 1, 0, 0.99]), # Fly 135° Diagonal (Backward-Left)
-        4: np.array([-1, 0, 0, 0.99]), # Fly 180° (Backward)
-        5: np.array([-1, -1, 0, 0.99]), # Fly 225° Diagonal (Backward-Right)
-        6: np.array([0, -1, 0, 0.99]), # Fly 270° (Right)
-        7: np.array([1, -1, 0, 0.99]), # Fly 315° Diagonal (Forward-Left)
+        1: np.array([[0, 0, 0, 0.99, 0]]), # Fly 0° (Stay)
+        2: np.array([[1, 0, 0, 0.99, 0]]), # Fly 90° (Forward)
+        3: np.array([[-1, 0, 0, 0.99, 0]]), # Fly 180° (Backward)
+        4: np.array([[0, 1, 0, 0.99, 0]]), # Fly 90° (Left)
+        5: np.array([[0, -1, 0, 0.99, 0]]), # Fly 270° (Right)
+        6: np.array([[0, 0, 0, 0.99, 1/4*np.pi]]), # 45° Left-Turn
+        7: np.array([[0, 0, 0, 0.99, -1/4*np.pi]]), # 45° Right-Turn
+        
     
         
 
         """
         
-        return spaces.Discrete(9)
+        return spaces.Discrete(7)
         
     ################################################################################
     # ANCHOR - def preprocessAction
@@ -143,28 +150,35 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         """
         # Convert action to movement vector
         # action_to_movement = {
-        #     0: np.array([1, 0, 0, 0.99]),  # Forward
-        #     1: np.array([-1, 0, 0, 0.99]), # Backward
-        #     2: np.array([0, 0, 0, 0.99]),  # Stay
+        #     0: np.array([[1, 0, 0, 0.99, 0]]),  # Forward
+        #     1: np.array([[-1, 0, 0, 0.99, 0]]), # Backward
+        #     2: np.array([[0, 0, 0, 0.99, 0]]),  # Stay
         # }
         
         rpm = np.zeros((self.NUM_DRONES, 4))
         for k in range(self.NUM_DRONES):
             #### Get the current state of the drone  ###################
             state = self._getDroneStateVector(k)
-            target_v = action[k, :]
+            target_v = action[k, :4]
             #### Normalize the first 3 components of the target velocity
             if np.linalg.norm(target_v[0:3]) != 0:
                 v_unit_vector = target_v[0:3] / np.linalg.norm(target_v[0:3])
             else:
                 v_unit_vector = np.zeros(3)
+            
+            # NOTE - neu hinzueefügt, dass die Drohne sich auch drehen kann
+            current_yaw = state[9]
+            change_value_yaw = action[k,4]
+            Calculate_new_yaw = current_yaw + change_value_yaw
+            
+            
             temp, _, _ = self.ctrl[k].computeControl(control_timestep=self.CTRL_TIMESTEP,
                                                     cur_pos=state[0:3],
                                                     cur_quat=state[3:7],
                                                     cur_vel=state[10:13],
                                                     cur_ang_vel=state[13:16],
-                                                    target_pos=np.concatenate([state[0:1],np.array([0]), np.array([0.5])]), # same as the current position on X, but should stay 0 on y and z = 0.5
-                                                    target_rpy=np.array([0,0,0]), # keep orientation to base
+                                                    target_pos=np.array([state[0], state[1], 0.5]), # same as the current position on X, and same on y (not as in fly to wall scenario) and z = 0.5
+                                                    target_rpy=np.array([0,0,Calculate_new_yaw]), # neue Yaw-Werte durch Drehung der Drohne
                                                     target_vel=self.SPEED_LIMIT * np.abs(target_v[3]) * v_unit_vector # target the desired velocity vector
                                                     )
             rpm[k,:] = temp
@@ -205,9 +219,9 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         
         lo = -np.inf
         hi = np.inf
-        obs_lower_bound = np.array([0,0,0,0,0]) #Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
+        obs_lower_bound = np.array([-99, -99,-2*np.pi,0,0,0,0,0]) #x,y,yaw, Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
     
-        obs_upper_bound = np.array([9999,9999,9999,9999,9999]) #Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
+        obs_upper_bound = np.array([99, 99, 2*np.pi, 9999,9999,9999,9999,9999]) #Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
                                     
         return spaces.Box(
             low=obs_lower_bound,
@@ -237,17 +251,21 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
     def _computeObs(self):
         """Returns the current observation of the environment.
         10.2.25: deutlich vereinfachte Observation Space, damit es für den PPO einfacher ist, die Zuammenhänge zwischen den relevanten Observations und dem dafür erhaltenen Reward zu erkennen.
-
-        Returns
+        
+        28.2.25: vereinfachte Observation Space: in jede Richtung vorne, hinten, links, rechts, oben folgende Outputs möglich
+        - 0: zu nahe an der Wand, 
+        - 1: Wand kommt näher, 
+        - 2: safe Distance,
+        - 9999: Sensor oben frei
+        
+        Returns (28.2.25):
         -------
         ndarray
-            A Box() of shape (NUM_DRONES,H,W,4) or (NUM_DRONES,21) depending on the observation type.
-            
-            Information of the self._getDroneStateVector:
-                ndarray
-                The state vector includes:
-
-                1x actual raycast reading (forward)  [21]    -> 0 bis 9999
+            A Box() of shape (NUM_DRONES,5) -> vorne, hinten, links, rechts, oben (1,9999)
+            -> 0: zu nahe an der Wand, 
+            -> 1: Wand kommt näher, 
+            -> 2: safe Distance,
+            -> 9999: Sensor oben frei
         """
 
     
@@ -265,8 +283,40 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         state = self._getDroneStateVector(0)
         
         # Select specific values from obs and concatenate them directly
-        obs = [state[21],state[22],state[23],state[24],state[25]]  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
-        return obs
+        obs = [state[21],state[22],state[23],state[24]]  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
+        
+        # NOTE - nachfolgend auf vereinfachte Observation Space umgestellt (28.2.25):
+        # Modify observation based on distance thresholds
+        modified_obs = []
+        
+        # NOTE - Distanz zum Übergeben hat gar nicht so viel gebracht, weil es sich langfristig nicht stabilieren konnte (28.2.25)
+        # drone_pos = state[0:3]  # XYZ position from state vector
+        # target_pos = self.TARGET_POSITION
+        # # Calculate distance to target
+        # distance = np.linalg.norm(drone_pos - target_pos)
+        # modified_obs.append(distance)
+        
+        # NOTE - neue Tests mit X,Y, Yaw Position der Drohne (28.2.25) übergeben
+        modified_obs.append(state[0]) #x-Position
+        modified_obs.append(state[1]) #y-Position
+        modified_obs.append(state[9]) #Yaw-Position
+        
+        for distance in obs:
+            if distance <= (self.Danger_Threshold_Wall):  # Too close to wall, Safetyalgorithmus wird gegensteuern
+                modified_obs.append(0)
+            elif distance <= (self.Danger_Threshold_Wall+0.1):  # Vorwarnung: gleich passiert was
+                modified_obs.append(1) 
+            else:  # Safe distance
+                modified_obs.append(2)
+        
+        #raycast oben noch anhängen        
+        if state[25] < 1:
+            modified_obs.append(1)
+        else:
+            modified_obs.append(9999)
+                
+        return np.array(modified_obs, dtype=np.float32) # vorne (0,1,2), hinten (0,1,2), links (0,1,2), rechts (0,1,2), oben (1,9999)
+        
     
             ############################################################
        
@@ -307,12 +357,35 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         reward = 0
         state = self._getDroneStateVector(0) #erste Drohne
         
-
+        
+        ###### 1.PUNISHMENT FOR COLLISION ######
         if self.action_change_because_of_Collision_Danger == True:
-            reward = -10
+            reward = -100
 
-        if self.action[0][0] != 0 and self.action[0][1] != 0:
-            reward = 10            
+        ###### 2.REWARD FOR DISTANCE TO TARGET ######
+        # Get current drone position and target position
+        drone_pos = state[0:3]  # XYZ position from state vector
+        target_pos = self.TARGET_POSITION
+        
+        # Calculate distance to target
+        self.distance = np.linalg.norm(drone_pos - target_pos)
+        
+        # Define max distance and max reward
+        MAX_DISTANCE = 3.0  # Maximum expected distance in meters
+        MAX_REWARD = 10.0    # Maximum reward for distance (excluding target hit bonus)
+        
+        # Squared reward that drops off more quickly at larger distances
+        # Scales from 0 (at MAX_DISTANCE) to MAX_REWARD (at distance=0)
+        distance_ratio = min(self.distance/MAX_DISTANCE, 1.0)
+        distance_reward = MAX_REWARD * (1 - distance_ratio)**2
+        
+        # Add huge reward if target is hit (within 0.05m) and top sensor shows no obstacle
+        if self.distance < 0.15 and state[25] < 1: # 0.15 = Radius Scheibe
+            reward += 1000.0
+            print(f"Target hit. Zeitstempel (min:sek) {time.strftime('%M:%S', time.localtime())}")
+            
+        reward += distance_reward
+        
 
         
         return reward
@@ -338,14 +411,15 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         """
         state = self._getDroneStateVector(0)
         #starte einen Timer, wenn die Drohne im sweet spot ist
-        if state[25] <= 1:
+        if self.distance < 0.15 and state[25] < 1: #0.15 = Radius Scheibe
             self.still_time += (1/self.reward_and_action_change_freq)# Increment by simulation timestep (in seconds) # TBD: funktioniert das richtig?
         else:
             self.still_time = 0.0 # Reset timer to 0 seconds
 
         #Wenn die Drohne im sweet spot ist (bezogen auf Sensor vorne, Sensor und seit 5 sekunden still ist, beenden!
-        if self.still_time >= 0.25:
-            Grund_Terminated = "Drohne hat nicht nur durch einen Bug da Objekt gefunden (Sensor oben ist belegt)"
+        if self.still_time >= 5:
+            current_time = time.localtime()
+            Grund_Terminated = f"Drohne ist 5 s lang unter dem Objekt gewesen. Zeitstempel (min:sek) {time.strftime('%M:%S', current_time)}"
             return True, Grund_Terminated
         
         Grund_Terminated = None
@@ -375,8 +449,9 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             return True, Grund_Truncated
 
         #Wenn an einer Wand gecrashed wird, beenden!
-        if (state[21] <= 0.2 or state[22] <= 0.2 or state[23] <= 0.2 or state[24] <= 0.2):
-            Grund_Truncated = "Zu nah an der Wand"
+        Abstand_truncated = self.Danger_Threshold_Wall-0.05
+        if (state[21] <= Abstand_truncated  or state[22] <= Abstand_truncated or state[23] <= Abstand_truncated or state[24] <= Abstand_truncated):
+            Grund_Truncated = f"Zu nah an der Wand (<{Abstand_truncated} m)"
             return True, Grund_Truncated
         
         # Wenn die Zeit abgelaufen ist, beenden!
