@@ -181,7 +181,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         # Open web browser after a short delay to ensure server is running
         def open_browser():
             time.sleep(1)  # Wait for server to start
-            webbrowser.open(f'http://localhost:{self.port}')
+            webbrowser.open(f'http://localhost:8050')
 
         Thread(target=open_browser, daemon=True).start()
                 
