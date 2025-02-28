@@ -4,6 +4,13 @@ import time
 import pybullet as p
 from gymnasium import spaces
 from collections import deque
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import dash
+from dash import dcc, html
+from dash.dependencies import Input, Output
+from threading import Thread
+import webbrowser  # Add this import
 
 from gym_pybullet_drones.examples.MAZE_TRAINING.BaseAviary_MAZE_TRAINING import BaseAviary_MAZE_TRAINING
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType, ImageType
@@ -113,12 +120,75 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         #### Set a limit on the maximum target speed ###############
         if  act == ActionType.VEL:
             self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000/3600)
+            
+        # Initialize Dash app
+        self.app = dash.Dash(__name__)
+        self.app.layout = html.Div([
+            dcc.Graph(id='live-map'),
+            dcc.Interval(
+                id='interval-component',
+                interval=500,  # in milliseconds
+                n_intervals=0
+            )
+        ])
+            
+        @self.app.callback(
+            Output('live-map', 'figure'),
+            Input('interval-component', 'n_intervals')
+        )
+        
+        def update_graph(n):
+            fig = make_subplots(
+                rows=1, cols=2,
+                subplot_titles=('Reward Map', 'Best Way Map')
+            )
+            
+            fig.add_trace(
+                go.Heatmap(
+                    z=self.reward_map,
+                    colorscale='Viridis',
+                    showscale=True,
+                    name='Reward Map'
+                ),
+                row=1, col=1
+            )
+            
+            fig.add_trace(
+                go.Heatmap(
+                    z=self.best_way_map,
+                    colorscale='Viridis',
+                    showscale=True,
+                    name='Best Way Map'
+                ),
+                row=1, col=2
+            )
+            
+            fig.update_layout(
+                height=600,
+                title_text="Maze Training Visualization",
+                showlegend=True
+            )
+            
+            return fig
+        
+        # Start the Dash server in a separate thread
+        self.dashboard_thread = Thread(
+            target=lambda: self.app.run_server(debug=False, port=self.port), 
+            daemon=True
+        )
+        self.dashboard_thread.start()
+        
+        # Open web browser after a short delay to ensure server is running
+        def open_browser():
+            time.sleep(1)  # Wait for server to start
+            webbrowser.open(f'http://localhost:{self.port}')
 
+        Thread(target=open_browser, daemon=True).start()
+                
     ################################################################################
     
-    # def _addObstacles(self): # in BaseAviary_TestFlytoWall implementiert
 
-
+    
     ################################################################################
 
     def _actionSpace(self):
@@ -355,9 +425,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             The reward.
 
         """
-        if 'lastaction' not in locals(): # Wird aufgarufen, wenn die Drohne das erste Mal startet
-            lastaction = self.action
-
+        if self.step_counter == 0:
             # NOTE - Reward Map
 
             # 0 = Unbesucht,
@@ -451,14 +519,17 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
                     self.best_way_map[position[0], position[1]] = 1
             
             # Save the best way map to a CSV file
-            with open('/home/moritz_s/Documents/RKIM_1/F_u_E_Drohnenrennen/GitRepo/gym-pybullet-drones/gym_pybullet_drones/examples/MAZE_TRAINING/best_way_map.csv', 'w', newline='') as file:
+            with open('best_way_map.csv', 'w', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerows(self.best_way_map)
 
             # Save the reward map to a CSV file
-            with open('/home/moritz_s/Documents/RKIM_1/F_u_E_Drohnenrennen/GitRepo/gym-pybullet-drones/gym_pybullet_drones/examples/MAZE_TRAINING/reward_map.csv', 'w', newline='') as file:
+            with open('reward_map.csv', 'w', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerows(self.reward_map)
+                
+            
+            
         
         reward = 0
         state = self._getDroneStateVector(0) #erste Drohne
@@ -517,7 +588,15 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         # elif self.reward_map[current_position[0], current_position[1]] == 5:
         #     reward += 1000
 
-        
+        # Save the best way map to a CSV file
+        with open('gym_pybullet_drones/examples/MAZE_TRAINING/best_way_map.csv', 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerows(self.best_way_map)
+
+        # Save the reward map to a CSV file
+        with open('gym_pybullet_drones/examples/MAZE_TRAINING/reward_map.csv', 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerows(self.reward_map)
         return reward
 
 

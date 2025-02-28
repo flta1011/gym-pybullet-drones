@@ -67,7 +67,7 @@ DEFAULT_MA = False
 DEFAULT_ALTITUDE = 0.5
 
 INIT_XYZS = np.array([
-                          [5*0.05, 4*0.05, DEFAULT_ALTITUDE],
+                          [7*0.05, 4*0.05, DEFAULT_ALTITUDE],
                           ])
 INIT_RPYS = np.array([
                           [0, 0, 0],
