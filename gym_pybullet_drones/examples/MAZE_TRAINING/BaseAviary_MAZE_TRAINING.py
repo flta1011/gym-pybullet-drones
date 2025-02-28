@@ -433,13 +433,13 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         # Lokale Koordinaten auf der Drohne
         #Für die Maze-Trainings-Umgebung 8 Möglichkeiten
         action_to_movement_direction_local = {
-            0: np.array([[0, 0, 0, 0.99, 0]]), # Fly 0° (Stay)
-            1: np.array([[1, 0, 0, 0.99, 0]]), # Fly 90° (Forward)
-            2: np.array([[-1, 0, 0, 0.99, 0]]), # Fly 180° (Backward)
-            3: np.array([[0, 1, 0, 0.99, 0]]), # Fly 90° (Left)
-            4: np.array([[0, -1, 0, 0.99, 0]]), # Fly 270° (Right)
-            5: np.array([[0, 0, 0, 0.99, 1/4*np.pi]]), # 45° Left-Turn # NOTE - Tests mit 1/36*np.pi waren nicht so gut, da die Drohne scheinbar nicht verstanden hat, dass bei einer Drehung vorwärtsfliegen bedeutet
-            6: np.array([[0, 0, 0, 0.99, -1/4*np.pi]]), # 45° Right-Turn
+            0: np.array([[0, 0, 0, 0.25, 0]]), # Fly 0° (Stay)
+            1: np.array([[1, 0, 0, 0.25, 0]]), # Fly 90° (Forward)
+            2: np.array([[-1, 0, 0, 0.25, 0]]), # Fly 180° (Backward)
+            3: np.array([[0, 1, 0, 0.25, 0]]), # Fly 90° (Left)
+            4: np.array([[0, -1, 0, 0.25, 0]]), # Fly 270° (Right)
+            5: np.array([[0, 0, 0, 0.25, 0]]), # 45° Left-Turn # NOTE - Tests mit 1/36*np.pi waren nicht so gut, da die Drohne scheinbar nicht verstanden hat, dass bei einer Drehung vorwärtsfliegen bedeutet
+            6: np.array([[0, 0, 0, 0.25, 0]]), # 45° Right-Turn # NOTE - Ausgesetzt für Testzweicke 28.02.25
             }
         
         
@@ -1388,7 +1388,8 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         These obstacles are loaded from standard URDF files included in Bullet.
 
         """
-        p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/train_square.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
+        #p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/train_square.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
+        p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/maze/map_1.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
         
         p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/target.urdf'), 
                   self.TARGET_POSITION, # x,y,z position

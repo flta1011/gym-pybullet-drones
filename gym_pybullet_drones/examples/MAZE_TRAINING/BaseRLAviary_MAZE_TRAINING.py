@@ -10,6 +10,8 @@ from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, Obs
 from gym_pybullet_drones.examples.Test_Flo.DSLPIDControl_TestFlo import DSLPIDControl
 
 from stable_baselines3.common.policies import ActorCriticPolicy
+import csv
+import heapq
 
 class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
     """Base single and multi-agent environment class for reinforcement learning."""
@@ -80,6 +82,8 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         self.EPISODE_LEN_SEC = 5*60 #increased from 20 to 100
         self.TARGET_POSITION = target_position
         self.Danger_Threshold_Wall = Danger_Threshold_Wall
+        self.INIT_XYZS = initial_xyzs
+        self.INIT_RPYS = initial_rpys
         
         
         #### Create integrated controllers #########################
@@ -351,8 +355,110 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             The reward.
 
         """
-        if 'lastaction' not in locals():
+        if 'lastaction' not in locals(): # Wird aufgarufen, wenn die Drohne das erste Mal startet
             lastaction = self.action
+
+            # NOTE - Reward Map
+
+            # 0 = Unbesucht,
+            # 1 = Einmal besucht,
+            # 2 = Zweimal besucht,
+            # 3 = Dreimal besucht,
+            # 4 = Startpunkt,
+            # 5 = Zielpunkt,
+            # 6 = Wand
+
+            # Initializing Reward Map
+            self.reward_map = np.zeros((60, 60), dtype=int)
+            # Loading the Walls of the CSV Maze into the reward map as ones
+            reward_map_file_path = "gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_1.csv"
+            with open(reward_map_file_path, 'r') as file:
+                reader = csv.reader(file)
+                for i, row in enumerate(reader):
+                    for j, value in enumerate(row):
+                        if value == "1":
+                            self.reward_map[i, j] = 6 # Wand
+            # Mirror the reward map vertically
+            self.reward_map = np.flipud(self.reward_map)
+            # Rotate the reward map 90° mathematically negative
+            self.reward_map = np.rot90(self.reward_map, k=3)
+            
+            # Set the Startpoint of the Drone
+            initial_position = [self.INIT_XYZS[0][0]/0.05, self.INIT_XYZS[0][1]/0.05] # Startpunkt der Drohne
+            self.reward_map[int(initial_position[0]), int(initial_position[1])] = 4 # Startpunkt
+
+            # Set the Targetpoint of the Drone
+            target_position = [self.TARGET_POSITION[0]/0.05, self.TARGET_POSITION[1]/0.05] # Zielpunkt der Drohne
+            self.reward_map[int(target_position[0]), int(target_position[1])] = 5 # Zielpunkt
+
+
+            # Best way to fly via A* Algorithm
+            self.best_way_map = np.zeros((60, 60), dtype=int)
+            def heuristic(a, b):
+                return np.linalg.norm(np.array(a) - np.array(b))  # Euklidische Distanz
+
+            def a_star_search(reward_map, start, goal):
+                neighbors = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+                close_set = set()
+                came_from = {}
+                gscore = {start: 0}
+                fscore = {start: heuristic(start, goal)}
+                oheap = []
+
+                heapq.heappush(oheap, (fscore[start], start))
+
+                while oheap:
+                    current = heapq.heappop(oheap)[1]
+
+                    if current == goal:
+                        path = [goal]
+                        while current in came_from:
+                            current = came_from[current]
+                            path.append(current)
+                        path.reverse()
+                        return path
+
+                    close_set.add(current)
+                    for i, j in neighbors:
+                        neighbor = (current[0] + i, current[1] + j)
+
+                        if not (0 <= neighbor[0] < reward_map.shape[0] and 0 <= neighbor[1] < reward_map.shape[1]):
+                            continue  # Außerhalb des Grids
+
+                        if reward_map[neighbor[0], neighbor[1]] == 6:
+                            continue  # Hindernis überspringen
+
+                        tentative_g_score = gscore[current] + reward_map[neighbor[0], neighbor[1]]  # Kosten berücksichtigen
+
+                        if neighbor in close_set and tentative_g_score >= gscore.get(neighbor, float('inf')):
+                            continue
+
+                        if tentative_g_score < gscore.get(neighbor, float('inf')) or all(n[1] != neighbor for n in oheap):
+                            came_from[neighbor] = current
+                            gscore[neighbor] = tentative_g_score
+                            fscore[neighbor] = tentative_g_score + heuristic(neighbor, goal)
+                            heapq.heappush(oheap, (fscore[neighbor], neighbor))
+
+                return None  # Kein Pfad gefunden
+
+            start = (int(initial_position[0]), int(initial_position[1]))
+            goal = (int(target_position[0]), int(target_position[1]))
+            path = a_star_search(self.reward_map, start, goal)
+
+            # Initializing the best way map
+            if path:
+                for position in path:
+                    self.best_way_map[position[0], position[1]] = 1
+            
+            # Save the best way map to a CSV file
+            with open('/home/moritz_s/Documents/RKIM_1/F_u_E_Drohnenrennen/GitRepo/gym-pybullet-drones/gym_pybullet_drones/examples/MAZE_TRAINING/best_way_map.csv', 'w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerows(self.best_way_map)
+
+            # Save the reward map to a CSV file
+            with open('/home/moritz_s/Documents/RKIM_1/F_u_E_Drohnenrennen/GitRepo/gym-pybullet-drones/gym_pybullet_drones/examples/MAZE_TRAINING/reward_map.csv', 'w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerows(self.reward_map)
         
         reward = 0
         state = self._getDroneStateVector(0) #erste Drohne
@@ -362,7 +468,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         if self.action_change_because_of_Collision_Danger == True:
             reward = -100
 
-        ###### 2.REWARD FOR DISTANCE TO TARGET ######
+        ###### 2.REWARD FOR DISTANCE TO TARGET (line of sight) ######
         # Get current drone position and target position
         drone_pos = state[0:3]  # XYZ position from state vector
         target_pos = self.TARGET_POSITION
@@ -385,7 +491,31 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             print(f"Target hit. Zeitstempel (min:sek) {time.strftime('%M:%S', time.localtime())}")
             
         reward += distance_reward
+
+        ###### 3. REWARD FOR BEING ON THE BEST WAY ######
+        # Get the current position of the drone
+        current_position = [int(state[0]/0.05), int(state[1]/0.05)]
+        # Check if the drone is on the best way
+        if self.best_way_map[current_position[0], current_position[1]] == 1:
+            reward += 10
         
+        ###### 4. REWARD FOR EXPLORING NEW AREAS ######
+        # Check if the drone is in a new area
+        # New area
+        if self.reward_map[current_position[0], current_position[1]] == 0:
+            reward += 1
+            self.reward_map[current_position[0], current_position[1]] = 1
+        # Area visited once
+        elif self.reward_map[current_position[0], current_position[1]] == 1:
+            reward += 0.1
+            self.reward_map[current_position[0], current_position[1]] = 2
+        # Area visited twice
+        elif self.reward_map[current_position[0], current_position[1]] == 2:
+            reward -= 0.1
+            self.reward_map[current_position[0], current_position[1]] = 3
+        # # Target point
+        # elif self.reward_map[current_position[0], current_position[1]] == 5:
+        #     reward += 1000
 
         
         return reward
