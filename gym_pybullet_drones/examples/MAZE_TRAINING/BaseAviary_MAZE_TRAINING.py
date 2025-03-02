@@ -163,10 +163,10 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
             self.CLIENT = p.connect(p.GUI) # p.connect(p.GUI, options="--opengl2")
             for i in [p.COV_ENABLE_RGB_BUFFER_PREVIEW, p.COV_ENABLE_DEPTH_BUFFER_PREVIEW, p.COV_ENABLE_SEGMENTATION_MARK_PREVIEW]:
                 p.configureDebugVisualizer(i, 0, physicsClientId=self.CLIENT)
-            p.resetDebugVisualizerCamera(cameraDistance=5,
-                                         cameraYaw=-90,
-                                         cameraPitch=-60,
-                                         cameraTargetPosition=[0, 0, 0],
+            p.resetDebugVisualizerCamera(cameraDistance=4,
+                                         cameraYaw=0,
+                                         cameraPitch=-89,
+                                         cameraTargetPosition=[1.5, 1.5, 0],
                                          physicsClientId=self.CLIENT
                                          )
             ret = p.getDebugVisualizerCamera(physicsClientId=self.CLIENT)
@@ -253,6 +253,8 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
 
         #### Start video recording #################################
         self._startVideoRecording()
+
+        self._update_camera()
     
     ################################################################################
 
@@ -647,7 +649,6 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         ###Debugging Plots
         state = self._getDroneStateVector(0) #Einführung neuste 
         
-        
         self.timestamp_actual = self.step_counter * self.PYB_TIMESTEP  # Use simulation time instead of real time
         self.RewardCounterActualTrainRun += reward
         self.List_Of_Tuples_Of_Reward_And_Action.append((action[0][0], reward))
@@ -714,8 +715,20 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
             plt.pause(0.01)  # Kurze Pause für das Update
             plt.draw()  # Manuelles Neuzeichnen erzwingen
         
+        #### Update the camera position to follow the drone ####
+        self._update_camera()
             
         return obs, reward, terminated, truncated, info
+    
+    def _update_camera(self):
+        """Updates the camera to follow the drone."""
+        state = self._getDroneStateVector(0)
+        p.resetDebugVisualizerCamera(cameraDistance=3,
+                                    cameraYaw=0,
+                                    cameraPitch=-89,
+                                    cameraTargetPosition=[state[0], state[1], state[2]],
+                                    physicsClientId=self.CLIENT)
+        
     # ANCHOR - check_for_Collision_Danger
     def _check_for_Collision_Danger(self, action):
         """Checks for collision danger and changes the action if necessary. Takes the action and checks the distances to the walls in all directions. If a wall is close (<=0.3) and the alogrithm picked an action in the direction of the wall, the action is changed to an halt. The idea is to punish the drone for the try moving into the wall and giving it a chance to correct its action. (Action not going into the direction of a wall will be passed through with change)

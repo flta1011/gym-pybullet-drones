@@ -11,6 +11,7 @@ from dash import dcc, html
 from dash.dependencies import Input, Output
 from threading import Thread
 import webbrowser  # Add this import
+import contextlib
 
 from gym_pybullet_drones.examples.MAZE_TRAINING.BaseAviary_MAZE_TRAINING import BaseAviary_MAZE_TRAINING
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType, ImageType
@@ -19,6 +20,8 @@ from gym_pybullet_drones.examples.Test_Flo.DSLPIDControl_TestFlo import DSLPIDCo
 from stable_baselines3.common.policies import ActorCriticPolicy
 import csv
 import heapq
+import sys
+import logging
 
 class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
     """Base single and multi-agent environment class for reinforcement learning."""
@@ -91,6 +94,11 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         self.Danger_Threshold_Wall = Danger_Threshold_Wall
         self.INIT_XYZS = initial_xyzs
         self.INIT_RPYS = initial_rpys
+        self.port = 8051
+
+        # Initialize reward and best_way map
+        self.reward_map = np.zeros((60, 60), dtype=int)
+        self.best_way_map = np.zeros((60, 60), dtype=int)
         
         
         #### Create integrated controllers #########################
@@ -120,68 +128,68 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         #### Set a limit on the maximum target speed ###############
         if  act == ActionType.VEL:
             self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000/3600)
-            
+        
         # Initialize Dash app
         self.app = dash.Dash(__name__)
         self.app.layout = html.Div([
             dcc.Graph(id='live-map'),
             dcc.Interval(
-                id='interval-component',
-                interval=500,  # in milliseconds
-                n_intervals=0
+            id='interval-component',
+            interval=500,  # in milliseconds
+            n_intervals=0
             )
         ])
-            
+
         @self.app.callback(
             Output('live-map', 'figure'),
             Input('interval-component', 'n_intervals')
         )
-        
         def update_graph(n):
             fig = make_subplots(
-                rows=1, cols=2,
-                subplot_titles=('Reward Map', 'Best Way Map')
+            rows=1, cols=2,
+            subplot_titles=('Reward Map', 'Best Way Map')
             )
             
             fig.add_trace(
-                go.Heatmap(
-                    z=self.reward_map,
-                    colorscale='Viridis',
-                    showscale=True,
-                    name='Reward Map'
-                ),
-                row=1, col=1
+            go.Heatmap(
+                z=self.reward_map,
+                colorscale='Viridis',
+                showscale=True,
+                name='Reward Map'
+            ),
+            row=1, col=1
             )
             
             fig.add_trace(
-                go.Heatmap(
-                    z=self.best_way_map,
-                    colorscale='Viridis',
-                    showscale=True,
-                    name='Best Way Map'
-                ),
-                row=1, col=2
+            go.Heatmap(
+                z=self.best_way_map,
+                colorscale='Viridis',
+                showscale=True,
+                name='Best Way Map'
+            ),
+            row=1, col=2
             )
             
             fig.update_layout(
-                height=600,
-                title_text="Maze Training Visualization",
-                showlegend=True
+            height=600,
+            title_text="Maze Training Visualization",
+            showlegend=True
             )
             
             return fig
-        
-        # Start the Dash server in a separate thread
-        self.dashboard_thread = Thread(
-            target=lambda: self.app.run_server(debug=False, port=self.port), 
-            daemon=True
-        )
+
+        # Start the Dash server but redirect only the dash logs
+        def run_dash_app():
+            logging.getLogger('werkzeug').setLevel(logging.ERROR)
+            self.app.run_server(debug=False, port=self.port)
+
+        self.dashboard_thread = Thread(target=run_dash_app, daemon=True)
         self.dashboard_thread.start()
-        
+
         # Open web browser after a short delay to ensure server is running
         def open_browser():
             time.sleep(1)  # Wait for server to start
-            webbrowser.open(f'http://localhost:8050')
+            webbrowser.open(f'http://localhost:{self.port}')
 
         Thread(target=open_browser, daemon=True).start()
                 
