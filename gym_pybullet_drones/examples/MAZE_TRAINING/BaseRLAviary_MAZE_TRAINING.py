@@ -22,6 +22,7 @@ import csv
 import heapq
 import sys
 import logging
+from collections import deque
 
 class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
     """Base single and multi-agent environment class for reinforcement learning."""
@@ -95,6 +96,14 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         self.INIT_XYZS = initial_xyzs
         self.INIT_RPYS = initial_rpys
         self.port = 8051
+        self.reward_components = {
+            'collision_penalty': 0,
+            'distance': 0,
+            'best_way_bonus': 0,
+            'explore_bonus': 0
+        }
+        # Historie der Reward-Komponenten für Balkendiagramm
+        self.reward_distribution_history = deque(maxlen=50)  # speichere 50 Einträge
 
         # Initialize reward and best_way map
         self.reward_map = np.zeros((60, 60), dtype=int)
@@ -129,54 +138,70 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         if  act == ActionType.VEL:
             self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000/3600)
         
-        # Initialize Dash app
         self.app = dash.Dash(__name__)
         self.app.layout = html.Div([
             dcc.Graph(id='live-map'),
+            dcc.Graph(id='reward-bar-chart'),      # <--- Neues Balkendiagramm
+            html.Div(id='current-total-reward'),   # <--- Zeigt den letzten Reward als Text
             dcc.Interval(
-            id='interval-component',
-            interval=500,  # in milliseconds
-            n_intervals=0
+                id='interval-component',
+                interval=1000,  # Aktualisierung in ms
+                n_intervals=0
             )
         ])
 
         @self.app.callback(
-            Output('live-map', 'figure'),
+            [Output('live-map', 'figure'),
+             Output('reward-bar-chart', 'figure'),
+             Output('current-total-reward', 'children')],
             Input('interval-component', 'n_intervals')
         )
         def update_graph(n):
+            # ... existierender Code ...
             fig = make_subplots(
-            rows=1, cols=2,
-            subplot_titles=('Reward Map', 'Best Way Map')
+                rows=1, cols=2,
+                subplot_titles=('Reward Map', 'Best Way Map')
             )
-            
             fig.add_trace(
-            go.Heatmap(
-                z=self.reward_map,
-                colorscale='Viridis',
-                showscale=True,
-                name='Reward Map'
-            ),
-            row=1, col=1
+                go.Heatmap(
+                    z=self.reward_map,
+                    colorscale='Viridis',
+                    showscale=True,
+                    name='Reward Map'
+                ),
+                row=1, col=1
             )
-            
             fig.add_trace(
-            go.Heatmap(
-                z=self.best_way_map,
-                colorscale='Viridis',
-                showscale=True,
-                name='Best Way Map'
-            ),
-            row=1, col=2
+                go.Heatmap(
+                    z=self.best_way_map,
+                    colorscale='Viridis',
+                    showscale=True,
+                    name='Best Way Map'
+                ),
+                row=1, col=2
             )
-            
             fig.update_layout(
-            height=600,
-            title_text="Maze Training Visualization",
-            showlegend=True
+                height=600,
+                title_text="Maze Training Visualization",
+                showlegend=True
             )
-            
-            return fig
+
+            bar_chart = go.Figure()
+            # zeige die zuletzt gespeicherten Reward-Komponenten
+            bar_chart.add_trace(go.Bar(
+                x=list(self.reward_components.keys()),
+                y=list(self.reward_components.values()),
+                marker_color='royalblue'
+            ))
+            bar_chart.update_layout(
+                title_text="Aktuelle Reward-Komponenten",
+                xaxis_title="Reward-Typ",
+                yaxis_title="Reward-Wert"
+            )
+
+            current_reward_text = f"Letzter Reward: {self.last_total_reward:.2f}"
+
+            return fig, bar_chart, current_reward_text
 
         # Start the Dash server but redirect only the dash logs
         def run_dash_app():
@@ -536,8 +561,6 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
                 writer = csv.writer(file)
                 writer.writerows(self.reward_map)
                 
-            
-            
         
         reward = 0
         state = self._getDroneStateVector(0) #erste Drohne
@@ -545,7 +568,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         
         ###### 1.PUNISHMENT FOR COLLISION ######
         if self.action_change_because_of_Collision_Danger == True:
-            reward = -100
+            self.reward_components["collision_penalty"] = -10.0
 
         ###### 2.REWARD FOR DISTANCE TO TARGET (line of sight) ######
         # Get current drone position and target position
@@ -562,39 +585,37 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         # Squared reward that drops off more quickly at larger distances
         # Scales from 0 (at MAX_DISTANCE) to MAX_REWARD (at distance=0)
         distance_ratio = min(self.distance/MAX_DISTANCE, 1.0)
-        distance_reward = MAX_REWARD * (1 - distance_ratio)**2
+        self.reward_components["distance_reward"] = MAX_REWARD * (1 - distance_ratio)**2
         
         # Add huge reward if target is hit (within 0.05m) and top sensor shows no obstacle
         if self.distance < 0.15 and state[25] < 1: # 0.15 = Radius Scheibe
-            reward += 1000.0
+            self.reward_components["distance_reward"] += 1000.0
             print(f"Target hit. Zeitstempel (min:sek) {time.strftime('%M:%S', time.localtime())}")
             
-        reward += distance_reward
-
         ###### 3. REWARD FOR BEING ON THE BEST WAY ######
         # Get the current position of the drone
         current_position = [int(state[0]/0.05), int(state[1]/0.05)]
         # Check if the drone is on the best way
         if self.best_way_map[current_position[0], current_position[1]] == 1:
-            reward += 10
+            self.reward_components["best_way_bonus"] = 10
         
         ###### 4. REWARD FOR EXPLORING NEW AREAS ######
         # Check if the drone is in a new area
         # New area
         if self.reward_map[current_position[0], current_position[1]] == 0:
-            reward += 1
+            self.reward_components["explore_bonus"] = 1
             self.reward_map[current_position[0], current_position[1]] = 1
         # Area visited once
         elif self.reward_map[current_position[0], current_position[1]] == 1:
-            reward += 0.1
+            self.reward_components["explore_bonus"] = 0.1
             self.reward_map[current_position[0], current_position[1]] = 2
         # Area visited twice
         elif self.reward_map[current_position[0], current_position[1]] == 2:
-            reward -= 0.1
+            self.reward_components["explore_bonus"] = 0.1
             self.reward_map[current_position[0], current_position[1]] = 3
         # # Target point
         # elif self.reward_map[current_position[0], current_position[1]] == 5:
-        #     reward += 1000
+        #     self.reward_components["explore_bonus"] = 1000
 
         # Save the best way map to a CSV file
         with open('gym_pybullet_drones/examples/MAZE_TRAINING/best_way_map.csv', 'w', newline='') as file:
@@ -604,13 +625,13 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         # Save the reward map to a CSV file
         with open('gym_pybullet_drones/examples/MAZE_TRAINING/reward_map.csv', 'w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerows(self.reward_map)
+            writer.writerows(self.reward_map)      
+
+        # COMPUTE TOTAL REWARD
+        reward = self.reward_components["collision_penalty"] + self.reward_components["distance_reward"] + self.reward_components["best_way_bonus"] + self.reward_components["explore_bonus"]
+        self.last_total_reward = reward  # Save the last total reward for the dashboard
+
         return reward
-
-
-        
-        
-        
         
     ################################################################################
     
