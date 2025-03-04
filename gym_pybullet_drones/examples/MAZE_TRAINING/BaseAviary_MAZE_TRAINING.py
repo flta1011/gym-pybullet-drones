@@ -435,13 +435,13 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         # Lokale Koordinaten auf der Drohne
         #Für die Maze-Trainings-Umgebung 8 Möglichkeiten
         action_to_movement_direction_local = {
-            0: np.array([[0, 0, 0, 0.25, 0]]), # Fly 0° (Stay)
-            1: np.array([[1, 0, 0, 0.25, 0]]), # Fly 90° (Forward)
-            2: np.array([[-1, 0, 0, 0.25, 0]]), # Fly 180° (Backward)
-            3: np.array([[0, 1, 0, 0.25, 0]]), # Fly 90° (Left)
-            4: np.array([[0, -1, 0, 0.25, 0]]), # Fly 270° (Right)
-            5: np.array([[0, 0, 0, 0.25, 0]]), # 45° Left-Turn # NOTE - Tests mit 1/36*np.pi waren nicht so gut, da die Drohne scheinbar nicht verstanden hat, dass bei einer Drehung vorwärtsfliegen bedeutet
-            6: np.array([[0, 0, 0, 0.25, 0]]), # 45° Right-Turn # NOTE - Ausgesetzt für Testzweicke 28.02.25
+            0: np.array([[0, 0, 0, 0.5, 0]]), # Fly 0° (Stay)
+            1: np.array([[1, 0, 0, 0.5, 0]]), # Fly 90° (Forward)
+            2: np.array([[-1, 0, 0, 0.5, 0]]), # Fly 180° (Backward)
+            3: np.array([[0, 1, 0, 0.5, 0]]), # Fly 90° (Left)
+            4: np.array([[0, -1, 0, 0.5, 0]]), # Fly 270° (Right)
+            5: np.array([[0, 0, 0, 0.5, 0]]), # 45° Left-Turn # NOTE - Tests mit 1/36*np.pi waren nicht so gut, da die Drohne scheinbar nicht verstanden hat, dass bei einer Drehung vorwärtsfliegen bedeutet
+            6: np.array([[0, 0, 0, 0.5, 0]]), # 45° Right-Turn # NOTE - Ausgesetzt für Testzweicke 28.02.25
             }
         
         
@@ -461,21 +461,26 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         # Get movement direction based on action
         input_action_local = action_to_movement_direction_local[actual_action_0_bis_8]
         
+        # New Function to check for Collision Danger and change the action if necessary
+        self.action_change_because_of_Collision_Danger, action_with_or_without_Collision_Danger_correction = self._check_for_Collision_Danger(input_action_local)
+        
+        
         # Übersetzten in World-Koordinaten
         state = self._getDroneStateVector(0)
         # Convert quaternion to rotation matrix using NumPy
         rot_matrix = np.array(p.getMatrixFromQuaternion(state[3:7])).reshape(3, 3)
         
     
-        input_action_Velocity_World = rot_matrix.dot(input_action_local[0][0:3])
+        input_action_Velocity_World = rot_matrix.dot(action_with_or_without_Collision_Danger_correction[0][0:3])
         
         input_action_complete_world = np.array([np.concatenate((input_action_Velocity_World[0:2],np.array([0]), input_action_local[0][3:5]))]) # gedrehte x,y-Werte, z-Wert 0, yaw-Wert bleibt gleich
         
+        action = input_action_complete_world
+        self.action = input_action_complete_world
         
         
-        # New Function to check for Collision Danger and change the action if necessary
-        self.action_change_because_of_Collision_Danger, action = self._check_for_Collision_Danger(input_action_complete_world)
-        self.action = action
+        
+        
 
 
         
@@ -676,11 +681,11 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
             if truncated:
                 #Zusammenfassung Trainingslauf
                 print(f"Zusammenfassung Trainingslauf Truncated (Grund: {Grund_Truncated}):")
-                print(f"Observations: x,y,yaw: {state[0]:.4f}, {state[1]:.4f}, {state[9]:.4f}, RayFront/Back: {state[21]:.4f}, {state[22]:.4f}, RayLeft/Right: {state[23]:.4f}, {state[24]:.4f}, RayUp: {state[25]:.4f}")
+                print(f"Observations: x,y,yaw: {obs[0]}, {obs[1]}, {obs[2]}, RayFront/Back: {obs[3]}, {obs[4]}, RayLeft/Right: {obs[5]}, {obs[6]}, RayUp: {obs[7]}")
                 print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
             if terminated:
                 print(f"Zusammenfassung Trainingslauf Terminated (Grund: {Grund_Terminated}):")
-                print(f"Observations: x,y,yaw: {state[0]:.4f}, {state[1]:.4f}, {state[9]:.4f}, RayFront/Back: {state[21]:.4f}, {state[22]:.4f}, RayLeft/Right: {state[23]:.4f}, {state[24]:.4f}, RayUp: {state[25]:.4f}")
+                print(f"Observations: x,y,yaw: {obs[0]}, {obs[1]}, {obs[2]}, RayFront/Back: {obs[3]}, {obs[4]}, RayLeft/Right: {obs[5]}, {obs[6]}, RayUp: {obs[7]}")
                 print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
         
         
@@ -746,21 +751,21 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         
         # wenn front,back,left,right distance kleiner als Threshold und action in die Richtung der Wand -> action = halt
         if state[21] <= self.Danger_Threshold_Wall and actionInput[0][0] == 1:
-            action = np.array([[-1, 0, 0, 0.5, 0]])  # Move backward
+            action = np.array([[-1, 0, 0, 0.25, 0]])  # Move backward
             action_change_because_of_Collision_Danger = True
-            print(f"Drohne würde vorwärts gegen die Wand fliegen: Distance to Wall_front: {state[21]} --> angepasst\n")
+            #print(f"Drohne würde vorwärts gegen die Wand fliegen: Distance to Wall_front: {state[21]} --> angepasst\n")
         elif state[22] <= self.Danger_Threshold_Wall and actionInput[0][0] == -1:
-            action = np.array([[1, 0, 0, 0.5, 0]])  # Move forward
+            action = np.array([[1, 0, 0, 0.25, 0]])  # Move forward
             action_change_because_of_Collision_Danger = True
-            print(f"Drohne würde rückwärts gegen die Wand fliegen: Distance to Wall_back: {state[22]} --> angepasst\n")
+            #print(f"Drohne würde rückwärts gegen die Wand fliegen: Distance to Wall_back: {state[22]} --> angepasst\n")
         elif state[23] <= self.Danger_Threshold_Wall and actionInput[0][1] == 1:
-            action = np.array([[0, -1, 0, 0.5, 0]])  # Move right
+            action = np.array([[0, -1, 0, 0.25, 0]])  # Move right
             action_change_because_of_Collision_Danger = True
-            print(f"Drohne würde rechts gegen die Wand fliegen: Distance to Wall_left: {state[23]} --> angepasst\n")
+            #print(f"Drohne würde rechts gegen die Wand fliegen: Distance to Wall_left: {state[23]} --> angepasst\n")
         elif state[24] <= self.Danger_Threshold_Wall and actionInput[0][1] == -1:
-            action = np.array([[0, 1, 0, 0.5, 0]])  # Move left
+            action = np.array([[0, 1, 0, 0.25, 0]])  # Move left
             action_change_because_of_Collision_Danger = True
-            print(f"Drohne würde links gegen die Wand fliegen: Distance to Wall_right: {state[24]} --> angepasst\n")
+            #print(f"Drohne würde links gegen die Wand fliegen: Distance to Wall_right: {state[24]} --> angepasst\n")
         
         return action_change_because_of_Collision_Danger, action
             

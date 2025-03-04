@@ -90,7 +90,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         self.reward_and_action_change_freq = reward_and_action_change_freq
         self.ACT_TYPE = act
         self.still_time = 0
-        self.EPISODE_LEN_SEC = 5*60 #increased from 20 to 100
+        self.EPISODE_LEN_SEC = 20*60 #increased from 5 auf 20 Minuten um mehr zu sehen (4.3.25)
         self.TARGET_POSITION = target_position
         self.Danger_Threshold_Wall = Danger_Threshold_Wall
         self.INIT_XYZS = initial_xyzs
@@ -145,7 +145,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             html.Div(id='current-total-reward'),   # <--- Zeigt den letzten Reward als Text
             dcc.Interval(
                 id='interval-component',
-                interval=1000,  # Aktualisierung in ms
+                interval=100,  # Aktualisierung in ms
                 n_intervals=0
             )
         ])
@@ -165,7 +165,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             fig.add_trace(
                 go.Heatmap(
                     z=self.reward_map,
-                    colorscale='Viridis',
+                    colorscale='Viridis', 
                     showscale=True,
                     name='Reward Map'
                 ),
@@ -404,9 +404,9 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         # modified_obs.append(distance)
         
         # NOTE - neue Tests mit X,Y, Yaw Position der Drohne (28.2.25) übergeben
-        modified_obs.append(state[0]) #x-Position
-        modified_obs.append(state[1]) #y-Position
-        modified_obs.append(state[9]) #Yaw-Position
+        modified_obs.append(round(state[0],2)) #x-Position
+        modified_obs.append(round(state[1],2)) #y-Position
+        modified_obs.append(round(state[9],2)) #Yaw-Position
         
         for distance in obs:
             if distance <= (self.Danger_Threshold_Wall):  # Too close to wall, Safetyalgorithmus wird gegensteuern
@@ -565,57 +565,62 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         reward = 0
         state = self._getDroneStateVector(0) #erste Drohne
         
+        #### Rewards initialisieren ####
+        self.reward_components["collision_penalty"] = 0
+        self.reward_components["distance_reward"] = 0
+        self.reward_components["best_way_bonus"] = 0
+        self.reward_components["explore_bonus_new_field"] = 0
+        self.reward_components["explore_bonus_visited_field"] = 0
+        self.reward_components["Target_Hit_Reward"] = 0
         
         ###### 1.PUNISHMENT FOR COLLISION ######
         if self.action_change_because_of_Collision_Danger == True:
-            self.reward_components["collision_penalty"] = -10.0
+            self.reward_components["collision_penalty"] = -5.0
 
         ###### 2.REWARD FOR DISTANCE TO TARGET (line of sight) ######
         # Get current drone position and target position
-        drone_pos = state[0:3]  # XYZ position from state vector
-        target_pos = self.TARGET_POSITION
+        drone_pos = state[0:2]  # XY position from state vector
+        target_pos = self.TARGET_POSITION[0:2]
         
         # Calculate distance to target
         self.distance = np.linalg.norm(drone_pos - target_pos)
         
         # Define max distance and max reward
         MAX_DISTANCE = 3.0  # Maximum expected distance in meters
-        MAX_REWARD = 10.0    # Maximum reward for distance (excluding target hit bonus)
+        MAX_REWARD = 10    # Maximum reward for distance (excluding target hit bonus)
         
-        # Squared reward that drops off more quickly at larger distances
-        # Scales from 0 (at MAX_DISTANCE) to MAX_REWARD (at distance=0)
+        # Linear reward that scales from 0 (at MAX_DISTANCE) to MAX_REWARD (at distance=0)
         distance_ratio = min(self.distance/MAX_DISTANCE, 1.0)
-        self.reward_components["distance_reward"] = MAX_REWARD * (1 - distance_ratio)**2
+        self.reward_components["distance_reward"] = MAX_REWARD * (1 - distance_ratio) ## 4.3.25: auf Linear umgestellt, damit auch in weiter entfernten Feldern noch ein Gradient erkannt werden kann
         
         # Add huge reward if target is hit (within 0.05m) and top sensor shows no obstacle
         if self.distance < 0.15 and state[25] < 1: # 0.15 = Radius Scheibe
-            self.reward_components["distance_reward"] += 1000.0
+            self.reward_components["Target_Hit_Reward"] += 1000.0
             print(f"Target hit. Zeitstempel (min:sek) {time.strftime('%M:%S', time.localtime())}")
-            
-        ###### 3. REWARD FOR BEING ON THE BEST WAY ######
-        # Get the current position of the drone
-        current_position = [int(state[0]/0.05), int(state[1]/0.05)]
-        # Check if the drone is on the best way
-        if self.best_way_map[current_position[0], current_position[1]] == 1:
-            self.reward_components["best_way_bonus"] = 10
+        
+        
+        current_position = [int(state[0]/0.05), int(state[1]/0.05)]    
+        # ###### 3. REWARD FOR BEING ON THE BEST WAY ######
+        # # Get the current position of the drone
+        # # Check if the drone is on the best way
+        # if self.best_way_map[current_position[0], current_position[1]] == 1:
+        #     self.reward_components["best_way_bonus"] = 1
         
         ###### 4. REWARD FOR EXPLORING NEW AREAS ######
         # Check if the drone is in a new area
         # New area
         if self.reward_map[current_position[0], current_position[1]] == 0:
-            self.reward_components["explore_bonus"] = 1
+            self.reward_components["explore_bonus_new_field"] = 2
             self.reward_map[current_position[0], current_position[1]] = 1
         # Area visited once
         elif self.reward_map[current_position[0], current_position[1]] == 1:
-            self.reward_components["explore_bonus"] = 0.1
+            self.reward_components["explore_bonus_visited_field"] = 0.1
             self.reward_map[current_position[0], current_position[1]] = 2
         # Area visited twice
-        elif self.reward_map[current_position[0], current_position[1]] == 2:
-            self.reward_components["explore_bonus"] = 0.1
+        elif self.reward_map[current_position[0], current_position[1]] >=2:
+            self.reward_components["explore_bonus_visited_field"] = -0.01# darf keine Bestrafung geben, wenn er noch mal auf ein bereits besuchtes Feld fliegt, aber auch keine Belohnung
             self.reward_map[current_position[0], current_position[1]] = 3
-        # # Target point
-        # elif self.reward_map[current_position[0], current_position[1]] == 5:
-        #     self.reward_components["explore_bonus"] = 1000
+        
 
         # Save the best way map to a CSV file
         with open('gym_pybullet_drones/examples/MAZE_TRAINING/best_way_map.csv', 'w', newline='') as file:
@@ -628,7 +633,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             writer.writerows(self.reward_map)      
 
         # COMPUTE TOTAL REWARD
-        reward = self.reward_components["collision_penalty"] + self.reward_components["distance_reward"] + self.reward_components["best_way_bonus"] + self.reward_components["explore_bonus"]
+        reward = self.reward_components["collision_penalty"] + self.reward_components["distance_reward"] + self.reward_components["best_way_bonus"] + self.reward_components["explore_bonus_new_field"] + self.reward_components["explore_bonus_visited_field"] + self.reward_components["Target_Hit_Reward"]
         self.last_total_reward = reward  # Save the last total reward for the dashboard
 
         return reward
@@ -683,7 +688,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         
         # TBD wenn die Drone abstürzt, dann auch truncaten
         if state[2] < 0.1: #state[2] ist z_position der Drohne
-            Grund_Truncated = "Crash"
+            Grund_Truncated = "Crash, Abstand < 0.1 m"
             return True, Grund_Truncated
 
         #Wenn an einer Wand gecrashed wird, beenden!

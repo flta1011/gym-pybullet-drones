@@ -22,7 +22,7 @@ import argparse
 import gymnasium as gym
 import numpy as np
 import torch
-from stable_baselines3 import PPO
+from stable_baselines3 import PPO, DQN
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from stable_baselines3.common.evaluation import evaluate_policy
@@ -40,9 +40,9 @@ DEFAULT_ADVANCED_STATUS_PLOT = True
 
 DEFAULT_GUI_TEST = False
 
-DEFAULT_USE_PRETRAINED_MODEL = False
+DEFAULT_USE_PRETRAINED_MODEL = True
 
-DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/best_model_2.28.2025_Scheibe-gut-getroffen-100-Reward.zip'
+DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/results/durchgelaufen-DQN/final_model.zip'
 
 DEFAULT_EVAL_FREQ = 5*1e4
 DEFAULT_EVAL_EPISODES = 1
@@ -56,7 +56,7 @@ DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
-DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 5
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 
 DEFAULT_OBS = ObservationType('kin') # 'kin' or 'rgb'
@@ -66,9 +66,15 @@ DEFAULT_MA = False
 
 DEFAULT_ALTITUDE = 0.5
 
+# INIT_XYZS = np.array([
+#                           [7*0.05, 4*0.05, DEFAULT_ALTITUDE],
+#                           ])
+
 INIT_XYZS = np.array([
-                          [7*0.05, 4*0.05, DEFAULT_ALTITUDE],
+                          [28*0.05, 43*0.05, DEFAULT_ALTITUDE],
                           ])
+                          
+                          
 INIT_RPYS = np.array([
                           [0, 0, 0],
                           ])
@@ -131,7 +137,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
     #### Load existing model or create new one ###################
     if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
         print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
-        model = PPO.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
+        model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
     else:
         print("[INFO] Creating new model")
         # model = PPO('MlpPolicy',
@@ -139,8 +145,10 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
         #            verbose=1,
         #            learning_rate=0.0004, # 0,0002 zu gering -> auf 0.0004 erhöht -> auf 0.0005 erhöht --> auf 0.0004 reduziert, da die Policy zu stark angepasst wurde, obwohl es schon 5s am Ziel war..
         #            )
-        model = PPO('MlpPolicy',
+        model = DQN('MlpPolicy',
                    train_env,
+                   learning_rate=0.0004,
+                   device='cuda:0',
                    verbose=1)
     #### Target cumulative rewards (problem-dependent) ##########
     target_reward = DEFAULT_TARGET_REWARD
@@ -200,7 +208,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
         path = filename+'/best_model.zip'
     else:
         print("[ERROR]: no model under the specified path", filename)
-    model = PPO.load(path)
+    model = DQN.load(path)
 
     #### Show (and record a video of) the model's performance ##
 
