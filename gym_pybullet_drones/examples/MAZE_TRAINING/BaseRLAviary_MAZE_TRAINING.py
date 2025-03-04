@@ -12,6 +12,7 @@ from dash.dependencies import Input, Output
 from threading import Thread
 import webbrowser  # Add this import
 import contextlib
+import matplotlib.pyplot as plt
 
 from gym_pybullet_drones.examples.MAZE_TRAINING.BaseAviary_MAZE_TRAINING import BaseAviary_MAZE_TRAINING
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType, ImageType
@@ -24,6 +25,125 @@ import sys
 import logging
 from collections import deque
 
+
+class SimpleSlam: 
+    def __init__(self, map_size=8, resolution=0.05): # map size 8x8m, damit, egal in welche Richtung die Drohne fliegt, in jeden Quadranten ein komplettes Labyrinth dargestellt werden kann
+        """ Erstellt eine leere Occupancy-Grid Map. Args: map_size (float): Seitengröße der Map in Metern (z. B. 10 m). resolution (float): Seitengröße einer Zelle, sodass grid_size ~60 ergibt. """ 
+        self.resolution = resolution 
+        self.grid_size = int(map_size / resolution) 
+        # Initialisiere die Map: 
+        # # -1: unbekannt, 0: frei, 1: Wand, 2: besucht (Sensor oben frei) 
+        
+        self.occupancy_grid = -1 * np.ones((self.grid_size, self.grid_size)) 
+        self.center = self.grid_size // 2 
+        self.path = [] # speichert besuchte Zellen
+        
+    def reset(self):
+        """Reset the SLAM map to its initial state."""
+        self.occupancy_grid = -1 * np.ones((self.grid_size, self.grid_size))
+        self.path = []
+        
+    def world_to_grid(self, x, y):
+        grid_x = int(self.center + x / self.resolution)
+        grid_y = int(self.center + y / self.resolution)
+        return grid_x, grid_y
+
+    def update(self, drone_pos, drone_yaw, raycast_results):
+        """
+        Aktualisiert die Map anhand der Sensorwerte.
+        Args:
+            drone_pos (tuple): (x, y, z)-Position der Drohne.
+            drone_yaw (float): Yaw-Winkel (in Radiant).
+            raycast_results (dict): z. B. { 'front': d_front, 'back': d_back,
+                                            'left': d_left, 'right': d_right, 'up': d_up }
+        """
+        x, y, _ = drone_pos
+        grid_x, grid_y = self.world_to_grid(x, y)
+        self.path.append((grid_x, grid_y))
+        # Markiere aktuelle Zelle als frei:
+        self.occupancy_grid[grid_x, grid_y] = 0
+        # Falls der "up"-Sensor keinen Treffer hat (z. B. Wert 9999), markiere als besucht:
+        if 'up' in raycast_results and raycast_results['up'] == 9999:
+            self.occupancy_grid[grid_x, grid_y] = 2
+
+        # Definiere Richtungswinkel:
+        angles = {
+            'front': drone_yaw,
+            'back': drone_yaw + np.pi,
+            'left': drone_yaw + np.pi/2,
+            'right': drone_yaw - np.pi/2
+        }
+        for direction in ['front', 'back', 'left', 'right']:
+            distance = raycast_results.get(direction, 9999)
+            if distance < 9999:  # Treffer – Wand erkannt
+                angle = angles[direction]
+                end_x = x + distance * np.cos(angle)
+                end_y = y + distance * np.sin(angle)
+                end_grid_x, end_grid_y = self.world_to_grid(end_x, end_y)
+                cells = self.get_line(grid_x, grid_y, end_grid_x, end_grid_y)
+                # Markiere Zellen entlang der Strahlbahn als frei:
+                for cx, cy in cells[:-1]:
+                    if 0 <= cx < self.grid_size and 0 <= cy < self.grid_size:
+                        self.occupancy_grid[cx, cy] = 0
+                # Markiere den Endpunkt als Wand:
+                if 0 <= end_grid_x < self.grid_size and 0 <= end_grid_y < self.grid_size:
+                    self.occupancy_grid[end_grid_x, end_grid_y] = 1
+
+    def get_line(self, x0, y0, x1, y1):
+        """Berechnet Zellen entlang einer Linie (Bresenham-Algorithmus)."""
+        cells = []
+        dx = abs(x1 - x0)
+        dy = abs(y1 - y0)
+        x, y = x0, y0
+        sx = 1 if x1 > x0 else -1
+        sy = 1 if y1 > y0 else -1
+        if dx > dy:
+            err = dx / 2.0
+            while x != x1:
+                cells.append((x, y))
+                err -= dy
+                if err < 0:
+                    y += sy
+                    err += dx
+                x += sx
+        else:
+            err = dy / 2.0
+            while y != y1:
+                cells.append((x, y))
+                err -= dx
+                if err < 0:
+                    x += sx
+                    err += dy
+                y += sy
+        cells.append((x, y))
+        return cells
+
+    def visualize(self):
+        """Visualisiert die aktuelle SLAM Map (zum Debuggen).(siehe in def step() ganz weit unten)"""
+        # Create figure without displaying
+        plt.ioff() # Turn off interactive mode
+        plt.figure(figsize=(6,6))
+        plt.imshow(self.occupancy_grid.T, cmap='gray', origin='lower')
+        if self.path:
+            path = np.array(self.path)
+            plt.plot(path[:, 0], path[:, 1], 'r-', linewidth=2)
+            plt.plot(path[-1, 0], path[-1, 1], 'ro', markersize=5)
+        plt.colorbar(label='Occupancy (-1: unbekannt, 0: frei, 1: Wand, 2: besucht)')
+        plt.title('SLAM Map')
+        plt.xlabel('X (grid cells)')
+        plt.ylabel('Y (grid cells)')
+        self.OUTPUT_FOLDER = os.path.join(os.path.dirname(__file__), 'output_SLAM_MAP')
+        #create output folder if it doesn't exist
+        if not os.path.exists(self.OUTPUT_FOLDER):
+            os.makedirs(self.OUTPUT_FOLDER)
+        
+        # Save plot to file
+        self.Latest_slam_map_path = os.path.join(self.OUTPUT_FOLDER, "latest_slam_map.png")
+        plt.savefig(self.Latest_slam_map_path)
+        plt.close()
+        plt.ion() # Turn interactive mode back on
+
+
 class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
     """Base single and multi-agent environment class for reinforcement learning."""
     
@@ -35,9 +155,6 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
                  neighbourhood_radius: float=np.inf,
                  initial_xyzs=None,
                  initial_rpys=None,
-                 # In BaseAviary hinzugefügt
-                #  Test_Area_Size_x: int = 10, #hoffentlich 10 Meter, später Größe der Map
-                #  Test_Area_Size_y: int = 10, #hoffentlich 10 Meter, später Größe der Map
                  physics: Physics=Physics.PYB,
                  pyb_freq: int = 240,
                  ctrl_freq: int = 60,
@@ -48,7 +165,9 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
                  act: ActionType=ActionType.VEL,
                  advanced_status_plot=False,
                  target_position=np.array([0, 0, 0]),
-                 Danger_Threshold_Wall=0.15
+                 Danger_Threshold_Wall=0.15,
+                 map_size_slam=8, #map size 8x8m, damit, egal in welche Richtung die Drohne fliegt, in jeden Quadranten ein komplettes Labyrinth dargestellt werden kann
+                 resolution_slam=0.05
                  ):
         """Initialization of a generic single and multi-agent RL environment.
 
@@ -83,6 +202,28 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             The type of action space (1 or 3D; RPMS, thurst and torques, waypoint or velocity with PID control; etc.)
 
         """
+        # Initialize SLAM before calling the parent constructor
+        self.slam = SimpleSlam(map_size=map_size_slam, resolution=resolution_slam)  # 10m x 10m map with 10cm resolution
+        self.grid_size = int(map_size_slam / resolution_slam) 
+        # Call the parent class constructor
+        super().__init__(drone_model=drone_model,
+                         num_drones=num_drones,
+                         neighbourhood_radius=neighbourhood_radius,
+                         initial_xyzs=initial_xyzs,
+                         initial_rpys=initial_rpys,
+                         physics=physics,
+                         pyb_freq=pyb_freq,
+                         ctrl_freq=ctrl_freq,
+                         reward_and_action_change_freq=reward_and_action_change_freq,
+                         gui=gui,
+                         record=record, 
+                         obstacles=True, # Add obstacles for RGB observations and/or FlyThruGate
+                         advanced_status_plot=advanced_status_plot,
+                         user_debug_gui=user_debug_gui, # Remove of RPM sliders from all single agent learning aviaries
+                         target_position=target_position,
+                         Danger_Threshold_Wall=Danger_Threshold_Wall
+                         )
+        
         #### Create a buffer for the last .5 sec of actions ########
         self.ACTION_BUFFER_SIZE = int(ctrl_freq//2)
         self.action_buffer = deque(maxlen=self.ACTION_BUFFER_SIZE) 
@@ -110,54 +251,43 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         self.best_way_map = np.zeros((60, 60), dtype=int)
         
         
+        
+        
         #### Create integrated controllers #########################
         os.environ['KMP_DUPLICATE_LIB_OK']='True'
         if drone_model in [DroneModel.CF2X, DroneModel.CF2P]:
             self.ctrl = [DSLPIDControl(drone_model=DroneModel.CF2X) for i in range(num_drones)]
         else:
             print("[ERROR] in BaseRLAviary.__init()__, no controller is available for the specified drone_model")
-        super().__init__(drone_model=drone_model,
-                         num_drones=num_drones,
-                         neighbourhood_radius=neighbourhood_radius,
-                         initial_xyzs=initial_xyzs,
-                         initial_rpys=initial_rpys,
-                         physics=physics,
-                         pyb_freq=pyb_freq,
-                         ctrl_freq=ctrl_freq,
-                         reward_and_action_change_freq=reward_and_action_change_freq,
-                         gui=gui,
-                         record=record, 
-                         obstacles=True, # Add obstacles for RGB observations and/or FlyThruGate
-                         advanced_status_plot=advanced_status_plot,
-                         user_debug_gui=user_debug_gui, # Remove of RPM sliders from all single agent learning aviaries
-                         target_position=target_position,
-                         Danger_Threshold_Wall=Danger_Threshold_Wall
-                         )
         
         #### Set a limit on the maximum target speed ###############
         if  act == ActionType.VEL:
             self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000/3600)
-        
+            
+            
+        # ANCHOR - Create DASH Graph
         self.app = dash.Dash(__name__)
         self.app.layout = html.Div([
             dcc.Graph(id='live-map'),
-            dcc.Graph(id='reward-bar-chart'),      # <--- Neues Balkendiagramm
-            html.Div(id='current-total-reward'),   # <--- Zeigt den letzten Reward als Text
+            dcc.Graph(id='observation-channels'), 
+            dcc.Graph(id='reward-bar-chart'),
+            html.Div(id='current-total-reward'),
             dcc.Interval(
                 id='interval-component',
-                interval=100,  # Aktualisierung in ms
+                interval=200,
                 n_intervals=0
             )
         ])
 
         @self.app.callback(
             [Output('live-map', 'figure'),
+             Output('observation-channels', 'figure'),
              Output('reward-bar-chart', 'figure'),
              Output('current-total-reward', 'children')],
-            Input('interval-component', 'n_intervals')
+            [Input('interval-component', 'n_intervals')]
         )
         def update_graph(n):
-            # ... existierender Code ...
+            # Create reward/best way map figure
             fig = make_subplots(
                 rows=1, cols=2,
                 subplot_titles=('Reward Map', 'Best Way Map')
@@ -165,7 +295,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             fig.add_trace(
                 go.Heatmap(
                     z=self.reward_map,
-                    colorscale='Viridis', 
+                    colorscale='Viridis',
                     showscale=True,
                     name='Reward Map'
                 ),
@@ -186,24 +316,79 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
                 showlegend=True
             )
 
-            bar_chart = go.Figure()
-            # zeige die zuletzt gespeicherten Reward-Komponenten
-            bar_chart.add_trace(go.Bar(
-                x=list(self.reward_components.keys()),
-                y=list(self.reward_components.values()),
-                marker_color='royalblue'
-            ))
-            bar_chart.update_layout(
-                title_text="Aktuelle Reward-Komponenten",
-                xaxis_title="Reward-Typ",
-                yaxis_title="Reward-Wert"
+            # Get current observation channels
+            obs = self._computeObs()
+            
+            # Create observation channels figure with SLAM map on left and values on right
+            obs_fig = make_subplots(
+                rows=1, cols=2,
+                column_widths=[0.5, 0.5],  # Make columns equal width
+                subplot_titles=('Normalized SLAM Map', 'Legend & Values'),
+                specs=[[{"type": "heatmap"}, {"type": "table"}]]
             )
 
-            current_reward_text = f"Letzter Reward: {self.last_total_reward:.2f}"
+            # Add SLAM map heatmap
+            obs_fig.add_trace(
+                go.Heatmap(
+                    z=obs[0],
+                    colorscale=[
+                        [0, 'rgb(0,0,0)'],      # Wall (0.0)
+                        [0.2, 'rgb(128,128,128)'],  # Unknown (0.2)
+                        [0.5, 'rgb(255,165,0)'],    # Visited (0.5)
+                        [0.9, 'rgb(255,255,255)']   # Free (0.9)
+                    ],
+                    showscale=False,
+                    name='SLAM Map'
+                ),
+                row=1, col=1
+            )
 
-            return fig, bar_chart, current_reward_text
+            # Create table with legend and observation values
+            obs_fig.add_trace(
+                go.Table(
+                    header=dict(values=['Type', 'Description']),
+                    cells=dict(
+                        values=[
+                            ['Wall', 'Unknown', 'Visited', 'Free', '', 'Position X', 'Position Y', 'sin(yaw)', 'cos(yaw)'],
+                            ['Black (0.0)', 'Gray (0.2)', 'Orange (0.5)', 'White (0.9)', '',
+                             f'{obs[1][0][0]:.3f}', f'{obs[2][0][0]:.3f}', 
+                             f'{obs[3][0][0]:.3f}', f'{obs[4][0][0]:.3f}']
+                        ]
+                    )
+                ),
+                row=1, col=2
+            )
 
-        # Start the Dash server but redirect only the dash logs
+            obs_fig.update_layout(
+                height=600,  # Make it square
+                title_text="Observation Channels",
+                showlegend=False
+            )
+
+            
+            # Create reward components bar chart
+            bar_chart = go.Figure(
+                go.Bar(
+                    x=list(self.reward_components.keys()),
+                    y=list(self.reward_components.values()),
+                    marker_color='royalblue'
+                )
+            )
+            bar_chart.update_layout(
+                title_text="Current Reward Components",
+                xaxis_title="Reward Type",
+                yaxis_title="Reward Value"
+            )
+
+            # Initialize last_total_reward if not set
+            if not hasattr(self, 'last_total_reward'):
+                self.last_total_reward = 0
+                
+            current_reward_text = f"Last Reward: {self.last_total_reward:.2f}"
+
+            return fig, obs_fig, bar_chart, current_reward_text
+
+        # Start Dash server in background thread
         def run_dash_app():
             logging.getLogger('werkzeug').setLevel(logging.ERROR)
             self.app.run_server(debug=False, port=self.port)
@@ -218,6 +403,8 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
 
         Thread(target=open_browser, daemon=True).start()
                 
+    
+        
     ################################################################################
     
 
@@ -293,7 +480,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
 
     ################################################################################
 
-    def _observationSpace(self):
+    def _observationSpace_Backup(self):
         """Returns the observation space.
         Simplified observation space with key state variables.
         
@@ -351,11 +538,37 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             )
 
 
-    
-    
+    ###################################################################################
+    # ANCHOR - OBSERVATIONSPACE Für CNN-DQN
+    def _observationSpace(self):
+        """
+        Returns the observation space for the CNN-DQN model.
+        The observation space is a Box with shape (5, grid_size, grid_size) containing:
+        - Channel 1: Normalized SLAM map (values in [0,1])
+        - Channel 2: Normalized x position (values in [0,1]) 
+        - Channel 3: Normalized y position (values in [0,1])
+        - Channel 4: sin(yaw) (values in [-1,1])
+        - Channel 5: cos(yaw) (values in [-1,1])
+        """
+        grid_size = self.slam.grid_size
+        
+        # Create proper shaped arrays for low and high bounds
+        low = np.zeros((5, grid_size, grid_size), dtype=np.float32)
+        high = np.ones((5, grid_size, grid_size), dtype=np.float32)
+        
+        # Set specific ranges for each channel
+        low[3, :, :] = -1.0  # sin(yaw) lower bound
+        low[4, :, :] = -1.0  # cos(yaw) lower bound
+        
+        return spaces.Box(
+            low=low,
+            high=high,
+            dtype=np.float32
+        )
+
     ################################################################################
-    # ANCHOR - computeObs
-    def _computeObs(self):
+    # ANCHOR - computeObs_Backup
+    def _computeObs_Backup(self):
         """Returns the current observation of the environment.
         10.2.25: deutlich vereinfachte Observation Space, damit es für den PPO einfacher ist, die Zuammenhänge zwischen den relevanten Observations und dem dafür erhaltenen Reward zu erkennen.
         
@@ -444,8 +657,58 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         #     print("[ERROR] in BaseRLAviary._computeObs()")
 
 ################################################################################
+    # ANCHOR compute_OBS_NORM_MAP für CNN-DQN
+    def _computeObs(self):
+        """
+        Baut einen 5-Kanal-Tensor auf:
+        - Kanal 1: Normalisierte SLAM Map (Occupancy Map)
+        - Kanal 2: Konstanter Wert des normierten x (angenommen, x ∈ [-5,5])
+        - Kanal 3: Konstanter Wert des normierten y (angenommen, y ∈ [-5,5])
+        - Kanal 4: sin(yaw)
+        - Kanal 5: cos(yaw)
+        """
+        # Get current drone state
+        state = self._getDroneStateVector(0)
+        
+        # Get SLAM map and normalize it
+        slam_map = self.slam.occupancy_grid
+        norm_map = np.zeros_like(slam_map, dtype=np.float32)
+        norm_map[slam_map == -1] = 0.2   # unbekannt
+        norm_map[slam_map == 0] = 0.9    # frei
+        norm_map[slam_map == 1] = 0.0    # Wand
+        norm_map[slam_map == 2] = 0.5    # besucht
+        
+
+        # Get drone position from state
+        pos = state[0:2]  # x,y position
+        
+        pos = state[0:2]
+        
+        #Achtung: in der Simulation sind nie negative Werte zu erwarten, da die Mazes so gespant sind, das Sie immer positive Werte aufweisen. In echt kann die Drohne aber später auch negative Werte erhalten.
+         
+        # Normalisiere x und y: Angenommener Bereich [-5, 5]
+        norm_x = (pos[0] + 5) / 10
+        norm_y = (pos[1] + 5) / 10
     
+        pos_x_channel = np.full((self.grid_size, self.grid_size), norm_x, dtype=np.float32)
+        pos_y_channel = np.full((self.grid_size, self.grid_size), norm_y, dtype=np.float32)
+
+        # Yaw in zwei Kanäle: sin und cos
+        yaw = state[9] # [9]=yaw-Winkel
+        yaw_sin_channel = np.full((self.grid_size, self.grid_size), np.sin(yaw), dtype=np.float32)
+        yaw_cos_channel = np.full((self.grid_size, self.grid_size), np.cos(yaw), dtype=np.float32)
+        
+
+
+        # Staple die 5 Kanäle zusammen: Shape = (5, grid_size, grid_size)
+        obs = np.stack([norm_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel], axis=0)
+        self.obs = obs # für Visualisierung in dem Dashboard
+        return obs
+
+ 
     
+
+#####################################################################################
     
     # ANCHOR - computeReward
     def _computeReward(self): # Funktioniert und die Drohne lernt, nahe an die Wand, aber nicht an die Wand zu fliegen. Problem: die Drohne bleibt nicht sauber im Sweetspot stehen.

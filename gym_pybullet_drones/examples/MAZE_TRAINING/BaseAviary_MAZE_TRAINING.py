@@ -247,6 +247,7 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
 
         self._housekeeping()
 
+
         #### Update and store the drones kinematic information #####
 
         self._updateAndStoreKinematicInformation()
@@ -385,6 +386,10 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         initial_obs = self._computeObs()
         initial_info = self._computeInfo()
         
+        #Slam Reset, damit daten nicht über mehrere Durchläufe hinwege gestack werden
+        self.slam.reset()
+        
+        
         return initial_obs, initial_info
     
     
@@ -435,13 +440,13 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         # Lokale Koordinaten auf der Drohne
         #Für die Maze-Trainings-Umgebung 8 Möglichkeiten
         action_to_movement_direction_local = {
-            0: np.array([[0, 0, 0, 0.5, 0]]), # Fly 0° (Stay)
-            1: np.array([[1, 0, 0, 0.5, 0]]), # Fly 90° (Forward)
-            2: np.array([[-1, 0, 0, 0.5, 0]]), # Fly 180° (Backward)
-            3: np.array([[0, 1, 0, 0.5, 0]]), # Fly 90° (Left)
-            4: np.array([[0, -1, 0, 0.5, 0]]), # Fly 270° (Right)
-            5: np.array([[0, 0, 0, 0.5, 0]]), # 45° Left-Turn # NOTE - Tests mit 1/36*np.pi waren nicht so gut, da die Drohne scheinbar nicht verstanden hat, dass bei einer Drehung vorwärtsfliegen bedeutet
-            6: np.array([[0, 0, 0, 0.5, 0]]), # 45° Right-Turn # NOTE - Ausgesetzt für Testzweicke 28.02.25
+            0: np.array([[0, 0, 0, 0.3, 0]]), # Fly 0° (Stay)
+            1: np.array([[1, 0, 0, 0.3, 0]]), # Fly 90° (Forward)
+            2: np.array([[-1, 0, 0, 0.3, 0]]), # Fly 180° (Backward)
+            3: np.array([[0, 1, 0, 0.3, 0]]), # Fly 90° (Left)
+            4: np.array([[0, -1, 0, 0.3, 0]]), # Fly 270° (Right)
+            5: np.array([[0, 0, 0, 0.3, 1/4*np.pi]]), # 45° Left-Turn # NOTE - Tests mit 1/36*np.pi waren nicht so gut, da die Drohne scheinbar nicht verstanden hat, dass bei einer Drehung vorwärtsfliegen bedeutet
+            6: np.array([[0, 0, 0, 0.3, -1/4*np.pi]]), # 45° Right-Turn # NOTE - Ausgesetzt für Testzweicke 28.02.25
             }
         
         
@@ -640,13 +645,33 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
                         break
                 #### Update and store the drones kinematic information #####
                 self._updateAndStoreKinematicInformation()
-                
-            
-            
+        
+        
+        #########################################################################################
+        # SLAM-Update  
+        pos = state[0:3]
+        yaw = state[9]  # Assuming this is the yaw angle
+        
+        # Get raycast results
+        raycast_results = {
+            'front': state[21],
+            'back': state[22],
+            'left': state[23],
+            'right': state[24],
+            'up': state[25]
+        }
+        
+        self.slam.update(pos, yaw, raycast_results)
+        # Optional: Zum Debuggen kann man die Map visualisieren (aber im Training besser deaktiviert)
+        
+        # NOTE - hier: SLAM Map visualisieren (im Training besser deaktiviert)
+        #Achtung: bei AKtivierung wird ein Bild pro Step gespeichert!
+        self.slam.visualize()     
+        #########################################################################################
             
         
         #### Prepare the return values #############################
-        obs = self._computeObs()
+        obs = self._computeObs()  # Erstelle die Beobachtung aus der SLAM Map
         reward = self._computeReward()
         terminated, Grund_Terminated = self._computeTerminated()
         truncated, Grund_Truncated = self._computeTruncated()
@@ -676,16 +701,19 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         #         print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
   
         
+            
+  
+        
         #if self.GUI: #deaktiviert, damit der nachfolgende Plot immer kommt, auch wenn keine GUI eingeschaltet ist
         if True:
             if truncated:
                 #Zusammenfassung Trainingslauf
                 print(f"Zusammenfassung Trainingslauf Truncated (Grund: {Grund_Truncated}):")
-                print(f"Observations: x,y,yaw: {obs[0]}, {obs[1]}, {obs[2]}, RayFront/Back: {obs[3]}, {obs[4]}, RayLeft/Right: {obs[5]}, {obs[6]}, RayUp: {obs[7]}")
+                print(f"Observations: x,y,yaw: {state[0]:.3f}, {state[1]:.3f}, {state[9]:.3f}, RayFront/Back: {state[21]:.3f}, {state[22]:.3f}, RayLeft/Right: {state[23]:.3f}, {state[24]:.3f}, RayUp: {state[25]:.3f}")
                 print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
             if terminated:
                 print(f"Zusammenfassung Trainingslauf Terminated (Grund: {Grund_Terminated}):")
-                print(f"Observations: x,y,yaw: {obs[0]}, {obs[1]}, {obs[2]}, RayFront/Back: {obs[3]}, {obs[4]}, RayLeft/Right: {obs[5]}, {obs[6]}, RayUp: {obs[7]}")
+                print(f"Observations: x,y,yaw: {state[0]:.3f}, {state[1]:.3f}, {state[9]:.3f}, RayFront/Back: {state[21]:.3f}, {state[22]:.3f}, RayLeft/Right: {state[23]:.3f}, {state[24]:.3f}, RayUp: {state[25]:.3f}")
                 print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
         
         

@@ -33,6 +33,14 @@ from gym_pybullet_drones.utils.enums import ObservationType, ActionType
 from gym_pybullet_drones.examples.MAZE_TRAINING.BaseRLAviary_MAZE_TRAINING import BaseRLAviary_MAZE_TRAINING
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType
 
+# Importiere benötigte Module für CNN-DQN
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from stable_baselines3 import DQN
+from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
+from gym_pybullet_drones.examples.MAZE_TRAINING.custom_CNN_V0_0 import CustomCNNFeatureExtractor
+
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
 DEFAULT_GUI_TRAIN = True
 DEFAULT_USER_DEBUG_GUI = True
@@ -40,7 +48,7 @@ DEFAULT_ADVANCED_STATUS_PLOT = True
 
 DEFAULT_GUI_TEST = False
 
-DEFAULT_USE_PRETRAINED_MODEL = True
+DEFAULT_USE_PRETRAINED_MODEL = False
 
 DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/results/durchgelaufen-DQN/final_model.zip'
 
@@ -49,7 +57,7 @@ DEFAULT_EVAL_EPISODES = 1
 
 DEFAULT_TRAIN_TIMESTEPS = 3*1e5 # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULT_TARGET_REWARD = 20000
-DEFAULT_TARGET_POSITION = np.array([1.8, 1.8, 1.0])
+
 
 DEFAULT_RECORD_VIDEO = False
 DEFAULT_OUTPUT_FOLDER = 'results' 
@@ -70,13 +78,18 @@ DEFAULT_ALTITUDE = 0.5
 #                           [7*0.05, 4*0.05, DEFAULT_ALTITUDE],
 #                           ])
 
+Y_Stern_eigentlich_X = 10
+X_Stern_eigentlich_Y = 10
+
 INIT_XYZS = np.array([
-                          [28*0.05, 43*0.05, DEFAULT_ALTITUDE],
+                          [Y_Stern_eigentlich_X*0.05, X_Stern_eigentlich_Y*0.05, DEFAULT_ALTITUDE],
                           ])
+
+DEFAULT_TARGET_POSITION = np.array([30*0.05, 40*0.05, 1.0])
                           
                           
 INIT_RPYS = np.array([
-                          [0, 0, 0],
+                          [0, 0, np.random.uniform(0, 2*np.pi)],
                           ])
 
 
@@ -139,17 +152,28 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
         print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
         model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
     else:
-        print("[INFO] Creating new model")
+        print("[INFO] Creating new model with CNN-DQN with custom feature extractor")
         # model = PPO('MlpPolicy',
         #            train_env,
         #            verbose=1,
         #            learning_rate=0.0004, # 0,0002 zu gering -> auf 0.0004 erhöht -> auf 0.0005 erhöht --> auf 0.0004 reduziert, da die Policy zu stark angepasst wurde, obwohl es schon 5s am Ziel war..
         #            )
-        model = DQN('MlpPolicy',
-                   train_env,
-                   learning_rate=0.0004,
-                   device='cuda:0',
-                   verbose=1)
+        
+        # ANCHOR - CNN-DQN
+        # Setze die policy_kwargs, um deinen Custom Feature Extractor zu nutzen:
+        policy_kwargs = dict(
+            features_extractor_class=CustomCNNFeatureExtractor,
+            features_extractor_kwargs=dict(features_dim=512)
+        )
+        model = DQN("CnnPolicy", 
+                    train_env, 
+                    policy_kwargs=policy_kwargs, 
+                    device='cuda:0', 
+                    learning_rate=0.0004, 
+                    verbose=1, 
+                    seed=42,
+                    buffer_size=10000)  # Reduced from 1,000,000 to 10,000
+
     #### Target cumulative rewards (problem-dependent) ##########
     target_reward = DEFAULT_TARGET_REWARD
     print(target_reward)

@@ -132,10 +132,8 @@ def evaluate(model_path, gui=True):
         initial_xyzs=np.array([[0., 0., 0.5]]),
         initial_rpys=np.array([[0., 0., 0.]]),
         gui=gui,
-        physics=Physics.PYB,
-        ctrl_freq=48,
-        reward_and_action_change_freq=0,
-        act=ActionType.VEL
+        physics="PYB",
+        ctrl_freq=48
     )
     
     # Run evaluation episodes
@@ -144,11 +142,7 @@ def evaluate(model_path, gui=True):
     steps = 0
     
     while steps < env.EPISODE_LEN_SEC * env.CTRL_FREQ:
-        action, _states = model.predict(obs,
-                                      deterministic=True)
-        print(f"Raw action from model: {action}")
-        action = env._preprocessAction(action)
-        print(f"Processed action: {action}")
+        action, _ = model.predict(obs, deterministic=True)
         obs, reward, terminated, truncated, _ = env.step(action)
         total_reward += reward
         steps += 1
