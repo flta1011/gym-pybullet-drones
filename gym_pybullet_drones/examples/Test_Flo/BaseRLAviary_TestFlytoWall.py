@@ -10,9 +10,152 @@ from gym_pybullet_drones.examples.Test_Flo.DSLPIDControl_TestFlo import DSLPIDCo
 
 from stable_baselines3.common.policies import ActorCriticPolicy
 
-class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
-    """Base single and multi-agent environment class for reinforcement learning."""
+class SimpleSlam:
+    def __init__(self, map_size=100, resolution=0.1):
+        """Initialize SLAM with an empty occupancy grid.
+        
+        Args:
+            map_size (int): Size of the map in meters
+            resolution (float): Size of each grid cell in meters
+        """
+        self.resolution = resolution
+        self.grid_size = int(map_size / resolution)
+        # Initialize occupancy grid (-1: unknown, 0: free, 1: occupied)
+        self.occupancy_grid = -1 * np.ones((self.grid_size, self.grid_size))
+        # Center of the map
+        self.center = self.grid_size // 2
+        
+        # Store drone's path
+        self.path = []
+        
+    def world_to_grid(self, x, y):
+        """Convert world coordinates to grid coordinates."""
+        grid_x = int(self.center + x / self.resolution)
+        grid_y = int(self.center + y / self.resolution)
+        return grid_x, grid_y
     
+    def update(self, drone_pos, drone_yaw, raycast_results):
+        """Update the map with new sensor readings.
+        
+        Args:
+            drone_pos (tuple): (x, y, z) position of drone
+            drone_yaw (float): Yaw angle in radians
+            raycast_results (dict): Dictionary with raycast distances
+                                  {'front': dist, 'back': dist, 'left': dist, 'right': dist}
+        """
+        x, y, _ = drone_pos
+        grid_x, grid_y = self.world_to_grid(x, y)
+        
+        # Store drone's position
+        self.path.append((grid_x, grid_y))
+        
+        # Mark current position as free
+        self.occupancy_grid[grid_x, grid_y] = 0
+        
+        # Process each raycast
+        angles = {
+            'front': drone_yaw,
+            'back': drone_yaw + np.pi,
+            'left': drone_yaw + np.pi/2,
+            'right': drone_yaw - np.pi/2
+        }
+        
+        for direction, distance in raycast_results.items():
+            if distance < 9999:  # If ray hit something
+                angle = angles[direction]
+                
+                # Calculate end point of ray
+                end_x = x + distance * np.cos(angle)
+                end_y = y + distance * np.sin(angle)
+                end_grid_x, end_grid_y = self.world_to_grid(end_x, end_y)
+                
+                # Mark cells along ray as free
+                cells = self.get_line(grid_x, grid_y, end_grid_x, end_grid_y)
+                for cx, cy in cells[:-1]:
+                    if 0 <= cx < self.grid_size and 0 <= cy < self.grid_size:
+                        self.occupancy_grid[cx, cy] = 0
+                
+                # Mark end point as occupied
+                if 0 <= end_grid_x < self.grid_size and 0 <= end_grid_y < self.grid_size:
+                    self.occupancy_grid[end_grid_x, end_grid_y] = 1
+    
+    def get_line(self, x0, y0, x1, y1):
+        """Get all grid cells along a line using Bresenham's algorithm."""
+        cells = []
+        dx = abs(x1 - x0)
+        dy = abs(y1 - y0)
+        x, y = x0, y0
+        sx = 1 if x1 > x0 else -1
+        sy = 1 if y1 > y0 else -1
+        
+        if dx > dy:
+            err = dx / 2.0
+            while x != x1:
+                cells.append((x, y))
+                err -= dy
+                if err < 0:
+                    y += sy
+                    err += dx
+                x += sx
+        else:
+            err = dy / 2.0
+            while y != y1:
+                cells.append((x, y))
+                err -= dx
+                if err < 0:
+                    x += sx
+                    err += dy
+                y += sy
+                
+        cells.append((x, y))
+        return cells
+    
+    def visualize(self):
+        """Visualize the occupancy grid."""
+        plt.figure(figsize=(10, 10))
+        plt.imshow(self.occupancy_grid.T, cmap='gray', origin='lower')
+        
+        # Plot drone's path
+        if self.path:
+            path = np.array(self.path)
+            plt.plot(path[:, 0], path[:, 1], 'r-', linewidth=2)
+            plt.plot(path[-1, 0], path[-1, 1], 'ro', markersize=10)  # Current position
+            
+        plt.colorbar(label='Occupancy (-1: unknown, 0: free, 1: occupied)')
+        plt.title('SLAM Map')
+        plt.xlabel('X (grid cells)')
+        plt.ylabel('Y (grid cells)')
+        plt.show()
+
+    def save_map(self, filename):
+        """Save the occupancy grid and path to CSV files.
+        
+        Args:
+            filename (str): Base filename to save the maps (without extension)
+        """
+        # Save occupancy grid
+        np.savetxt(f"{filename}_grid.csv", self.occupancy_grid, delimiter=',')
+        
+        # Save path
+        if self.path:
+            path_array = np.array(self.path)
+            np.savetxt(f"{filename}_path.csv", path_array, delimiter=',')
+    
+    def load_map(self, filename):
+        """Load the occupancy grid and path from CSV files.
+        
+        Args:
+            filename (str): Base filename to load the maps (without extension)
+        """
+        # Load occupancy grid
+        self.occupancy_grid = np.loadtxt(f"{filename}_grid.csv", delimiter=',')
+        
+        # Load path if it exists
+        try:
+            path_array = np.loadtxt(f"{filename}_path.csv", delimiter=',')
+            self.path = path_array.tolist()
+        except:
+            print("No path file found")
     ################################################################################
 
     def __init__(self,
@@ -102,6 +245,8 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         #### Set a limit on the maximum target speed ###############
         if  act == ActionType.VEL:
             self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000/3600)
+        
+        self.slam = SimpleSlam(map_size=10, resolution=0.1)  # 10m x 10m map with 10cm resolution
 
     ################################################################################
     
@@ -470,27 +615,11 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
     
     
     def _computeTerminated(self):
-        """Computes the current terminated value(s).
-
-        Unused as this subclass is not meant for reinforcement learning.
-
-        Returns
-        -------
-        bool
-            Dummy value.
-
-        """
-    
-        
-
-        #Wenn die Drohne im sweet spot ist (bezogen auf Sensor vorne, Sensor und seit 5 sekunden still ist, beenden!
-        if self.still_time >= 5:
-            Grund_Terminated = "Drohne ist im sweet spot für 5 sekunden Stillstand und wird erfolgreich beendet"
-            return True, Grund_Terminated
-        
-        Grund_Terminated = None
-        
-        return False, Grund_Terminated
+        terminated, reason = super()._computeTerminated()
+        if terminated:
+            # Save final map
+            self.slam.save_map(f"slam_map_final_{self.step_counter}")
+        return terminated, reason
     
     ################################################################################
     
@@ -554,6 +683,39 @@ class BaseRLAviary_TestFlytoWall(BaseAviary_TestFlytoWall):
         # print("Raycast vorne:", state[21])
  
         return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
+
+    #########################################################################################
+    
+    def step(self, action):
+        # Your existing step code...
+        
+        # Update SLAM
+        state = self._getDroneStateVector(0)
+        pos = state[0:3]
+        yaw = state[9]  # Assuming this is the yaw angle
+        
+        # Get raycast results
+        sensor_readings = self.check_distance_sensors(0)
+        raycast_results = {
+            'front': sensor_readings[0],
+            'back': sensor_readings[1],
+            'left': sensor_readings[2],
+            'right': sensor_readings[3]
+        }
+        
+        self.slam.update(pos, yaw, raycast_results)
+        
+        # Save map every 1000 steps
+        if self.step_counter % 1000 == 0:
+            self.slam.save_map(f"slam_map_{self.step_counter}")
+        
+        # Visualize every 100 steps
+        if self.step_counter % 100 == 0:
+            self.slam.visualize()
+        
+        # Your existing step code...
+        
+        return self.step_counter
 
     #########################################################################################
     
