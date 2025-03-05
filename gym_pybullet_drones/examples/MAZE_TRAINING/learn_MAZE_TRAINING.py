@@ -64,7 +64,7 @@ DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
-DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 5
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 
 DEFAULT_OBS = ObservationType('kin') # 'kin' or 'rgb'
@@ -78,8 +78,8 @@ DEFAULT_ALTITUDE = 0.5
 #                           [7*0.05, 4*0.05, DEFAULT_ALTITUDE],
 #                           ])
 
-Y_Stern_eigentlich_X = 10
-X_Stern_eigentlich_Y = 10
+Y_Stern_eigentlich_X = 55
+X_Stern_eigentlich_Y = 55
 
 INIT_XYZS = np.array([
                           [Y_Stern_eigentlich_X*0.05, X_Stern_eigentlich_Y*0.05, DEFAULT_ALTITUDE],
@@ -169,7 +169,8 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
                     train_env, 
                     policy_kwargs=policy_kwargs, 
                     device='cuda:0', 
-                    learning_rate=0.0004, 
+                    #learning_rate=0.0004, 
+                    learning_rate=0.001,
                     verbose=1, 
                     seed=42,
                     buffer_size=10000)  # Reduced from 1,000,000 to 10,000

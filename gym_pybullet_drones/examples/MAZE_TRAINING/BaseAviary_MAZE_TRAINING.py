@@ -445,8 +445,8 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
             2: np.array([[-1, 0, 0, 0.3, 0]]), # Fly 180° (Backward)
             3: np.array([[0, 1, 0, 0.3, 0]]), # Fly 90° (Left)
             4: np.array([[0, -1, 0, 0.3, 0]]), # Fly 270° (Right)
-            5: np.array([[0, 0, 0, 0.3, 1/4*np.pi]]), # 45° Left-Turn # NOTE - Tests mit 1/36*np.pi waren nicht so gut, da die Drohne scheinbar nicht verstanden hat, dass bei einer Drehung vorwärtsfliegen bedeutet
-            6: np.array([[0, 0, 0, 0.3, -1/4*np.pi]]), # 45° Right-Turn # NOTE - Ausgesetzt für Testzweicke 28.02.25
+            5: np.array([[0, 0, 0, 0.3, 1/8*np.pi]]), # 45° Left-Turn # NOTE - Tests mit 1/36*np.pi waren nicht so gut, da die Drohne scheinbar nicht verstanden hat, dass bei einer Drehung vorwärtsfliegen bedeutet
+            6: np.array([[0, 0, 0, 0.3, -1/8*np.pi]]), # 45° Right-Turn # NOTE - Ausgesetzt für Testzweicke 28.02.25
             }
         
         

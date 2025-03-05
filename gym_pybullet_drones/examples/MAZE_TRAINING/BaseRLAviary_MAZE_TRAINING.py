@@ -28,19 +28,24 @@ from collections import deque
 
 class SimpleSlam: 
     def __init__(self, map_size=8, resolution=0.05): # map size 8x8m, damit, egal in welche Richtung die Drohne fliegt, in jeden Quadranten ein komplettes Labyrinth dargestellt werden kann
-        """ Erstellt eine leere Occupancy-Grid Map. Args: map_size (float): Seitengröße der Map in Metern (z. B. 10 m). resolution (float): Seitengröße einer Zelle, sodass grid_size ~60 ergibt. """ 
+        """ Erstellt eine leere Occupancy-Grid Map. Args: map_size (float): Seitengröße der Map in Metern (z. B. 8 m). resolution (float): Seitengröße einer Zelle, sodass grid_size ~60 ergibt. """ 
         self.resolution = resolution 
         self.grid_size = int(map_size / resolution) 
         # Initialisiere die Map: 
         # # -1: unbekannt, 0: frei, 1: Wand, 2: besucht (Sensor oben frei) 
+        # # 0.2: unbekannt, 0.9: frei, 0.0: Wand, 0.5: besucht (Sensor oben frei) 
+
+
         
-        self.occupancy_grid = -1 * np.ones((self.grid_size, self.grid_size)) 
+        self.occupancy_grid = 0.2 * np.ones((self.grid_size, self.grid_size)) 
         self.center = self.grid_size // 2 
         self.path = [] # speichert besuchte Zellen
+        self.counter_free_space = 0
+        
         
     def reset(self):
         """Reset the SLAM map to its initial state."""
-        self.occupancy_grid = -1 * np.ones((self.grid_size, self.grid_size))
+        self.occupancy_grid = 0.2 * np.ones((self.grid_size, self.grid_size))
         self.path = []
         
     def world_to_grid(self, x, y):
@@ -61,10 +66,13 @@ class SimpleSlam:
         grid_x, grid_y = self.world_to_grid(x, y)
         self.path.append((grid_x, grid_y))
         # Markiere aktuelle Zelle als frei:
-        self.occupancy_grid[grid_x, grid_y] = 0
+        self.occupancy_grid[grid_x, grid_y] = 0.9
+        #self.counter_free_space += 1
         # Falls der "up"-Sensor keinen Treffer hat (z. B. Wert 9999), markiere als besucht:
         if 'up' in raycast_results and raycast_results['up'] == 9999:
-            self.occupancy_grid[grid_x, grid_y] = 2
+            self.occupancy_grid[grid_x, grid_y] = 0.5
+
+        
 
         # Definiere Richtungswinkel:
         angles = {
@@ -83,11 +91,12 @@ class SimpleSlam:
                 cells = self.get_line(grid_x, grid_y, end_grid_x, end_grid_y)
                 # Markiere Zellen entlang der Strahlbahn als frei:
                 for cx, cy in cells[:-1]:
-                    if 0 <= cx < self.grid_size and 0 <= cy < self.grid_size:
-                        self.occupancy_grid[cx, cy] = 0
+                    if 0 <= cx < self.grid_size and 0 <= cy < self.grid_size and self.occupancy_grid[cx, cy] != 0.0:
+                        self.occupancy_grid[cx, cy] = 0.9
+                        self.counter_free_space += 1
                 # Markiere den Endpunkt als Wand:
-                if 0 <= end_grid_x < self.grid_size and 0 <= end_grid_y < self.grid_size:
-                    self.occupancy_grid[end_grid_x, end_grid_y] = 1
+                if 0 <= end_grid_x < self.grid_size and 0 <= end_grid_y < self.grid_size and self.occupancy_grid[end_grid_x, end_grid_y] != 0.9:
+                    self.occupancy_grid[end_grid_x, end_grid_y] = 0.0
 
     def get_line(self, x0, y0, x1, y1):
         """Berechnet Zellen entlang einer Linie (Bresenham-Algorithmus)."""
@@ -138,8 +147,8 @@ class SimpleSlam:
             os.makedirs(self.OUTPUT_FOLDER)
         
         # Save plot to file
-        self.Latest_slam_map_path = os.path.join(self.OUTPUT_FOLDER, "latest_slam_map.png")
-        plt.savefig(self.Latest_slam_map_path)
+        # self.Latest_slam_map_path = os.path.join(self.OUTPUT_FOLDER, "latest_slam_map.png")
+        # plt.savefig(self.Latest_slam_map_path)
         plt.close()
         plt.ion() # Turn interactive mode back on
 
@@ -231,7 +240,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         self.reward_and_action_change_freq = reward_and_action_change_freq
         self.ACT_TYPE = act
         self.still_time = 0
-        self.EPISODE_LEN_SEC = 20*60 #increased from 5 auf 20 Minuten um mehr zu sehen (4.3.25)
+        self.EPISODE_LEN_SEC = 3*60 #increased from 5 auf 20 Minuten um mehr zu sehen (4.3.25) auf 5 Min (5.3.25)
         self.TARGET_POSITION = target_position
         self.Danger_Threshold_Wall = Danger_Threshold_Wall
         self.INIT_XYZS = initial_xyzs
@@ -239,9 +248,10 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         self.port = 8051
         self.reward_components = {
             'collision_penalty': 0,
-            'distance': 0,
+            'distance_reward': 0,
             'best_way_bonus': 0,
-            'explore_bonus': 0
+            'explore_bonus_new_field': 0,
+            'Target_Hit_Reward': 0,
         }
         # Historie der Reward-Komponenten für Balkendiagramm
         self.reward_distribution_history = deque(maxlen=50)  # speichere 50 Einträge
@@ -250,7 +260,15 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         self.reward_map = np.zeros((60, 60), dtype=int)
         self.best_way_map = np.zeros((60, 60), dtype=int)
         
-        
+        # Counter for the amount of wall pixel in map
+        self.wall_pixel_counter = 0
+        self.amount_of_pixel_in_map = 60*60
+        self.ratio_previous_step = 0
+        #self.ratio_current_step = 0
+        self.amount_of_pixel_in_map_without_walls = 0
+        self.distance_10_step_ago = 0
+        self.distance_50_step_ago = 0
+        self.differnece_threshold = 0.05
         
         
         #### Create integrated controllers #########################
@@ -589,7 +607,6 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         """
 
     
-        
         state = self._getDroneStateVector(0)
         
         # # NOTE: wenn nicht das Alte Modell genutzt werden soll, das hier wieder auskommentieren
@@ -662,8 +679,8 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         """
         Baut einen 5-Kanal-Tensor auf:
         - Kanal 1: Normalisierte SLAM Map (Occupancy Map)
-        - Kanal 2: Konstanter Wert des normierten x (angenommen, x ∈ [-5,5])
-        - Kanal 3: Konstanter Wert des normierten y (angenommen, y ∈ [-5,5])
+        - Kanal 2: Konstanter Wert des normierten x (angenommen, x ∈ [-4,4])
+        - Kanal 3: Konstanter Wert des normierten y (angenommen, y ∈ [-4,4])
         - Kanal 4: sin(yaw)
         - Kanal 5: cos(yaw)
         """
@@ -672,11 +689,11 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         
         # Get SLAM map and normalize it
         slam_map = self.slam.occupancy_grid
-        norm_map = np.zeros_like(slam_map, dtype=np.float32)
-        norm_map[slam_map == -1] = 0.2   # unbekannt
-        norm_map[slam_map == 0] = 0.9    # frei
-        norm_map[slam_map == 1] = 0.0    # Wand
-        norm_map[slam_map == 2] = 0.5    # besucht
+        # norm_map = np.zeros_like(slam_map, dtype=np.float32)
+        # norm_map[slam_map == -1] = 0.2   # unbekannt
+        # norm_map[slam_map == 0] = 0.9    # frei
+        # norm_map[slam_map == 1] = 0.0    # Wand
+        # norm_map[slam_map == 2] = 0.5    # besucht
         
 
         # Get drone position from state
@@ -687,9 +704,10 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         #Achtung: in der Simulation sind nie negative Werte zu erwarten, da die Mazes so gespant sind, das Sie immer positive Werte aufweisen. In echt kann die Drohne aber später auch negative Werte erhalten.
          
         # Normalisiere x und y: Angenommener Bereich [-5, 5]
-        norm_x = (pos[0] + 5) / 10
-        norm_y = (pos[1] + 5) / 10
-    
+        norm_x = (pos[0] + 4) / 8
+        norm_y = (pos[1] + 4) / 8
+
+        # Muss auf die Input Shape des DQN angepasst werden: (grid_size, grid_size)
         pos_x_channel = np.full((self.grid_size, self.grid_size), norm_x, dtype=np.float32)
         pos_y_channel = np.full((self.grid_size, self.grid_size), norm_y, dtype=np.float32)
 
@@ -701,8 +719,9 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
 
 
         # Staple die 5 Kanäle zusammen: Shape = (5, grid_size, grid_size)
-        obs = np.stack([norm_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel], axis=0)
+        obs = np.stack([slam_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel], axis=0)
         self.obs = obs # für Visualisierung in dem Dashboard
+
         return obs
 
  
@@ -742,6 +761,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
                     for j, value in enumerate(row):
                         if value == "1":
                             self.reward_map[i, j] = 6 # Wand
+                            self.wall_pixel_counter += 1
             # Mirror the reward map vertically
             self.reward_map = np.flipud(self.reward_map)
             # Rotate the reward map 90° mathematically negative
@@ -755,11 +775,15 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             target_position = [self.TARGET_POSITION[0]/0.05, self.TARGET_POSITION[1]/0.05] # Zielpunkt der Drohne
             self.reward_map[int(target_position[0]), int(target_position[1])] = 5 # Zielpunkt
 
+            # Amount of pixel in the map without walls
+            self.amount_of_pixel_in_map_without_walls = self.amount_of_pixel_in_map - self.wall_pixel_counter
 
             # Best way to fly via A* Algorithm
             self.best_way_map = np.zeros((60, 60), dtype=int)
             def heuristic(a, b):
                 return np.linalg.norm(np.array(a) - np.array(b))  # Euklidische Distanz
+            
+            
 
             def a_star_search(reward_map, start, goal):
                 neighbors = [(0, 1), (0, -1), (1, 0), (-1, 0)]
@@ -833,12 +857,12 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         self.reward_components["distance_reward"] = 0
         self.reward_components["best_way_bonus"] = 0
         self.reward_components["explore_bonus_new_field"] = 0
-        self.reward_components["explore_bonus_visited_field"] = 0
+        #self.reward_components["explore_bonus_visited_field"] = 0
         self.reward_components["Target_Hit_Reward"] = 0
         
         ###### 1.PUNISHMENT FOR COLLISION ######
         if self.action_change_because_of_Collision_Danger == True:
-            self.reward_components["collision_penalty"] = -5.0
+            self.reward_components["collision_penalty"] = -10.0
 
         ###### 2.REWARD FOR DISTANCE TO TARGET (line of sight) ######
         # Get current drone position and target position
@@ -847,10 +871,9 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         
         # Calculate distance to target
         self.distance = np.linalg.norm(drone_pos - target_pos)
-        
         # Define max distance and max reward
-        MAX_DISTANCE = 3.0  # Maximum expected distance in meters
-        MAX_REWARD = 10    # Maximum reward for distance (excluding target hit bonus)
+        MAX_DISTANCE = 2.0  # Maximum expected distance in meters
+        MAX_REWARD = 2   # Maximum reward for distance (excluding target hit bonus)
         
         # Linear reward that scales from 0 (at MAX_DISTANCE) to MAX_REWARD (at distance=0)
         distance_ratio = min(self.distance/MAX_DISTANCE, 1.0)
@@ -860,44 +883,93 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         if self.distance < 0.15 and state[25] < 1: # 0.15 = Radius Scheibe
             self.reward_components["Target_Hit_Reward"] += 1000.0
             print(f"Target hit. Zeitstempel (min:sek) {time.strftime('%M:%S', time.localtime())}")
+
+        if self.step_counter%10 == 0:
+        # Check if the distance to the target has not changed
+            difference = np.abs(self.distance - self.distance_10_step_ago)
+            # print(f"Difference to 10 steps ago: {difference}")
+            # print(f"Distance to target: {self.distance}")
+            # print(f"Distance 10 steps ago: {self.distance_10_step_ago}")
+
+            if self.distance < 0.20:
+                self.reward_components["distance_reward"] = self.reward_components["distance_reward"] + 1
+            
+            
+            elif difference >= 0.5:
+                self.reward_components["distance_reward"] = self.reward_components["distance_reward"] + 1
+
+            self.distance_10_step_ago = self.distance
         
+        if self.step_counter%100 == 0:
+
+            difference_50 = np.abs(self.distance - self.distance_50_step_ago)
+
+            if self.distance < 0.20:
+                self.reward_components["distance_reward"] = self.reward_components["distance_reward"] + 1
+            elif difference_50 < self.differnece_threshold:
+                self.reward_components["distance_reward"] = self.reward_components["distance_reward"] - 2
+
+            self.distance_50_step_ago = self.distance
         
         current_position = [int(state[0]/0.05), int(state[1]/0.05)]    
         # ###### 3. REWARD FOR BEING ON THE BEST WAY ######
-        # # Get the current position of the drone
-        # # Check if the drone is on the best way
-        # if self.best_way_map[current_position[0], current_position[1]] == 1:
-        #     self.reward_components["best_way_bonus"] = 1
+        # Get the current position of the drone
+        # Check if the drone is on the best way
+        if self.best_way_map[current_position[0], current_position[1]] == 1:
+            self.reward_components["best_way_bonus"] = 1
         
-        ###### 4. REWARD FOR EXPLORING NEW AREAS ######
-        # Check if the drone is in a new area
+        # ###### 4. REWARD FOR EXPLORING NEW AREAS ######
+        # # Check if the drone is in a new area
         # New area
         if self.reward_map[current_position[0], current_position[1]] == 0:
-            self.reward_components["explore_bonus_new_field"] = 2
+            #self.reward_components["explore_bonus_new_field"] = 2
             self.reward_map[current_position[0], current_position[1]] = 1
         # Area visited once
         elif self.reward_map[current_position[0], current_position[1]] == 1:
-            self.reward_components["explore_bonus_visited_field"] = 0.1
+            #self.reward_components["explore_bonus_visited_field"] = 0.1
             self.reward_map[current_position[0], current_position[1]] = 2
         # Area visited twice
         elif self.reward_map[current_position[0], current_position[1]] >=2:
-            self.reward_components["explore_bonus_visited_field"] = -0.01# darf keine Bestrafung geben, wenn er noch mal auf ein bereits besuchtes Feld fliegt, aber auch keine Belohnung
+            #self.reward_components["explore_bonus_visited_field"] = -0.01# darf keine Bestrafung geben, wenn er noch mal auf ein bereits besuchtes Feld fliegt, aber auch keine Belohnung
             self.reward_map[current_position[0], current_position[1]] = 3
         
 
         # Save the best way map to a CSV file
-        with open('gym_pybullet_drones/examples/MAZE_TRAINING/best_way_map.csv', 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerows(self.best_way_map)
+        # with open('gym_pybullet_drones/examples/MAZE_TRAINING/best_way_map.csv', 'w', newline='') as file:
+        #     writer = csv.writer(file)
+        #     writer.writerows(self.best_way_map)
 
         # Save the reward map to a CSV file
         with open('gym_pybullet_drones/examples/MAZE_TRAINING/reward_map.csv', 'w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerows(self.reward_map)      
+            writer.writerows(self.reward_map)   
+
+
+        ##### 5. REWARD FOR DIFFERENCE IN AMOUNT OF EXPLOERED FIELDS #####
+        # Calculate the ratio of visited fields
+        ratio_current_step = self.slam.counter_free_space/self.amount_of_pixel_in_map_without_walls
+        difference_ratio = ratio_current_step - self.ratio_previous_step
+
+        #print(f"Ratio current step: {ratio_current_step}")
+
+
+        if difference_ratio < 0.01:
+            self.reward_components["explore_bonus_new_field"] = -2  # 0 Punkte für bereits erkundete Felder
+        elif difference_ratio > 0.010:
+            self.reward_components["explore_bonus_new_field"] = difference_ratio * 100 # 10 Punkte für 100% erkundete Felder
+        else:
+            self.reward_components["explore_bonus_new_field"] = 0
+
+        self.slam.counter_free_space = 0 # Reset the counter of free space for the next step
+
+        ##### 
+
 
         # COMPUTE TOTAL REWARD
-        reward = self.reward_components["collision_penalty"] + self.reward_components["distance_reward"] + self.reward_components["best_way_bonus"] + self.reward_components["explore_bonus_new_field"] + self.reward_components["explore_bonus_visited_field"] + self.reward_components["Target_Hit_Reward"]
+        reward = self.reward_components["collision_penalty"] + self.reward_components["distance_reward"] + self.reward_components["best_way_bonus"] + self.reward_components["explore_bonus_new_field"] + self.reward_components["Target_Hit_Reward"]
         self.last_total_reward = reward  # Save the last total reward for the dashboard
+
+        self.ratio_previous_step = ratio_current_step
 
         return reward
         
