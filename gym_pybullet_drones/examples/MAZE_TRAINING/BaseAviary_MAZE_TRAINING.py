@@ -124,6 +124,9 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         self.DW_COEFF_1, \
         self.DW_COEFF_2, \
         self.DW_COEFF_3 = self._parseURDFParameters()
+        self.Maze_number = 1
+        self.New_Maze_number = 10
+        self.New_Maze_number_counter = 0
         print("[INFO] BaseAviary.__init__() loaded parameters from the drone's .urdf:\n[INFO] m {:f}, L {:f},\n[INFO] ixx {:f}, iyy {:f}, izz {:f},\n[INFO] kf {:f}, km {:f},\n[INFO] t2w {:f}, max_speed_kmh {:f},\n[INFO] gnd_eff_coeff {:f}, prop_radius {:f},\n[INFO] drag_xy_coeff {:f}, drag_z_coeff {:f},\n[INFO] dw_coeff_1 {:f}, dw_coeff_2 {:f}, dw_coeff_3 {:f}".format(
             self.M, self.L, self.J[0,0], self.J[1,1], self.J[2,2], self.KF, self.KM, self.THRUST2WEIGHT_RATIO, self.MAX_SPEED_KMH, self.GND_EFF_COEFF, self.PROP_RADIUS, self.DRAG_COEFF[0], self.DRAG_COEFF[2], self.DW_COEFF_1, self.DW_COEFF_2, self.DW_COEFF_3))
         #### Compute constants #####################################
@@ -244,7 +247,7 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         self.action_space = self._actionSpace()
         self.observation_space = self._observationSpace()
         #### Housekeeping ##########################################
-
+        print(self.Maze_number, "-------------------------------INIT MAZE NUMMER-----------------------------")
         self._housekeeping()
 
         #### Update and store the drones kinematic information #####
@@ -324,7 +327,20 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
 
         """
 
-       
+        #### Reset the simulation ##################################
+
+        if  self.New_Maze_number_counter == self.New_Maze_number:
+            #self.Maze_number = np.random.randint(1, 21)
+            # solang nicht alle csv datei erstellt dann ändern auf 21
+            self.Maze_number = np.random.randint(1, 15)
+            print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
+            print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
+            print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
+            self.New_Maze_number_counter = 0
+        else:
+            self.New_Maze_number_counter += 1
+            print(f"--------------------------MAZE_NUMBER: {self.Maze_number}---------------------------------------")
+            print(f"--------------------------MAZE_NUMBER_Counter: { self.New_Maze_number_counter}---------------------------------------")
 
         p.resetSimulation(physicsClientId=self.CLIENT)
         
@@ -647,7 +663,7 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         
         #### Prepare the return values #############################
         obs = self._computeObs()
-        reward = self._computeReward()
+        reward = self._computeReward(self.Maze_number)
         terminated, Grund_Terminated = self._computeTerminated()
         truncated, Grund_Truncated = self._computeTruncated()
         info = self._computeInfo()
@@ -1407,7 +1423,7 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
 
         """
         #p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/train_square.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
-        p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/maze/map_1.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
+        p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', f'assets/maze/map_{self.Maze_number}.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
         
         p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/target.urdf'), 
                   self.TARGET_POSITION, # x,y,z position

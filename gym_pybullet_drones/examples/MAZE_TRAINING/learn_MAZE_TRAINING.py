@@ -32,6 +32,7 @@ from gym_pybullet_drones.utils.utils import sync, str2bool
 from gym_pybullet_drones.utils.enums import ObservationType, ActionType
 from gym_pybullet_drones.examples.MAZE_TRAINING.BaseRLAviary_MAZE_TRAINING import BaseRLAviary_MAZE_TRAINING
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType
+import yaml
 
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
 DEFAULT_GUI_TRAIN = True
@@ -51,6 +52,13 @@ DEFAULT_TRAIN_TIMESTEPS = 3*1e5 # nach 100000 Steps sollten schon mehrbahre Erke
 DEFAULT_TARGET_REWARD = 20000
 DEFAULT_TARGET_POSITION = np.array([1.8, 1.8, 1.0])
 
+file_path = 'gym_pybullet_drones/examples/MAZE_TRAINING/Maze_init_target.yaml'
+def loadyaml_(file_path):
+    with open(file_path, 'r') as file:
+        return yaml.safe_load(file)
+
+loadyaml_ = loadyaml_('gym_pybullet_drones/examples/MAZE_TRAINING/Maze_init_target.yaml')
+
 DEFAULT_RECORD_VIDEO = False
 DEFAULT_OUTPUT_FOLDER = 'results' 
 DEFAULT_COLAB = False
@@ -65,10 +73,6 @@ DEFAULT_AGENTS = 1
 DEFAULT_MA = False
 
 DEFAULT_ALTITUDE = 0.5
-
-# INIT_XYZS = np.array([
-#                           [7*0.05, 4*0.05, DEFAULT_ALTITUDE],
-#                           ])
 
 INIT_XYZS = np.array([
                           [28*0.05, 43*0.05, DEFAULT_ALTITUDE],
@@ -237,7 +241,8 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
     # options={}: Additional options for resetting the environment.
     # In your code, obs will contain the initial observation, and info will contain additional information provided by the environment after resetting.
     
-    obs, info = test_env.reset(seed=42, options={})
+    obs, info , maze_number = test_env.reset(seed=42, options={})
+    print("PRINT MAZE NUMBER IM LEARN-------------------------------------------", maze_number, "---------------")
     start = time.time()
     #This code runs a loop to simulate the environment using the trained model and logs the results.
     # Loop: Runs for a specified number of steps.
@@ -252,7 +257,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
         action, _states = model.predict(obs,
                                         deterministic=True
                                         )
-        obs, reward, terminated, truncated, info = test_env.step(action)
+        obs, reward, terminated, truncated, info = test_env.step(action, maze_number)
         obs2 = obs.squeeze()
         act2 = action.squeeze()
         print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:", truncated)

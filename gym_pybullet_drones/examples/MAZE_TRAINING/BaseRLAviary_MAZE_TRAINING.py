@@ -110,6 +110,8 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         self.best_way_map = np.zeros((60, 60), dtype=int)
         
         
+        
+        
         #### Create integrated controllers #########################
         os.environ['KMP_DUPLICATE_LIB_OK']='True'
         if drone_model in [DroneModel.CF2X, DroneModel.CF2P]:
@@ -165,7 +167,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             fig.add_trace(
                 go.Heatmap(
                     z=self.reward_map,
-                    colorscale='Viridis', 
+                    colorscale='Viridis',
                     showscale=True,
                     name='Reward Map'
                 ),
@@ -426,7 +428,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         
     
             ############################################################
-       
+        
         
         # '''für mehrere Drohnen'''
         # obs_25 = np.zeros((self.NUM_DRONES,25))
@@ -448,7 +450,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
     
     
     # ANCHOR - computeReward
-    def _computeReward(self): # Funktioniert und die Drohne lernt, nahe an die Wand, aber nicht an die Wand zu fliegen. Problem: die Drohne bleibt nicht sauber im Sweetspot stehen.
+    def _computeReward(self, Maze_Number): # Funktioniert und die Drohne lernt, nahe an die Wand, aber nicht an die Wand zu fliegen. Problem: die Drohne bleibt nicht sauber im Sweetspot stehen.
         """Computes the current reward value.
 
         # _Backup_20250211_V1_with_mixed_reward_cases
@@ -472,17 +474,19 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             # Initializing Reward Map
             self.reward_map = np.zeros((60, 60), dtype=int)
             # Loading the Walls of the CSV Maze into the reward map as ones
-            reward_map_file_path = "gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_1.csv"
+            reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_{Maze_Number}.csv"
+            #reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_1.csv"
+            
             with open(reward_map_file_path, 'r') as file:
                 reader = csv.reader(file)
                 for i, row in enumerate(reader):
                     for j, value in enumerate(row):
                         if value == "1":
-                            self.reward_map[i, j] = 6 # Wand
+                            self.reward_map[j, i] = 6 # Wand
             # Mirror the reward map vertically
-            self.reward_map = np.flipud(self.reward_map)
+            #self.reward_map = np.flipud(self.reward_map)
             # Rotate the reward map 90° mathematically negative
-            self.reward_map = np.rot90(self.reward_map, k=3)
+            #self.reward_map = np.rot90(self.reward_map, k=4)
             
             # Set the Startpoint of the Drone
             initial_position = [self.INIT_XYZS[0][0]/0.05, self.INIT_XYZS[0][1]/0.05] # Startpunkt der Drohne
@@ -564,6 +568,8 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         
         reward = 0
         state = self._getDroneStateVector(0) #erste Drohne
+
+
         
         #### Rewards initialisieren ####
         self.reward_components["collision_penalty"] = 0
@@ -597,18 +603,28 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         if self.distance < 0.15 and state[25] < 1: # 0.15 = Radius Scheibe
             self.reward_components["Target_Hit_Reward"] += 1000.0
             print(f"Target hit. Zeitstempel (min:sek) {time.strftime('%M:%S', time.localtime())}")
-        
-        
-        current_position = [int(state[0]/0.05), int(state[1]/0.05)]    
-        # ###### 3. REWARD FOR BEING ON THE BEST WAY ######
-        # # Get the current position of the drone
-        # # Check if the drone is on the best way
+            
+        ###### 3. REWARD FOR BEING ON THE BEST WAY ######
+        # Get the current position of the drone
+        current_position = [int(state[0]/0.05), int(state[1]/0.05)]
+        # Check if the drone is on the best way
         # if self.best_way_map[current_position[0], current_position[1]] == 1:
-        #     self.reward_components["best_way_bonus"] = 1
+        #     self.reward_components["best_way_bonus"] = 10
         
         ###### 4. REWARD FOR EXPLORING NEW AREAS ######
         # Check if the drone is in a new area
         # New area
+        # if self.reward_map[current_position[1], current_position[0]] == 0:
+        #     self.reward_components["explore_bonus"] = 1
+        #     self.reward_map[current_position[1], current_position[0]] = 1
+        # # Area visited once
+        # elif self.reward_map[current_position[1], current_position[0]] == 1:
+        #     self.reward_components["explore_bonus"] = 0.1
+        #     self.reward_map[current_position[1], current_position[0]] = 2
+        # # Area visited twice
+        # elif self.reward_map[current_position[1], current_position[0]] == 2:
+        #     self.reward_components["explore_bonus"] = 0.1
+        #     self.reward_map[current_position[1], current_position[0]] = 3
         if self.reward_map[current_position[0], current_position[1]] == 0:
             self.reward_components["explore_bonus_new_field"] = 2
             self.reward_map[current_position[0], current_position[1]] = 1
