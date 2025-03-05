@@ -259,6 +259,8 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         self._startVideoRecording()
 
         self._update_camera()
+
+        self.environment_active = True
     
     ################################################################################
 
@@ -404,7 +406,8 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         
         #Slam Reset, damit daten nicht über mehrere Durchläufe hinwege gestack werden
         self.slam.reset()
-        
+
+        self.environment_active = True
         
         return initial_obs, initial_info
     

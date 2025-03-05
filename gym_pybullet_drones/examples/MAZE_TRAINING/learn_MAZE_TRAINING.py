@@ -172,7 +172,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
                     learning_rate=0.001,
                     verbose=1, 
                     seed=42,
-                    buffer_size=10000)  # Reduced from 1,000,000 to 10,000
+                    buffer_size=5000)  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
 
     #### Target cumulative rewards (problem-dependent) ##########
     target_reward = DEFAULT_TARGET_REWARD

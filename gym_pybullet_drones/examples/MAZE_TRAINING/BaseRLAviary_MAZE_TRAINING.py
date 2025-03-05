@@ -269,6 +269,8 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         self.distance_10_step_ago = 0
         self.distance_50_step_ago = 0
         self.differnece_threshold = 0.05
+
+        self.environment_active = True # 05032025: Um den Callback zu stoppen wenn die Umgebung nicht aktiv ist
         
         #### Create integrated controllers #########################
         os.environ['KMP_DUPLICATE_LIB_OK']='True'
@@ -304,6 +306,14 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             [Input('interval-component', 'n_intervals')]
         )
         def update_graph(n):
+            if not self.environment_active:
+                # Falls die Umgebung schon beendet wurde,
+                # liefere einfach leere oder statische Diagramme,
+                # um Fehler zu vermeiden
+                empty_fig = go.Figure()
+                current_reward_text = "Last Reward: 0.00"
+                return empty_fig, empty_fig, empty_fig, current_reward_text
+            
             # Create reward/best way map figure
             fig = make_subplots(
                 rows=1, cols=2,
@@ -419,6 +429,9 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             webbrowser.open(f'http://localhost:{self.port}')
 
         Thread(target=open_browser, daemon=True).start()
+
+        # def close():
+        #     self.environment_active = False
                 
     
         
@@ -1012,6 +1025,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         if self.still_time >= 5:
             current_time = time.localtime()
             Grund_Terminated = f"Drohne ist 5 s lang unter dem Objekt gewesen. Zeitstempel (min:sek) {time.strftime('%M:%S', current_time)}"
+            self.environment_active = False
             return True, Grund_Terminated
         
         Grund_Terminated = None
@@ -1033,22 +1047,26 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         state = self._getDroneStateVector(0)
         if abs(state[7]) > .4 or abs(state[8]) > .4: 
             Grund_Truncated = "Zu tilted"
+            self.environment_active = False
             return True, Grund_Truncated
         
         # TBD wenn die Drone abstürzt, dann auch truncaten
         if state[2] < 0.1: #state[2] ist z_position der Drohne
             Grund_Truncated = "Crash, Abstand < 0.1 m"
+            self.environment_active = False
             return True, Grund_Truncated
 
         #Wenn an einer Wand gecrashed wird, beenden!
         Abstand_truncated = self.Danger_Threshold_Wall-0.05
         if (state[21] <= Abstand_truncated  or state[22] <= Abstand_truncated or state[23] <= Abstand_truncated or state[24] <= Abstand_truncated):
             Grund_Truncated = f"Zu nah an der Wand (<{Abstand_truncated} m)"
+            self.environment_active = False
             return True, Grund_Truncated
         
         # Wenn die Zeit abgelaufen ist, beenden!
         if self.step_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC:
             Grund_Truncated = "Zeit abgelaufen"
+            self.environment_active = False
             return True, Grund_Truncated
         
         Grund_Truncated = None
