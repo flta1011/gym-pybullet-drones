@@ -240,7 +240,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         self.reward_and_action_change_freq = reward_and_action_change_freq
         self.ACT_TYPE = act
         self.still_time = 0
-        self.EPISODE_LEN_SEC = 3*60 #increased from 5 auf 20 Minuten um mehr zu sehen (4.3.25) auf 5 Min (5.3.25)
+        self.EPISODE_LEN_SEC = 5*60 #increased from 5 auf 20 Minuten um mehr zu sehen (4.3.25) auf 5 Min (5.3.25)
         self.TARGET_POSITION = target_position
         self.Danger_Threshold_Wall = Danger_Threshold_Wall
         self.INIT_XYZS = initial_xyzs
