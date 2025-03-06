@@ -90,6 +90,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         self.reward_and_action_change_freq = reward_and_action_change_freq
         self.ACT_TYPE = act
         self.still_time = 0
+        #NOTE - Episoden länge
         self.EPISODE_LEN_SEC = 20*60 #increased from 5 auf 20 Minuten um mehr zu sehen (4.3.25)
         self.TARGET_POSITION = target_position
         self.Danger_Threshold_Wall = Danger_Threshold_Wall
@@ -450,7 +451,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
     
     
     # ANCHOR - computeReward
-    def _computeReward(self, Maze_Number): # Funktioniert und die Drohne lernt, nahe an die Wand, aber nicht an die Wand zu fliegen. Problem: die Drohne bleibt nicht sauber im Sweetspot stehen.
+    def _computeReward(self, Maze_Number, random_number_Start, random_number_Target): # Funktioniert und die Drohne lernt, nahe an die Wand, aber nicht an die Wand zu fliegen. Problem: die Drohne bleibt nicht sauber im Sweetspot stehen.
         """Computes the current reward value.
 
         # _Backup_20250211_V1_with_mixed_reward_cases
@@ -488,12 +489,17 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             # Rotate the reward map 90° mathematically negative
             #self.reward_map = np.rot90(self.reward_map, k=4)
             
+            Start_position = self.INIT_XYZS[f"map{Maze_Number}"][0][random_number_Start]
+            End_Position = self.TARGET_POSITION[f"map{Maze_Number}"][0][random_number_Target]
+
+            # print (Start_position, "Start-REward")
+            # print (End_Position, "Target-reward")
             # Set the Startpoint of the Drone
-            initial_position = [self.INIT_XYZS[0][0]/0.05, self.INIT_XYZS[0][1]/0.05] # Startpunkt der Drohne
+            initial_position = [Start_position[1]/0.05, Start_position[0]/0.05] # Startpunkt der Drohne
             self.reward_map[int(initial_position[0]), int(initial_position[1])] = 4 # Startpunkt
 
             # Set the Targetpoint of the Drone
-            target_position = [self.TARGET_POSITION[0]/0.05, self.TARGET_POSITION[1]/0.05] # Zielpunkt der Drohne
+            target_position = [End_Position[1]/0.05, End_Position[0]/0.05] # Zielpunkt der Drohne
             self.reward_map[int(target_position[0]), int(target_position[1])] = 5 # Zielpunkt
 
 
@@ -584,16 +590,25 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             self.reward_components["collision_penalty"] = -5.0
 
         ###### 2.REWARD FOR DISTANCE TO TARGET (line of sight) ######
-        # Get current drone position and target position
-        drone_pos = state[0:2]  # XY position from state vector
-        target_pos = self.TARGET_POSITION[0:2]
+        # Get current drone position and target position # TODO STIMMT DER TARGET POSITION?
         
+        drone_pos = state[0:2]  # XY position from state vector
+        target_pos = self.TARGET_POSITION[f"map{Maze_Number}"][0][random_number_Target][0:2] # XY position of the target
+        Target_Value_1 = target_pos[0]
+        Target_Value_2 = target_pos[1]
+        target_pos = [Target_Value_2, Target_Value_1] # X und Y Werte vertauschen, weil die Drohne die Werte vertauscht
+        # print(drone_pos, "Drone Position")s
+        # print(target_pos, "Target Position")
         # Calculate distance to target
         self.distance = np.linalg.norm(drone_pos - target_pos)
+
+        # print(self.distance, "Distance")
+        # print(drone_pos, "Drone Position")
+        # print(target_pos, "Target Position")
         
         # Define max distance and max reward
         MAX_DISTANCE = 3.0  # Maximum expected distance in meters
-        MAX_REWARD = 10    # Maximum reward for distance (excluding target hit bonus)
+        MAX_REWARD = 0.5    # Maximum reward for distance (excluding target hit bonus)
         
         # Linear reward that scales from 0 (at MAX_DISTANCE) to MAX_REWARD (at distance=0)
         distance_ratio = min(self.distance/MAX_DISTANCE, 1.0)

@@ -48,16 +48,30 @@ DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/res
 DEFAULT_EVAL_FREQ = 5*1e4
 DEFAULT_EVAL_EPISODES = 1
 
-DEFAULT_TRAIN_TIMESTEPS = 3*1e5 # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
-DEFAULT_TARGET_REWARD = 20000
-DEFAULT_TARGET_POSITION = np.array([1.8, 1.8, 1.0])
+DEFAULT_TRAIN_TIMESTEPS = 10*1e5 # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
+DEFAULT_TARGET_REWARD = 99999999999999
+
 
 file_path = 'gym_pybullet_drones/examples/MAZE_TRAINING/Maze_init_target.yaml'
 def loadyaml_(file_path):
     with open(file_path, 'r') as file:
         return yaml.safe_load(file)
 
-loadyaml_ = loadyaml_('gym_pybullet_drones/examples/MAZE_TRAINING/Maze_init_target.yaml')
+Target_Start_Values = loadyaml_(file_path)
+
+
+
+# Initialisieren Sie das Dictionary, um die Werte zu speichern
+INIT_XYZS = {}
+DEFAULT_TARGET_POSITION = {}
+#INIT_RPYS = {}
+
+# Iterieren Sie über die Maps und speichern Sie die Werte im Dictionary
+for map_name, map_values in Target_Start_Values.items():
+        INIT_XYZS[map_name] = map_values['initial_xyzs'],
+        DEFAULT_TARGET_POSITION[map_name] = map_values['target_position'],
+        #INIT_RPYS = map_values['initial_rpys']
+
 
 DEFAULT_RECORD_VIDEO = False
 DEFAULT_OUTPUT_FOLDER = 'results' 
@@ -74,16 +88,16 @@ DEFAULT_MA = False
 
 DEFAULT_ALTITUDE = 0.5
 
-INIT_XYZS = np.array([
-                          [28*0.05, 43*0.05, DEFAULT_ALTITUDE],
-                          ])
+# DEFAULT_TARGET_POSITION = np.array([1.8, 1.8, 1.0])
+
+# INIT_XYZS = np.array([
+#                           [3*0.05, 4*0.05, DEFAULT_ALTITUDE],
+#                           ])
                           
                           
 INIT_RPYS = np.array([
                           [0, 0, 0],
                           ])
-
-
 
 
 
@@ -144,16 +158,16 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
         model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
     else:
         print("[INFO] Creating new model")
-        # model = PPO('MlpPolicy',
-        #            train_env,
-        #            verbose=1,
-        #            learning_rate=0.0004, # 0,0002 zu gering -> auf 0.0004 erhöht -> auf 0.0005 erhöht --> auf 0.0004 reduziert, da die Policy zu stark angepasst wurde, obwohl es schon 5s am Ziel war..
-        #            )
-        model = DQN('MlpPolicy',
+        model = PPO('MlpPolicy',
                    train_env,
-                   learning_rate=0.0004,
-                   device='cuda:0',
-                   verbose=1)
+                   verbose=1,
+                   learning_rate=0.0004, # 0,0002 zu gering -> auf 0.0004 erhöht -> auf 0.0005 erhöht --> auf 0.0004 reduziert, da die Policy zu stark angepasst wurde, obwohl es schon 5s am Ziel war..
+                   )
+        # model = DQN('MlpPolicy',
+        #            train_env,
+        #            learning_rate=0.0004,
+        #            device='cuda:0',
+        #            verbose=1)
     #### Target cumulative rewards (problem-dependent) ##########
     target_reward = DEFAULT_TARGET_REWARD
     print(target_reward)
