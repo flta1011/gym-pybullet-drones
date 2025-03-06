@@ -24,6 +24,7 @@ import matplotlib.pyplot as plt
 import random
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
+import csv
 
 class MazeGenerator:
     def __init__(self, width=3, height=3, discretization=0.05, min_corridor_size=0.3, seed=30):
@@ -261,14 +262,25 @@ class MazeGenerator:
         pretty_xml_str = minidom.parseString(xml_str).toprettyxml(indent="  ")
         with open(filename, "w") as f:
             f.write(pretty_xml_str)
+    
+    # def generate_csv_from_maze(self, filename="map_15.csv"):
+    #     """Generate a CSV file from the maze."""
+    #     np.savetxt(filename, self.grid, fmt="%d", delimiter=",")
 
+    def generate_csv_from_maze(self, filename="map_20.csv"):
+        """Generate a CSV file from the maze."""
+        with open(filename, 'w', newline='') as f:
+            writer = csv.writer(f)
+            for row in self.grid:
+                writer.writerow(['1' if cell == 1 else '' for cell in row])
 
 if __name__ == "__main__":
     rs = 42 # Random seed
     maze = MazeGenerator(seed=rs)
     maze.generate()
-    maze.visualize()
-    maze.visualize_range_of_mazes(start_seed=1, stop_seed=104)
+    maze.generate_csv_from_maze()
+    #maze.visualize()
+    #maze.visualize_range_of_mazes(start_seed=1, stop_seed=104)
 
     #Maze_Name = f"gym_pybullet_drones/assets/maze/maze_rs_{rs}.urdf"
     #maze.generate_urdf_from_maze(maze_height=1, filename=Maze_Name)

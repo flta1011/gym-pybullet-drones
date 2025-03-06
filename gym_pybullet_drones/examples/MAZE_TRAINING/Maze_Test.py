@@ -216,8 +216,8 @@ class MazeGenerator:
 if __name__ == "__main__":
     rs = 42 # Random seed
     maze = MazeGenerator(seed=rs)
-    maze.generate()
-    #maze.visualize()
+    #maze.generate()
+    maze.visualize()
     maze.visualize_range_of_mazes(start_seed=1, stop_seed=104)
 
     Maze_Name = f"gym_pybullet_drones/assets/maze/maze_rs_{rs}.urdf"
