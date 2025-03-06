@@ -232,7 +232,9 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
                          target_position=target_position,
                          Danger_Threshold_Wall=Danger_Threshold_Wall
                          )
-        
+
+        self.environment_active = True # 05032025: Um den Callback zu stoppen wenn die Umgebung nicht aktiv ist
+
         #### Create a buffer for the last .5 sec of actions ########
         self.ACTION_BUFFER_SIZE = int(ctrl_freq//2)
         self.action_buffer = deque(maxlen=self.ACTION_BUFFER_SIZE) 
@@ -269,8 +271,6 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         self.distance_10_step_ago = 0
         self.distance_50_step_ago = 0
         self.differnece_threshold = 0.05
-
-        self.environment_active = True # 05032025: Um den Callback zu stoppen wenn die Umgebung nicht aktiv ist
         
         #### Create integrated controllers #########################
         os.environ['KMP_DUPLICATE_LIB_OK']='True'
@@ -306,7 +306,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             [Input('interval-component', 'n_intervals')]
         )
         def update_graph(n):
-            if not self.environment_active:
+            if self.environment_active == False:
                 # Falls die Umgebung schon beendet wurde,
                 # liefere einfach leere oder statische Diagramme,
                 # um Fehler zu vermeiden
@@ -432,7 +432,6 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
 
         # def close():
         #     self.environment_active = False
-                
     
         
     ################################################################################
@@ -696,46 +695,58 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         - Kanal 4: sin(yaw)
         - Kanal 5: cos(yaw)
         """
-        # Get current drone state
-        state = self._getDroneStateVector(0)
-        
-        # Get SLAM map and normalize it
-        slam_map = self.slam.occupancy_grid
-        # norm_map = np.zeros_like(slam_map, dtype=np.float32)
-        # norm_map[slam_map == -1] = 0.2   # unbekannt
-        # norm_map[slam_map == 0] = 0.9    # frei
-        # norm_map[slam_map == 1] = 0.0    # Wand
-        # norm_map[slam_map == 2] = 0.5    # besucht
-        
+        try:
+            if self.environment_active == False:
+                self.restart_environment()
 
-        # Get drone position from state
-        pos = state[0:2]  # x,y position
-        
-        pos = state[0:2]
-        
-        #Achtung: in der Simulation sind nie negative Werte zu erwarten, da die Mazes so gespant sind, das Sie immer positive Werte aufweisen. In echt kann die Drohne aber später auch negative Werte erhalten.
-         
-        # Normalisiere x und y: Angenommener Bereich [-5, 5]
-        norm_x = (pos[0] + 4) / 8
-        norm_y = (pos[1] + 4) / 8
+            # if self.environment_active == False:
+            #     p.disconnect(physicsClientId=self.CLIENT)
+            #     time.sleep(2000)
+            #     p.connect(p.GUI)
+            #     self.environment_active = True
 
-        # Muss auf die Input Shape des DQN angepasst werden: (grid_size, grid_size)
-        pos_x_channel = np.full((self.grid_size, self.grid_size), norm_x, dtype=np.float32)
-        pos_y_channel = np.full((self.grid_size, self.grid_size), norm_y, dtype=np.float32)
+            # Get current drone state
+            state = self._getDroneStateVector(0)
+            
+            # Get SLAM map and normalize it
+            slam_map = self.slam.occupancy_grid
+            # norm_map = np.zeros_like(slam_map, dtype=np.float32)
+            # norm_map[slam_map == -1] = 0.2   # unbekannt
+            # norm_map[slam_map == 0] = 0.9    # frei
+            # norm_map[slam_map == 1] = 0.0    # Wand
+            # norm_map[slam_map == 2] = 0.5    # besucht
+            
 
-        # Yaw in zwei Kanäle: sin und cos
-        yaw = state[9] # [9]=yaw-Winkel
-        yaw_sin_channel = np.full((self.grid_size, self.grid_size), np.sin(yaw), dtype=np.float32)
-        yaw_cos_channel = np.full((self.grid_size, self.grid_size), np.cos(yaw), dtype=np.float32)
-        
+            # Get drone position from state
+            pos = state[0:2]  # x,y position
+                    
+            #Achtung: in der Simulation sind nie negative Werte zu erwarten, da die Mazes so gespant sind, das Sie immer positive Werte aufweisen. In echt kann die Drohne aber später auch negative Werte erhalten.
+            
+            # Normalisiere x und y: Angenommener Bereich [-5, 5]
+            norm_x = (pos[0] + 4) / 8
+            norm_y = (pos[1] + 4) / 8
+
+            # Muss auf die Input Shape des DQN angepasst werden: (grid_size, grid_size)
+            pos_x_channel = np.full((self.grid_size, self.grid_size), norm_x, dtype=np.float32)
+            pos_y_channel = np.full((self.grid_size, self.grid_size), norm_y, dtype=np.float32)
+
+            # Yaw in zwei Kanäle: sin und cos
+            yaw = state[9] # [9]=yaw-Winkel
+            yaw_sin_channel = np.full((self.grid_size, self.grid_size), np.sin(yaw), dtype=np.float32)
+            yaw_cos_channel = np.full((self.grid_size, self.grid_size), np.cos(yaw), dtype=np.float32)
+            
 
 
-        # Staple die 5 Kanäle zusammen: Shape = (5, grid_size, grid_size)
-        obs = np.stack([slam_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel], axis=0)
-        self.obs = obs # für Visualisierung in dem Dashboard
+            # Staple die 5 Kanäle zusammen: Shape = (5, grid_size, grid_size)
+            obs = np.stack([slam_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel], axis=0)
+            self.obs = obs # für Visualisierung in dem Dashboard
 
-        return obs
+            return obs
 
+        except Exception as e:
+            self.logger.error(f"Error in _computeObs: {e}")
+            self.environment_active = False
+            return None
  
     
 
@@ -1101,8 +1112,17 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
 
     #########################################################################################
-    
         
-   
+    def restart_environment(self):
+        try:
+            self.close()
+            self._housekeeping()
+            self._updateAndStoreKinematicInformation()
+            self._startVideoRecording()
+            self.environment_active = True
+            self.logger.info("Environment restarted successfully")
+        except Exception as e:
+            self.logger.error(f"Error restarting environment: {e}")
+            self.environment_active = False
     
     

@@ -14,6 +14,7 @@ import pybullet_data
 import gymnasium as gym
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ImageType
 import matplotlib.pyplot as plt
+import logging
 
 
 class BaseAviary_MAZE_TRAINING(gym.Env):
@@ -261,6 +262,9 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         self._update_camera()
 
         self.environment_active = True
+
+        logging.basicConfig(level=logging.INFO)
+        self.logger = logging.getLogger(__name__)
     
     ################################################################################
 
@@ -1000,60 +1004,70 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
             - 1x Last action [26]             -> -1, 0, or 1 (velocity in x direction)
         """
         
-        # #initialisierung der ray_results_actual
-        # if not hasattr(self, 'ray_results_actual'):
-        #     self.ray_results_actual = self.check_distance_sensors(nth_drone)
-        #     self.ray_results_previous = self.ray_results_actual #fürs initialisieren die Werte gleich setzen
-        #     self.step_counter_last_actual_raycast = self.step_counter
-        # print("nth_drone:", nth_drone)
-        # #nur die Raycasts Readings aktualisieren, wenn wirklich ein Physics-Step gerechnet wurde!
-        # if self.step_counter > self.step_counter_last_actual_raycast:
-        #     self.ray_results_previous = self.ray_results_actual #safe old actual raycast readings to previous raycast readings
-        #     self.ray_results_actual = self.check_distance_sensors(nth_drone) # get new actual raycast readings
-        #     self.step_counter_last_actual_raycast = self.step_counter
+        if self.environment_active == False:
+            raise RuntimeError("Environment is not active")
         
-        
-        self.ray_results_actual = self.check_distance_sensors(nth_drone) # get new actual raycast readings
-        # state = np.hstack([self.pos[nth_drone, :], #[0:3]
-        #                    self.quat[nth_drone, :], #[3:7]
-        #                    self.rpy[nth_drone, :], #[7:10]
-        #                    self.vel[nth_drone, :], #[10:13]
-        #                    self.ang_v[nth_drone, :], #[13:16]
-        #                 self.ray_results_previous[0], #forward [16]
-        #                 self.ray_results_previous[1], #backward [17]
-        #                 self.ray_results_previous[2], #left [18]
-        #                 self.ray_results_previous[3], #right [19]
-        #                 self.ray_results_previous[4], #up [20]
-        #                 self.ray_results_actual[0], #forward [21]
-        #                 self.ray_results_actual[1], #backward [22]
-        #                 self.ray_results_actual[2], #left [23]
-        #                 self.ray_results_actual[3], #right [24]
-        #                 self.ray_results_actual[4], #up [25]
-        #                 self.last_clipped_action[nth_drone, :]]) #last clipped action [26:30]
-        # return state.reshape(30,)
-        
-        if hasattr(self, 'action'):
-            last_action_VEL_X = self.action[0][0]
-        else:
-            last_action_VEL_X = 0
+        try:
+                
+            # #initialisierung der ray_results_actual
+            # if not hasattr(self, 'ray_results_actual'):
+            #     self.ray_results_actual = self.check_distance_sensors(nth_drone)
+            #     self.ray_results_previous = self.ray_results_actual #fürs initialisieren die Werte gleich setzen
+            #     self.step_counter_last_actual_raycast = self.step_counter
+            # print("nth_drone:", nth_drone)
+            # #nur die Raycasts Readings aktualisieren, wenn wirklich ein Physics-Step gerechnet wurde!
+            # if self.step_counter > self.step_counter_last_actual_raycast:
+            #     self.ray_results_previous = self.ray_results_actual #safe old actual raycast readings to previous raycast readings
+            #     self.ray_results_actual = self.check_distance_sensors(nth_drone) # get new actual raycast readings
+            #     self.step_counter_last_actual_raycast = self.step_counter
             
-        state = np.hstack([self.pos[nth_drone, :], #[0:3]
-                           self.quat[nth_drone, :], #[3:7]
-                           self.rpy[nth_drone, :], #[7:10]
-                           self.vel[nth_drone, :], #[10:13]
-                           self.ang_v[nth_drone, :], #[13:16]
-                            0, # [16]
-                            0, # [17]
-                            0, # [18]
-                            0, # [19]
-                            0, # [20]
-                        self.ray_results_actual[0], #forward [21]
-                        self.ray_results_actual[1], #backward [22]
-                        self.ray_results_actual[2], #left [23]
-                        self.ray_results_actual[3], #right [24]
-                        self.ray_results_actual[4], #up [25]
-                        last_action_VEL_X]) #last clipped action [26]: jetzt nur noch 1 Wert (10.2.25)
-        return state.reshape(27,) # von 30 auf 27 geändert, da nur 1 Wert in lastClipppedACtion (10.2.25)
+            
+            self.ray_results_actual = self.check_distance_sensors(nth_drone) # get new actual raycast readings
+            # state = np.hstack([self.pos[nth_drone, :], #[0:3]
+            #                    self.quat[nth_drone, :], #[3:7]
+            #                    self.rpy[nth_drone, :], #[7:10]
+            #                    self.vel[nth_drone, :], #[10:13]
+            #                    self.ang_v[nth_drone, :], #[13:16]
+            #                 self.ray_results_previous[0], #forward [16]
+            #                 self.ray_results_previous[1], #backward [17]
+            #                 self.ray_results_previous[2], #left [18]
+            #                 self.ray_results_previous[3], #right [19]
+            #                 self.ray_results_previous[4], #up [20]
+            #                 self.ray_results_actual[0], #forward [21]
+            #                 self.ray_results_actual[1], #backward [22]
+            #                 self.ray_results_actual[2], #left [23]
+            #                 self.ray_results_actual[3], #right [24]
+            #                 self.ray_results_actual[4], #up [25]
+            #                 self.last_clipped_action[nth_drone, :]]) #last clipped action [26:30]
+            # return state.reshape(30,)
+            
+            if hasattr(self, 'action'):
+                last_action_VEL_X = self.action[0][0]
+            else:
+                last_action_VEL_X = 0
+                
+            state = np.hstack([self.pos[nth_drone, :], #[0:3]
+                            self.quat[nth_drone, :], #[3:7]
+                            self.rpy[nth_drone, :], #[7:10]
+                            self.vel[nth_drone, :], #[10:13]
+                            self.ang_v[nth_drone, :], #[13:16]
+                                0, # [16]
+                                0, # [17]
+                                0, # [18]
+                                0, # [19]
+                                0, # [20]
+                            self.ray_results_actual[0], #forward [21]
+                            self.ray_results_actual[1], #backward [22]
+                            self.ray_results_actual[2], #left [23]
+                            self.ray_results_actual[3], #right [24]
+                            self.ray_results_actual[4], #up [25]
+                            last_action_VEL_X]) #last clipped action [26]: jetzt nur noch 1 Wert (10.2.25)
+            return state.reshape(27,) # von 30 auf 27 geändert, da nur 1 Wert in lastClipppedACtion (10.2.25)
+        
+        except Exception as e:
+            self.logger.error(f"Error in _getDroneStateVector: {e}")
+            self.environment_active = False
+            return None
 
     ################################################################################
 
