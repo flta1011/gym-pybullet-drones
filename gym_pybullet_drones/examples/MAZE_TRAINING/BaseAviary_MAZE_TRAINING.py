@@ -79,6 +79,7 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
 
         """
         #### Constants #############################################
+        self.environment_active = True
         self.G = 9.8
         self.RAD2DEG = 180/np.pi
         self.DEG2RAD = np.pi/180
@@ -260,8 +261,6 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         self._startVideoRecording()
 
         self._update_camera()
-
-        self.environment_active = True
 
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
@@ -1005,7 +1004,8 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         """
         
         if self.environment_active == False:
-            raise RuntimeError("Environment is not active")
+            self.logger.error("Environment is not active")
+            return None
         
         try:
                 

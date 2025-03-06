@@ -51,7 +51,7 @@ DEFAULT_USE_PRETRAINED_MODEL = False
 
 DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/results/durchgelaufen-DQN/final_model.zip'
 
-DEFAULT_EVAL_FREQ = 5*1e4
+DEFAULT_EVAL_FREQ = 3*1e4
 DEFAULT_EVAL_EPISODES = 1
 
 DEFAULT_TRAIN_TIMESTEPS = 3*1e5 # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
