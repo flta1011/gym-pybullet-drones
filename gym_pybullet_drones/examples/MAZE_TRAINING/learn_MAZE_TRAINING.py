@@ -54,7 +54,7 @@ DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/res
 DEFAULT_EVAL_FREQ = 3*1e4
 DEFAULT_EVAL_EPISODES = 1
 
-DEFAULT_TRAIN_TIMESTEPS = 3*1e5 # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
+DEFAULT_TRAIN_TIMESTEPS = 5*1e5 # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULT_TARGET_REWARD = 200000
 DEFAULT_TARGET_POSITION = np.array([1.8, 1.8, 1.0])
 
