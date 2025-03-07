@@ -336,7 +336,7 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         if  self.New_Maze_number_counter == self.New_Maze_number:
             #self.Maze_number = np.random.randint(1, 21)
             # solang nicht alle csv datei erstellt dann ändern auf 21
-            self.Maze_number = np.random.randint(1, 15)
+            self.Maze_number = np.random.randint(1, 21)
             print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
             print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
             print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
