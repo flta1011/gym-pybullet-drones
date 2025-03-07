@@ -1003,9 +1003,9 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
             - 1x Last action [26]             -> -1, 0, or 1 (velocity in x direction)
         """
         
-        if self.environment_active == False:
-            self.logger.error("Environment is not active")
-            return None
+        # if self.environment_active == False:
+        #     self.logger.error("Environment is not active")
+        #     return None
         
         try:
                 
