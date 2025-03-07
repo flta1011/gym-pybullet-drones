@@ -91,7 +91,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         self.ACT_TYPE = act
         self.still_time = 0
         #NOTE - Episoden länge
-        self.EPISODE_LEN_SEC = 20*60 #increased from 5 auf 20 Minuten um mehr zu sehen (4.3.25)
+        self.EPISODE_LEN_SEC = 10*60 #increased from 5 auf 20 Minuten um mehr zu sehen (4.3.25)
         self.TARGET_POSITION = target_position
         self.Danger_Threshold_Wall = Danger_Threshold_Wall
         self.INIT_XYZS = initial_xyzs
@@ -99,10 +99,13 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         self.port = 8051
         self.reward_components = {
             'collision_penalty': 0,
-            'distance': 0,
-            'best_way_bonus': 0,
-            'explore_bonus': 0
+            'distance_reward': 0,
+            'explore_bonus_new_field': 0,
+            'explore_bonus_visited_field': 0,
+            'Target_Hit_Reward': 0
         }
+
+    
         # Historie der Reward-Komponenten für Balkendiagramm
         self.reward_distribution_history = deque(maxlen=50)  # speichere 50 Einträge
 
@@ -580,7 +583,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         #### Rewards initialisieren ####
         self.reward_components["collision_penalty"] = 0
         self.reward_components["distance_reward"] = 0
-        self.reward_components["best_way_bonus"] = 0
+        #self.reward_components["best_way_bonus"] = 0
         self.reward_components["explore_bonus_new_field"] = 0
         self.reward_components["explore_bonus_visited_field"] = 0
         self.reward_components["Target_Hit_Reward"] = 0
@@ -649,7 +652,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             self.reward_map[current_position[0], current_position[1]] = 2
         # Area visited twice
         elif self.reward_map[current_position[0], current_position[1]] >=2:
-            self.reward_components["explore_bonus_visited_field"] = -0.01# darf keine Bestrafung geben, wenn er noch mal auf ein bereits besuchtes Feld fliegt, aber auch keine Belohnung
+            self.reward_components["explore_bonus_visited_field"] = -0.1# darf keine Bestrafung geben, wenn er noch mal auf ein bereits besuchtes Feld fliegt, aber auch keine Belohnung
             self.reward_map[current_position[0], current_position[1]] = 3
         
 
@@ -664,7 +667,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             writer.writerows(self.reward_map)      
 
         # COMPUTE TOTAL REWARD
-        reward = self.reward_components["collision_penalty"] + self.reward_components["distance_reward"] + self.reward_components["best_way_bonus"] + self.reward_components["explore_bonus_new_field"] + self.reward_components["explore_bonus_visited_field"] + self.reward_components["Target_Hit_Reward"]
+        reward = self.reward_components["collision_penalty"] + self.reward_components["distance_reward"] + self.reward_components["explore_bonus_new_field"] + self.reward_components["explore_bonus_visited_field"] + self.reward_components["Target_Hit_Reward"]
         self.last_total_reward = reward  # Save the last total reward for the dashboard
 
         return reward

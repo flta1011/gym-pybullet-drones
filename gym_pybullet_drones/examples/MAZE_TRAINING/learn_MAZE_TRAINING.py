@@ -43,7 +43,8 @@ DEFAULT_GUI_TEST = False
 
 DEFAULT_USE_PRETRAINED_MODEL = True
 
-DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/results/durchgelaufen-DQN/final_model.zip'
+#DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/results/durchgelaufen-DQN/final_model.zip'
+DEFAULT_PRETRAINED_MODEL_PATH = '/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/results/save-03.07.2025_02.23.46/best_model.zip'
 
 DEFAULT_EVAL_FREQ = 5*1e4
 DEFAULT_EVAL_EPISODES = 1
@@ -155,7 +156,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
     #### Load existing model or create new one ###################
     if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
         print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
-        model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
+        model = PPO.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
     else:
         print("[INFO] Creating new model")
         model = PPO('MlpPolicy',
