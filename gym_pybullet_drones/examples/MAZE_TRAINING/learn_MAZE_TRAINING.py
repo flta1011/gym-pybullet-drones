@@ -56,7 +56,28 @@ DEFAULT_EVAL_EPISODES = 1
 
 DEFAULT_TRAIN_TIMESTEPS = 5*1e5 # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULT_TARGET_REWARD = 200000
-DEFAULT_TARGET_POSITION = np.array([1.8, 1.8, 1.0])
+
+
+file_path = 'gym_pybullet_drones/examples/MAZE_TRAINING/Maze_init_target.yaml'
+def loadyaml_(file_path):
+    with open(file_path, 'r') as file:
+        return yaml.safe_load(file)
+
+Target_Start_Values = loadyaml_(file_path)
+
+
+
+# Initialisieren Sie das Dictionary, um die Werte zu speichern
+INIT_XYZS = {}
+DEFAULT_TARGET_POSITION = {}
+#INIT_RPYS = {}
+
+# Iterieren Sie über die Maps und speichern Sie die Werte im Dictionary
+for map_name, map_values in Target_Start_Values.items():
+        INIT_XYZS[map_name] = map_values['initial_xyzs'],
+        DEFAULT_TARGET_POSITION[map_name] = map_values['target_position'],
+        #INIT_RPYS = map_values['initial_rpys']
+
 
 DEFAULT_RECORD_VIDEO = False
 DEFAULT_OUTPUT_FOLDER = 'results' 
@@ -77,21 +98,19 @@ DEFAULT_ALTITUDE = 0.5
 #                           [7*0.05, 4*0.05, DEFAULT_ALTITUDE],
 #                           ])
 
-Y_Stern_eigentlich_X = 55
-X_Stern_eigentlich_Y = 55
+#Y_Stern_eigentlich_X = 55
+#X_Stern_eigentlich_Y = 55
 
-INIT_XYZS = np.array([
-                          [Y_Stern_eigentlich_X*0.05, X_Stern_eigentlich_Y*0.05, DEFAULT_ALTITUDE],
-                          ])
+# DEFAULT_TARGET_POSITION = np.array([1.8, 1.8, 1.0])
 
-DEFAULT_TARGET_POSITION = np.array([30*0.05, 40*0.05, 1.0])
+# INIT_XYZS = np.array([
+#                           [3*0.05, 4*0.05, DEFAULT_ALTITUDE],
+#                           ])
                           
                           
 INIT_RPYS = np.array([
-                          [0, 0, np.random.uniform(0, 2*np.pi)],
+                          [0, 0, 0],
                           ])
-
-
 
 
 
@@ -152,11 +171,6 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
         model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
     else:
         print("[INFO] Creating new model with CNN-DQN with custom feature extractor")
-        # model = PPO('MlpPolicy',
-        #            train_env,
-        #            verbose=1,
-        #            learning_rate=0.0004, # 0,0002 zu gering -> auf 0.0004 erhöht -> auf 0.0005 erhöht --> auf 0.0004 reduziert, da die Policy zu stark angepasst wurde, obwohl es schon 5s am Ziel war..
-        #            )
         
         # ANCHOR - CNN-DQN
         # Setze die policy_kwargs, um deinen Custom Feature Extractor zu nutzen:

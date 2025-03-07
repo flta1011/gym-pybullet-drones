@@ -878,12 +878,17 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             # Rotate the reward map 90° mathematically negative
             #self.reward_map = np.rot90(self.reward_map, k=4)
             
+            Start_position = self.INIT_XYZS[f"map{Maze_Number}"][0][random_number_Start]
+            End_Position = self.TARGET_POSITION[f"map{Maze_Number}"][0][random_number_Target]
+
+            # print (Start_position, "Start-REward")
+            # print (End_Position, "Target-reward")
             # Set the Startpoint of the Drone
-            initial_position = [self.INIT_XYZS[0][0]/0.05, self.INIT_XYZS[0][1]/0.05] # Startpunkt der Drohne
+            initial_position = [Start_position[1]/0.05, Start_position[0]/0.05] # Startpunkt der Drohne
             self.reward_map[int(initial_position[0]), int(initial_position[1])] = 4 # Startpunkt
 
             # Set the Targetpoint of the Drone
-            target_position = [self.TARGET_POSITION[0]/0.05, self.TARGET_POSITION[1]/0.05] # Zielpunkt der Drohne
+            target_position = [End_Position[1]/0.05, End_Position[0]/0.05] # Zielpunkt der Drohne
             self.reward_map[int(target_position[0]), int(target_position[1])] = 5 # Zielpunkt
 
             # Amount of pixel in the map without walls
