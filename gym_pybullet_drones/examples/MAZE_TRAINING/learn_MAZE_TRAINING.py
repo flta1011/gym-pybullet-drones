@@ -39,6 +39,7 @@ import torch.nn.functional as F
 from stable_baselines3 import DQN
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from gym_pybullet_drones.examples.MAZE_TRAINING.custom_CNN_V0_0 import CustomCNNFeatureExtractor
+import yaml
 
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
 DEFAULT_GUI_TRAIN = True
