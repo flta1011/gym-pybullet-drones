@@ -334,9 +334,12 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         #### Reset the simulation ##################################
 
         if  self.New_Maze_number_counter == self.New_Maze_number:
-            #self.Maze_number = np.random.randint(1, 21)
-            # solang nicht alle csv datei erstellt dann ändern auf 21
-            self.Maze_number = np.random.randint(1, 15)
+            #self.Maze_number = np.random.randint(1, 20)
+            # solang nicht alle csv datei erstellt dann ändern auf 20
+            # Erstellen Sie eine Liste der zulässigen Zahlen
+
+            # Wählen Sie eine Zufallszahl aus der Liste der zulässigen Zahlen
+            self.Maze_number = np.random.choice((1, 20))
             print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
             print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
             print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
@@ -460,8 +463,8 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
             2: np.array([[-1, 0, 0, 0.5, 0]]), # Fly 180° (Backward)
             3: np.array([[0, 1, 0, 0.5, 0]]), # Fly 90° (Left)
             4: np.array([[0, -1, 0, 0.5, 0]]), # Fly 270° (Right)
-            5: np.array([[0, 0, 0, 0.5, 0]]), # 45° Left-Turn # NOTE - Tests mit 1/36*np.pi waren nicht so gut, da die Drohne scheinbar nicht verstanden hat, dass bei einer Drehung vorwärtsfliegen bedeutet
-            6: np.array([[0, 0, 0, 0.5, 0]]), # 45° Right-Turn # NOTE - Ausgesetzt für Testzweicke 28.02.25
+            5: np.array([[0, 0, 0, 0.5, 1/8*np.pi]]), # 45° Left-Turn # NOTE - Tests mit 1/36*np.pi waren nicht so gut, da die Drohne scheinbar nicht verstanden hat, dass bei einer Drehung vorwärtsfliegen bedeutet
+            6: np.array([[0, 0, 0, 0.5, -1/8*np.pi]]), # 45° Right-Turn # NOTE - Ausgesetzt für Testzweicke 28.02.25
             }
         
         
