@@ -463,8 +463,8 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
             2: np.array([[-1, 0, 0, 0.5, 0]]), # Fly 180° (Backward)
             3: np.array([[0, 1, 0, 0.5, 0]]), # Fly 90° (Left)
             4: np.array([[0, -1, 0, 0.5, 0]]), # Fly 270° (Right)
-            5: np.array([[0, 0, 0, 0.5, 1/8*np.pi]]), # 45° Left-Turn # NOTE - Tests mit 1/36*np.pi waren nicht so gut, da die Drohne scheinbar nicht verstanden hat, dass bei einer Drehung vorwärtsfliegen bedeutet
-            6: np.array([[0, 0, 0, 0.5, -1/8*np.pi]]), # 45° Right-Turn # NOTE - Ausgesetzt für Testzweicke 28.02.25
+            5: np.array([[0, 0, 0, 0.5, 0]]), # 45° Left-Turn # NOTE - Tests mit 1/36*np.pi waren nicht so gut, da die Drohne scheinbar nicht verstanden hat, dass bei einer Drehung vorwärtsfliegen bedeutet
+            6: np.array([[0, 0, 0, 0.5, 0]]), # 45° Right-Turn # NOTE - Ausgesetzt für Testzweicke 28.02.25
             }
         
         
@@ -704,12 +704,14 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
             if truncated:
                 #Zusammenfassung Trainingslauf
                 print(f"Zusammenfassung Trainingslauf Truncated (Grund: {Grund_Truncated}):")
-                print(f"Observations: x,y,yaw: {obs[0]}, {obs[1]}, {obs[2]}, RayFront/Back: {obs[3]}, {obs[4]}, RayLeft/Right: {obs[5]}, {obs[6]}, RayUp: {obs[7]}")
+                # Remove the redundant print(obs[0]) line
+                print(f"Observations: x,y,yaw: {obs[0]:.3f}, {obs[1]:.3f}, {obs[2]:.3f}, RayFront/Back: {obs[3]:.1f}, {obs[4]:.1f}, RayLeft/Right: {obs[5]:.1f}, {obs[6]:.1f}, RayUp: {obs[7]:.1f}")
                 print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
             if terminated:
                 print(f"Zusammenfassung Trainingslauf Terminated (Grund: {Grund_Terminated}):")
-                print(f"Observations: x,y,yaw: {obs[0]}, {obs[1]}, {obs[2]}, RayFront/Back: {obs[3]}, {obs[4]}, RayLeft/Right: {obs[5]}, {obs[6]}, RayUp: {obs[7]}")
+                print(f"Observations: x,y,yaw: {obs[0]:.3f}, {obs[1]:.3f}, {obs[2]:.3f}, RayFront/Back: {obs[3]:.1f}, {obs[4]:.1f}, RayLeft/Right: {obs[5]:.1f}, {obs[6]:.1f}, RayUp: {obs[7]:.1f}")
                 print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
+
         
         
         #nachfolgendes war nur zum Debugging der getDroneStateVector Funktion genutzt worden

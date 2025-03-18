@@ -410,9 +410,9 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         # modified_obs.append(distance)
         
         # NOTE - neue Tests mit X,Y, Yaw Position der Drohne (28.2.25) übergeben
-        modified_obs.append(round(state[0],2)) #x-Position
-        modified_obs.append(round(state[1],2)) #y-Position
-        modified_obs.append(round(state[9],2)) #Yaw-Position
+        modified_obs.append(round(state[0],3)) #x-Position
+        modified_obs.append(round(state[1],3)) #y-Position
+        modified_obs.append(round(state[9],3)) #Yaw-Position
         
         for distance in obs:
             if distance <= (self.Danger_Threshold_Wall):  # Too close to wall, Safetyalgorithmus wird gegensteuern
@@ -590,70 +590,75 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         
         ###### 1.PUNISHMENT FOR COLLISION ######
         if self.action_change_because_of_Collision_Danger == True:
-            self.reward_components["collision_penalty"] = -5.0
+            self.reward_components["collision_penalty"] = -1.0
 
-        ###### 2.REWARD FOR DISTANCE TO TARGET (line of sight) ######
-        # Get current drone position and target position # TODO STIMMT DER TARGET POSITION?
+        # NOTE - 18.3: Ziel hat keinen Einfluss mehr, soll aufs erkunden belohnt werden
+        # ###### 2.REWARD FOR DISTANCE TO TARGET (line of sight) ######
+        # # Get current drone position and target position # TODO STIMMT DER TARGET POSITION?
         
-        drone_pos = state[0:2]  # XY position from state vector
-        target_pos = self.TARGET_POSITION[f"map{Maze_Number}"][0][random_number_Target][0:2] # XY position of the target
-        Target_Value_1 = target_pos[0]
-        Target_Value_2 = target_pos[1]
-        target_pos = [Target_Value_2, Target_Value_1] # X und Y Werte vertauschen, weil die Drohne die Werte vertauscht
-        # print(drone_pos, "Drone Position")s
-        # print(target_pos, "Target Position")
-        # Calculate distance to target
-        self.distance = np.linalg.norm(drone_pos - target_pos)
+        # drone_pos = state[0:2]  # XY position from state vector
+        # target_pos = self.TARGET_POSITION[f"map{Maze_Number}"][0][random_number_Target][0:2] # XY position of the target
+        # Target_Value_1 = target_pos[0]
+        # Target_Value_2 = target_pos[1]
+        # target_pos = [Target_Value_2, Target_Value_1] # X und Y Werte vertauschen, weil die Drohne die Werte vertauscht
+        # # print(drone_pos, "Drone Position")s
+        # # print(target_pos, "Target Position")
+        # # Calculate distance to target
+        # self.distance = np.linalg.norm(drone_pos - target_pos)
 
-        # print(self.distance, "Distance")
-        # print(drone_pos, "Drone Position")
-        # print(target_pos, "Target Position")
+        # # print(self.distance, "Distance")
+        # # print(drone_pos, "Drone Position")
+        # # print(target_pos, "Target Position")
         
-        # Define max distance and max reward
-        MAX_DISTANCE = 3.0  # Maximum expected distance in meters
-        MAX_REWARD = 0.5    # Maximum reward for distance (excluding target hit bonus)
+        # # Define max distance and max reward
+        # MAX_DISTANCE = 3.0  # Maximum expected distance in meters
+        # MAX_REWARD = 0.5    # Maximum reward for distance (excluding target hit bonus)
         
-        # Linear reward that scales from 0 (at MAX_DISTANCE) to MAX_REWARD (at distance=0)
-        distance_ratio = min(self.distance/MAX_DISTANCE, 1.0)
-        self.reward_components["distance_reward"] = MAX_REWARD * (1 - distance_ratio) ## 4.3.25: auf Linear umgestellt, damit auch in weiter entfernten Feldern noch ein Gradient erkannt werden kann
+        # # Linear reward that scales from 0 (at MAX_DISTANCE) to MAX_REWARD (at distance=0)
+        # distance_ratio = min(self.distance/MAX_DISTANCE, 1.0)
+        # self.reward_components["distance_reward"] = MAX_REWARD * (1 - distance_ratio) ## 4.3.25: auf Linear umgestellt, damit auch in weiter entfernten Feldern noch ein Gradient erkannt werden kann
         
-        # Add huge reward if target is hit (within 0.05m) and top sensor shows no obstacle
-        if self.distance < 0.15 and state[25] < 1: # 0.15 = Radius Scheibe
-            self.reward_components["Target_Hit_Reward"] += 1000.0
-            print(f"Target hit. Zeitstempel (min:sek) {time.strftime('%M:%S', time.localtime())}")
-            
+        # # Add huge reward if target is hit (within 0.05m) and top sensor shows no obstacle
+        # if self.distance < 0.15 and state[25] < 1: # 0.15 = Radius Scheibe
+        #     self.reward_components["Target_Hit_Reward"] += 1000.0
+        #     print(f"Target hit. Zeitstempel (min:sek) {time.strftime('%M:%S', time.localtime())}")
+        
+        # Get current position
+        current_position = [int(state[0]/0.05), int(state[1]/0.05)]
+        
+           
         ###### 3. REWARD FOR BEING ON THE BEST WAY ######
         # Get the current position of the drone
-        current_position = [int(state[0]/0.05), int(state[1]/0.05)]
+        
         # Check if the drone is on the best way
         # if self.best_way_map[current_position[0], current_position[1]] == 1:
         #     self.reward_components["best_way_bonus"] = 10
         
+        
+        
         ###### 4. REWARD FOR EXPLORING NEW AREAS ######
-        # Check if the drone is in a new area
-        # New area
-        # if self.reward_map[current_position[1], current_position[0]] == 0:
-        #     self.reward_components["explore_bonus"] = 1
-        #     self.reward_map[current_position[1], current_position[0]] = 1
+        # Vereinfachung 18.3: 5x5 grid um die Drohne herum
+        x, y = current_position[0], current_position[1]
+      
+        # Iterate through 5x5 grid centered on current position --> 3x3 grid
+        for i in range(max(0, x-2), min(60, x+2)):
+            for j in range(max(0, y-2), min(60, y+2)):
+                if self.reward_map[i, j] == 0:
+                    self.reward_map[i, j] = 1
+                    self.reward_components["explore_bonus_new_field"] += 1
+                  
+        
+        # Only give reward if any new cells were explored
+        # if reward_given:
+        #     self.reward_components["explore_bonus_new_field"] = 1
         # # Area visited once
-        # elif self.reward_map[current_position[1], current_position[0]] == 1:
-        #     self.reward_components["explore_bonus"] = 0.1
-        #     self.reward_map[current_position[1], current_position[0]] = 2
+        # elif self.reward_map[current_position[0], current_position[1]] == 1:
+        #     self.reward_components["explore_bonus_visited_field"] = 0.1
+        #     self.reward_map[current_position[0], current_position[1]] = 2
         # # Area visited twice
-        # elif self.reward_map[current_position[1], current_position[0]] == 2:
-        #     self.reward_components["explore_bonus"] = 0.1
-        #     self.reward_map[current_position[1], current_position[0]] = 3
-        if self.reward_map[current_position[0], current_position[1]] == 0:
-            self.reward_components["explore_bonus_new_field"] = 2
-            self.reward_map[current_position[0], current_position[1]] = 1
-        # Area visited once
-        elif self.reward_map[current_position[0], current_position[1]] == 1:
-            self.reward_components["explore_bonus_visited_field"] = 0.1
-            self.reward_map[current_position[0], current_position[1]] = 2
-        # Area visited twice
-        elif self.reward_map[current_position[0], current_position[1]] >=2:
-            self.reward_components["explore_bonus_visited_field"] = -0.1# darf keine Bestrafung geben, wenn er noch mal auf ein bereits besuchtes Feld fliegt, aber auch keine Belohnung
-            self.reward_map[current_position[0], current_position[1]] = 3
+        # elif self.reward_map[current_position[0], current_position[1]] >=2:
+        #     self.reward_components["explore_bonus_visited_field"] = -0.1# darf keine Bestrafung geben, wenn er noch mal auf ein bereits besuchtes Feld fliegt, aber auch keine Belohnung
+        #     self.reward_map[current_position[0], current_position[1]] = 3
         
 
         # Save the best way map to a CSV file
@@ -688,7 +693,104 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         """
         state = self._getDroneStateVector(0)
         #starte einen Timer, wenn die Drohne im sweet spot ist
-        if self.distance < 0.15 and state[25] < 1: #0.15 = Radius Scheibe
+        if  state[25] < 1: #0.15 = Radius Scheibe
+            self.still_time += (1/self.reward_and_action_change_freq)# Increment by simulation timestep (in seconds) # TBD: funktioniert das richtig?
+        else:
+            self.still_time = 0.0 # Reset timer to 0 seconds
+
+        #Wenn die Drohne im sweet spot ist (bezogen auf Sensor vorne, Sensor und seit 5 sekunden still ist, beenden!
+        if self.still_time >= 5:
+            current_time = time.localtime()
+            Grund_Terminated = f"Drohne ist 5 s lang unter dem Objekt gewesen. Zeitstempel (min:sek) {time.strftime('%M:%S', current_time)}"
+            return True, Grund_Terminated
+        
+        Grund_Terminated = None
+        
+        return False, Grund_Terminated
+    
+    ################################################################################
+    
+    def _computeTruncated(self): #coppied from HoverAviary_TestFlo.py
+        """Computes the current truncated value.
+
+        Returns
+        -------
+        bool
+            Whether the drone is too tilted or has crashed into a wall.
+
+        """
+        # Truncate when the drone is too tilted
+        state = self._getDroneStateVector(0)
+        if abs(state[7]) > .4 or abs(state[8]) > .4: 
+            Grund_Truncated = "Zu tilted"
+            return True, Grund_Truncated
+        
+        # TBD wenn die Drone abstürzt, dann auch truncaten
+        if state[2] < 0.1: #state[2] ist z_position der Drohne
+            Grund_Truncated = "Crash, Abstand < 0.1 m"
+            return True, Grund_Truncated
+
+        #Wenn an einer Wand gecrashed wird, beenden!
+        Abstand_truncated = self.Danger_Threshold_Wall-0.05
+        if (state[21] <= Abstand_truncated  or state[22] <= Abstand_truncated or state[23] <= Abstand_truncated or state[24] <= Abstand_truncated):
+            Grund_Truncated = f"Zu nah an der Wand (<{Abstand_truncated} m)"
+            return True, Grund_Truncated
+        
+        # Wenn die Zeit abgelaufen ist, beenden!
+        if self.step_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC:
+            Grund_Truncated = "Zeit abgelaufen"
+            return True, Grund_Truncated
+        
+        Grund_Truncated = None
+       
+        
+        return False, Grund_Truncated
+
+    ################################################################################
+    
+    def _computeInfo(self):
+        """Computes the current info dict(s).
+
+        Unused as this subclass is not meant for reinforcement learning.
+
+        Returns
+        -------
+        dict[str, int]
+            Dummy value.
+            
+    
+
+        """
+        # state = self._getDroneStateVector(0) #getDroneStateVector braucht die 0 
+        
+        # print("Reward:", self.reward_buffer)
+        # #Plotting infos zum Zeitpunkt der Episode, Raycasts(vorne) der Drohne und Geschwindigkeiten der Drohne
+        # print("Abstand zur Wand:", state[21])
+        # print("Linear velocity Vx:", state[10])
+        # #print raycasts
+        # print("Raycast vorne:", state[21])
+ 
+        return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
+
+    #########################################################################################
+    
+        
+   
+    
+    def _computeTerminated(self):
+        """Computes the current terminated value(s).
+
+        Unused as this subclass is not meant for reinforcement learning.
+
+        Returns
+        -------
+        bool
+            Dummy value.
+
+        """
+        state = self._getDroneStateVector(0)
+        #starte einen Timer, wenn die Drohne im sweet spot ist
+        if  state[25] < 1: #0.15 = Radius Scheibe
             self.still_time += (1/self.reward_and_action_change_freq)# Increment by simulation timestep (in seconds) # TBD: funktioniert das richtig?
         else:
             self.still_time = 0.0 # Reset timer to 0 seconds
