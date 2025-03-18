@@ -79,7 +79,8 @@ DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
-DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10 # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
+DEFAULT_EPISODE_LEN_SEC= 30*60
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 
 DEFAULT_OBS = ObservationType('kin') # 'kin' or 'rgb'
@@ -102,7 +103,7 @@ INIT_RPYS = np.array([
 
 
 
-def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DEFAULT_GUI_TRAIN, gui_Test=DEFAULT_GUI_TEST, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO, local=True, pyb_freq=DEFAULT_PYB_FREQ, ctrl_freq=DEFAULT_CTRL_FREQ, user_debug_gui=DEFAULT_USER_DEBUG_GUI, reward_and_action_change_freq=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ, drone_model=DEFAULT_DRONE_MODEL, advanced_status_plot=DEFAULT_ADVANCED_STATUS_PLOT, target_position=DEFAULT_TARGET_POSITION):
+def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DEFAULT_GUI_TRAIN, gui_Test=DEFAULT_GUI_TEST, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO, local=True, pyb_freq=DEFAULT_PYB_FREQ, ctrl_freq=DEFAULT_CTRL_FREQ, user_debug_gui=DEFAULT_USER_DEBUG_GUI, reward_and_action_change_freq=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ, drone_model=DEFAULT_DRONE_MODEL, advanced_status_plot=DEFAULT_ADVANCED_STATUS_PLOT, target_position=DEFAULT_TARGET_POSITION, EPISODE_LEN_SEC=DEFAULT_EPISODE_LEN_SEC):
 
     filename = os.path.join(output_folder, 'save-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
     if not os.path.exists(filename):
@@ -162,7 +163,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
         model = PPO('MlpPolicy',
                    train_env,
                    verbose=1,
-                   learning_rate=0.0004, # 0,0002 zu gering -> auf 0.0004 erhöht -> auf 0.0005 erhöht --> auf 0.0004 reduziert, da die Policy zu stark angepasst wurde, obwohl es schon 5s am Ziel war..
+                    # Learning-Rate 0,0002 zu gering -> auf 0.0004 erhöht -> auf 0.0005 erhöht --> auf 0.0004 reduziert, da die Policy zu stark angepasst wurde, obwohl es schon 5s am Ziel war..
                    )
         # model = DQN('MlpPolicy',
         #            train_env,
@@ -325,6 +326,7 @@ if __name__ == '__main__':
     parser.add_argument('--user_debug_gui',          default=DEFAULT_USER_DEBUG_GUI,    type=str2bool,           help='set to True if you want to see the debug GUI, only for showing the frame in training!(default: False)', metavar='')
     parser.add_argument('--advanced_status_plot',          default=DEFAULT_ADVANCED_STATUS_PLOT,    type=str2bool,           help='set to True if you want to see the advanced status plot, only for showing the frame in training!(default: False)', metavar='')
     parser.add_argument('--target_position',          default=DEFAULT_TARGET_POSITION,    type=str,           help='set to True if you want to see the advanced status plot, only for showing the frame in training!(default: False)', metavar='')
+    parser.add_argument('--EPISODE_LEN_SEC',          default=DEFAULT_EPISODE_LEN_SEC,    type=int,           help='set to True if you want to see the advanced status plot, only for showing the frame in training!(default: False)', metavar='')
     ARGS = parser.parse_args()
 
     run(**vars(ARGS))

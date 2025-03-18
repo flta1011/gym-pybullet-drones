@@ -48,7 +48,8 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
                  act: ActionType=ActionType.VEL,
                  advanced_status_plot=False,
                  target_position=np.array([0, 0, 0]),
-                 Danger_Threshold_Wall=0.15
+                 Danger_Threshold_Wall=0.15,
+                 EPISODE_LEN_SEC=10*60
                  ):
         """Initialization of a generic single and multi-agent RL environment.
 
@@ -91,7 +92,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         self.ACT_TYPE = act
         self.still_time = 0
         #NOTE - Episoden länge
-        self.EPISODE_LEN_SEC = 10*60 #increased from 5 auf 20 Minuten um mehr zu sehen (4.3.25)
+        self.EPISODE_LEN_SEC = EPISODE_LEN_SEC #increased from 5 auf 20 Minuten um mehr zu sehen (4.3.25)
         self.TARGET_POSITION = target_position
         self.Danger_Threshold_Wall = Danger_Threshold_Wall
         self.INIT_XYZS = initial_xyzs
@@ -414,13 +415,18 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         modified_obs.append(round(state[1],3)) #y-Position
         modified_obs.append(round(state[9],3)) #Yaw-Position
         
+        #abstände anhängen mit 3 Nachkommastellen
         for distance in obs:
-            if distance <= (self.Danger_Threshold_Wall):  # Too close to wall, Safetyalgorithmus wird gegensteuern
-                modified_obs.append(0)
-            elif distance <= (self.Danger_Threshold_Wall+0.1):  # Vorwarnung: gleich passiert was
-                modified_obs.append(1) 
-            else:  # Safe distance
-                modified_obs.append(2)
+            modified_obs.append(round(distance,3))
+        
+        
+        # for distance in obs:
+        #     if distance <= (self.Danger_Threshold_Wall):  # Too close to wall, Safetyalgorithmus wird gegensteuern
+        #         modified_obs.append(0)
+        #     elif distance <= (self.Danger_Threshold_Wall+0.1):  # Vorwarnung: gleich passiert was
+        #         modified_obs.append(1) 
+        #     else:  # Safe distance
+        #         modified_obs.append(2)
         
         #raycast oben noch anhängen        
         if state[25] < 1:
