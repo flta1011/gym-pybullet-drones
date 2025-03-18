@@ -21,6 +21,7 @@ from datetime import datetime
 import argparse
 import gymnasium as gym
 import numpy as np
+import yaml
 import torch
 from stable_baselines3 import PPO, DQN, SAC
 from stable_baselines3.common.env_util import make_vec_env
@@ -60,9 +61,9 @@ DEFAULT_TRAIN_TIMESTEPS = 10*1e5 # nach 100000 Steps sollten schon mehrbahre Erk
 DEFAULT_TARGET_REWARD = 99999999999999
 
 
-file_path = 'gym_pybullet_drones/examples/MAZE_TRAINING/Maze_init_target.yaml'
+file_path = os.path.join(os.path.dirname(__file__), 'Maze_init_target.yaml')
 def loadyaml_(file_path):
-    with open(file_path, 'r') as file:
+    with open(file_path) as file:
         return yaml.safe_load(file)
 
 Target_Start_Values = loadyaml_(file_path)
@@ -72,6 +73,11 @@ Target_Start_Values = loadyaml_(file_path)
 # Initialisieren Sie das Dictionary, um die Werte zu speichern
 INIT_XYZS = {}
 DEFAULT_TARGET_POSITION = {}
+                          
+INIT_RPYS = np.array([
+                          [0, 0, np.random.uniform(0, 2*np.pi)],
+                          ])
+
 #INIT_RPYS = {}
 
 # Iterieren Sie über die Maps und speichern Sie die Werte im Dictionary
@@ -97,23 +103,7 @@ DEFAULT_MA = False
 
 DEFAULT_ALTITUDE = 0.5
 
-# INIT_XYZS = np.array([
-#                           [7*0.05, 4*0.05, DEFAULT_ALTITUDE],
-#                           ])
 
-Y_Stern_eigentlich_X = 55
-X_Stern_eigentlich_Y = 55
-
-# DEFAULT_TARGET_POSITION = np.array([1.8, 1.8, 1.0])
-
-# INIT_XYZS = np.array([
-#                           [3*0.05, 4*0.05, DEFAULT_ALTITUDE],
-#                           ])
-                          
-                          
-INIT_RPYS = np.array([
-                          [0, 0, np.random.uniform(0, 2*np.pi)],
-                          ])
 
 
 

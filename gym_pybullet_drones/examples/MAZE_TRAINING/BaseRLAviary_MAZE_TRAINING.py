@@ -928,10 +928,6 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         try:
             if self.step_counter == 0:
                 self._initialize_Reward_Map_and_Best_Way_Map(Maze_Number)
-
-            # Initialize reward
-            reward = 0
-            state = self._getDroneStateVector(0) #erste Drohne
         
         
         
@@ -950,8 +946,6 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             
             self._compute_potential_fields(initial_position, only_forces=False)
             
-            start = (int(initial_position[0]), int(initial_position[1]))
-            goal = (int(target_position[0]), int(target_position[1]))
             
             
             
@@ -1071,7 +1065,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             
             # update the buffer
             self.last_total_reward = reward  # Save the last total reward for the dashboard
-            self.ratio_previous_step = ratio_current_step
+            
             
 
             # Save the best way map to a CSV file
@@ -1199,23 +1193,24 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             Dummy value.
 
         """
-        state = self._getDroneStateVector(0)
-        #starte einen Timer, wenn die Drohne im sweet spot ist
-        if  state[25] < 1: #0.15 = Radius Scheibe
-            self.still_time += (1/self.reward_and_action_change_freq)# Increment by simulation timestep (in seconds) # TBD: funktioniert das richtig?
-        else:
-            self.still_time = 0.0 # Reset timer to 0 seconds
+        try:
+            state = self._getDroneStateVector(0)
+            #starte einen Timer, wenn die Drohne im sweet spot ist
+            if  state[25] < 1: #0.15 = Radius Scheibe
+                self.still_time += (1/self.reward_and_action_change_freq)# Increment by simulation timestep (in seconds) # TBD: funktioniert das richtig?
+            else:
+                self.still_time = 0.0 # Reset timer to 0 seconds
 
-            #Wenn die Drohne im sweet spot ist (bezogen auf Sensor vorne, Sensor und seit 5 sekunden still ist, beenden!
-            if self.still_time >= 5:
-                current_time = time.localtime()
-                Grund_Terminated = f"Drohne ist 5 s lang unter dem Objekt gewesen. Zeitstempel (min:sek) {time.strftime('%M:%S', current_time)}"
-                self.environment_active = False
-                return True, Grund_Terminated
-            
-            Grund_Terminated = None
-            
-            return False, Grund_Terminated
+                #Wenn die Drohne im sweet spot ist (bezogen auf Sensor vorne, Sensor und seit 5 sekunden still ist, beenden!
+                if self.still_time >= 5:
+                    current_time = time.localtime()
+                    Grund_Terminated = f"Drohne ist 5 s lang unter dem Objekt gewesen. Zeitstempel (min:sek) {time.strftime('%M:%S', current_time)}"
+                    self.environment_active = False
+                    return True, Grund_Terminated
+                
+                Grund_Terminated = None
+                
+                return False, Grund_Terminated
         
         except Exception as e:
             self.logger.error(f"Error in _computeTerminated: {e}")
