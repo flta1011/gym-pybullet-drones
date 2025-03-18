@@ -22,7 +22,7 @@ import argparse
 import gymnasium as gym
 import numpy as np
 import torch
-from stable_baselines3 import PPO, DQN
+from stable_baselines3 import PPO, DQN, SAC
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from stable_baselines3.common.evaluation import evaluate_policy
@@ -48,22 +48,46 @@ DEFAULT_ADVANCED_STATUS_PLOT = True
 DEFAULT_GUI_TEST = False
 
 DEFAULT_USE_PRETRAINED_MODEL = False
+DEFAULT_USE_PRETRAINED_MODEL = False
 
-DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/results/durchgelaufen-DQN/final_model.zip'
+#DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/results/durchgelaufen-DQN/final_model.zip'
+DEFAULT_PRETRAINED_MODEL_PATH = '/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/results/save-03.07.2025_02.23.46/best_model.zip'
 
 DEFAULT_EVAL_FREQ = 3*1e4
 DEFAULT_EVAL_EPISODES = 1
 
-DEFAULT_TRAIN_TIMESTEPS = 5*1e5 # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
-DEFAULT_TARGET_REWARD = 200000
-DEFAULT_TARGET_POSITION = np.array([1.8, 1.8, 1.0])
+DEFAULT_TRAIN_TIMESTEPS = 10*1e5 # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
+DEFAULT_TARGET_REWARD = 99999999999999
+
+
+file_path = 'gym_pybullet_drones/examples/MAZE_TRAINING/Maze_init_target.yaml'
+def loadyaml_(file_path):
+    with open(file_path, 'r') as file:
+        return yaml.safe_load(file)
+
+Target_Start_Values = loadyaml_(file_path)
+
+
+
+# Initialisieren Sie das Dictionary, um die Werte zu speichern
+INIT_XYZS = {}
+DEFAULT_TARGET_POSITION = {}
+#INIT_RPYS = {}
+
+# Iterieren Sie über die Maps und speichern Sie die Werte im Dictionary
+for map_name, map_values in Target_Start_Values.items():
+        INIT_XYZS[map_name] = map_values['initial_xyzs'],
+        DEFAULT_TARGET_POSITION[map_name] = map_values['target_position'],
+        #INIT_RPYS = map_values['initial_rpys']
+
 
 DEFAULT_RECORD_VIDEO = False
 DEFAULT_OUTPUT_FOLDER = 'results' 
 DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
-DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10 # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
+DEFAULT_EPISODE_LEN_SEC= 30*60
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 
 DEFAULT_OBS = ObservationType('kin') # 'kin' or 'rgb'
@@ -80,11 +104,11 @@ DEFAULT_ALTITUDE = 0.5
 Y_Stern_eigentlich_X = 55
 X_Stern_eigentlich_Y = 55
 
-INIT_XYZS = np.array([
-                          [Y_Stern_eigentlich_X*0.05, X_Stern_eigentlich_Y*0.05, DEFAULT_ALTITUDE],
-                          ])
+# DEFAULT_TARGET_POSITION = np.array([1.8, 1.8, 1.0])
 
-DEFAULT_TARGET_POSITION = np.array([30*0.05, 40*0.05, 1.0])
+# INIT_XYZS = np.array([
+#                           [3*0.05, 4*0.05, DEFAULT_ALTITUDE],
+#                           ])
                           
                           
 INIT_RPYS = np.array([
@@ -93,9 +117,7 @@ INIT_RPYS = np.array([
 
 
 
-
-
-def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DEFAULT_GUI_TRAIN, gui_Test=DEFAULT_GUI_TEST, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO, local=True, pyb_freq=DEFAULT_PYB_FREQ, ctrl_freq=DEFAULT_CTRL_FREQ, user_debug_gui=DEFAULT_USER_DEBUG_GUI, reward_and_action_change_freq=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ, drone_model=DEFAULT_DRONE_MODEL, advanced_status_plot=DEFAULT_ADVANCED_STATUS_PLOT, target_position=DEFAULT_TARGET_POSITION):
+def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DEFAULT_GUI_TRAIN, gui_Test=DEFAULT_GUI_TEST, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO, local=True, pyb_freq=DEFAULT_PYB_FREQ, ctrl_freq=DEFAULT_CTRL_FREQ, user_debug_gui=DEFAULT_USER_DEBUG_GUI, reward_and_action_change_freq=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ, drone_model=DEFAULT_DRONE_MODEL, advanced_status_plot=DEFAULT_ADVANCED_STATUS_PLOT, target_position=DEFAULT_TARGET_POSITION, EPISODE_LEN_SEC=DEFAULT_EPISODE_LEN_SEC):
 
     filename = os.path.join(output_folder, 'save-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
     if not os.path.exists(filename):
@@ -145,11 +167,11 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
     #### Check the environment's spaces ########################
     print('[INFO] Action space:', train_env.action_space)
     print('[INFO] Observation space:', train_env.observation_space)
-
+    #NOTE - FIX THE ACTION SPACE
     #### Load existing model or create new one ###################
     if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
         print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
-        model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
+        model = PPO.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
     else:
         print("[INFO] Creating new model with CNN-DQN with custom feature extractor")
         # model = PPO('MlpPolicy',
@@ -330,6 +352,7 @@ if __name__ == '__main__':
     parser.add_argument('--user_debug_gui',          default=DEFAULT_USER_DEBUG_GUI,    type=str2bool,           help='set to True if you want to see the debug GUI, only for showing the frame in training!(default: False)', metavar='')
     parser.add_argument('--advanced_status_plot',          default=DEFAULT_ADVANCED_STATUS_PLOT,    type=str2bool,           help='set to True if you want to see the advanced status plot, only for showing the frame in training!(default: False)', metavar='')
     parser.add_argument('--target_position',          default=DEFAULT_TARGET_POSITION,    type=str,           help='set to True if you want to see the advanced status plot, only for showing the frame in training!(default: False)', metavar='')
+    parser.add_argument('--EPISODE_LEN_SEC',          default=DEFAULT_EPISODE_LEN_SEC,    type=int,           help='set to True if you want to see the advanced status plot, only for showing the frame in training!(default: False)', metavar='')
     ARGS = parser.parse_args()
 
     run(**vars(ARGS))

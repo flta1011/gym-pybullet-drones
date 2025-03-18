@@ -126,9 +126,13 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         self.DW_COEFF_1, \
         self.DW_COEFF_2, \
         self.DW_COEFF_3 = self._parseURDFParameters()
+        #NOTE - Maze Anzahl Wechsel
         self.Maze_number = 1
         self.New_Maze_number = 20
         self.New_Maze_number_counter = 0
+        # The random number to generate the init and target position
+        self.random_number_Start = 1
+        self.random_number_Target = 2
         print("[INFO] BaseAviary.__init__() loaded parameters from the drone's .urdf:\n[INFO] m {:f}, L {:f},\n[INFO] ixx {:f}, iyy {:f}, izz {:f},\n[INFO] kf {:f}, km {:f},\n[INFO] t2w {:f}, max_speed_kmh {:f},\n[INFO] gnd_eff_coeff {:f}, prop_radius {:f},\n[INFO] drag_xy_coeff {:f}, drag_z_coeff {:f},\n[INFO] dw_coeff_1 {:f}, dw_coeff_2 {:f}, dw_coeff_3 {:f}".format(
             self.M, self.L, self.J[0,0], self.J[1,1], self.J[2,2], self.KF, self.KM, self.THRUST2WEIGHT_RATIO, self.MAX_SPEED_KMH, self.GND_EFF_COEFF, self.PROP_RADIUS, self.DRAG_COEFF[0], self.DRAG_COEFF[2], self.DW_COEFF_1, self.DW_COEFF_2, self.DW_COEFF_3))
         #### Compute constants #####################################
@@ -336,7 +340,12 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         #### Reset the simulation ##################################
 
         if  self.New_Maze_number_counter == self.New_Maze_number:
-            self.Maze_number = np.random.randint(1, 21)
+            #self.Maze_number = np.random.randint(1, 20)
+            # solang nicht alle csv datei erstellt dann ändern auf 20
+            # Erstellen Sie eine Liste der zulässigen Zahlen
+
+            # Wählen Sie eine Zufallszahl aus der Liste der zulässigen Zahlen
+            self.Maze_number = np.random.choice((1, 20))
             print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
             print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
             print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
@@ -460,13 +469,13 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         # Lokale Koordinaten auf der Drohne
         #Für die Maze-Trainings-Umgebung 8 Möglichkeiten
         action_to_movement_direction_local = {
-            0: np.array([[0, 0, 0, 0.3, 0]]), # Fly 0° (Stay)
-            1: np.array([[1, 0, 0, 0.3, 0]]), # Fly 90° (Forward)
-            2: np.array([[-1, 0, 0, 0.3, 0]]), # Fly 180° (Backward)
-            3: np.array([[0, 1, 0, 0.3, 0]]), # Fly 90° (Left)
-            4: np.array([[0, -1, 0, 0.3, 0]]), # Fly 270° (Right)
-            5: np.array([[0, 0, 0, 0.3, 1/8*np.pi]]), # 45° Left-Turn # NOTE - Tests mit 1/36*np.pi waren nicht so gut, da die Drohne scheinbar nicht verstanden hat, dass bei einer Drehung vorwärtsfliegen bedeutet
-            6: np.array([[0, 0, 0, 0.3, -1/8*np.pi]]), # 45° Right-Turn # NOTE - Ausgesetzt für Testzweicke 28.02.25
+            0: np.array([[0, 0, 0, 0.5, 0]]), # Fly 0° (Stay)
+            1: np.array([[1, 0, 0, 0.5, 0]]), # Fly 90° (Forward)
+            2: np.array([[-1, 0, 0, 0.5, 0]]), # Fly 180° (Backward)
+            3: np.array([[0, 1, 0, 0.5, 0]]), # Fly 90° (Left)
+            4: np.array([[0, -1, 0, 0.5, 0]]), # Fly 270° (Right)
+            5: np.array([[0, 0, 0, 0.5, 1/72*np.pi]]), # 45° Left-Turn # NOTE - Tests mit 1/36*np.pi waren nicht so gut, da die Drohne scheinbar nicht verstanden hat, dass bei einer Drehung vorwärtsfliegen bedeutet
+            6: np.array([[0, 0, 0, 0.5, -1/72*np.pi]]), # 45° Right-Turn # NOTE - Ausgesetzt für Testzweicke 28.02.25
             }
         
         
@@ -691,8 +700,8 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
             
         
         #### Prepare the return values #############################
-        obs = self._computeObs() # Erstelle die Beobachtung aus der SLAM Map
-        reward = self._computeReward(self.Maze_number) # Erstelle den Reward aus der SLAM Map
+        obs = self._computeObs()
+        reward = self._computeReward(self.Maze_number, self.random_number_Start, self.random_number_Target)
         terminated, Grund_Terminated = self._computeTerminated()
         truncated, Grund_Truncated = self._computeTruncated()
         info = self._computeInfo()
@@ -729,12 +738,14 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
             if truncated:
                 #Zusammenfassung Trainingslauf
                 print(f"Zusammenfassung Trainingslauf Truncated (Grund: {Grund_Truncated}):")
-                print(f"Observations: x,y,yaw: {state[0]:.3f}, {state[1]:.3f}, {state[9]:.3f}, RayFront/Back: {state[21]:.3f}, {state[22]:.3f}, RayLeft/Right: {state[23]:.3f}, {state[24]:.3f}, RayUp: {state[25]:.3f}")
+                # Remove the redundant print(obs[0]) line
+                print(f"Observations: x,y,yaw: {obs[0]:.3f}, {obs[1]:.3f}, {obs[2]:.3f}, RayFront/Back: {obs[3]:.1f}, {obs[4]:.1f}, RayLeft/Right: {obs[5]:.1f}, {obs[6]:.1f}, RayUp: {obs[7]:.1f}")
                 print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
             if terminated:
                 print(f"Zusammenfassung Trainingslauf Terminated (Grund: {Grund_Terminated}):")
-                print(f"Observations: x,y,yaw: {state[0]:.3f}, {state[1]:.3f}, {state[9]:.3f}, RayFront/Back: {state[21]:.3f}, {state[22]:.3f}, RayLeft/Right: {state[23]:.3f}, {state[24]:.3f}, RayUp: {state[25]:.3f}")
+                print(f"Observations: x,y,yaw: {obs[0]:.3f}, {obs[1]:.3f}, {obs[2]:.3f}, RayFront/Back: {obs[3]:.1f}, {obs[4]:.1f}, RayLeft/Right: {obs[5]:.1f}, {obs[6]:.1f}, RayUp: {obs[7]:.1f}")
                 print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
+
         
         
         #nachfolgendes war nur zum Debugging der getDroneStateVector Funktion genutzt worden
@@ -923,8 +934,27 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         #### Load ground plane, drone and obstacles models #########
         self.PLANE_ID = p.loadURDF("plane.urdf", physicsClientId=self.CLIENT)
 
+        if  self.New_Maze_number_counter == self.New_Maze_number:
+            #self.Maze_number = np.random.randint(1, 21)
+            # solang nicht alle csv datei erstellt dann ändern auf 21
+            while True:
+                self.random_number_Start = np.random.randint(0, 10)
+                if self.random_number_Start != self.random_number_Target:
+                    break
+
+            Start_Position_swapped = [0,0,0.5] #NOTE - TARGET POSITION FIX
+            Start_Position =  self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0:2]
+            Start_Position_swapped[1] = Start_Position[0]
+            Start_Position_swapped[0] = Start_Position[1]
+        else:
+            Start_Position_swapped = [0,0,0.5]
+            Start_Position =  self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0:2]
+            Start_Position_swapped[1] = Start_Position[0]
+            Start_Position_swapped[0] = Start_Position[1]
+
+        #print(f"Start_Position_swapped: {Start_Position_swapped}")
         self.DRONE_IDS = np.array([p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/'+self.URDF),
-                                              self.INIT_XYZS[i,:],
+                                              Start_Position_swapped,
                                               p.getQuaternionFromEuler(self.INIT_RPYS[i,:]),
                                               flags = p.URDF_USE_INERTIA_FROM_FILE,
                                               physicsClientId=self.CLIENT
@@ -1465,15 +1495,35 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         These obstacles are loaded from standard URDF files included in Bullet.
 
         """
+        if  self.New_Maze_number_counter == self.New_Maze_number:
+            #self.Maze_number = np.random.randint(1, 21)
+            # solang nicht alle csv datei erstellt dann ändern auf 21
+            while True:
+                self.random_number_Target = np.random.randint(0, 10)
+                if self.random_number_Target != self.random_number_Start:
+                    break
+
+            targetPosition_swapped = [0,0,1] #NOTE - TARGET POSITION FIX
+            targetPosition = self.TARGET_POSITION[f"map{self.Maze_number}"][0][self.random_number_Target][0:2]
+            targetPosition_swapped[1] = targetPosition[0]
+            targetPosition_swapped[0] = targetPosition[1]
+        else:
+            targetPosition_swapped = [0,0,1] #NOTE - TARGET POSITION FIX
+            targetPosition = self.TARGET_POSITION[f"map{self.Maze_number}"][0][self.random_number_Target][0:2]
+            targetPosition_swapped[1] = targetPosition[0]
+            targetPosition_swapped[0] = targetPosition[1]
+
+        #print(f"Target_Position_swapped: {targetPosition_swapped}")
+
+
         #p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/train_square.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
         p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', f'assets/maze/map_{self.Maze_number}.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
         
         p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/target.urdf'), 
-                  self.TARGET_POSITION, # x,y,z position
+                  targetPosition_swapped, # x,y,z position
                   p.getQuaternionFromEuler([0, 0, 0]), # rotation
                   physicsClientId=self.CLIENT,
                   useFixedBase=True)
-            
         #Wände mit Variablen.. läuft aber irgendwie nicht
         #p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/train_quader.urdf'), physicsClientId=self.CLIENT)
         
