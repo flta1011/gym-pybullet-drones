@@ -713,6 +713,8 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         self.timestamp_actual = self.step_counter * self.PYB_TIMESTEP  # Use simulation time instead of real time
         if reward is not None:
             self.RewardCounterActualTrainRun += reward
+            
+        # 19.3.25: auskommentiert, da das ganze Ding rießig wird :0    
         self.List_Of_Tuples_Of_Reward_And_Action.append((action[0][0], reward))
             
         # ANCHOR - Debugging-Plots STEP
@@ -1519,11 +1521,12 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         #p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/train_square.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
         p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', f'assets/maze/map_{self.Maze_number}.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
         
-        p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/target.urdf'), 
-                  targetPosition_swapped, # x,y,z position
-                  p.getQuaternionFromEuler([0, 0, 0]), # rotation
-                  physicsClientId=self.CLIENT,
-                  useFixedBase=True)
+        # 19.3.25: kein Target mehr, dami das ERkunden gelernt wird und es gar nicht um das Ziel geht --> Finden anstatt hinfliegen!
+        # p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/target.urdf'), 
+        #           targetPosition_swapped, # x,y,z position
+        #           p.getQuaternionFromEuler([0, 0, 0]), # rotation
+        #           physicsClientId=self.CLIENT,
+        #           useFixedBase=True)
         #Wände mit Variablen.. läuft aber irgendwie nicht
         #p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/train_quader.urdf'), physicsClientId=self.CLIENT)
         

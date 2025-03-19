@@ -43,10 +43,12 @@ from gym_pybullet_drones.examples.MAZE_TRAINING.custom_CNN_V0_0 import CustomCNN
 
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
 DEFAULT_GUI_TRAIN = True
-DEFAULT_USER_DEBUG_GUI = True
+DEFAULT_GUI_TEST = False
+
+DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_ADVANCED_STATUS_PLOT = False
 
-DEFAULT_GUI_TEST = False
+
 
 DEFAULT_USE_PRETRAINED_MODEL = False
 DEFAULT_USE_PRETRAINED_MODEL = False
@@ -92,7 +94,7 @@ DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
 DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10 # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
-DEFAULT_EPISODE_LEN_SEC= 10*60 # normal: 10*60 , aber 5 für Debugging
+DEFAULT_EPISODE_LEN_SEC= 15*60 # normal: 10*60 , aber 5 für Debugging
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 
 DEFAULT_OBS = ObservationType('kin') # 'kin' or 'rgb'
@@ -181,6 +183,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
             features_extractor_class=CustomCNNFeatureExtractor,
             features_extractor_kwargs=dict(features_dim=512)
         )
+       
         model = DQN("CnnPolicy", 
                     train_env, 
                     policy_kwargs=policy_kwargs, 
@@ -190,6 +193,15 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
                     verbose=1, 
                     seed=42,
                     buffer_size=5000)  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
+        
+        # NOTE - Try with Standard CNN-Feature Extractor --> Bug mit Schwarzem Refresh in der pybuellet GUI kommt auch hier -> leigt nicht am Modell!
+        # model = DQN("MlpPolicy", 
+        #             train_env,
+        #             learning_rate=0.001,
+        #             verbose=1, 
+        #             seed=42,
+        #             buffer_size=5000,
+        #             )
 
     #### Target cumulative rewards (problem-dependent) ##########
     target_reward = DEFAULT_TARGET_REWARD
