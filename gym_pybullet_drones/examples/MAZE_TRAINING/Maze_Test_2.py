@@ -1,9 +1,11 @@
 import os
-import numpy as np
-import matplotlib.pyplot as plt
 import random
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
+
+import matplotlib.pyplot as plt
+import numpy as np
+
 
 class MazeGenerator_self_made_maps:
 
@@ -16,17 +18,17 @@ class MazeGenerator_self_made_maps:
 
     def _generate_from_csv(self, filename):
         """Generate a maze from a CSV file."""
-        self.grid = np.genfromtxt(filename, delimiter=',', dtype=int)
+        self.grid = np.genfromtxt(filename, delimiter=",", dtype=int)
 
     def visualize(self, ax=None):
         """Visualize the maze using matplotlib."""
         if ax is None:
             fig, ax = plt.subplots()
-            ax.imshow(self.grid, cmap='binary')
+            ax.imshow(self.grid, cmap="binary")
             plt.show()
         else:
-            ax.imshow(self.grid, cmap='binary')
-    
+            ax.imshow(self.grid, cmap="binary")
+
     def generate_urdf_from_maze(self, maze_height, filename="gym_pybullet_drones/assets/maze/maze_single_wall_link.urdf"):
         """Generate a URDF file from the maze."""
 
@@ -70,13 +72,13 @@ class MazeGenerator_self_made_maps:
                 if self.grid[y, x] == 1:
                     wall_size = f"{self.discretization} {self.discretization} {maze_height}"
                     wall_xyz = f"{x * self.discretization + self.discretization / 2} {y * self.discretization + self.discretization / 2} {maze_height / 2}"
-                    
+
                     # Add visual geometry
                     visual = ET.SubElement(wall_link, "visual")
                     geometry = ET.SubElement(visual, "geometry")
                     box = ET.SubElement(geometry, "box", size=wall_size)
                     origin = ET.SubElement(visual, "origin", xyz=wall_xyz, rpy="0 0 0")
-                    
+
                     # Add collision geometry
                     collision = ET.SubElement(wall_link, "collision")
                     collision_geometry = ET.SubElement(collision, "geometry")
@@ -95,8 +97,8 @@ class MazeGenerator_self_made_maps:
 
 
 if __name__ == "__main__":
-    csv_directory = "gym-pybullet-drones/gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps"  # Replace with the path to your CSV files
-    urdf_directory = "gym-pybullet-drones/gym_pybullet_drones/assets/maze"  # Directory to save URDF files
+    csv_directory = "gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps"  # Replace with the path to your CSV files
+    urdf_directory = "gym-pybullet-drones/gym_pybullet_drones/assets/maze/20250319"  # Directory to save URDF files
 
     if not os.path.exists(urdf_directory):
         os.makedirs(urdf_directory)
@@ -109,5 +111,5 @@ if __name__ == "__main__":
 
             maze = MazeGenerator_self_made_maps()  # Optional: set a seed for reproducibility
             maze._generate_from_csv(csv_path)
-            maze.visualize()
+            # maze.visualize()
             maze.generate_urdf_from_maze(maze_height=1, filename=urdf_path)

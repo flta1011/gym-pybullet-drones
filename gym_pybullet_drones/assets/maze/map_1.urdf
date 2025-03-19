@@ -5,7 +5,8 @@
       <mass value="1"/>
       <inertia ixx="1" iyy="1" izz="1"/>
     </inertial>
-  </link>  <link name="floor">
+  </link>
+  <link name="floor">
     <visual>
       <geometry>
         <box size="3.0 3.0 0.05"/>
@@ -35,10 +36,6 @@
       </geometry>
       <origin xyz="0.025 0.025 0.5" rpy="0 0 0"/>
     </visual>
-    <inertial>
-      <mass value="10"/> <!-- Gesamtmasse der Wände -->
-      <inertia ixx="10" iyy="10" izz="10"/> <!-- Gesamtträgheitsmomente der Wände -->
-    </inertial>
     <collision>
       <geometry>
         <box size="0.05 0.05 1"/>
@@ -4557,6 +4554,10 @@
       </geometry>
       <origin xyz="2.975 2.975 0.5" rpy="0 0 0"/>
     </collision>
+    <inertial>
+      <mass value="377"/>
+      <inertia ixx="31.495208333333135" iyy="31.495208333333135" izz="0.15708333333333357"/>
+    </inertial>
   </link>
   <joint name="walls_joint" type="fixed">
     <parent link="base_link"/>
