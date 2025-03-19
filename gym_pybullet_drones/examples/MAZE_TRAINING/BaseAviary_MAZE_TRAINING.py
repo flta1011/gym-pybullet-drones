@@ -339,7 +339,9 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
             # Erstellen Sie eine Liste der zulässigen Zahlen
 
             # Wählen Sie eine Zufallszahl aus der Liste der zulässigen Zahlen
-            self.Maze_number = np.random.choice((1, 20))
+            #self.Maze_number = np.random.choice((1, 20))
+            self.Maze_number = 0
+            
             print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
             print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
             print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
@@ -909,12 +911,18 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
                     break
 
             Start_Position_swapped = [0,0,0.5] #NOTE - TARGET POSITION FIX
-            Start_Position =  self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0:2]
+            if self.Maze_number == 0:
+                Start_Position =  self.INIT_XYZS[f"map{self.Maze_number+1}"][0][self.random_number_Start][0:2]
+            else:
+                Start_Position =  self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0:2]
             Start_Position_swapped[1] = Start_Position[0]
             Start_Position_swapped[0] = Start_Position[1]
         else:
             Start_Position_swapped = [0,0,0.5]
-            Start_Position =  self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0:2]
+            if self.Maze_number == 0:
+                Start_Position =  self.INIT_XYZS[f"map{self.Maze_number+1}"][0][self.random_number_Start][0:2]
+            else:
+                Start_Position =  self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0:2]
             Start_Position_swapped[1] = Start_Position[0]
             Start_Position_swapped[0] = Start_Position[1]
 
@@ -1459,12 +1467,18 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
                     break
 
             targetPosition_swapped = [0,0,1] #NOTE - TARGET POSITION FIX
-            targetPosition = self.TARGET_POSITION[f"map{self.Maze_number}"][0][self.random_number_Target][0:2]
+            if self.Maze_number == 0:
+                targetPosition = self.TARGET_POSITION[f"map{self.Maze_number+1}"][0][self.random_number_Target][0:2]
+            else:
+                targetPosition = self.TARGET_POSITION[f"map{self.Maze_number}"][0][self.random_number_Target][0:2]
             targetPosition_swapped[1] = targetPosition[0]
             targetPosition_swapped[0] = targetPosition[1]
         else:
             targetPosition_swapped = [0,0,1] #NOTE - TARGET POSITION FIX
-            targetPosition = self.TARGET_POSITION[f"map{self.Maze_number}"][0][self.random_number_Target][0:2]
+            if self.Maze_number == 0:
+                targetPosition = self.TARGET_POSITION[f"map{self.Maze_number+1}"][0][self.random_number_Target][0:2]
+            else:
+                targetPosition = self.TARGET_POSITION[f"map{self.Maze_number}"][0][self.random_number_Target][0:2]
             targetPosition_swapped[1] = targetPosition[0]
             targetPosition_swapped[0] = targetPosition[1]
 
@@ -1474,11 +1488,12 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         #p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/train_square.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
         p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', f'assets/maze/map_{self.Maze_number}.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
         
-        p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/target.urdf'), 
-                  targetPosition_swapped, # x,y,z position
-                  p.getQuaternionFromEuler([0, 0, 0]), # rotation
-                  physicsClientId=self.CLIENT,
-                  useFixedBase=True)
+        #NOTE - 19.3.2025: TARGET ENTFERNT
+        # p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/target.urdf'), 
+        #           targetPosition_swapped, # x,y,z position
+        #           p.getQuaternionFromEuler([0, 0, 0]), # rotation
+        #           physicsClientId=self.CLIENT,
+        #           useFixedBase=True)
         #Wände mit Variablen.. läuft aber irgendwie nicht
         #p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/train_quader.urdf'), physicsClientId=self.CLIENT)
         

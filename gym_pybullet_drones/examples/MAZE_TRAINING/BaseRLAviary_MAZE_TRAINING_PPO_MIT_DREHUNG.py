@@ -49,7 +49,8 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
                  advanced_status_plot=False,
                  target_position=np.array([0, 0, 0]),
                  Danger_Threshold_Wall=0.15,
-                 EPISODE_LEN_SEC=10*60
+                 EPISODE_LEN_SEC=10*60,
+                 dash_active=True
                  ):
         """Initialization of a generic single and multi-agent RL environment.
 
@@ -113,6 +114,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         # Initialize reward and best_way map
         self.reward_map = np.zeros((60, 60), dtype=int)
         self.best_way_map = np.zeros((60, 60), dtype=int)
+        self.DASH_ACTIVE = dash_active
         
         
         
@@ -145,88 +147,90 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         if  act == ActionType.VEL:
             self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000/3600)
         
-        self.app = dash.Dash(__name__)
-        self.app.layout = html.Div([
-            dcc.Graph(id='live-map'),
-            dcc.Graph(id='reward-bar-chart'),      # <--- Neues Balkendiagramm
-            html.Div(id='current-total-reward'),   # <--- Zeigt den letzten Reward als Text
-            dcc.Interval(
-                id='interval-component',
-                interval=100,  # Aktualisierung in ms
-                n_intervals=0
+        
+        if self.DASH_ACTIVE:
+            self.app = dash.Dash(__name__)
+            self.app.layout = html.Div([
+                dcc.Graph(id='live-map'),
+                dcc.Graph(id='reward-bar-chart'),      # <--- Neues Balkendiagramm
+                html.Div(id='current-total-reward'),   # <--- Zeigt den letzten Reward als Text
+                dcc.Interval(
+                    id='interval-component',
+                    interval=100,  # Aktualisierung in ms
+                    n_intervals=0
+                )
+            ])
+
+            @self.app.callback(
+                [Output('live-map', 'figure'),
+                Output('reward-bar-chart', 'figure'),
+                Output('current-total-reward', 'children')],
+                Input('interval-component', 'n_intervals')
             )
-        ])
+            def update_graph(n):
+                # ... existierender Code ...
+                fig = make_subplots(
+                    rows=1, cols=2,
+                    subplot_titles=('Reward Map', 'Best Way Map')
+                )
+                fig.add_trace(
+                    go.Heatmap(
+                        z=self.reward_map,
+                        colorscale='Viridis',
+                        showscale=True,
+                        name='Reward Map'
+                    ),
+                    row=1, col=1
+                )
+                fig.add_trace(
+                    go.Heatmap(
+                        z=self.best_way_map,
+                        colorscale='Viridis',
+                        showscale=True,
+                        name='Best Way Map'
+                    ),
+                    row=1, col=2
+                )
+                fig.update_layout(
+                    height=600,
+                    title_text="Maze Training Visualization",
+                    showlegend=True
+                )
 
-        @self.app.callback(
-            [Output('live-map', 'figure'),
-             Output('reward-bar-chart', 'figure'),
-             Output('current-total-reward', 'children')],
-            Input('interval-component', 'n_intervals')
-        )
-        def update_graph(n):
-            # ... existierender Code ...
-            fig = make_subplots(
-                rows=1, cols=2,
-                subplot_titles=('Reward Map', 'Best Way Map')
-            )
-            fig.add_trace(
-                go.Heatmap(
-                    z=self.reward_map,
-                    colorscale='Viridis',
-                    showscale=True,
-                    name='Reward Map'
-                ),
-                row=1, col=1
-            )
-            fig.add_trace(
-                go.Heatmap(
-                    z=self.best_way_map,
-                    colorscale='Viridis',
-                    showscale=True,
-                    name='Best Way Map'
-                ),
-                row=1, col=2
-            )
-            fig.update_layout(
-                height=600,
-                title_text="Maze Training Visualization",
-                showlegend=True
-            )
+                bar_chart = go.Figure()
+                # zeige die zuletzt gespeicherten Reward-Komponenten
+                bar_chart.add_trace(go.Bar(
+                    x=list(self.reward_components.keys()),
+                    y=list(self.reward_components.values()),
+                    marker_color='royalblue'
+                ))
+                bar_chart.update_layout(
+                    title_text="Aktuelle Reward-Komponenten",
+                    xaxis_title="Reward-Typ",
+                    yaxis_title="Reward-Wert"
+                )
 
-            bar_chart = go.Figure()
-            # zeige die zuletzt gespeicherten Reward-Komponenten
-            bar_chart.add_trace(go.Bar(
-                x=list(self.reward_components.keys()),
-                y=list(self.reward_components.values()),
-                marker_color='royalblue'
-            ))
-            bar_chart.update_layout(
-                title_text="Aktuelle Reward-Komponenten",
-                xaxis_title="Reward-Typ",
-                yaxis_title="Reward-Wert"
-            )
+                current_reward_text = f"Letzter Reward: {self.last_total_reward:.2f}"
 
-            current_reward_text = f"Letzter Reward: {self.last_total_reward:.2f}"
+                return fig, bar_chart, current_reward_text
 
-            return fig, bar_chart, current_reward_text
+            # Start the Dash server but redirect only the dash logs
+            def run_dash_app():
+                logging.getLogger('werkzeug').setLevel(logging.ERROR)
+                self.app.run_server(debug=False, port=self.port)
 
-        # Start the Dash server but redirect only the dash logs
-        def run_dash_app():
-            logging.getLogger('werkzeug').setLevel(logging.ERROR)
-            self.app.run_server(debug=False, port=self.port)
+            self.dashboard_thread = Thread(target=run_dash_app, daemon=True)
+            self.dashboard_thread.start()
 
-        self.dashboard_thread = Thread(target=run_dash_app, daemon=True)
-        self.dashboard_thread.start()
+            # Open web browser after a short delay to ensure server is running
+            def open_browser():
+                time.sleep(1)  # Wait for server to start
+                webbrowser.open(f'http://localhost:{self.port}')
 
-        # Open web browser after a short delay to ensure server is running
-        def open_browser():
-            time.sleep(1)  # Wait for server to start
-            webbrowser.open(f'http://localhost:{self.port}')
-
-        Thread(target=open_browser, daemon=True).start()
-                
-    ################################################################################
-    
+            Thread(target=open_browser, daemon=True).start()
+                    
+            ################################################################################
+        
 
     
     ################################################################################
@@ -498,8 +502,12 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             # Rotate the reward map 90° mathematically negative
             #self.reward_map = np.rot90(self.reward_map, k=4)
             
-            Start_position = self.INIT_XYZS[f"map{Maze_Number}"][0][random_number_Start]
-            End_Position = self.TARGET_POSITION[f"map{Maze_Number}"][0][random_number_Target]
+            if Maze_Number == 0:
+                Start_position = self.INIT_XYZS[f"map{Maze_Number+1}"][0][random_number_Start]
+                End_Position = self.TARGET_POSITION[f"map{Maze_Number+1}"][0][random_number_Target]
+            else:
+                Start_position = self.INIT_XYZS[f"map{Maze_Number}"][0][random_number_Start]
+                End_Position = self.TARGET_POSITION[f"map{Maze_Number}"][0][random_number_Target]
 
             # print (Start_position, "Start-REward")
             # print (End_Position, "Target-reward")
