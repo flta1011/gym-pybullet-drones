@@ -36,11 +36,12 @@ class SimpleSlam:
         # # -1: unbekannt, 0: frei, 1: Wand, 2: besucht (Sensor oben frei) 
         # # 0.2: unbekannt, 0.9: frei, 0.0: Wand, 0.5: besucht (Sensor oben frei) 
 
-
         
         self.occupancy_grid = 0.2 * np.ones((self.grid_size, self.grid_size)) 
         self.center = self.grid_size // 2 
         self.path = [] # speichert besuchte Zellen
+        self.DrohnePosition = []
+        self.Prev_DrohnePosition = []
         self.counter_free_space = 0
         
         
@@ -48,6 +49,8 @@ class SimpleSlam:
         """Reset the SLAM map to its initial state."""
         self.occupancy_grid = 0.2 * np.ones((self.grid_size, self.grid_size))
         self.path = []
+        self.DrohnePosition = []
+        self.Prev_DrohnePosition = []
         
     def world_to_grid(self, x, y):
         grid_x = int(self.center + x / self.resolution)
@@ -64,17 +67,20 @@ class SimpleSlam:
                                             'left': d_left, 'right': d_right, 'up': d_up }
         """
         x, y, _ = drone_pos
+
+        # Iterate through 5x5 grid centered on current position --> 3x3 grid
+
         grid_x, grid_y = self.world_to_grid(x, y)
-        self.path.append((grid_x, grid_y))
+        #self.path.append((grid_x, grid_y))
         # Markiere aktuelle Zelle als frei:
-        self.occupancy_grid[grid_x, grid_y] = 0.9
+        self.occupancy_grid[grid_x, grid_y] = 0.5
+        self.grid_x = grid_x
+        self.grid_y = grid_y    
         #self.counter_free_space += 1
         # Falls der "up"-Sensor keinen Treffer hat (z. B. Wert 9999), markiere als besucht:
         if 'up' in raycast_results and raycast_results['up'] == 9999:
             self.occupancy_grid[grid_x, grid_y] = 0.5
-
         
-
         # Definiere Richtungswinkel:
         angles = {
             'front': drone_yaw,
@@ -98,7 +104,22 @@ class SimpleSlam:
                 # Markiere den Endpunkt als Wand:
                 if 0 <= end_grid_x < self.grid_size and 0 <= end_grid_y < self.grid_size and self.occupancy_grid[end_grid_x, end_grid_y] != 0.9:
                     self.occupancy_grid[end_grid_x, end_grid_y] = 0.0
+        
+        self.Prev_DrohnePosition = self.DrohnePosition
+        self.DrohnePosition = []
 
+        for i in range(max(0, grid_x-2), min(160, grid_x+2)):
+            for j in range(max(0, grid_y-2), min(160, grid_y+2)):
+                self.path.append((i,j))
+                self.DrohnePosition.append((i,j))
+                if self.occupancy_grid[i, j] == 0.2:
+                    self.occupancy_grid[i, j] = 0.5
+                elif self.occupancy_grid[i, j] == 0.5:
+                    self.occupancy_grid[i, j] = 0.7
+                    
+        
+        
+        
     def get_line(self, x0, y0, x1, y1):
         """Berechnet Zellen entlang einer Linie (Bresenham-Algorithmus)."""
         cells = []
@@ -134,10 +155,22 @@ class SimpleSlam:
         plt.ioff() # Turn off interactive mode
         plt.figure(figsize=(6,6))
         plt.imshow(self.occupancy_grid.T, cmap='gray', origin='lower')
+        
+        if self.Prev_DrohnePosition:
+            prev_position = np.array(self.Prev_DrohnePosition)
+            plt.plot(prev_position[:, 0], prev_position[:, 1], 'r-', linewidth=2)
+            plt.plot(prev_position[-1, 0], prev_position[-1, 1], 'ro', markersize=5)
+
         if self.path:
             path = np.array(self.path)
             plt.plot(path[:, 0], path[:, 1], 'r-', linewidth=2)
             plt.plot(path[-1, 0], path[-1, 1], 'ro', markersize=5)
+
+        if self.DrohnePosition:
+            position = np.array(self.DrohnePosition)
+            plt.plot(position[:, 0], position[:, 1], 'g-', linewidth=2)
+            #plt.plot(position[-1, 0], position[-1, 1], 'go', markersize=5)
+            
         plt.colorbar(label='Occupancy (-1: unbekannt, 0: frei, 1: Wand, 2: besucht)')
         plt.title('SLAM Map')
         plt.xlabel('X (grid cells)')
@@ -147,9 +180,10 @@ class SimpleSlam:
         if not os.path.exists(self.OUTPUT_FOLDER):
             os.makedirs(self.OUTPUT_FOLDER)
         
-        # Save plot to file
-        # self.Latest_slam_map_path = os.path.join(self.OUTPUT_FOLDER, "latest_slam_map.png")
-        # plt.savefig(self.Latest_slam_map_path)
+        # Save plot to file with current date and time
+        #current_time = time.strftime("%Y%m%d-%H%M%S")
+        #self.Latest_slam_map_path = os.path.join(self.OUTPUT_FOLDER, f"slam_map_{current_time}.png")
+        #plt.savefig(self.Latest_slam_map_path)
         plt.close()
         plt.ion() # Turn interactive mode back on
 
@@ -660,6 +694,22 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             # Staple die 5 Kanäle zusammen: Shape = (5, grid_size, grid_size)
             obs = np.stack([slam_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel], axis=0)
             self.obs = obs # für Visualisierung in dem Dashboard
+            
+            # Save the SLAM map as an image
+            plt.imshow(slam_map, cmap='gray', origin='lower')
+            plt.colorbar(label='Occupancy')
+            plt.title('SLAM Map')
+            plt.xlabel('X (grid cells)')
+            plt.ylabel('Y (grid cells)')
+            output_folder = os.path.join(os.path.dirname(__file__), 'output_SLAM_MAP')
+            if not os.path.exists(output_folder):
+                os.makedirs(output_folder)
+            current_time = time.strftime("%Y%m%d-%H%M%S")
+            slam_map_path = os.path.join(output_folder, f"slam_map_{current_time}.png")
+            plt.savefig(slam_map_path)
+            plt.close()
+
+
 
             return obs
 
