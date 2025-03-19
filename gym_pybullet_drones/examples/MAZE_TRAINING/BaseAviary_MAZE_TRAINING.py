@@ -130,7 +130,7 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         self.DW_COEFF_2, \
         self.DW_COEFF_3 = self._parseURDFParameters()
         #NOTE - Maze Anzahl Wechsel
-        self.Maze_number = 1
+        self.Maze_number = 0
         self.New_Maze_number = 5
         self.New_Maze_number_counter = 0
         # The random number to generate the init and target position
