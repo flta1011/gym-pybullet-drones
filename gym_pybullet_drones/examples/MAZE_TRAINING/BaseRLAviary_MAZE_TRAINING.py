@@ -655,7 +655,6 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             yaw_cos_channel = np.full((self.grid_size, self.grid_size), np.cos(yaw), dtype=np.float32)
             
 
-
             # Staple die 5 Kanäle zusammen: Shape = (5, grid_size, grid_size)
             obs = np.stack([slam_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel], axis=0)
             self.obs = obs # für Visualisierung in dem Dashboard
@@ -881,8 +880,23 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
                 for i, row in enumerate(reader):
                     for j, value in enumerate(row):
                         if value == "1":
-                            self.reward_map[i, j] = 6 # Wand
+                            self.reward_map[j, i] = 6 # Wand
                             self.wall_pixel_counter += 1
+
+
+
+
+    
+            # with open(reward_map_file_path, 'r') as file:
+            #     reader = csv.reader(file)
+            #     for i, row in enumerate(reader):
+            #         for j, value in enumerate(row):
+            #             if value == "1":
+            #                 self.reward_map[j, i] = 6 # Wand
+
+
+
+                            
             # Mirror the reward map vertically
             #self.reward_map = np.flipud(self.reward_map)
             # Rotate the reward map 90° mathematically negative

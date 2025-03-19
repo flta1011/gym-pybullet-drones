@@ -44,7 +44,7 @@ from gym_pybullet_drones.examples.MAZE_TRAINING.custom_CNN_V0_0 import CustomCNN
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
 DEFAULT_GUI_TRAIN = True
 DEFAULT_USER_DEBUG_GUI = True
-DEFAULT_ADVANCED_STATUS_PLOT = True
+DEFAULT_ADVANCED_STATUS_PLOT = False
 
 DEFAULT_GUI_TEST = False
 
@@ -93,7 +93,7 @@ DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
 DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10 # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
-DEFAULT_EPISODE_LEN_SEC= 30*60
+DEFAULT_EPISODE_LEN_SEC= 0.3 # normal: 10*60 , aber 5 für Debugging
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 
 DEFAULT_OBS = ObservationType('kin') # 'kin' or 'rgb'
@@ -126,7 +126,8 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
                             ctrl_freq=ctrl_freq, # Ansatz: von 60 auf 10 reduzieren, damit die gewählte Action länger wirkt
                             reward_and_action_change_freq=reward_and_action_change_freq, # Ansatz: neu hinzugefügt, da die Step-Funktion vorher mit der ctrl_freq aufgerufen wurde, Problem war dann, dass bei hoher Frequenz die Raycasts keine Änderung hatten, dafür die Drohne aber sauber geflogen ist (60). Wenn der Wert niedriger war, hat es mit den Geschwindigkeiten und Actions besser gepasst, dafür ist die Drohne nicht sauber geflogen, weil die Ctrl-Frequenz für das erreichen der gewählten Action zu niedrig war (10/20).
                             act=ActionType.VEL,
-                            target_position=target_position
+                            target_position=target_position,
+                            EPISODE_LEN_SEC=EPISODE_LEN_SEC
                             ),
                         n_envs=1,
                         seed=0
@@ -146,7 +147,8 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
                             ctrl_freq=ctrl_freq,
                             reward_and_action_change_freq=reward_and_action_change_freq,
                             act=ActionType.VEL,
-                            target_position=target_position
+                            target_position=target_position,
+                            EPISODE_LEN_SEC=EPISODE_LEN_SEC
                             ),
                         n_envs=1,
                         seed=0

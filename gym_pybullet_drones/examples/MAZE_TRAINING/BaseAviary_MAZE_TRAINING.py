@@ -494,6 +494,8 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         
         # Get movement direction based on action
         input_action_local = action_to_movement_direction_local[actual_action_0_bis_8]
+
+    
         
         # New Function to check for Collision Danger and change the action if necessary
         self.action_change_because_of_Collision_Danger, action_with_or_without_Collision_Danger_correction = self._check_for_Collision_Danger(input_action_local)
@@ -729,24 +731,21 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         #     if terminated:
         #         print(f"Grund für Terminated: {Grund_Terminated}")
         #         print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
-  
-        
-            
-  
         
         #if self.GUI: #deaktiviert, damit der nachfolgende Plot immer kommt, auch wenn keine GUI eingeschaltet ist
-        if True:
-            if truncated:
-                #Zusammenfassung Trainingslauf
-                print(f"Zusammenfassung Trainingslauf Truncated (Grund: {Grund_Truncated}):")
-                # Remove the redundant print(obs[0]) line
-                print(f"Observations: x,y,yaw: {obs[0]:.3f}, {obs[1]:.3f}, {obs[2]:.3f}, RayFront/Back: {obs[3]:.1f}, {obs[4]:.1f}, RayLeft/Right: {obs[5]:.1f}, {obs[6]:.1f}, RayUp: {obs[7]:.1f}")
-                print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
-            if terminated:
-                print(f"Zusammenfassung Trainingslauf Terminated (Grund: {Grund_Terminated}):")
-                print(f"Observations: x,y,yaw: {obs[0]:.3f}, {obs[1]:.3f}, {obs[2]:.3f}, RayFront/Back: {obs[3]:.1f}, {obs[4]:.1f}, RayLeft/Right: {obs[5]:.1f}, {obs[6]:.1f}, RayUp: {obs[7]:.1f}")
-                print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
+        # if True:
+        #     if truncated:
+        #         #Zusammenfassung Trainingslauf
+        #         print(f"Zusammenfassung Trainingslauf Truncated (Grund: {Grund_Truncated}):")
+        #         # Remove the redundant print(obs[0]) line
 
+        #         print(f"Observations: x,y,yaw: {obs[1][0][0][0]:.3f}, {obs[2][0][0][0]:.3f}, {obs[3][0][0][0]:.1f}, {obs[4][0][0][0]:.1f}")                
+        #         print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
+        #     if terminated:
+        #         print(f"Zusammenfassung Trainingslauf Terminated (Grund: {Grund_Terminated}):")
+        #         print(f"Observations: x,y,yaw: {obs[0][0][0]:.3f}, {obs[1][0][0]:.3f}, {obs[2][0][0]:.3f}, RayFront/Back: {obs[3][0][0]:.1f}, {obs[4][0][0]:.1f}, RayLeft/Right: {obs[5][0][0]:.1f}, {obs[6][0][0]:.1f}, RayUp: {obs[7][0][0]:.1f}")
+        #         print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
+        
         
         
         #nachfolgendes war nur zum Debugging der getDroneStateVector Funktion genutzt worden
