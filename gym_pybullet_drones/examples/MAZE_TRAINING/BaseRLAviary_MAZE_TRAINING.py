@@ -213,27 +213,6 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             The type of action space (1 or 3D; RPMS, thurst and torques, waypoint or velocity with PID control; etc.)
 
         """
-        # Initialize SLAM before calling the parent constructor
-        self.slam = SimpleSlam(map_size=map_size_slam, resolution=resolution_slam)  # 10m x 10m map with 10cm resolution
-        self.grid_size = int(map_size_slam / resolution_slam) 
-        # Call the parent class constructor
-        super().__init__(drone_model=drone_model,
-                         num_drones=num_drones,
-                         neighbourhood_radius=neighbourhood_radius,
-                         initial_xyzs=initial_xyzs,
-                         initial_rpys=initial_rpys,
-                         physics=physics,
-                         pyb_freq=pyb_freq,
-                         ctrl_freq=ctrl_freq,
-                         reward_and_action_change_freq=reward_and_action_change_freq,
-                         gui=gui,
-                         record=record, 
-                         obstacles=True, # Add obstacles for RGB observations and/or FlyThruGate
-                         advanced_status_plot=advanced_status_plot,
-                         user_debug_gui=user_debug_gui, # Remove of RPM sliders from all single agent learning aviaries
-                         target_position=target_position,
-                         Danger_Threshold_Wall=Danger_Threshold_Wall
-                         )
 
         #self.environment_active = self.BaseAviary_MAZE_TRAINING.environment_active
 
@@ -278,6 +257,30 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         self.distance_10_step_ago = 0
         self.distance_50_step_ago = 0
         self.differnece_threshold = 0.05
+
+        # Initialize SLAM before calling the parent constructor
+        self.slam = SimpleSlam(map_size=map_size_slam, resolution=resolution_slam)  # 10m x 10m map with 10cm resolution
+        self.grid_size = int(map_size_slam / resolution_slam) 
+        # Call the parent class constructor
+        super().__init__(drone_model=drone_model,
+                         num_drones=num_drones,
+                         neighbourhood_radius=neighbourhood_radius,
+                         initial_xyzs=initial_xyzs,
+                         initial_rpys=initial_rpys,
+                         physics=physics,
+                         pyb_freq=pyb_freq,
+                         ctrl_freq=ctrl_freq,
+                         reward_and_action_change_freq=reward_and_action_change_freq,
+                         gui=gui,
+                         record=record, 
+                         obstacles=True, # Add obstacles for RGB observations and/or FlyThruGate
+                         advanced_status_plot=advanced_status_plot,
+                         user_debug_gui=user_debug_gui, # Remove of RPM sliders from all single agent learning aviaries
+                         target_position=target_position,
+                         Danger_Threshold_Wall=Danger_Threshold_Wall
+                         )
+
+        
         
         #### Create integrated controllers #########################
         os.environ['KMP_DUPLICATE_LIB_OK']='True'
@@ -944,7 +947,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             target_position = [End_Position[1]/0.05, End_Position[0]/0.05] # Zielpunkt der Drohne
             self.reward_map[int(target_position[0]), int(target_position[1])] = 5 # Zielpunkt
             
-            self._compute_potential_fields(initial_position, only_forces=False)
+            #self._compute_potential_fields(initial_position, only_forces=False)
             
             
             
@@ -1048,20 +1051,26 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             
             ###### 5. REWARD BASED ON POTENTIAL FIELDS ######
             # Calculate attraction and repulsion forces
-            F_att, F_rep = self._compute_potential_fields(state, only_forces=True)
-            F_total = F_att + F_rep
+            #F_att, F_rep = self._compute_potential_fields(state, only_forces=True)
+            # F_total = F_att + F_rep
 
-            # Calculate potential field reward
-            self.reward_components["potential_field_reward"] = np.linalg.norm(F_total)
+            # # Calculate potential field reward
+            # self.reward_components["potential_field_reward"] = np.linalg.norm(F_total)
 
             ###### COMPUTE TOTAL REWARD ######
+            # reward = (self.reward_components["collision_penalty"] +
+            #           self.reward_components["distance_reward"] #+
+            #           #self.reward_components["best_way_bonus"] +
+            #           self.reward_components["explore_bonus_new_field"] +
+            #           self.reward_components["Target_Hit_Reward"] #+
+            #           #self.reward_components["potential_field_reward"]
+            #           )
+
             reward = (self.reward_components["collision_penalty"] +
-                      self.reward_components["distance_reward"] +
-                      self.reward_components["best_way_bonus"] +
-                      self.reward_components["explore_bonus_new_field"] +
-                      self.reward_components["Target_Hit_Reward"] +
-                      self.reward_components["potential_field_reward"]
-                      )
+                    self.reward_components["distance_reward"] +
+                    self.reward_components["explore_bonus_new_field"] +
+                    self.reward_components["Target_Hit_Reward"]
+                    )
             
             # update the buffer
             self.last_total_reward = reward  # Save the last total reward for the dashboard
@@ -1087,7 +1096,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         except Exception as e:
             self.logger.error(f"Error in _computeReward: {e}")
             self.environment_active = False
-            return None
+            return 0
         
     ################################################################################
     

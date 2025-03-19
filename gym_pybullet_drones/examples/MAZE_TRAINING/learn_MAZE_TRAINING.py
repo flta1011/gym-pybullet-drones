@@ -161,7 +161,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
     #### Load existing model or create new one ###################
     if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
         print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
-        model = PPO.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
+        model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
     else:
         print("[INFO] Creating new model with CNN-DQN with custom feature extractor")
         # model = PPO('MlpPolicy',

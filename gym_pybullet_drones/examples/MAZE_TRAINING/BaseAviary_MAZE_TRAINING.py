@@ -709,7 +709,8 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         state = self._getDroneStateVector(0) #Einführung neuste 
         
         self.timestamp_actual = self.step_counter * self.PYB_TIMESTEP  # Use simulation time instead of real time
-        self.RewardCounterActualTrainRun += reward
+        if reward is not None:
+            self.RewardCounterActualTrainRun += reward
         self.List_Of_Tuples_Of_Reward_And_Action.append((action[0][0], reward))
             
         # ANCHOR - Debugging-Plots STEP
