@@ -2015,7 +2015,6 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
                 self.last_total_reward = reward  # Save the last total reward for the dashboard
 
                 return reward
-            case "REWARD_VERSION_2":
             case _:
                 raise ValueError(f"Unknown reward version: {self.REWARD_VERSION}")
 
