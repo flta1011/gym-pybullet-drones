@@ -128,7 +128,7 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         self.DW_COEFF_3 = self._parseURDFParameters()
         #NOTE - Maze Anzahl Wechsel
         self.Maze_number = 1
-        self.New_Maze_number = 20
+        self.New_Maze_number = 10
         self.New_Maze_number_counter = 0
         # The random number to generate the init and target position
         self.random_number_Start = 1
@@ -345,7 +345,7 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
             # Erstellen Sie eine Liste der zulässigen Zahlen
 
             # Wählen Sie eine Zufallszahl aus der Liste der zulässigen Zahlen
-            self.Maze_number = np.random.choice((1, 20))
+            self.Maze_number = np.random.randint(1, 5)
             print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
             print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
             print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
@@ -718,33 +718,33 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         # ANCHOR - Debugging-Plots STEP
         
         # NOTE - plotting im Trainings-Plot mit zusätzlichen Informationen deaktiviert (28.2.25)
-        # if self.GUI and self.USER_DEBUG:
+        if self.GUI and self.USER_DEBUG:
             
         #     print("Trainingszeit aktueller Run(s):", "{:.3f}".format(self.timestamp_actual))
         #     print(f" Observationspace (forward,backward, letzte Action (Velocity in X-Richtung!)):\t {state[21]} \t{state[22]} \t{state[26]}")
         #     print(f"aktuelle Action (Velocity in X-Richtung!) / Reward für Action: {self.action[0][0]} / {reward}")
         #     print(f"Reward aktueller Trainingslauf: {self.RewardCounterActualTrainRun}")
         #     print(f"current Physics-Step / Reward-Steps: {self.step_counter} / {self.timestamp_actual/(1/self.REWARD_AND_ACTION_CHANGE_FREQ)}")
-        #     if truncated:
-        #         print(f"Grund für Truncated: {Grund_Truncated}")
-        #         print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
-        #     if terminated:
-        #         print(f"Grund für Terminated: {Grund_Terminated}")
-        #         print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
+            if truncated:
+                print(f"Grund für Truncated: {Grund_Truncated}")
+                print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
+            if terminated:
+                print(f"Grund für Terminated: {Grund_Terminated}")
+                print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
         
         #if self.GUI: #deaktiviert, damit der nachfolgende Plot immer kommt, auch wenn keine GUI eingeschaltet ist
-        # if True:
-        #     if truncated:
-        #         #Zusammenfassung Trainingslauf
-        #         print(f"Zusammenfassung Trainingslauf Truncated (Grund: {Grund_Truncated}):")
-        #         # Remove the redundant print(obs[0]) line
+        if True:
+            if truncated:
+                #Zusammenfassung Trainingslauf
+                print(f"Zusammenfassung Trainingslauf Truncated (Grund: {Grund_Truncated}):")
+                # Remove the redundant print(obs[0]) line
 
-        #         print(f"Observations: x,y,yaw: {obs[1][0][0][0]:.3f}, {obs[2][0][0][0]:.3f}, {obs[3][0][0][0]:.1f}, {obs[4][0][0][0]:.1f}")                
-        #         print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
-        #     if terminated:
-        #         print(f"Zusammenfassung Trainingslauf Terminated (Grund: {Grund_Terminated}):")
-        #         print(f"Observations: x,y,yaw: {obs[0][0][0]:.3f}, {obs[1][0][0]:.3f}, {obs[2][0][0]:.3f}, RayFront/Back: {obs[3][0][0]:.1f}, {obs[4][0][0]:.1f}, RayLeft/Right: {obs[5][0][0]:.1f}, {obs[6][0][0]:.1f}, RayUp: {obs[7][0][0]:.1f}")
-        #         print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
+                #print(f"Observations: x,y,yaw: {obs[1][0][0][0]:.3f}, {obs[2][0][0][0]:.3f}, {obs[3][0][0][0]:.1f}, {obs[4][0][0][0]:.1f}")                
+                print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
+            if terminated:
+                print(f"Zusammenfassung Trainingslauf Terminated (Grund: {Grund_Terminated}):")
+                #print(f"Observations: x,y,yaw: {obs[0][0][0]:.3f}, {obs[1][0][0]:.3f}, {obs[2][0][0]:.3f}, RayFront/Back: {obs[3][0][0]:.1f}, {obs[4][0][0]:.1f}, RayLeft/Right: {obs[5][0][0]:.1f}, {obs[6][0][0]:.1f}, RayUp: {obs[7][0][0]:.1f}")
+                print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
         
         
         
