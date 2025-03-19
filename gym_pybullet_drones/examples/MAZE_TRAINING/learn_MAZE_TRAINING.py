@@ -92,7 +92,7 @@ DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
 DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10 # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
-DEFAULT_EPISODE_LEN_SEC= 30*60 # normal: 10*60 , aber 5 für Debugging
+DEFAULT_EPISODE_LEN_SEC= 10*60 # normal: 10*60 , aber 5 für Debugging
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 
 DEFAULT_OBS = ObservationType('kin') # 'kin' or 'rgb'
@@ -102,7 +102,7 @@ DEFAULT_MA = False
 
 DEFAULT_ALTITUDE = 0.5
 
-DEFAULT_DASH_ACTIVE = True
+DEFAULT_DASH_ACTIVE = False
 
 
 

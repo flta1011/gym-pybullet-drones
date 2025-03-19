@@ -127,8 +127,8 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         self.DW_COEFF_2, \
         self.DW_COEFF_3 = self._parseURDFParameters()
         #NOTE - Maze Anzahl Wechsel
-        self.Maze_number = 1
-        self.New_Maze_number = 5
+        self.Maze_number = 0
+        self.New_Maze_number = 10000
         self.New_Maze_number_counter = 0
         # The random number to generate the init and target position
         self.random_number_Start = 1
@@ -339,21 +339,21 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
 
         #### Reset the simulation ##################################
 
-        if  self.New_Maze_number_counter == self.New_Maze_number:
-            #self.Maze_number = np.random.randint(1, 20)
-            # solang nicht alle csv datei erstellt dann ändern auf 20
-            # Erstellen Sie eine Liste der zulässigen Zahlen
+        # if  self.New_Maze_number_counter == self.New_Maze_number:
+        #     #self.Maze_number = np.random.randint(1, 20)
+        #     # solang nicht alle csv datei erstellt dann ändern auf 20
+        #     # Erstellen Sie eine Liste der zulässigen Zahlen
 
-            # Wählen Sie eine Zufallszahl aus der Liste der zulässigen Zahlen
-            self.Maze_number = np.random.randint(1, 5)
-            print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
-            print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
-            print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
-            self.New_Maze_number_counter = 0
-        else:
-            self.New_Maze_number_counter += 1
-            print(f"--------------------------MAZE_NUMBER: {self.Maze_number}---------------------------------------")
-            print(f"--------------------------MAZE_NUMBER_Counter: { self.New_Maze_number_counter}---------------------------------------")
+        #     # Wählen Sie eine Zufallszahl aus der Liste der zulässigen Zahlen
+        #     #self.Maze_number = np.random.randint(1, 5)
+        #     print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
+        #     print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
+        #     print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
+        #     self.New_Maze_number_counter = 0
+        # else:
+        #     self.New_Maze_number_counter += 1
+        #     print(f"--------------------------MAZE_NUMBER: {self.Maze_number}---------------------------------------")
+        #     print(f"--------------------------MAZE_NUMBER_Counter: { self.New_Maze_number_counter}---------------------------------------")
 
         p.resetSimulation(physicsClientId=self.CLIENT)
         

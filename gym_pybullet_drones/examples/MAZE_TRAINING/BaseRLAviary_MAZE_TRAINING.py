@@ -692,22 +692,23 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             
 
             # Staple die 5 Kanäle zusammen: Shape = (5, grid_size, grid_size)
+            #obs = np.stack([slam_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel], axis=0)
             obs = np.stack([slam_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel], axis=0)
             self.obs = obs # für Visualisierung in dem Dashboard
             
-            # Save the SLAM map as an image
-            plt.imshow(slam_map, cmap='gray', origin='lower')
-            plt.colorbar(label='Occupancy')
-            plt.title('SLAM Map')
-            plt.xlabel('X (grid cells)')
-            plt.ylabel('Y (grid cells)')
-            output_folder = os.path.join(os.path.dirname(__file__), 'output_SLAM_MAP')
-            if not os.path.exists(output_folder):
-                os.makedirs(output_folder)
-            current_time = time.strftime("%Y%m%d-%H%M%S")
-            slam_map_path = os.path.join(output_folder, f"slam_map_{current_time}.png")
-            plt.savefig(slam_map_path)
-            plt.close()
+            # # Save the SLAM map as an image
+            # plt.imshow(slam_map, cmap='gray', origin='lower')
+            # plt.colorbar(label='Occupancy')
+            # plt.title('SLAM Map')
+            # plt.xlabel('X (grid cells)')
+            # plt.ylabel('Y (grid cells)')
+            # output_folder = os.path.join(os.path.dirname(__file__), 'output_SLAM_MAP')
+            # if not os.path.exists(output_folder):
+            #     os.makedirs(output_folder)
+            # current_time = time.strftime("%Y%m%d-%H%M%S")
+            # slam_map_path = os.path.join(output_folder, f"slam_map_{current_time}.png")
+            # plt.savefig(slam_map_path)
+            # plt.close()
 
 
 
@@ -925,7 +926,9 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
 
             # Initializing Reward Map
             self.reward_map = np.zeros((60, 60), dtype=int)
-            reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_{Maze_Number}.csv"
+            #reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_{Maze_Number}.csv"
+            reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_0.csv"
+
 
             with open(reward_map_file_path, 'r') as file:
                 reader = csv.reader(file)
