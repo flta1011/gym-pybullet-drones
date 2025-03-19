@@ -178,7 +178,8 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
                  Danger_Threshold_Wall=0.15,
                  EPISODE_LEN_SEC=10*60,
                  map_size_slam=8, #map size 8x8m, damit, egal in welche Richtung die Drohne fliegt, in jeden Quadranten ein komplettes Labyrinth dargestellt werden kann
-                 resolution_slam=0.05
+                 resolution_slam=0.05,
+                 Dash_active = True
                  ):
         """Initialization of a generic single and multi-agent RL environment.
 
@@ -239,6 +240,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             'explore_bonus_visited_field': 0,
             'Target_Hit_Reward': 0
         }
+        self.Dash_active = Dash_active
 
     
         # Historie der Reward-Komponenten für Balkendiagramm
@@ -293,154 +295,154 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         if  act == ActionType.VEL:
             self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000/3600)
             
-            
-        # ANCHOR - Create DASH Graph
-        self.app = dash.Dash(__name__)
-        self.app.layout = html.Div([
-            dcc.Graph(id='live-map'),
-            dcc.Graph(id='observation-channels'), 
-            dcc.Graph(id='reward-bar-chart'),
-            html.Div(id='current-total-reward'),
-            dcc.Interval(
-                id='interval-component',
-                interval=200,
-                n_intervals=0
-            )
-        ])
-
-        @self.app.callback(
-            [Output('live-map', 'figure'),
-             Output('observation-channels', 'figure'),
-             Output('reward-bar-chart', 'figure'),
-             Output('current-total-reward', 'children')],
-            [Input('interval-component', 'n_intervals')]
-        )
-        def update_graph(n):
-            if self.environment_active == False:
-                # Falls die Umgebung schon beendet wurde, liefere einfach leere oder statische Diagramme, um Fehler zu vermeiden
-                empty_fig = go.Figure()
-                current_reward_text = "Last Reward: 0.00"
-                return empty_fig, empty_fig, empty_fig, current_reward_text
-            
-            # Create reward/best way map figure
-            fig = make_subplots(
-                rows=1, cols=2,
-                subplot_titles=('Reward Map', 'Best Way Map')
-            )
-            fig.add_trace(
-                go.Heatmap(
-                    z=self.reward_map,
-                    colorscale='Viridis',
-                    showscale=True,
-                    name='Reward Map'
-                ),
-                row=1, col=1
-            )
-            fig.add_trace(
-                go.Heatmap(
-                    z=self.best_way_map,
-                    colorscale='Viridis',
-                    showscale=True,
-                    name='Best Way Map'
-                ),
-                row=1, col=2
-            )
-            fig.update_layout(
-                height=600,
-                title_text="Maze Training Visualization",
-                showlegend=True
-            )
-
-            # Get current observation channels
-            obs = self._computeObs()
-
-            # Create observation channels figure with SLAM map on left and values on right
-            obs_fig = make_subplots(
-                rows=1, cols=2,
-                column_widths=[0.5, 0.5],  # Make columns equal width
-                subplot_titles=('Normalized SLAM Map', 'Legend & Values'),
-                specs=[[{"type": "heatmap"}, {"type": "table"}]]
-            )
-
-            # Add SLAM map heatmap
-            obs_fig.add_trace(
-                go.Heatmap(
-                    z=obs[0],
-                    colorscale=[
-                        [0, 'rgb(0,0,0)'],      # Wall (0.0)
-                        [0.2, 'rgb(128,128,128)'],  # Unknown (0.2)
-                        [0.5, 'rgb(255,165,0)'],    # Visited (0.5)
-                        [0.9, 'rgb(255,255,255)']   # Free (0.9)
-                    ],
-                    showscale=False,
-                    name='SLAM Map'
-                ),
-                row=1, col=1
-            )
-
-            # Create table with legend and observation values
-            obs_fig.add_trace(
-                go.Table(
-                    header=dict(values=['Type', 'Description']),
-                    cells=dict(
-                        values=[
-                            ['Wall', 'Unknown', 'Visited', 'Free', '', 'Position X', 'Position Y', 'sin(yaw)', 'cos(yaw)'],
-                            ['Black (0.0)', 'Gray (0.2)', 'Orange (0.5)', 'White (0.9)', '',
-                            f'{obs[1][0][0]:.3f}', f'{obs[2][0][0]:.3f}', 
-                            f'{obs[3][0][0]:.3f}', f'{obs[4][0][0]:.3f}']
-                        ]
-                    )
-                ),
-                row=1, col=2
-            )
-
-            obs_fig.update_layout(
-                height=600,  # Make it square
-                title_text="Observation Channels",
-                showlegend=False
-            )
-
-            
-            # Create reward components bar chart
-            bar_chart = go.Figure(
-                go.Bar(
-                    x=list(self.reward_components.keys()),
-                    y=list(self.reward_components.values()),
-                    marker_color='royalblue'
+        if self.Dash_active:
+            # ANCHOR - Create DASH Graph
+            self.app = dash.Dash(__name__)
+            self.app.layout = html.Div([
+                dcc.Graph(id='live-map'),
+                dcc.Graph(id='observation-channels'), 
+                dcc.Graph(id='reward-bar-chart'),
+                html.Div(id='current-total-reward'),
+                dcc.Interval(
+                    id='interval-component',
+                    interval=200,
+                    n_intervals=0
                 )
-            )
-            bar_chart.update_layout(
-                title_text="Current Reward Components",
-                xaxis_title="Reward Type",
-                yaxis_title="Reward Value"
-            )
+            ])
 
-            # Initialize last_total_reward if not set
-            if not hasattr(self, 'last_total_reward'):
-                self.last_total_reward = 0
+            @self.app.callback(
+                [Output('live-map', 'figure'),
+                    Output('observation-channels', 'figure'),
+                    Output('reward-bar-chart', 'figure'),
+                    Output('current-total-reward', 'children')],
+                [Input('interval-component', 'n_intervals')]
+            )
+            def update_graph(n):
+                if self.environment_active == False:
+                    # Falls die Umgebung schon beendet wurde, liefere einfach leere oder statische Diagramme, um Fehler zu vermeiden
+                    empty_fig = go.Figure()
+                    current_reward_text = "Last Reward: 0.00"
+                    return empty_fig, empty_fig, empty_fig, current_reward_text
                 
-            current_reward_text = f"Last Reward: {self.last_total_reward:.2f}"
+                # Create reward/best way map figure
+                fig = make_subplots(
+                    rows=1, cols=2,
+                    subplot_titles=('Reward Map', 'Best Way Map')
+                )
+                fig.add_trace(
+                    go.Heatmap(
+                        z=self.reward_map,
+                        colorscale='Viridis',
+                        showscale=True,
+                        name='Reward Map'
+                    ),
+                    row=1, col=1
+                )
+                fig.add_trace(
+                    go.Heatmap(
+                        z=self.best_way_map,
+                        colorscale='Viridis',
+                        showscale=True,
+                        name='Best Way Map'
+                    ),
+                    row=1, col=2
+                )
+                fig.update_layout(
+                    height=600,
+                    title_text="Maze Training Visualization",
+                    showlegend=True
+                )
 
-            return fig, obs_fig, bar_chart, current_reward_text
+                # Get current observation channels
+                obs = self._computeObs()
 
-        def is_port_in_use(port):
-            with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
-                return s.connect_ex(('localhost', port)) == 0
-            
-        # Start Dash server in background thread
-        def run_dash_app():
-            logging.getLogger('werkzeug').setLevel(logging.ERROR)
-            self.app.run_server(debug=False, port=self.port)
+                # Create observation channels figure with SLAM map on left and values on right
+                obs_fig = make_subplots(
+                    rows=1, cols=2,
+                    column_widths=[0.5, 0.5],  # Make columns equal width
+                    subplot_titles=('Normalized SLAM Map', 'Legend & Values'),
+                    specs=[[{"type": "heatmap"}, {"type": "table"}]]
+                )
 
-        if not is_port_in_use(self.port):
-            self.dashboard_thread = Thread(target=run_dash_app, daemon=True)
-            self.dashboard_thread.start()
+                # Add SLAM map heatmap
+                obs_fig.add_trace(
+                    go.Heatmap(
+                        z=obs[0],
+                        colorscale=[
+                            [0, 'rgb(0,0,0)'],      # Wall (0.0)
+                            [0.2, 'rgb(128,128,128)'],  # Unknown (0.2)
+                            [0.5, 'rgb(255,165,0)'],    # Visited (0.5)
+                            [0.9, 'rgb(255,255,255)']   # Free (0.9)
+                        ],
+                        showscale=False,
+                        name='SLAM Map'
+                    ),
+                    row=1, col=1
+                )
 
-            # Open web browser after a short delay to ensure server is running
-            time.sleep(1)  # Wait for server to start
-            webbrowser.open(f'http://localhost:{self.port}')
-        else:
-            print(f"Port {self.port} is already in use, cannot start Dash server.")
+                # Create table with legend and observation values
+                obs_fig.add_trace(
+                    go.Table(
+                        header=dict(values=['Type', 'Description']),
+                        cells=dict(
+                            values=[
+                                ['Wall', 'Unknown', 'Visited', 'Free', '', 'Position X', 'Position Y', 'sin(yaw)', 'cos(yaw)'],
+                                ['Black (0.0)', 'Gray (0.2)', 'Orange (0.5)', 'White (0.9)', '',
+                                f'{obs[1][0][0]:.3f}', f'{obs[2][0][0]:.3f}', 
+                                f'{obs[3][0][0]:.3f}', f'{obs[4][0][0]:.3f}']
+                            ]
+                        )
+                    ),
+                    row=1, col=2
+                )
+
+                obs_fig.update_layout(
+                    height=600,  # Make it square
+                    title_text="Observation Channels",
+                    showlegend=False
+                )
+
+                
+                # Create reward components bar chart
+                bar_chart = go.Figure(
+                    go.Bar(
+                        x=list(self.reward_components.keys()),
+                        y=list(self.reward_components.values()),
+                        marker_color='royalblue'
+                    )
+                )
+                bar_chart.update_layout(
+                    title_text="Current Reward Components",
+                    xaxis_title="Reward Type",
+                    yaxis_title="Reward Value"
+                )
+
+                # Initialize last_total_reward if not set
+                if not hasattr(self, 'last_total_reward'):
+                    self.last_total_reward = 0
+                    
+                current_reward_text = f"Last Reward: {self.last_total_reward:.2f}"
+
+                return fig, obs_fig, bar_chart, current_reward_text
+
+            def is_port_in_use(port):
+                with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+                    return s.connect_ex(('localhost', port)) == 0
+                
+            # Start Dash server in background thread
+            def run_dash_app():
+                logging.getLogger('werkzeug').setLevel(logging.ERROR)
+                self.app.run_server(debug=False, port=self.port)
+
+            if not is_port_in_use(self.port):
+                self.dashboard_thread = Thread(target=run_dash_app, daemon=True)
+                self.dashboard_thread.start()
+
+                # Open web browser after a short delay to ensure server is running
+                time.sleep(1)  # Wait for server to start
+                webbrowser.open(f'http://localhost:{self.port}')
+            else:
+                print(f"Port {self.port} is already in use, cannot start Dash server.")
     
         
     ################################################################################
@@ -1279,17 +1281,6 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
 
     #########################################################################################
         
-    def restart_environment(self):
-        try:
-            self.close()
-            self._housekeeping()
-            self._updateAndStoreKinematicInformation()
-            self._startVideoRecording()
-            self.environment_active = True
-            self.logger.info("Environment restarted successfully")
-
-        except Exception as e:
-            self.logger.error(f"Error restarting environment: {e}")
-            self.environment_active = False
+   
     
     

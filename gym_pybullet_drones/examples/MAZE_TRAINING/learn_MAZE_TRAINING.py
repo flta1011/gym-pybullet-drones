@@ -103,11 +103,13 @@ DEFAULT_MA = False
 
 DEFAULT_ALTITUDE = 0.5
 
+DEFAULT_DASH_ACTIVE = False
 
 
 
 
-def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DEFAULT_GUI_TRAIN, gui_Test=DEFAULT_GUI_TEST, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO, local=True, pyb_freq=DEFAULT_PYB_FREQ, ctrl_freq=DEFAULT_CTRL_FREQ, user_debug_gui=DEFAULT_USER_DEBUG_GUI, reward_and_action_change_freq=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ, drone_model=DEFAULT_DRONE_MODEL, advanced_status_plot=DEFAULT_ADVANCED_STATUS_PLOT, target_position=DEFAULT_TARGET_POSITION, EPISODE_LEN_SEC=DEFAULT_EPISODE_LEN_SEC):
+
+def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DEFAULT_GUI_TRAIN, gui_Test=DEFAULT_GUI_TEST, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO, local=True, pyb_freq=DEFAULT_PYB_FREQ, ctrl_freq=DEFAULT_CTRL_FREQ, user_debug_gui=DEFAULT_USER_DEBUG_GUI, Dash_active=DEFAULT_DASH_ACTIVE, reward_and_action_change_freq=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ, drone_model=DEFAULT_DRONE_MODEL, advanced_status_plot=DEFAULT_ADVANCED_STATUS_PLOT, target_position=DEFAULT_TARGET_POSITION, EPISODE_LEN_SEC=DEFAULT_EPISODE_LEN_SEC):
 
     filename = os.path.join(output_folder, 'save-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
     if not os.path.exists(filename):
@@ -127,7 +129,8 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
                             reward_and_action_change_freq=reward_and_action_change_freq, # Ansatz: neu hinzugefügt, da die Step-Funktion vorher mit der ctrl_freq aufgerufen wurde, Problem war dann, dass bei hoher Frequenz die Raycasts keine Änderung hatten, dafür die Drohne aber sauber geflogen ist (60). Wenn der Wert niedriger war, hat es mit den Geschwindigkeiten und Actions besser gepasst, dafür ist die Drohne nicht sauber geflogen, weil die Ctrl-Frequenz für das erreichen der gewählten Action zu niedrig war (10/20).
                             act=ActionType.VEL,
                             target_position=target_position,
-                            EPISODE_LEN_SEC=EPISODE_LEN_SEC
+                            EPISODE_LEN_SEC=EPISODE_LEN_SEC,
+                            Dash_active = Dash_active
                             ),
                         n_envs=1,
                         seed=0
@@ -148,7 +151,8 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui_Train=DE
                             reward_and_action_change_freq=reward_and_action_change_freq,
                             act=ActionType.VEL,
                             target_position=target_position,
-                            EPISODE_LEN_SEC=EPISODE_LEN_SEC
+                            EPISODE_LEN_SEC=EPISODE_LEN_SEC,
+                            Dash_active = Dash_active
                             ),
                         n_envs=1,
                         seed=0
