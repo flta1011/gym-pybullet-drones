@@ -49,6 +49,7 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         target_position=np.array([0, 0, 0]),
         Danger_Threshold_Wall=0.20,
         REWARD_VERSION="REWARD_VERSION_1",
+        ACTION_SPACE_VERSION="DISKRET_PPO_MIT_DREHUNG",
     ):
         """Initialization of a generic aviary environment.
 
@@ -86,6 +87,7 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         """
         #### Constants #############################################
         self.REWARD_VERSION = REWARD_VERSION
+        self.ACTION_SPACE_VERSION = ACTION_SPACE_VERSION
         self.G = 9.8
         self.RAD2DEG = 180 / np.pi
         self.DEG2RAD = np.pi / 180
@@ -1997,6 +1999,7 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
             list: Sensor readings for each direction (forward, backward, left, right, up, down).
                 Each reading is the distance to the nearest obstacle or max_distance if no obstacle is detected.
         """
+
         drone_id = nth_drone + 1  # nth_drone is 0-based, but the drone IDs are 1-based
         pos, ori = p.getBasePositionAndOrientation(drone_id, physicsClientId=self.CLIENT)
 
@@ -2017,12 +2020,6 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         # Convert quaternion to rotation matrix using NumPy
         rot_matrix = np.array(p.getMatrixFromQuaternion(ori)).reshape(3, 3)
 
-        # # Vorbereitung Visualisierung
-        # p.removeAllUserDebugItems() # Entferne alle vergangenen Linien
-        # # Benötigt, damit die Linien nur den akutellen Ray zeigen
-
-        hit_fraction_list = []
-
         for direction in local_directions:
             # Transform local direction to world direction
             world_direction = rot_matrix.dot(direction)
@@ -2032,28 +2029,12 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
             ray_result = p.rayTest(pos, to_pos)
             hit_object_id = ray_result[0][0]
             hit_fraction = ray_result[0][2]
-            hit_fraction_list.append(hit_fraction)
 
             if hit_object_id != -1 and hit_fraction > 0:
                 distance = round(hit_fraction * max_distance, 5)
-
-                # if distance < 0.2:
-                # Visualize the ray
-                # visualize_ray(self, pos, to_pos, hit_fraction)
-
             else:
                 distance = 9999  # No obstacle detected within max_distance
 
             sensor_readings.append(distance)
 
-            # hit_fraction_forward = ray_result[0][2]
-            # hit_fraction_backward = ray_result[1][2]
-            # hit_fraction_left = ray_result[2][2]
-            # hit_fraction_right = ray_result[3][2]
-            # hit_fraction_up = ray_result[4][2]
-            # hit_fraction_down = ray_result[5][2]
-
-        # hit_fraction_list = [hit_fraction_forward, hit_fraction_backward, hit_fraction_left, hit_fraction_right, hit_fraction_up, hit_fraction_down]
-
-        # return sensor_readings, pos, to_pos, hit_fraction_list
         return sensor_readings
