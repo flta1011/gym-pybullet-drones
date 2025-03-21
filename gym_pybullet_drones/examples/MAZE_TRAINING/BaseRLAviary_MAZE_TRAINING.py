@@ -766,96 +766,57 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         #     print("[ERROR] in BaseRLAviary._computeObs()")
 ##############################################################################!SECTION
 
-    def _compute_potential_fields(self, state, only_forces=False):
+    def _compute_potential_fields(self):
         # Parameter
-        k_att = 1.0    # Attraction
-        k_rep = 100.0  # Repulsion
-        d0 = 5.0       # Einflussradius für Wände
+        state = self._getDroneStateVector(0)
+        
+        k_rep = 0.01  # Repulsion-Skalierun
+        d0 = 0.4       # Einflussradius für Wände
+        Scale_Grid = 0.05
 
-        start = np.array([self.INIT_XYZS[0][0] / 0.05, self.INIT_XYZS[0][1] / 0.05])  # Startpunkt
-        goal = np.array([self.TARGET_POSITION[0] / 0.05, self.TARGET_POSITION[1] / 0.05])  # Zielpunkt
-        pos = np.array([state[0] / 0.05, state[1] / 0.05])  # aktuelle Position der Drohne
 
         # Erstelle ein Raster mit Potentialwerten
         potential_map = np.zeros_like(self.reward_map, dtype=float)
 
-        # Extrahiere Wandpositionen
-        walls = np.argwhere(np.isclose(self.reward_map, 6))
+        # Extrahiere Wandpositionen (Indizes der Wandpositionen)
+        walls = np.argwhere(self.reward_map == 6)
 
-        if only_forces:
-            F_att = k_att * (goal - pos)
-            F_rep = np.array([0.0, 0.0])
-            for wall in walls:
-                d = np.linalg.norm(pos - wall)
-                if 0 < d < d0:
-                    F_rep += k_rep * (1/d - 1/d0) * (1/d**2) * (pos - wall) / d
-            return F_att, F_rep
-        else:
-            # Berechne Potentialfeld für jedes Pixel im Grid
-            for x in range(potential_map.shape[0]):
-                for y in range(potential_map.shape[1]):
-                    pos = np.array([x, y])
+        # Berechne Potentialfeld für jedes Pixel im Grid
+        for x in range(potential_map.shape[0]):
+            for y in range(potential_map.shape[1]):
+                pos = np.array([x, y])
 
-                    # Anziehungs-Potential (zum Ziel)
-                    U_att = k_att * np.linalg.norm(goal - pos)
+                # Abstoßungs-Potential (von Wänden)
+                U_rep = 0
+                for wall in walls:
+                    d = np.linalg.norm(pos - wall)*Scale_Grid
+                    if 0 < d < d0:
+                        U_rep += k_rep * (1/d - 1/d0) ** 2
 
-                    # Abstoßungs-Potential (von Wänden)
-                    U_rep = 0
-                    for wall in walls:
-                        d = np.linalg.norm(pos - wall)
-                        if 0 < d < d0:
-                            U_rep += k_rep * (1/d - 1/d0) ** 2
-
-                    potential_map[x, y] = U_att + U_rep
-            # Berechne den optimalen Pfad mit A*
-            self._compute_best_path(start, goal, potential_map)
-
-    def _compute_best_path(self, start, goal, potential_map):
-        """Findet den besten Weg von Start zu Ziel mit A* auf dem Potentialfeld."""
+                potential_map[x, y] = U_rep
+                
+        # Visualisiere das Potentialfeld
+        # Create output folder if it doesn't exist
+        output_folder = os.path.join(os.path.dirname(__file__), 'potenzial_fields')
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+            
+        # Create and save the plot without displaying
+        plt.ioff() # Turn off interactive mode
+        fig = plt.figure(figsize=(10, 10))
+        plt.imshow(potential_map, cmap='viridis', origin='lower')
+        plt.colorbar(label='Potential')
+        plt.title('Potentialfeld')
+        plt.xlabel('x')
         
-        def heuristic(a, b):
-            """Euklidische Distanz als Heuristik für A*"""
-            return np.linalg.norm(np.array(a) - np.array(b))
-
-        def get_neighbors(node):
-            """Gibt gültige Nachbarpixel zurück"""
-            x, y = node
-            neighbors = [(x+1, y), (x-1, y), (x, y+1), (x, y-1)]  # 4-neighbor grid
-            valid_neighbors = [(nx, ny) for nx, ny in neighbors if 0 <= nx < potential_map.shape[0] and 0 <= ny < potential_map.shape[1]]
-            return valid_neighbors
-
-        start = tuple(np.round(start).astype(int))
-        goal = tuple(np.round(goal).astype(int))
-
-        # A*-Suchalgorithmus
-        open_set = []
-        heapq.heappush(open_set, (0, start))  # (Kosten, Knoten)
-        came_from = {}
-        g_score = {start: 0}
-        f_score = {start: heuristic(start, goal)}
-
-        while open_set:
-            _, current = heapq.heappop(open_set)
-
-            if current == goal:
-                break  # Ziel erreicht
-
-            for neighbor in get_neighbors(current):
-                tentative_g_score = g_score[current] + potential_map[neighbor]
-                if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
-                    came_from[neighbor] = current
-                    g_score[neighbor] = tentative_g_score
-                    f_score[neighbor] = tentative_g_score + heuristic(neighbor, goal)
-                    heapq.heappush(open_set, (f_score[neighbor], neighbor))
-
-        # Rekonstruiere den Pfad
-        best_way_map = np.zeros_like(potential_map, dtype=int)
-        current = goal
-        while current in came_from:
-            best_way_map[current] = 1
-            current = came_from[current]
-
-        self.best_way_map = best_way_map
+        # Generate timestamp and save
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        plt.savefig(os.path.join(output_folder, f'potential_field_{timestamp}.png'))
+        plt.close()
+        
+                
+        return potential_map
+                    
 ################################################################################
     def _initialize_Reward_Map_and_Best_Way_Map(self, Maze_Number):
         """Initializes the reward map and the best way map.
@@ -944,6 +905,9 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             The reward.
 
         """
+        
+        
+        
         try:
             if self.step_counter == 0:
                 self._initialize_Reward_Map_and_Best_Way_Map(Maze_Number)
@@ -963,7 +927,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             target_position = [End_Position[1]/0.05, End_Position[0]/0.05] # Zielpunkt der Drohne
             self.reward_map[int(target_position[0]), int(target_position[1])] = 5 # Zielpunkt
             
-            #self._compute_potential_fields(initial_position, only_forces=False)
+         
             
             
             
@@ -978,6 +942,9 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
                 writer = csv.writer(file)
                 writer.writerows(self.reward_map)
                 
+            # Test mit Potentialfeld-Plot (wird aber im Code noch nicht benutzt)
+            if self.step_counter == 0:
+                potential_map = self._compute_potential_fields()
         
             reward = 0
             state = self._getDroneStateVector(0) #erste Drohne
@@ -1065,23 +1032,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             #     self.reward_map[current_position[0], current_position[1]] = 3
             
             
-            ###### 5. REWARD BASED ON POTENTIAL FIELDS ######
-            # Calculate attraction and repulsion forces
-            #F_att, F_rep = self._compute_potential_fields(state, only_forces=True)
-            # F_total = F_att + F_rep
-
-            # # Calculate potential field reward
-            # self.reward_components["potential_field_reward"] = np.linalg.norm(F_total)
-
-            ###### COMPUTE TOTAL REWARD ######
-            # reward = (self.reward_components["collision_penalty"] +
-            #           self.reward_components["distance_reward"] #+
-            #           #self.reward_components["best_way_bonus"] +
-            #           self.reward_components["explore_bonus_new_field"] +
-            #           self.reward_components["Target_Hit_Reward"] #+
-            #           #self.reward_components["potential_field_reward"]
-            #           )
-
+           
             reward = (self.reward_components["collision_penalty"] +
                     self.reward_components["distance_reward"] +
                     self.reward_components["explore_bonus_new_field"] +
