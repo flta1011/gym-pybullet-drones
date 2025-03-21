@@ -23,7 +23,11 @@ from datetime import datetime
 
 import gymnasium as gym
 import numpy as np
+
+# Importiere benötigte Module für CNN-DQN
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 import yaml
 from stable_baselines3 import DQN, PPO, SAC
 from stable_baselines3.common.callbacks import (
@@ -32,7 +36,14 @@ from stable_baselines3.common.callbacks import (
 )
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
+from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 
+from gym_pybullet_drones.examples.MAZE_TRAINING.BaseAviary_MAZE_TRAINING import (
+    BaseRLAviary_MAZE_TRAINING,
+)
+from gym_pybullet_drones.examples.MAZE_TRAINING.custom_CNN_V0_0 import (
+    CustomCNNFeatureExtractor,
+)
 from gym_pybullet_drones.examples.MAZE_TRAINING.Logger_MAZE_TRAINING_BUGGY import Logger
 from gym_pybullet_drones.utils.enums import (
     ActionType,
@@ -49,7 +60,7 @@ DEFAULT_ADVANCED_STATUS_PLOT = True
 
 DEFAULT_GUI_TEST = False
 
-DEFAULT_USE_PRETRAINED_MODEL = True
+DEFAULT_USE_PRETRAINED_MODEL = False
 # DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/results/durchgelaufen-DQN/final_model.zip'
 # DEFAULT_PRETRAINED_MODEL_PATH = "/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/results/save-03.07.2025_02.23.46/best_model.zip"
 DEFAULT_PRETRAINED_MODEL_PATH = "/home/moritz_s/Documents/RKIM_1/F_u_E_Drohnenrennen/GitRepo/gym-pybullet-drones/results/save-03.19.2025_22.33.41/best_model.zip"
@@ -62,7 +73,8 @@ DEFAULT_TRAIN_TIMESTEPS = 10 * 1e5  # nach 100000 Steps sollten schon mehrbahre 
 DEFAULT_TARGET_REWARD = 99999999999999
 
 
-file_path = "gym_pybullet_drones/examples/MAZE_TRAINING/Maze_init_target.yaml"
+# file_path = "gym_pybullet_drones/examples/MAZE_TRAINING/Maze_init_target.yaml"
+file_path = os.path.join(os.path.dirname(__file__), "Maze_init_target.yaml")
 
 
 def loadyaml_(file_path):
@@ -82,7 +94,7 @@ DEFAULT_ALTITUDE = 0.5
 # INIT_RPYS = {}
 INIT_RPYS = np.array(
     [
-        [0, 0, 0],
+        [0, 0, np.random.uniform(0, 2 * np.pi)],
     ]
 )
 
@@ -111,29 +123,26 @@ DEFAULT_MA = False
 DEFAULT_DASH_ACTIVE = False
 
 """MODEL_Versionen: 
-- PPO_MIT_DREHUNG
-- PPO_OHNE_DREHUNG
+- M1:   PPO
+- M2:   DQN_CNNPolicy_StandardFeatureExtractor
+- M3:   DQN_MLPPolicy
+- M4:   DQN_CNNPolicy_CustomFeatureExtractor
+
+- SAC
 """
-MODEL_Version = "PPO_MIT_DREHUNG"
+MODEL_Version = "M1"
 
 """REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
-- REWARD_VERSION_1: Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
-- REWARD_VERSION_2: Zusätzlich Bestrafung für zu nah an der Wand
-- REWARD_VERSION_3
-- REWARD_VERSION_4
+- R1:   Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
+- R2:   Zusätzlich Bestrafung für zu nah an der Wand
+- R3:
+- R4:
 """
-REWARD_VERSION = "REWARD_VERSION_1"
+REWARD_VERSION = "R1"
 
+# TODO: Implementierung Actionspace und ObsSpace Auswahl
 
 ################################################################################
-
-from gym_pybullet_drones.examples.MAZE_TRAINING.BaseAviary_MAZE_TRAINING import (
-    BaseRLAviary_MAZE_TRAINING,
-)
-
-DEFAULT_USE_PRETRAINED_MODEL = False
-# DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/results/durchgelaufen-DQN/final_model.zip'
-DEFAULT_PRETRAINED_MODEL_PATH = "/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/results/save-03.07.2025_02.23.46/best_model.zip"
 
 
 def run(
@@ -217,31 +226,68 @@ def run(
     print("[INFO] Observation space:", train_env.observation_space)
     # NOTE - FIX THE ACTION SPACE
     #### Load existing model or create new one ###################
-    if MODEL_Version == "PPO_MIT_DREHUNG" or MODEL_Version == "PPO_OHNE_DREHUNG":
-        if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
-            print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_Version} with {REWARD_VERSION}")
-            model = PPO.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
-        else:
-            print(f"[INFO] Creating new model {MODEL_Version} with {REWARD_VERSION}")
-            model = PPO(
-                "MlpPolicy",
-                train_env,
-                verbose=1,
-                # Learning-Rate 0,0002 zu gering -> auf 0.0004 erhöht -> auf 0.0005 erhöht --> auf 0.0004 reduziert, da die Policy zu stark angepasst wurde, obwohl es schon 5s am Ziel war..
-            )
-    if MODEL_Version == "DQN":
-        if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
-            print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_Version} with {REWARD_VERSION}")
-            model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
-        else:
-            print(f"[INFO] Creating new model {MODEL_Version} with {REWARD_VERSION}")
-            model = DQN(
-                "MlpPolicy",
-                train_env,
-                # learning_rate=0.0004, #nicht verwendet --> erst mal standard fürs Training
-                device="cuda:0",
-                verbose=1,
-            )
+    match MODEL_Version:
+        case "M1":  # M1: PPO
+            if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
+                print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_Version} with {REWARD_VERSION}")
+                model = PPO.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
+            else:
+                print(f"[INFO] Creating new model {MODEL_Version} with {REWARD_VERSION}")
+                model = PPO(
+                    "MlpPolicy",
+                    train_env,
+                    verbose=1,
+                    # Learning-Rate 0,0002 zu gering -> auf 0.0004 erhöht -> auf 0.0005 erhöht --> auf 0.0004 reduziert, da die Policy zu stark angepasst wurde, obwohl es schon 5s am Ziel war..
+                )
+
+        case "M2":  # M2: DQN_CNNPolicy_StandardFeatureExtractor
+            if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
+                print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_Version} with {REWARD_VERSION}")
+                model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
+            else:
+                print(f"[INFO] Creating new model {MODEL_Version} with {REWARD_VERSION}")
+                model = DQN(
+                    "CNNPolicy",
+                    train_env,
+                    # learning_rate=0.0004, #nicht verwendet --> erst mal standard fürs Training
+                    device="cuda:0",
+                    verbose=1,
+                )
+
+        case "M3":  # M3: DQN_MLPPolicy
+            if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
+                print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
+                model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
+            else:
+                print("[INFO] Creating new model with CNN-DQN with custom feature extractor")
+                model = PPO(
+                    "MlpPolicy",
+                    train_env,
+                    verbose=1,
+                    learning_rate=0.0004,  # 0,0002 zu gering -> auf 0.0004 erhöht -> auf 0.0005 erhöht --> auf 0.0004 reduziert, da die Policy zu stark angepasst wurde, obwohl es schon 5s am Ziel war..
+                )
+
+        case "M4":  # M4: DQN_CNNPolicy_CustomFeatureExtractor
+            # ANCHOR - CNN-DQN
+            # Setze die policy_kwargs, um deinen Custom Feature Extractor zu nutzen:
+            policy_kwargs = dict(features_extractor_class=CustomCNNFeatureExtractor, features_extractor_kwargs=dict(features_dim=512))
+            if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
+                print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
+                model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
+            else:
+                print("[INFO] Creating new model with CNN-DQN with custom feature extractor")
+                model = DQN(
+                    "CnnPolicy",
+                    train_env,
+                    policy_kwargs=policy_kwargs,
+                    device="cuda:0",
+                    # learning_rate=0.0004,
+                    learning_rate=0.001,
+                    verbose=1,
+                    seed=42,
+                    buffer_size=5000,
+                )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
+
     #### Target cumulative rewards (problem-dependent) ##########
     target_reward = DEFAULT_TARGET_REWARD
     print(target_reward)

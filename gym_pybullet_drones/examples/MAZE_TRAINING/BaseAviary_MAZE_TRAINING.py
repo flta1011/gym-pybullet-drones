@@ -4,6 +4,7 @@ import csv
 import heapq
 import logging
 import os
+import socket
 import sys
 import time
 import webbrowser  # Add this import
@@ -21,21 +22,36 @@ import pkg_resources
 import plotly.graph_objects as go
 import pybullet as p
 import pybullet_data
-from gym_pybullet_drones.examples.MAZE_TRAINING._actionSpace import _actionSpace as _actionSpace_outsource
-from gym_pybullet_drones.examples.MAZE_TRAINING._computeObs import _computeObs as _computeObs_outsource
-from gym_pybullet_drones.examples.MAZE_TRAINING._computeReward import _computeReward as _computeReward_outsource
-from gym_pybullet_drones.examples.MAZE_TRAINING._computeTerminated import _computeTerminated as _computeTerminated_outsource
-from gym_pybullet_drones.examples.MAZE_TRAINING._computeTruncated import _computeTruncated as _computeTruncated_outsource
-from gym_pybullet_drones.examples.MAZE_TRAINING._observationSpace import _observationSpace as _observationSpace_outsource
-from gym_pybullet_drones.examples.MAZE_TRAINING._preprocessAction import _preprocessAction as _preprocessAction_outsource
 from dash import dcc, html
 from dash.dependencies import Input, Output
 from gymnasium import spaces
 from PIL import Image
 from plotly.subplots import make_subplots
+from SimpleSlam_MAZE_TRAINING import SimpleSlam_MAZE_TRAINING
 from stable_baselines3.common.policies import ActorCriticPolicy
 
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
+from gym_pybullet_drones.examples.MAZE_TRAINING._actionSpace import (
+    _actionSpace as _actionSpace_outsource,
+)
+from gym_pybullet_drones.examples.MAZE_TRAINING._computeObs import (
+    _computeObs as _computeObs_outsource,
+)
+from gym_pybullet_drones.examples.MAZE_TRAINING._computeReward import (
+    _computeReward as _computeReward_outsource,
+)
+from gym_pybullet_drones.examples.MAZE_TRAINING._computeTerminated import (
+    _computeTerminated as _computeTerminated_outsource,
+)
+from gym_pybullet_drones.examples.MAZE_TRAINING._computeTruncated import (
+    _computeTruncated as _computeTruncated_outsource,
+)
+from gym_pybullet_drones.examples.MAZE_TRAINING._observationSpace import (
+    _observationSpace as _observationSpace_outsource,
+)
+from gym_pybullet_drones.examples.MAZE_TRAINING._preprocessAction import (
+    _preprocessAction as _preprocessAction_outsource,
+)
 from gym_pybullet_drones.utils.enums import (
     ActionType,
     DroneModel,
@@ -75,8 +91,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         Danger_Threshold_Wall=0.20,
         EPISODE_LEN_SEC=10 * 60,
         dash_active=True,
-        REWARD_VERSION="REWARD_VERSION_1",
-        ACTION_SPACE_VERSION="DISKRET_PPO_MIT_DREHUNG",
+        REWARD_VERSION="R1",
+        ACTION_SPACE_VERSION="A1",
     ):
         """Initialization of a generic aviary environment.
 
@@ -471,6 +487,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         initial_obs = None
         initial_obs = self._computeObs()
         initial_info = self._computeInfo()
+        self.slam.reset()  # TODO - Reset SLAM evtl. nicht in allen Modellen
 
         return initial_obs, initial_info
 
@@ -714,6 +731,22 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 #### Update and store the drones kinematic information #####
                 self._updateAndStoreKinematicInformation()
 
+        #########################################################################################
+        # SLAM-Update
+        pos = state[0:3]
+        yaw = state[9]  # Assuming this is the yaw angle
+
+        # Get raycast results
+        raycast_results = {"front": state[21], "back": state[22], "left": state[23], "right": state[24], "up": state[25]}
+
+        self.slam.update(pos, yaw, raycast_results)
+        # Optional: Zum Debuggen kann man die Map visualisieren (aber im Training besser deaktiviert)
+
+        # NOTE - hier: SLAM Map visualisieren (im Training besser deaktiviert)
+        # Achtung: bei AKtivierung wird ein Bild pro Step gespeichert!
+        self.slam.visualize()
+        #########################################################################################
+
         #### Prepare the return values #############################
         obs = self._computeObs()
         reward = self._computeReward(self.Maze_number, self.random_number_Start, self.random_number_Target)
@@ -724,38 +757,43 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         state = self._getDroneStateVector(0)  # Einführung neuste
 
         self.timestamp_actual = self.step_counter * self.PYB_TIMESTEP  # Use simulation time instead of real time
-        self.RewardCounterActualTrainRun += reward
-        self.List_Of_Tuples_Of_Reward_And_Action.append((action[0][0], reward))
+        if reward is not None:
+            self.RewardCounterActualTrainRun += reward
 
         # ANCHOR - Debugging-Plots STEP
 
         # NOTE - plotting im Trainings-Plot mit zusätzlichen Informationen deaktiviert (28.2.25)
-        # if self.GUI and self.USER_DEBUG:
+        if self.GUI and self.USER_DEBUG:
+            # 19.3.25: EVENTUELL auskommentieren, da das ganze Ding rießig wird :0
+            self.List_Of_Tuples_Of_Reward_And_Action.append((action[0][0], reward))
 
-        #     print("Trainingszeit aktueller Run(s):", "{:.3f}".format(self.timestamp_actual))
-        #     print(f" Observationspace (forward,backward, letzte Action (Velocity in X-Richtung!)):\t {state[21]} \t{state[22]} \t{state[26]}")
-        #     print(f"aktuelle Action (Velocity in X-Richtung!) / Reward für Action: {self.action[0][0]} / {reward}")
-        #     print(f"Reward aktueller Trainingslauf: {self.RewardCounterActualTrainRun}")
-        #     print(f"current Physics-Step / Reward-Steps: {self.step_counter} / {self.timestamp_actual/(1/self.REWARD_AND_ACTION_CHANGE_FREQ)}")
-        #     if truncated:
-        #         print(f"Grund für Truncated: {Grund_Truncated}")
-        #         print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
-        #     if terminated:
-        #         print(f"Grund für Terminated: {Grund_Terminated}")
-        #         print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
+            print("Trainingszeit aktueller Run(s):", "{:.3f}".format(self.timestamp_actual))
+            print(f" Observationspace (forward,backward, letzte Action (Velocity in X-Richtung!)):\t {state[21]} \t{state[22]} \t{state[26]}")
+            print(f"aktuelle Action (Velocity in X-Richtung!) / Reward für Action: {self.action[0][0]} / {reward}")
+            print(f"Reward aktueller Trainingslauf: {self.RewardCounterActualTrainRun}")
+            print(f"current Physics-Step / Reward-Steps: {self.step_counter} / {self.timestamp_actual/(1/self.REWARD_AND_ACTION_CHANGE_FREQ)}")
+            if truncated:
+                print(f"Grund für Truncated: {Grund_Truncated}")
+                print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
+            if terminated:
+                print(f"Grund für Terminated: {Grund_Terminated}")
+                print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
 
         # if self.GUI: #deaktiviert, damit der nachfolgende Plot immer kommt, auch wenn keine GUI eingeschaltet ist
-        if True:
-            if truncated:
-                # Zusammenfassung Trainingslauf
-                print(f"Zusammenfassung Trainingslauf Truncated (Grund: {Grund_Truncated}):")
-                # Remove the redundant print(obs[0]) line
-                print(f"Observations: x,y,yaw: {obs[0]:.3f}, {obs[1]:.3f}, {obs[2]:.3f}, RayFront/Back: {obs[3]:.1f}, {obs[4]:.1f}, RayLeft/Right: {obs[5]:.1f}, {obs[6]:.1f}, RayUp: {obs[7]:.1f}")
-                print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
-            if terminated:
-                print(f"Zusammenfassung Trainingslauf Terminated (Grund: {Grund_Terminated}):")
-                print(f"Observations: x,y,yaw: {obs[0]:.3f}, {obs[1]:.3f}, {obs[2]:.3f}, RayFront/Back: {obs[3]:.1f}, {obs[4]:.1f}, RayLeft/Right: {obs[5]:.1f}, {obs[6]:.1f}, RayUp: {obs[7]:.1f}")
-                print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
+        if truncated:
+            # Zusammenfassung Trainingslauf
+            print(f"Zusammenfassung Trainingslauf Truncated (Grund: {Grund_Truncated}):")
+            # Remove the redundant print(obs[0]) line
+            print(
+                f"Observations: x,y,yaw: {state[0]:.3f}, {state[1]:.3f}, {state[9]:.3f}, RayFront/Back: {state[21]:.1f}, {state[22]:.1f}, RayLeft/Right: {state[23]:.1f}, {state[24]:.1f}, RayUp: {state[25]:.1f}"
+            )
+            print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
+        if terminated:
+            print(f"Zusammenfassung Trainingslauf Terminated (Grund: {Grund_Terminated}):")
+            print(
+                f"Observations: x,y,yaw: {state[0]:.3f}, {state[1]:.3f}, {state[9]:.3f}, RayFront/Back: {state[21]:.1f}, {state[22]:.1f}, RayLeft/Right: {state[23]:.1f}, {state[24]:.1f}, RayUp: {state[25]:.1f}"
+            )
+            print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
 
         # nachfolgendes war nur zum Debugging der getDroneStateVector Funktion genutzt worden
         # ray_cast_readings = self.check_distance_sensors(0)
@@ -838,6 +876,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         return action_change_because_of_Collision_Danger, action
 
     #############################################################################
+
     def render(self, mode="human", close=False):
         """Prints a textual output of the environment.
 

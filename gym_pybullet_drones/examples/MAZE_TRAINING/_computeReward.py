@@ -10,10 +10,10 @@ def _computeReward(
 ):  # Funktioniert und die Drohne lernt, nahe an die Wand, aber nicht an die Wand zu fliegen. Problem: die Drohne bleibt nicht sauber im Sweetspot stehen.
     """Computes the current reward value.
     Reward-Versionen:
-    - REWARD_VERSION_1: Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
-    - REWARD_VERSION_2: Ziel hat keinen Einfluss mehr, soll aufs erkunden belohnt werden
-    - REWARD_VERSION_3: Ziel hat keinen Einfluss mehr, soll aufs erkunden belohnt werden
-    - REWARD_VERSION_4: Ziel hat keinen Einfluss mehr, soll aufs erkunden belohnt werden
+    - R1: Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
+    - R2: Ziel hat keinen Einfluss mehr, soll aufs erkunden belohnt werden
+    - R3:
+    - R4:
 
 
     Returns
@@ -24,7 +24,7 @@ def _computeReward(
     """
 
     match self.REWARD_VERSION:
-        case "REWARD_VERSION_1":
+        case "R1":  # Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
             # Initialisierung der Reward-Map und a-Star-etc.
             if self.step_counter == 0:
                 # NOTE - Reward Map
@@ -240,7 +240,7 @@ def _computeReward(
             self.last_total_reward = reward  # Save the last total reward for the dashboard
 
             return reward
-        case "REWARD_VERSION_2":
+        case "R2":  # Ziel hat keinen Einfluss mehr, soll aufs erkunden belohnt werden
             # Initialisierung der Reward-Map und a-Star-etc.
             if self.step_counter == 0:
                 # NOTE - Reward Map

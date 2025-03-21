@@ -34,157 +34,6 @@ from gym_pybullet_drones.utils.enums import (
 )
 
 
-class SimpleSlam:
-    def __init__(self, map_size=8, resolution=0.05):  # map size 8x8m, damit, egal in welche Richtung die Drohne fliegt, in jeden Quadranten ein komplettes Labyrinth dargestellt werden kann
-        """Erstellt eine leere Occupancy-Grid Map. Args: map_size (float): Seitengröße der Map in Metern (z. B. 8 m). resolution (float): Seitengröße einer Zelle, sodass grid_size ~60 ergibt."""
-        self.resolution = resolution
-        self.grid_size = int(map_size / resolution)
-        # Initialisiere die Map:
-        # # -1: unbekannt, 0: frei, 1: Wand, 2: besucht (Sensor oben frei)
-        # # 0.2: unbekannt, 0.9: frei, 0.0: Wand, 0.5: besucht (Sensor oben frei)
-
-        self.occupancy_grid = 0.2 * np.ones((self.grid_size, self.grid_size))
-        self.center = self.grid_size // 2
-        self.path = []  # speichert besuchte Zellen
-        self.DrohnePosition = []
-        self.Prev_DrohnePosition = []
-        self.counter_free_space = 0
-
-    def reset(self):
-        """Reset the SLAM map to its initial state."""
-        self.occupancy_grid = 0.2 * np.ones((self.grid_size, self.grid_size))
-        self.path = []
-        self.DrohnePosition = []
-        self.Prev_DrohnePosition = []
-
-    def world_to_grid(self, x, y):
-        grid_x = int(self.center + x / self.resolution)
-        grid_y = int(self.center + y / self.resolution)
-        return grid_x, grid_y
-
-    def update(self, drone_pos, drone_yaw, raycast_results):
-        """
-        Aktualisiert die Map anhand der Sensorwerte.
-        Args:
-            drone_pos (tuple): (x, y, z)-Position der Drohne.
-            drone_yaw (float): Yaw-Winkel (in Radiant).
-            raycast_results (dict): z. B. { 'front': d_front, 'back': d_back,
-                                            'left': d_left, 'right': d_right, 'up': d_up }
-        """
-        x, y, _ = drone_pos
-
-        # Iterate through 5x5 grid centered on current position --> 3x3 grid
-
-        grid_x, grid_y = self.world_to_grid(x, y)
-        # self.path.append((grid_x, grid_y))
-        # Markiere aktuelle Zelle als frei:
-        self.occupancy_grid[grid_x, grid_y] = 0.5
-        self.grid_x = grid_x
-        self.grid_y = grid_y
-        # self.counter_free_space += 1
-        # Falls der "up"-Sensor keinen Treffer hat (z. B. Wert 9999), markiere als besucht:
-        if "up" in raycast_results and raycast_results["up"] == 9999:
-            self.occupancy_grid[grid_x, grid_y] = 0.5
-
-        # Definiere Richtungswinkel:
-        angles = {"front": drone_yaw, "back": drone_yaw + np.pi, "left": drone_yaw + np.pi / 2, "right": drone_yaw - np.pi / 2}
-        for direction in ["front", "back", "left", "right"]:
-            distance = raycast_results.get(direction, 9999)
-            if distance < 9999:  # Treffer – Wand erkannt
-                angle = angles[direction]
-                end_x = x + distance * np.cos(angle)
-                end_y = y + distance * np.sin(angle)
-                end_grid_x, end_grid_y = self.world_to_grid(end_x, end_y)
-                cells = self.get_line(grid_x, grid_y, end_grid_x, end_grid_y)
-                # Markiere Zellen entlang der Strahlbahn als frei:
-                for cx, cy in cells[:-1]:
-                    if 0 <= cx < self.grid_size and 0 <= cy < self.grid_size and self.occupancy_grid[cx, cy] != 0.0:
-                        self.occupancy_grid[cx, cy] = 0.9
-                        self.counter_free_space += 1
-                # Markiere den Endpunkt als Wand:
-                if 0 <= end_grid_x < self.grid_size and 0 <= end_grid_y < self.grid_size and self.occupancy_grid[end_grid_x, end_grid_y] != 0.9:
-                    self.occupancy_grid[end_grid_x, end_grid_y] = 0.0
-
-        self.Prev_DrohnePosition = self.DrohnePosition
-        self.DrohnePosition = []
-
-        for i in range(max(0, grid_x - 2), min(160, grid_x + 2)):
-            for j in range(max(0, grid_y - 2), min(160, grid_y + 2)):
-                self.path.append((i, j))
-                self.DrohnePosition.append((i, j))
-                if self.occupancy_grid[i, j] == 0.2:
-                    self.occupancy_grid[i, j] = 0.5
-                elif self.occupancy_grid[i, j] == 0.5:
-                    self.occupancy_grid[i, j] = 0.7
-
-    def get_line(self, x0, y0, x1, y1):
-        """Berechnet Zellen entlang einer Linie (Bresenham-Algorithmus)."""
-        cells = []
-        dx = abs(x1 - x0)
-        dy = abs(y1 - y0)
-        x, y = x0, y0
-        sx = 1 if x1 > x0 else -1
-        sy = 1 if y1 > y0 else -1
-        if dx > dy:
-            err = dx / 2.0
-            while x != x1:
-                cells.append((x, y))
-                err -= dy
-                if err < 0:
-                    y += sy
-                    err += dx
-                x += sx
-        else:
-            err = dy / 2.0
-            while y != y1:
-                cells.append((x, y))
-                err -= dx
-                if err < 0:
-                    x += sx
-                    err += dy
-                y += sy
-        cells.append((x, y))
-        return cells
-
-    def visualize(self):
-        """Visualisiert die aktuelle SLAM Map (zum Debuggen).(siehe in def step() ganz weit unten)"""
-        # Create figure without displaying
-        plt.ioff()  # Turn off interactive mode
-        plt.figure(figsize=(6, 6))
-        plt.imshow(self.occupancy_grid.T, cmap="gray", origin="lower")
-
-        if self.Prev_DrohnePosition:
-            prev_position = np.array(self.Prev_DrohnePosition)
-            plt.plot(prev_position[:, 0], prev_position[:, 1], "r-", linewidth=2)
-            plt.plot(prev_position[-1, 0], prev_position[-1, 1], "ro", markersize=5)
-
-        if self.path:
-            path = np.array(self.path)
-            plt.plot(path[:, 0], path[:, 1], "r-", linewidth=2)
-            plt.plot(path[-1, 0], path[-1, 1], "ro", markersize=5)
-
-        if self.DrohnePosition:
-            position = np.array(self.DrohnePosition)
-            plt.plot(position[:, 0], position[:, 1], "g-", linewidth=2)
-            # plt.plot(position[-1, 0], position[-1, 1], 'go', markersize=5)
-
-        plt.colorbar(label="Occupancy (-1: unbekannt, 0: frei, 1: Wand, 2: besucht)")
-        plt.title("SLAM Map")
-        plt.xlabel("X (grid cells)")
-        plt.ylabel("Y (grid cells)")
-        self.OUTPUT_FOLDER = os.path.join(os.path.dirname(__file__), "output_SLAM_MAP")
-        # create output folder if it doesn't exist
-        if not os.path.exists(self.OUTPUT_FOLDER):
-            os.makedirs(self.OUTPUT_FOLDER)
-
-        # Save plot to file with current date and time
-        # current_time = time.strftime("%Y%m%d-%H%M%S")
-        # self.Latest_slam_map_path = os.path.join(self.OUTPUT_FOLDER, f"slam_map_{current_time}.png")
-        # plt.savefig(self.Latest_slam_map_path)
-        plt.close()
-        plt.ion()  # Turn interactive mode back on
-
-
 class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
     """Base single and multi-agent environment class for reinforcement learning."""
 
@@ -705,11 +554,10 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
     def _compute_potential_fields(self):
         # Parameter
         state = self._getDroneStateVector(0)
-        
-        k_rep = 0.01  # Repulsion-Skalierun
-        d0 = 0.4       # Einflussradius für Wände
-        Scale_Grid = 0.05
 
+        k_rep = 0.01  # Repulsion-Skalierun
+        d0 = 0.4  # Einflussradius für Wände
+        Scale_Grid = 0.05
 
         # Erstelle ein Raster mit Potentialwerten
         potential_map = np.zeros_like(self.reward_map, dtype=float)
@@ -725,35 +573,34 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
                 # Abstoßungs-Potential (von Wänden)
                 U_rep = 0
                 for wall in walls:
-                    d = np.linalg.norm(pos - wall)*Scale_Grid
+                    d = np.linalg.norm(pos - wall) * Scale_Grid
                     if 0 < d < d0:
-                        U_rep += k_rep * (1/d - 1/d0) ** 2
+                        U_rep += k_rep * (1 / d - 1 / d0) ** 2
 
                 potential_map[x, y] = U_rep
-                
+
         # Visualisiere das Potentialfeld
         # Create output folder if it doesn't exist
-        output_folder = os.path.join(os.path.dirname(__file__), 'potenzial_fields')
+        output_folder = os.path.join(os.path.dirname(__file__), "potenzial_fields")
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
-            
+
         # Create and save the plot without displaying
-        plt.ioff() # Turn off interactive mode
+        plt.ioff()  # Turn off interactive mode
         fig = plt.figure(figsize=(10, 10))
-        plt.imshow(potential_map, cmap='viridis', origin='lower')
-        plt.colorbar(label='Potential')
-        plt.title('Potentialfeld')
-        plt.xlabel('x')
-        
+        plt.imshow(potential_map, cmap="viridis", origin="lower")
+        plt.colorbar(label="Potential")
+        plt.title("Potentialfeld")
+        plt.xlabel("x")
+
         # Generate timestamp and save
         timestamp = time.strftime("%Y%m%d-%H%M%S")
-        plt.savefig(os.path.join(output_folder, f'potential_field_{timestamp}.png'))
+        plt.savefig(os.path.join(output_folder, f"potential_field_{timestamp}.png"))
         plt.close()
-        
-                
+
         return potential_map
-                    
-################################################################################
+
+    ################################################################################
     def _initialize_Reward_Map_and_Best_Way_Map(self, Maze_Number):
         """Initializes the reward map and the best way map.
         uses potential fields to find the best way from start to goal.
@@ -830,15 +677,10 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             The reward.
 
         """
-        
-        
-        
-        
+
         if self.step_counter == 0:
             self._initialize_Reward_Map_and_Best_Way_Map(Maze_Number)
-    
-    
-    
+
         Start_position = self.INIT_XYZS[f"map{Maze_Number}"][0][random_number_Start]
         End_Position = self.TARGET_POSITION[f"map{Maze_Number}"][0][random_number_Target]
 
@@ -849,38 +691,29 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         self.reward_map[int(initial_position[0]), int(initial_position[1])] = 4  # Startpunkt
 
         # Set the Targetpoint of the Drone
-        target_position = [End_Position[1]/0.05, End_Position[0]/0.05] # Zielpunkt der Drohne
-        self.reward_map[int(target_position[0]), int(target_position[1])] = 5 # Zielpunkt
-            
-         
-            
-            
-            
-            
-       
+        target_position = [End_Position[1] / 0.05, End_Position[0] / 0.05]  # Zielpunkt der Drohne
+        self.reward_map[int(target_position[0]), int(target_position[1])] = 5  # Zielpunkt
 
         # Save the reward map to a CSV file
-        with open('reward_map.csv', 'w', newline='') as file:
+        with open("reward_map.csv", "w", newline="") as file:
             writer = csv.writer(file)
             writer.writerows(self.reward_map)
-            
-        #NOTE Test mit Potentialfeld-Plot (wird aber im Code noch nicht benutzt)
+
+        # NOTE Test mit Potentialfeld-Plot (wird aber im Code noch nicht benutzt)
         # if self.step_counter == 0:
         #     potential_map = self._compute_potential_fields()
-    
+
         reward = 0
-        state = self._getDroneStateVector(0) #erste Drohne
+        state = self._getDroneStateVector(0)  # erste Drohne
 
-
-            
         #### Rewards initialisieren ####
         self.reward_components["collision_penalty"] = 0
         self.reward_components["distance_reward"] = 0
-        #self.reward_components["best_way_bonus"] = 0
+        # self.reward_components["best_way_bonus"] = 0
         self.reward_components["explore_bonus_new_field"] = 0
         self.reward_components["explore_bonus_visited_field"] = 0
         self.reward_components["Target_Hit_Reward"] = 0
-        
+
         ###### 1.PUNISHMENT FOR COLLISION ######
         if self.action_change_because_of_Collision_Danger == True:
             self.reward_components["collision_penalty"] = -1.0
@@ -902,45 +735,41 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         # # print(self.distance, "Distance")
         # # print(drone_pos, "Drone Position")
         # # print(target_pos, "Target Position")
-        
+
         # # Define max distance and max reward
         # MAX_DISTANCE = 3.0  # Maximum expected distance in meters
         # MAX_REWARD = 0.5    # Maximum reward for distance (excluding target hit bonus)
-        
+
         # # Linear reward that scales from 0 (at MAX_DISTANCE) to MAX_REWARD (at distance=0)
         # distance_ratio = min(self.distance/MAX_DISTANCE, 1.0)
         # self.reward_components["distance_reward"] = MAX_REWARD * (1 - distance_ratio) ## 4.3.25: auf Linear umgestellt, damit auch in weiter entfernten Feldern noch ein Gradient erkannt werden kann
-        
+
         # # Add huge reward if target is hit (within 0.05m) and top sensor shows no obstacle
         # if self.distance < 0.15 and state[25] < 1: # 0.15 = Radius Scheibe
         #     self.reward_components["Target_Hit_Reward"] += 1000.0
         #     print(f"Target hit. Zeitstempel (min:sek) {time.strftime('%M:%S', time.localtime())}")
-        
+
         # Get current position
-        current_position = [int(state[0]/0.05), int(state[1]/0.05)]
-        
-        
+        current_position = [int(state[0] / 0.05), int(state[1] / 0.05)]
+
         ###### 3. REWARD FOR BEING ON THE BEST WAY ######
         # Get the current position of the drone
-        
+
         # Check if the drone is on the best way
         # if self.best_way_map[current_position[0], current_position[1]] == 1:
         #     self.reward_components["best_way_bonus"] = 10
-        
-        
-        
+
         ###### 4. REWARD FOR EXPLORING NEW AREAS ######
         # Vereinfachung 18.3: 5x5 grid um die Drohne herum
         x, y = current_position[0], current_position[1]
-    
+
         # Iterate through 5x5 grid centered on current position --> 3x3 grid
-        for i in range(max(0, x-2), min(60, x+2)):
-            for j in range(max(0, y-2), min(60, y+2)):
+        for i in range(max(0, x - 2), min(60, x + 2)):
+            for j in range(max(0, y - 2), min(60, y + 2)):
                 if self.reward_map[i, j] == 0:
                     self.reward_map[i, j] = 1
                     self.reward_components["explore_bonus_new_field"] += 1
-                
-        
+
         # Only give reward if any new cells were explored
         # if reward_given:
         #     self.reward_components["explore_bonus_new_field"] = 1
@@ -952,18 +781,13 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         # elif self.reward_map[current_position[0], current_position[1]] >=2:
         #     self.reward_components["explore_bonus_visited_field"] = -0.1# darf keine Bestrafung geben, wenn er noch mal auf ein bereits besuchtes Feld fliegt, aber auch keine Belohnung
         #     self.reward_map[current_position[0], current_position[1]] = 3
-        
-        
-        
-        reward = (self.reward_components["collision_penalty"] +
-                self.reward_components["distance_reward"] +
-                self.reward_components["explore_bonus_new_field"] +
-                self.reward_components["Target_Hit_Reward"]
-                )
-        
+
+        reward = (
+            self.reward_components["collision_penalty"] + self.reward_components["distance_reward"] + self.reward_components["explore_bonus_new_field"] + self.reward_components["Target_Hit_Reward"]
+        )
+
         # update the buffer
         self.last_total_reward = reward  # Save the last total reward for the dashboard
-        
 
         # Save the reward map to a CSV file
         with open("gym_pybullet_drones/examples/MAZE_TRAINING/reward_map.csv", "w", newline="") as file:
