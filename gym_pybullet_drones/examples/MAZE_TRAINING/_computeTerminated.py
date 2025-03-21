@@ -15,7 +15,7 @@ def _computeTerminated(self):
     state = self._getDroneStateVector(0)
     # starte einen Timer, wenn die Drohne im sweet spot ist
     if state[25] < 1:  # 0.15 = Radius Scheibe
-        self.still_time += 1 / self.reward_and_action_change_freq  # Increment by simulation timestep (in seconds) # TBD: funktioniert das richtig?
+        self.still_time += 1 / self.REWARD_AND_ACTION_CHANGE_FREQ  # Increment by simulation timestep (in seconds) # TBD: funktioniert das richtig?
     else:
         self.still_time = 0.0  # Reset timer to 0 seconds
 

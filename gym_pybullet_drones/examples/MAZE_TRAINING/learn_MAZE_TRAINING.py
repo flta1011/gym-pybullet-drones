@@ -99,7 +99,7 @@ DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
 DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
-DEFAULT_EPISODE_LEN_SEC = 0.5  # 15 * 60
+DEFAULT_EPISODE_LEN_SEC = 15 * 60
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 
 DEFAULT_OBS = ObservationType("kin")  # 'kin' or 'rgb'
@@ -127,7 +127,7 @@ REWARD_VERSION = "REWARD_VERSION_1"
 
 ################################################################################
 
-from gym_pybullet_drones.examples.MAZE_TRAINING.BaseRLAviary_MAZE_TRAINING_PPO import (
+from gym_pybullet_drones.examples.MAZE_TRAINING.BaseAviary_MAZE_TRAINING import (
     BaseRLAviary_MAZE_TRAINING,
 )
 
@@ -283,10 +283,6 @@ def run(
         for j in range(data["timesteps"].shape[0]):
             print(str(data["timesteps"][j]) + "," + str(data["results"][j][0]))
 
-    ############################################################
-    ############################################################
-    ############################################################
-    ############################################################
     ############################################################
 
     if local:
