@@ -328,51 +328,6 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
 
     ################################################################################
 
-    def _observationSpace_Backup(self):
-        """Returns the observation space.
-        Simplified observation space with key state variables.
-
-        10.2.25: deutlich vereinfachte Observation Space, damit es für den PPO einfacher ist, die Zuammenhänge zwischen den relevanten Observations und dem dafür erhaltenen Reward zu erkennen.
-
-        Returns
-        -------
-        ndarray
-            A Box() of shape (NUM_DRONES,H,W,4) or (NUM_DRONES,21) depending on the observation type.
-
-            Information of the self._getDroneStateVector:
-                ndarray
-                1x Raycast reading (forward) [21]          -> 0 bis 9999
-
-        """
-
-        #  # NOTE: wenn nicht das Alte Modell genutzt werden soll, das hier wieder auskommentieren
-        # '''OLD MODELL mit 3D-Observation Rayfront, Rayback, LastAction'''
-        # obs_lower_bound = np.array([0, 0, 0]) #Raycast reading forward
-        # obs_upper_bound = np.array([9999, 9999, 2]) #Raycast reading forward, LastAction
-        # return spaces.Box(
-        #     low=obs_lower_bound,
-        #     high=obs_upper_bound,
-        #     dtype=np.float32
-        #     )
-
-        lo = -np.inf
-        hi = np.inf
-        obs_lower_bound = np.array([-99, -99, -2 * np.pi, 0, 0, 0, 0, 0])  # x,y,yaw, Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
-
-        obs_upper_bound = np.array(
-            [99, 99, 2 * np.pi, 9999, 9999, 9999, 9999, 9999]
-        )  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
-
-        return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
-
-        lo = -np.inf
-        hi = np.inf
-        obs_lower_bound = np.array([0])  # Raycast reading forward
-
-        obs_upper_bound = np.array([9999])  # Raycast reading forward
-
-        return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
-
     ###################################################################################
     # ANCHOR - OBSERVATIONSPACE Für CNN-DQN
     def _observationSpace(self):
@@ -461,95 +416,7 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
 
     ################################################################################
     # ANCHOR - computeObs_Backup
-    def _computeObs_Backup(self):
-        """Returns the current observation of the environment.
-        10.2.25: deutlich vereinfachte Observation Space, damit es für den PPO einfacher ist, die Zuammenhänge zwischen den relevanten Observations und dem dafür erhaltenen Reward zu erkennen.
-
-        28.2.25: vereinfachte Observation Space: in jede Richtung vorne, hinten, links, rechts, oben folgende Outputs möglich
-        - 0: zu nahe an der Wand,
-        - 1: Wand kommt näher,
-        - 2: safe Distance,
-        - 9999: Sensor oben frei
-
-        Returns (28.2.25):
-        -------
-        ndarray
-            A Box() of shape (NUM_DRONES,5) -> vorne, hinten, links, rechts, oben (1,9999)
-            -> 0: zu nahe an der Wand,
-            -> 1: Wand kommt näher,
-            -> 2: safe Distance,
-            -> 9999: Sensor oben frei
-        """
-
-        state = self._getDroneStateVector(0)
-
-        # # NOTE: wenn nicht das Alte Modell genutzt werden soll, das hier wieder auskommentieren
-        # '''OLD MODELL mit 3D-Observation Rayfront, Rayback, LastAction'''
-        # obs_9 = np.concatenate([
-        #     state[21:23],  # actual raycast readings (forward,backward)
-        #     [state[26]]   # last  action (Velocity in X-Richtung!)
-        # ])
-        # return obs_9
-
-        state = self._getDroneStateVector(0)
-
-        # Select specific values from obs and concatenate them directly
-        obs = [state[21], state[22], state[23], state[24]]  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
-
-        # NOTE - nachfolgend auf vereinfachte Observation Space umgestellt (28.2.25):
-        # Modify observation based on distance thresholds
-        modified_obs = []
-
-        # NOTE - Distanz zum Übergeben hat gar nicht so viel gebracht, weil es sich langfristig nicht stabilieren konnte (28.2.25)
-        # drone_pos = state[0:3]  # XYZ position from state vector
-        # target_pos = self.TARGET_POSITION
-        # # Calculate distance to target
-        # distance = np.linalg.norm(drone_pos - target_pos)
-        # modified_obs.append(distance)
-
-        # NOTE - neue Tests mit X,Y, Yaw Position der Drohne (28.2.25) übergeben
-        modified_obs.append(round(state[0], 3))  # x-Position
-        modified_obs.append(round(state[1], 3))  # y-Position
-        modified_obs.append(round(state[9], 3))  # Yaw-Position
-
-        # abstände anhängen mit 3 Nachkommastellen
-        for distance in obs:
-            modified_obs.append(round(distance, 3))
-
-        # for distance in obs:
-        #     if distance <= (self.Danger_Threshold_Wall):  # Too close to wall, Safetyalgorithmus wird gegensteuern
-        #         modified_obs.append(0)
-        #     elif distance <= (self.Danger_Threshold_Wall+0.1):  # Vorwarnung: gleich passiert was
-        #         modified_obs.append(1)
-        #     else:  # Safe distance
-        #         modified_obs.append(2)
-
-        # raycast oben noch anhängen
-        if state[25] < 1:
-            modified_obs.append(1)
-        else:
-            modified_obs.append(9999)
-
-        return np.array(modified_obs, dtype=np.float32)  # vorne (0,1,2), hinten (0,1,2), links (0,1,2), rechts (0,1,2), oben (1,9999)
-
-        ############################################################
-
-        # '''für mehrere Drohnen'''
-        # obs_25 = np.zeros((self.NUM_DRONES,25))
-        # for i in range(self.NUM_DRONES):
-        #     #obs = self._clipAndNormalizeState(self._getDroneStateVector(i))
-        #     obs = self._getDroneStateVector(i)
-        #     obs_25[i, :] = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16], obs[16:20], obs[20:25]]).reshape(21,)
-        #     ret = np.array([obs_25[i, :] for i in range(self.NUM_DRONES)]).astype('float32')
-        # #### Add action buffer to observation #######################
-        # for i in range(self.ACTION_BUFFER_SIZE):
-        #     ret = np.hstack([ret, np.array([self.action_buffer[i][j, :] for j in range(self.NUM_DRONES)])])
-        # return ret
-        #     ############################################################
-        # else:
-        #     print("[ERROR] in BaseRLAviary._computeObs()")
-
-    ##############################################################################!SECTION
+    #############################################################!SECTION
 
     def _compute_potential_fields(self):
         # Parameter

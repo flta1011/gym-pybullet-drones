@@ -27,7 +27,7 @@ from dash.dependencies import Input, Output
 from gymnasium import spaces
 from PIL import Image
 from plotly.subplots import make_subplots
-from SimpleSlam_MAZE_TRAINING import SimpleSlam_MAZE_TRAINING
+from SimpleSlam_MAZE_TRAINING import SimpleSlam
 from stable_baselines3.common.policies import ActorCriticPolicy
 
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
@@ -76,8 +76,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         initial_xyzs=None,
         initial_rpys=None,
         physics: Physics = Physics.PYB,
-        pyb_freq: int = 240,  # simulation frequency
-        ctrl_freq: int = 240,
+        pyb_freq: int = 100,  # simulation frequency
+        ctrl_freq: int = 50,
         reward_and_action_change_freq: int = 10,
         gui=False,
         user_debug_gui=False,
@@ -86,13 +86,16 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         advanced_status_plot=False,
         obstacles=True,
         vision_attributes=False,
-        output_folder="results_FlytoWall",
+        output_folder="results_maze_training" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"),
         target_position=np.array([0, 0, 0]),
         Danger_Threshold_Wall=0.20,
         EPISODE_LEN_SEC=10 * 60,
-        dash_active=True,
+        dash_active=False,
+        map_size_slam=8,  # map size 8x8m, damit, egal in welche Richtung die Drohne fliegt, in jeden Quadranten ein komplettes Labyrinth dargestellt werden kann
+        resolution_slam=0.05,
         REWARD_VERSION="R1",
-        ACTION_SPACE_VERSION="A1",
+        ACTION_TYPE="A1",
+        OBSERVATION_TYPE="O1",
     ):
         """Initialization of a generic aviary environment.
 
@@ -130,7 +133,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         """
         #### Constants #############################################
         self.REWARD_VERSION = REWARD_VERSION
-        self.ACTION_SPACE_VERSION = ACTION_SPACE_VERSION
+        self.ACTION_SPACE_VERSION = ACTION_TYPE
+        self.OBSERVATION_TYPE = OBSERVATION_TYPE
         self.G = 9.8
         self.RAD2DEG = 180 / np.pi
         self.DEG2RAD = np.pi / 180
@@ -178,6 +182,19 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # Initialize reward and best_way map
         self.reward_map = np.zeros((60, 60), dtype=int)
         self.best_way_map = np.zeros((60, 60), dtype=int)
+        # Counter for the amount of wall pixel in map
+        self.wall_pixel_counter = 0
+        self.amount_of_pixel_in_map = 60 * 60
+        self.ratio_previous_step = 0
+        # self.ratio_current_step = 0
+        self.amount_of_pixel_in_map_without_walls = 0
+        self.distance_10_step_ago = 0
+        self.distance_50_step_ago = 0
+        self.differnece_threshold = 0.05
+
+        # Initialize SLAM before calling the parent constructor
+        self.slam = SimpleSlam(map_size=map_size_slam, resolution=resolution_slam)  # 10m x 10m map with 10cm resolution
+        self.grid_size = int(map_size_slam / resolution_slam)
 
         #### Create integrated controllers #########################
         os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
@@ -348,40 +365,90 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         #### Start Dash server #####################################
         if self.DASH_ACTIVE:
+            # ANCHOR - Create DASH Graph
             self.app = dash.Dash(__name__)
             self.app.layout = html.Div(
                 [
                     dcc.Graph(id="live-map"),
-                    dcc.Graph(id="reward-bar-chart"),  # <--- Neues Balkendiagramm
-                    html.Div(id="current-total-reward"),  # <--- Zeigt den letzten Reward als Text
-                    dcc.Interval(id="interval-component", interval=100, n_intervals=0),  # Aktualisierung in ms
+                    dcc.Graph(id="observation-channels"),
+                    dcc.Graph(id="reward-bar-chart"),
+                    html.Div(id="current-total-reward"),
+                    dcc.Interval(id="interval-component", interval=200, n_intervals=0),
                 ]
             )
 
-            @self.app.callback([Output("live-map", "figure"), Output("reward-bar-chart", "figure"), Output("current-total-reward", "children")], Input("interval-component", "n_intervals"))
+            @self.app.callback(
+                [Output("live-map", "figure"), Output("observation-channels", "figure"), Output("reward-bar-chart", "figure"), Output("current-total-reward", "children")],
+                [Input("interval-component", "n_intervals")],
+            )
             def update_graph(n):
-                # ... existierender Code ...
+                # Create reward/best way map figure
                 fig = make_subplots(rows=1, cols=2, subplot_titles=("Reward Map", "Best Way Map"))
                 fig.add_trace(go.Heatmap(z=self.reward_map, colorscale="Viridis", showscale=True, name="Reward Map"), row=1, col=1)
                 fig.add_trace(go.Heatmap(z=self.best_way_map, colorscale="Viridis", showscale=True, name="Best Way Map"), row=1, col=2)
                 fig.update_layout(height=600, title_text="Maze Training Visualization", showlegend=True)
 
-                bar_chart = go.Figure()
-                # zeige die zuletzt gespeicherten Reward-Komponenten
-                bar_chart.add_trace(go.Bar(x=list(self.reward_components.keys()), y=list(self.reward_components.values()), marker_color="royalblue"))
-                bar_chart.update_layout(title_text="Aktuelle Reward-Komponenten", xaxis_title="Reward-Typ", yaxis_title="Reward-Wert")
+                # Get current observation channels
+                obs = self._computeObs()
 
-                current_reward_text = f"Letzter Reward: {self.last_total_reward:.2f}"
+                # Create observation channels figure with SLAM map on left and values on right
+                obs_fig = make_subplots(
+                    rows=1, cols=2, column_widths=[0.5, 0.5], subplot_titles=("Normalized SLAM Map", "Legend & Values"), specs=[[{"type": "heatmap"}, {"type": "table"}]]  # Make columns equal width
+                )
 
-                return fig, bar_chart, current_reward_text
+                # Add SLAM map heatmap
+                obs_fig.add_trace(
+                    go.Heatmap(
+                        z=obs[0],
+                        colorscale=[[0, "rgb(0,0,0)"], [0.2, "rgb(128,128,128)"], [0.5, "rgb(255,165,0)"], [0.9, "rgb(255,255,255)"]],  # Wall (0.0)  # Unknown (0.2)  # Visited (0.5)  # Free (0.9)
+                        showscale=False,
+                        name="SLAM Map",
+                    ),
+                    row=1,
+                    col=1,
+                )
 
-            # Start the Dash server but redirect only the dash logs
+                # Create table with legend and observation values
+                obs_fig.add_trace(
+                    go.Table(
+                        header=dict(values=["Type", "Description"]),
+                        cells=dict(
+                            values=[
+                                ["Wall", "Unknown", "Visited", "Free", "", "Position X", "Position Y", "sin(yaw)", "cos(yaw)"],
+                                ["Black (0.0)", "Gray (0.2)", "Orange (0.5)", "White (0.9)", "", f"{obs[1][0][0]:.3f}", f"{obs[2][0][0]:.3f}", f"{obs[3][0][0]:.3f}", f"{obs[4][0][0]:.3f}"],
+                            ]
+                        ),
+                    ),
+                    row=1,
+                    col=2,
+                )
+
+                obs_fig.update_layout(height=600, title_text="Observation Channels", showlegend=False)  # Make it square
+
+                # Create reward components bar chart
+                bar_chart = go.Figure(go.Bar(x=list(self.reward_components.keys()), y=list(self.reward_components.values()), marker_color="royalblue"))
+                bar_chart.update_layout(title_text="Current Reward Components", xaxis_title="Reward Type", yaxis_title="Reward Value")
+
+                # Initialize last_total_reward if not set
+                if not hasattr(self, "last_total_reward"):
+                    self.last_total_reward = 0
+
+                current_reward_text = f"Last Reward: {self.last_total_reward:.2f}"
+
+                return fig, obs_fig, bar_chart, current_reward_text
+
+            def is_port_in_use(port):
+                with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+                    return s.connect_ex(("localhost", port)) == 0
+
+            # Start Dash server in background thread
             def run_dash_app():
                 logging.getLogger("werkzeug").setLevel(logging.ERROR)
                 self.app.run_server(debug=False, port=self.port)
 
-            self.dashboard_thread = Thread(target=run_dash_app, daemon=True)
-            self.dashboard_thread.start()
+            if not is_port_in_use(self.port):
+                self.dashboard_thread = Thread(target=run_dash_app, daemon=True)
+                self.dashboard_thread.start()
 
             # Open web browser after a short delay to ensure server is running
             def open_browser():
@@ -1666,3 +1733,109 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         normalized_direction = direction / distance  # Normalize the direction vector
         next_step = current_position + normalized_direction * step_size  # Calculate the next step
         return next_step
+
+    ##############################################################################!SECTION
+
+    def _compute_potential_fields(self):
+        # Parameter
+        state = self._getDroneStateVector(0)
+
+        k_rep = 0.01  # Repulsion-Skalierun
+        d0 = 0.4  # Einflussradius für Wände
+        Scale_Grid = 0.05
+
+        # Erstelle ein Raster mit Potentialwerten
+        potential_map = np.zeros_like(self.reward_map, dtype=float)
+
+        # Extrahiere Wandpositionen (Indizes der Wandpositionen)
+        walls = np.argwhere(self.reward_map == 6)
+
+        # Berechne Potentialfeld für jedes Pixel im Grid
+        for x in range(potential_map.shape[0]):
+            for y in range(potential_map.shape[1]):
+                pos = np.array([x, y])
+
+                # Abstoßungs-Potential (von Wänden)
+                U_rep = 0
+                for wall in walls:
+                    d = np.linalg.norm(pos - wall) * Scale_Grid
+                    if 0 < d < d0:
+                        U_rep += k_rep * (1 / d - 1 / d0) ** 2
+
+                potential_map[x, y] = U_rep
+
+        # Visualisiere das Potentialfeld
+        # Create output folder if it doesn't exist
+        output_folder = os.path.join(os.path.dirname(__file__), "potenzial_fields")
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+
+        # Create and save the plot without displaying
+        plt.ioff()  # Turn off interactive mode
+        fig = plt.figure(figsize=(10, 10))
+        plt.imshow(potential_map, cmap="viridis", origin="lower")
+        plt.colorbar(label="Potential")
+        plt.title("Potentialfeld")
+        plt.xlabel("x")
+
+        # Generate timestamp and save
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        plt.savefig(os.path.join(output_folder, f"potential_field_{timestamp}.png"))
+        plt.close()
+
+        return potential_map
+
+    ################################################################################
+    def _initialize_Reward_Map_and_Best_Way_Map(self, Maze_Number):
+        """Initializes the reward map and the best way map.
+        uses potential fields to find the best way from start to goal.
+        """
+
+        # NOTE - Reward Map
+
+        # 0 = Unbesucht,
+        # 1 = Einmal besucht,
+        # 2 = Zweimal besucht,
+        # 3 = Dreimal besucht,
+        # 4 = Startpunkt,
+        # 5 = Zielpunkt,
+        # 6 = Wand
+
+        # Initializing Reward Map
+        self.reward_map = np.zeros((60, 60), dtype=int)
+        # reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_{Maze_Number}.csv"
+        reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_0.csv"
+
+        with open(reward_map_file_path, "r") as file:
+            reader = csv.reader(file)
+            for i, row in enumerate(reader):
+                for j, value in enumerate(row):
+                    if value == "1":
+                        self.reward_map[j, i] = 6  # Wand
+                        self.wall_pixel_counter += 1
+
+        # with open(reward_map_file_path, 'r') as file:
+        #     reader = csv.reader(file)
+        #     for i, row in enumerate(reader):
+        #         for j, value in enumerate(row):
+        #             if value == "1":
+        #                 self.reward_map[j, i] = 6 # Wand
+
+        # Mirror the reward map vertically
+        # self.reward_map = np.flipud(self.reward_map)
+        # Rotate the reward map 90° mathematically negative
+        # self.reward_map = np.rot90(self.reward_map, k=4)
+
+        # Amount of pixel in the map without walls
+        self.amount_of_pixel_in_map_without_walls = self.amount_of_pixel_in_map - self.wall_pixel_counter
+
+        # Save the best way map to a CSV file
+        # self._compute_potential_fields([0, 0], only_forces=False)  # aktuell noch buggy, Übergabe [0, 0]
+        with open("best_way_map_DQN.csv", "w", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerows(self.best_way_map)
+
+        # Save the reward map to a CSV file
+        with open("reward_map_DQN.csv", "w", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerows(self.reward_map)

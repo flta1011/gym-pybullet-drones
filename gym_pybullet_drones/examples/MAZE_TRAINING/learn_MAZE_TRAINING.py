@@ -55,8 +55,8 @@ from gym_pybullet_drones.utils.utils import str2bool, sync
 
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
 DEFAULT_GUI_TRAIN = True
-DEFAULT_USER_DEBUG_GUI = True
-DEFAULT_ADVANCED_STATUS_PLOT = True
+DEFAULT_USER_DEBUG_GUI = False
+DEFAULT_ADVANCED_STATUS_PLOT = False
 
 DEFAULT_GUI_TEST = False
 
@@ -111,7 +111,7 @@ DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
 DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
-DEFAULT_EPISODE_LEN_SEC = 15 * 60
+DEFAULT_EPISODE_LEN_SEC = 0.5  # 15 * 60
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 
 DEFAULT_OBS = ObservationType("kin")  # 'kin' or 'rgb'
@@ -130,7 +130,7 @@ DEFAULT_DASH_ACTIVE = False
 
 - SAC
 """
-MODEL_Version = "M1"
+MODEL_VERSION = "M1"
 
 """REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
 - R1:   Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
@@ -139,6 +139,20 @@ MODEL_Version = "M1"
 - R4:
 """
 REWARD_VERSION = "R1"
+
+"""ObservationType:
+- O1: X, Y, Yaw, Raycast readings
+- O2: 5 Kanäliges Bild CNN
+"""
+
+OBSERVATION_TYPE = "O1"
+
+"""ActionType:'
+- A1: Vier Richtungen und zwei Drehungen
+- A2: Vier Richtungen
+"""
+
+ACTION_TYPE = "A1"
 
 # TODO: Implementierung Actionspace und ObsSpace Auswahl
 
@@ -163,8 +177,10 @@ def run(
     target_position=DEFAULT_TARGET_POSITION,
     EPISODE_LEN_SEC=DEFAULT_EPISODE_LEN_SEC,
     dash_active=DEFAULT_DASH_ACTIVE,
-    MODEL_Version=MODEL_Version,
-    REWARD_VERSION=REWARD_VERSION,
+    MODEL_Version=MODEL_VERSION,
+    reward_version=REWARD_VERSION,
+    ObservationType=OBSERVATION_TYPE,
+    Action_Type=ACTION_TYPE,
 ):
 
     filename = os.path.join(output_folder, "save-" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
@@ -188,8 +204,10 @@ def run(
                 act=ActionType.VEL,
                 target_position=target_position,
                 dash_active=dash_active,
-                REWARD_VERSION=REWARD_VERSION,
                 EPISODE_LEN_SEC=EPISODE_LEN_SEC,
+                REWARD_VERSION=reward_version,
+                ACTION_TYPE=Action_Type,
+                OBSERVATION_TYPE=ObservationType,
             ),
             n_envs=1,
             seed=0,
@@ -212,8 +230,10 @@ def run(
                 act=ActionType.VEL,
                 target_position=target_position,
                 dash_active=dash_active,
-                REWARD_VERSION=REWARD_VERSION,
                 EPISODE_LEN_SEC=EPISODE_LEN_SEC,
+                REWARD_VERSION=reward_version,
+                ACTION_TYPE=Action_Type,
+                OBSERVATION_TYPE=ObservationType,
             ),
             n_envs=1,
             seed=0,
