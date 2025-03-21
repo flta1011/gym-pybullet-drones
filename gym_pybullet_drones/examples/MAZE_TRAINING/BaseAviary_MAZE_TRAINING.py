@@ -21,13 +21,13 @@ import pkg_resources
 import plotly.graph_objects as go
 import pybullet as p
 import pybullet_data
-from _actionSpace import _actionSpace as _actionSpace_outsource
-from _computeObs import _computeObs as _computeObs_outsource
-from _computeReward import _computeReward as _computeReward_outsource
-from _computeTerminated import _computeTerminated as _computeTerminated_outsource
-from _computeTruncated import _computeTruncated as _computeTruncated_outsource
-from _observationSpace import _observationSpace as _observationSpace_outsource
-from _preprocessAction import _preprocessAction as _preprocessAction_outsource
+from gym_pybullet_drones.examples.MAZE_TRAINING._actionSpace import _actionSpace as _actionSpace_outsource
+from gym_pybullet_drones.examples.MAZE_TRAINING._computeObs import _computeObs as _computeObs_outsource
+from gym_pybullet_drones.examples.MAZE_TRAINING._computeReward import _computeReward as _computeReward_outsource
+from gym_pybullet_drones.examples.MAZE_TRAINING._computeTerminated import _computeTerminated as _computeTerminated_outsource
+from gym_pybullet_drones.examples.MAZE_TRAINING._computeTruncated import _computeTruncated as _computeTruncated_outsource
+from gym_pybullet_drones.examples.MAZE_TRAINING._observationSpace import _observationSpace as _observationSpace_outsource
+from gym_pybullet_drones.examples.MAZE_TRAINING._preprocessAction import _preprocessAction as _preprocessAction_outsource
 from dash import dcc, html
 from dash.dependencies import Input, Output
 from gymnasium import spaces
@@ -35,7 +35,7 @@ from PIL import Image
 from plotly.subplots import make_subplots
 from stable_baselines3.common.policies import ActorCriticPolicy
 
-from gym_pybullet_drones.examples.Test_Flo.DSLPIDControl_TestFlo import DSLPIDControl
+from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.enums import (
     ActionType,
     DroneModel,
