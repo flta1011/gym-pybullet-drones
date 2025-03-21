@@ -13,6 +13,8 @@ import dash
 import numpy as np
 import plotly.graph_objects as go
 import pybullet as p
+from _computeTerminated import _computeTerminated as _computeTerminated_
+from _computeTruncated import _computeTruncated as _computeTruncated_
 from dash import dcc, html
 from dash.dependencies import Input, Output
 from gymnasium import spaces
@@ -404,71 +406,75 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
     # compute Reward siehe BaseAviary
 
     ################################################################################
-
+    # ANCHOR - _coputeTerminated_Ersetzt
     def _computeTerminated(self):
-        """Computes the current terminated value(s).
+        return _computeTerminated_(self)
 
-        Unused as this subclass is not meant for reinforcement learning.
+    #     """Computes the current terminated value(s).
 
-        Returns
-        -------
-        bool
-            Dummy value.
+    #     Unused as this subclass is not meant for reinforcement learning.
 
-        """
-        state = self._getDroneStateVector(0)
-        # starte einen Timer, wenn die Drohne im sweet spot ist
-        if state[25] < 1:  # 0.15 = Radius Scheibe
-            self.still_time += 1 / self.reward_and_action_change_freq  # Increment by simulation timestep (in seconds) # TBD: funktioniert das richtig?
-        else:
-            self.still_time = 0.0  # Reset timer to 0 seconds
+    #     Returns
+    #     -------
+    #     bool
+    #         Dummy value.
 
-        # Wenn die Drohne im sweet spot ist (bezogen auf Sensor vorne, Sensor und seit 5 sekunden still ist, beenden!
-        if self.still_time >= 5:
-            current_time = time.localtime()
-            Grund_Terminated = f"Drohne ist 5 s lang unter dem Objekt gewesen. Zeitstempel (min:sek) {time.strftime('%M:%S', current_time)}"
-            return True, Grund_Terminated
+    #     """
+    #     state = self._getDroneStateVector(0)
+    #     # starte einen Timer, wenn die Drohne im sweet spot ist
+    #     if state[25] < 1:  # 0.15 = Radius Scheibe
+    #         self.still_time += 1 / self.reward_and_action_change_freq  # Increment by simulation timestep (in seconds) # TBD: funktioniert das richtig?
+    #     else:
+    #         self.still_time = 0.0  # Reset timer to 0 seconds
 
-        Grund_Terminated = None
+    #     # Wenn die Drohne im sweet spot ist (bezogen auf Sensor vorne, Sensor und seit 5 sekunden still ist, beenden!
+    #     if self.still_time >= 5:
+    #         current_time = time.localtime()
+    #         Grund_Terminated = f"Drohne ist 5 s lang unter dem Objekt gewesen. Zeitstempel (min:sek) {time.strftime('%M:%S', current_time)}"
+    #         return True, Grund_Terminated
 
-        return False, Grund_Terminated
+    #     Grund_Terminated = None
+
+    #     return False, Grund_Terminated
 
     ################################################################################
 
     def _computeTruncated(self):  # coppied from HoverAviary_TestFlo.py
-        """Computes the current truncated value.
+        return _computeTruncated_(self)
 
-        Returns
-        -------
-        bool
-            Whether the drone is too tilted or has crashed into a wall.
+        # """Computes the current truncated value.
 
-        """
-        # Truncate when the drone is too tilted
-        state = self._getDroneStateVector(0)
-        if abs(state[7]) > 0.4 or abs(state[8]) > 0.4:
-            Grund_Truncated = "Zu tilted"
-            return True, Grund_Truncated
+        # Returns
+        # -------
+        # bool
+        #     Whether the drone is too tilted or has crashed into a wall.
 
-        # TBD wenn die Drone abstürzt, dann auch truncaten
-        if state[2] < 0.1:  # state[2] ist z_position der Drohne
-            Grund_Truncated = "Crash, Abstand < 0.1 m"
-            return True, Grund_Truncated
+        # """
+        # # Truncate when the drone is too tilted
+        # state = self._getDroneStateVector(0)
+        # if abs(state[7]) > 0.4 or abs(state[8]) > 0.4:
+        #     Grund_Truncated = "Zu tilted"
+        #     return True, Grund_Truncated
 
-        # Wenn an einer Wand gecrashed wird, beenden!
-        Abstand_truncated = self.Danger_Threshold_Wall - 0.05
-        if state[21] <= Abstand_truncated or state[22] <= Abstand_truncated or state[23] <= Abstand_truncated or state[24] <= Abstand_truncated:
-            Grund_Truncated = f"Zu nah an der Wand (<{Abstand_truncated} m)"
-            return True, Grund_Truncated
+        # # TBD wenn die Drone abstürzt, dann auch truncaten
+        # if state[2] < 0.1:  # state[2] ist z_position der Drohne
+        #     Grund_Truncated = "Crash, Abstand < 0.1 m"
+        #     return True, Grund_Truncated
 
-        # Wenn die Zeit abgelaufen ist, beenden!
-        if self.step_counter / self.PYB_FREQ > self.EPISODE_LEN_SEC:
-            Grund_Truncated = "Zeit abgelaufen"
-            return True, Grund_Truncated
+        # # Wenn an einer Wand gecrashed wird, beenden!
+        # Abstand_truncated = self.Danger_Threshold_Wall - 0.05
+        # if state[21] <= Abstand_truncated or state[22] <= Abstand_truncated or state[23] <= Abstand_truncated or state[24] <= Abstand_truncated:
+        #     Grund_Truncated = f"Zu nah an der Wand (<{Abstand_truncated} m)"
+        #     return True, Grund_Truncated
 
-        Grund_Truncated = None
+        # # Wenn die Zeit abgelaufen ist, beenden!
+        # if self.step_counter / self.PYB_FREQ > self.EPISODE_LEN_SEC:
+        #     Grund_Truncated = "Zeit abgelaufen"
+        #     return True, Grund_Truncated
 
-        return False, Grund_Truncated
+        # Grund_Truncated = None
+
+        # return False, Grund_Truncated
 
     ################################################################################
 
