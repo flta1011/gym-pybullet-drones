@@ -102,7 +102,7 @@ INIT_RPYS = np.array(
 for map_name, map_values in Target_Start_Values.items():
     INIT_XYZS[map_name] = (map_values["initial_xyzs"],)
     DEFAULT_TARGET_POSITION[map_name] = (map_values["target_position"],)
-    # INIT_RPYS = map_values['initial_rpys']
+    # INIT_RPYS = map_values["initial_rpys"]
 
 
 DEFAULT_RECORD_VIDEO = False
@@ -111,7 +111,7 @@ DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
 DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
-DEFAULT_EPISODE_LEN_SEC = 0.5  # 15 * 60
+DEFAULT_EPISODE_LEN_SEC = 2  # 15 * 60
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 
 DEFAULT_OBS = ObservationType("kin")  # 'kin' or 'rgb'
@@ -144,17 +144,13 @@ REWARD_VERSION = "R1"
 - O1: X, Y, Yaw, Raycast readings
 - O2: 5 Kanäliges Bild CNN
 """
-
 OBSERVATION_TYPE = "O1"
 
 """ActionType:'
 - A1: Vier Richtungen und zwei Drehungen
 - A2: Vier Richtungen
 """
-
 ACTION_TYPE = "A1"
-
-# TODO: Implementierung Actionspace und ObsSpace Auswahl
 
 ################################################################################
 
@@ -380,8 +376,7 @@ def run(
     # options={}: Additional options for resetting the environment.
     # In your code, obs will contain the initial observation, and info will contain additional information provided by the environment after resetting.
 
-    obs, info, maze_number = test_env.reset(seed=42, options={})
-    print("PRINT MAZE NUMBER IM LEARN-------------------------------------------", maze_number, "---------------")
+    obs, info = test_env.reset(seed=42, options={})
     start = time.time()
     # This code runs a loop to simulate the environment using the trained model and logs the results.
     # Loop: Runs for a specified number of steps.
@@ -394,7 +389,7 @@ def run(
     for i in range((test_env.EPISODE_LEN_SEC + 2) * test_env.CTRL_FREQ):
 
         action, _states = model.predict(obs, deterministic=True)
-        obs, reward, terminated, truncated, info = test_env.step(action, maze_number)
+        obs, reward, terminated, truncated, info = test_env.step(action)
         obs2 = obs.squeeze()
         act2 = action.squeeze()
         print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:", truncated)

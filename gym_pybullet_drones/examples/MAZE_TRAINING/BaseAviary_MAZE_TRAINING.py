@@ -500,7 +500,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             print(f"--------------------------MAZE_NUMBER: {self.Maze_number}---------------------------------------")
             print(f"--------------------------MAZE_NUMBER_Counter: { self.New_Maze_number_counter}---------------------------------------")
 
-        p.resetSimulation(physicsClientId=self.CLIENT)
+        # p.resetSimulation(physicsClientId=self.CLIENT)
 
         # if self.USER_DEBUG:
         #     #### Housekeeping ##########################################
@@ -542,21 +542,57 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         #     return initial_obs, initial_info
 
+        p.resetSimulation(physicsClientId=self.CLIENT)
         #### Housekeeping ##########################################
         self._housekeeping()
-        #### Start video recording #################################
-        self._startVideoRecording()
         #### Update and store the drones kinematic information #####
         self._updateAndStoreKinematicInformation()
         #### Start video recording #################################
         self._startVideoRecording()
         #### Return the initial observation ########################
-        initial_obs = None
         initial_obs = self._computeObs()
         initial_info = self._computeInfo()
         self.slam.reset()  # TODO - Reset SLAM evtl. nicht in allen Modellen
-
         return initial_obs, initial_info
+
+        # #### Housekeeping ##########################################
+        # print("Start housekeeping - INIT_XYZS:", self.INIT_XYZS)
+        # self._housekeeping()
+        # print("End housekeeping - INIT_XYZS:", self.INIT_XYZS)
+
+        # #### Start video recording #################################
+        # self._startVideoRecording()
+        # #### Update and store the drones kinematic information #####
+        # print("Start kinematic update - INIT_XYZS:", self.INIT_XYZS)
+        # print(f"self.pos vor Update: {self.pos}")
+        # self._updateAndStoreKinematicInformation()
+        # print(f"self.pos nach Update: {self.pos}")
+        # print("End kinematic update - INIT_XYZS:", self.INIT_XYZS)
+        # #### Start video recording #################################
+        # self._startVideoRecording()
+        # #### Return the initial observation ########################
+        # initial_obs = None
+        # initial_obs = self._computeObs()
+        # nth_drone = 0  # weil das so standardmäßig im computeObs festegelegt ist
+        # print(f"Getting state for nth_drone: {nth_drone}")
+
+        # # Get all bodies in simulation
+        # all_bodies = p.getNumBodies(physicsClientId=self.CLIENT)
+        # print(f"Bodies in simulation: {all_bodies}")
+
+        # # Get the actual drone ID
+        # drone_id = nth_drone + 1  # If this is the issue, you might need to adjust this
+        # print(f"Accessing drone ID: {drone_id}")
+
+        # # Verify the body is actually a drone
+        # body_info = p.getBodyInfo(drone_id, physicsClientId=self.CLIENT)
+        # print(f"Body info for ID {drone_id}: {body_info}")
+
+        # print(f"Environment resettet, initial_obs: {initial_obs}\n")
+
+        # initial_info = self._computeInfo()
+
+        # return initial_obs, initial_info
 
     ################################################################################
     # ANCHOR - STEP
@@ -1073,7 +1109,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             Start_Position_swapped[1] = Start_Position[0]
             Start_Position_swapped[0] = Start_Position[1]
 
-        # print(f"Start_Position_swapped: {Start_Position_swapped}")
+        print(f"Start_Position_swapped: {Start_Position_swapped}")
         self.DRONE_IDS = np.array(
             [
                 p.loadURDF(
@@ -1091,7 +1127,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         #     p.changeDynamics(self.DRONE_IDS[i], -1, linearDamping=0, angularDamping=0)
         #### Show the frame of reference of the drone, note that ###
         #### It severly slows down the GUI #########################
-        if self.GUI and self.USER_DEBUG:
+        if self.GUI:  # and self.USER_DEBUG:
             for i in range(self.NUM_DRONES):
                 self._showDroneLocalAxes(i)
         #### Disable collisions between drones' and the ground plane
@@ -1571,7 +1607,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 Each reading is the distance to the nearest obstacle or max_distance if no obstacle is detected.
         """
 
-        drone_id = nth_drone + 1  # nth_drone is 0-based, but the drone IDs are 1-based
+        # drone_id = nth_drone + 1  # nth_drone is 0-based, but the drone IDs are 1-based
+        drone_id = self.DRONE_IDS[nth_drone]
         pos, ori = p.getBasePositionAndOrientation(drone_id, physicsClientId=self.CLIENT)
 
         local_directions = np.array(
@@ -1813,18 +1850,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                     if value == "1":
                         self.reward_map[j, i] = 6  # Wand
                         self.wall_pixel_counter += 1
-
-        # with open(reward_map_file_path, 'r') as file:
-        #     reader = csv.reader(file)
-        #     for i, row in enumerate(reader):
-        #         for j, value in enumerate(row):
-        #             if value == "1":
-        #                 self.reward_map[j, i] = 6 # Wand
-
-        # Mirror the reward map vertically
-        # self.reward_map = np.flipud(self.reward_map)
-        # Rotate the reward map 90° mathematically negative
-        # self.reward_map = np.rot90(self.reward_map, k=4)
 
         # Amount of pixel in the map without walls
         self.amount_of_pixel_in_map_without_walls = self.amount_of_pixel_in_map - self.wall_pixel_counter
