@@ -224,7 +224,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             self.DW_COEFF_3,
         ) = self._parseURDFParameters()
         # NOTE - Maze Anzahl Wechsel
-        self.Maze_number = 0
+        self.Maze_number = 21
         self.New_Maze_number = 5
         self.New_Maze_number_counter = 0
         # The random number to generate the init and target position
@@ -397,6 +397,12 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 )
 
                 # Add SLAM map heatmap
+                ##NOTE - ValueError:  HIER  KOMMT ERRORs
+    # Invalid value of type 'numpy.float32' received for the 'z' property of heatmap
+    #     Received value: 1.8
+
+    # The 'z' property is an array that may be specified as a tuple,
+    # list, numpy array, or pandas Series
                 obs_fig.add_trace(
                     go.Heatmap(
                         z=obs[0],
@@ -489,7 +495,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
             # Wählen Sie eine Zufallszahl aus der Liste der zulässigen Zahlen
             # self.Maze_number = np.random.choice((1, 20))
-            self.Maze_number = 0
+            self.Maze_number = 21
 
             print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
             print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
