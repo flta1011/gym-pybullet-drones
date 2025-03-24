@@ -196,8 +196,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.differnece_threshold = 0.05
         self.Multiplier_Collision_Penalty = DEFAULT_Multiplier_Collision_Penalty
 
-        
-
         # Initialize SLAM before calling the parent constructor
         self.slam = SimpleSlam(map_size=map_size_slam, resolution=resolution_slam)  # 10m x 10m map with 10cm resolution
         self.grid_size = int(map_size_slam / resolution_slam)
@@ -318,8 +316,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 self.CAM_VIEW = p.computeViewMatrixFromYawPitchRoll(distance=3, yaw=-30, pitch=-30, roll=0, cameraTargetPosition=[0, 0, 0], upAxisIndex=2, physicsClientId=self.CLIENT)
                 self.CAM_PRO = p.computeProjectionMatrixFOV(fov=60.0, aspect=self.VID_WIDTH / self.VID_HEIGHT, nearVal=0.1, farVal=1000.0)
 
-
-
         if self.ADVANCED_STATUS_PLOT:
             # Matplotlib Setup für Live-Plot
             self.fig, self.ax = plt.subplots()
@@ -370,7 +366,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         #### Set a limit on the maximum target speed ###############
         if act == ActionType.VEL:
             self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000 / 3600)
-
 
         #### Start Dash server #####################################
         if self.DASH_ACTIVE:
@@ -452,25 +447,24 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
                 return fig, obs_fig, bar_chart, current_reward_text
 
-            def is_port_in_use(port):
-                with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
-                    return s.connect_ex(("localhost", port)) == 0
+        def is_port_in_use(port):
+            with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+                return s.connect_ex(("localhost", port)) == 0
 
-            # Start Dash server in background thread
-            def run_dash_app():
-                logging.getLogger("werkzeug").setLevel(logging.ERROR)
-                self.app.run_server(debug=False, port=self.port)
+        # Start Dash server in background thread
+        def run_dash_app():
+            logging.getLogger("werkzeug").setLevel(logging.ERROR)
+            self.app.run_server(debug=False, port=self.port)
 
-            if not is_port_in_use(self.port):
-                self.dashboard_thread = Thread(target=run_dash_app, daemon=True)
-                self.dashboard_thread.start()
+        if not is_port_in_use(self.port):
+            self.dashboard_thread = Thread(target=run_dash_app, daemon=True)
+            self.dashboard_thread.start()
 
             # Open web browser after a short delay to ensure server is running
-            def open_browser():
-                time.sleep(1)  # Wait for server to start
-                webbrowser.open(f"http://localhost:{self.port}")
-
-            Thread(target=open_browser, daemon=True).start()
+            time.sleep(1)  # Wait for server to start
+            webbrowser.open(f"http://localhost:{self.port}")
+        else:
+            print(f"Port {self.port} is already in use, cannot start Dash server.")
 
     ################################################################################
 
@@ -643,7 +637,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # Übersetzten in World-Koordinaten
         state = self._getDroneStateVector(0)
 
-
         if self.PUSHBACK_ACTIVE == True:
             # self.action = np.zeros((self.NUM_DRONES, 4))
             self.action_change_because_of_Collision_Danger = False
@@ -651,7 +644,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             # Get movement direction based on action
             input_action_local = action_to_movement_direction_local[actual_action_0_bis_8]
 
-             # Convert quaternion to rotation matrix using NumPy
+            # Convert quaternion to rotation matrix using NumPy
             rot_matrix = np.array(p.getMatrixFromQuaternion(state[3:7])).reshape(3, 3)
 
             # New Function to check for Collision Danger and change the action if necessary
@@ -659,13 +652,12 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
             input_action_Velocity_World = rot_matrix.dot(action_with_or_without_Collision_Danger_correction[0][0:3])
 
-            input_action_complete_world = np.array([np.concatenate((input_action_Velocity_World[0:2], np.array([0]), input_action_local[0][3:5]))])  # gedrehte x,y-Werte, z-Wert 0, yaw-Wert bleibt gleich
+            input_action_complete_world = np.array(
+                [np.concatenate((input_action_Velocity_World[0:2], np.array([0]), input_action_local[0][3:5]))]
+            )  # gedrehte x,y-Werte, z-Wert 0, yaw-Wert bleibt gleich
 
             action = input_action_complete_world
             self.action = input_action_complete_world
-
-    
-        
 
         #### Save PNG video frames if RECORD=True and GUI=False ####
         if self.RECORD and not self.GUI and self.step_counter % self.CAPTURE_FREQ == 0:
@@ -1182,8 +1174,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             - 4x actual raycast readings (front, back, left, right,up) [21:26] -> 0 to 9999
             - 1x Last action [26]             -> -1, 0, or 1 (velocity in x direction)
         """
-       # match MODEL_Version:
-            #case "M1":  # M1: PPO
+        # match MODEL_Version:
+        # case "M1":  # M1: PPO
         self.ray_results_actual = self.check_distance_sensors(nth_drone)  # get new actual raycast readings
 
         if hasattr(self, "action"):
@@ -1214,13 +1206,13 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 self.ray_results_actual[4],  # up [25]
                 last_action_VEL_1,
                 last_action_VEL_2,
-                last_action_VEL_3
+                last_action_VEL_3,
             ]
         )  # last clipped action [26]: jetzt nur noch 1 Wert (10.2.25)
         return state.reshape(
             29,
         )  # von 30 auf 27 geändert, da nur 1 Wert in lastClipppedACtion (10.2.25)
-                # auf 28 geändert, da 2 Werte in lastClippedAction (24.03.25)
+        # auf 28 geändert, da 2 Werte in lastClippedAction (24.03.25)
 
     ################################################################################
 
@@ -1797,7 +1789,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                         U_rep += k_rep * (1 / d - 1 / d0) ** 2
 
                 self.potential_map[x, y] = U_rep
-        
 
         # Visualisiere das Potentialfeld
         # Create output folder if it doesn't exist
@@ -1818,7 +1809,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # plt.savefig(os.path.join(output_folder, f"potential_field_{timestamp}.png"))
         # plt.close()
 
-        #return self.potential_map
+        # return self.potential_map
 
     ################################################################################
     def _initialize_Reward_Map_and_Best_Way_Map(self, Maze_Number):

@@ -246,7 +246,7 @@ def run(
                 ACTION_TYPE=Action_Type,
                 OBSERVATION_TYPE=ObservationType,
                 Pushback_active=Pushback_active,
-                DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty
+                DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
             ),
             n_envs=1,
             seed=0,
@@ -322,12 +322,11 @@ def run(
                     seed=42,
                     buffer_size=5000,
                 )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
-    #NOTE - OHNE ZUFALLSWERTE AM ANFANG
+        # NOTE - OHNE ZUFALLSWERTE AM ANFANG
 
-        case "M5":  # M4: DQN_NN_MIPolicy
+        case "M5":  # M5: DQN_NN_MIPolicy
             # ANCHOR - NN-DQN-MI
             # Setze die policy_kwargs, um deinen Custom Feature Extractor zu nutzen:
-            policy_kwargs = dict(features_extractor_class=CustomCNNFeatureExtractor, features_extractor_kwargs=dict(features_dim=512))
             if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
                 print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
                 model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
@@ -336,7 +335,6 @@ def run(
                 model = DQN(
                     "MultiInputPolicy",
                     train_env,
-                    policy_kwargs=policy_kwargs,
                     device="cuda:0",
                     # learning_rate=0.0004,
                     learning_rate=0.001,
@@ -344,7 +342,6 @@ def run(
                     seed=42,
                     buffer_size=5000,
                 )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
-
     #### Target cumulative rewards (problem-dependent) ##########
     target_reward = DEFAULT_TARGET_REWARD
     print(target_reward)
