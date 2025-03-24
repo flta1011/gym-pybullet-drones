@@ -194,7 +194,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.distance_10_step_ago = 0
         self.distance_50_step_ago = 0
         self.differnece_threshold = 0.05
-        self.DEFAULT_Multiplier_Collision_Penalty = DEFAULT_Multiplier_Collision_Penalty
+        self.Multiplier_Collision_Penalty = DEFAULT_Multiplier_Collision_Penalty
 
         
 
@@ -414,7 +414,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 # list, numpy array, or pandas Series
                 obs_fig.add_trace(
                     go.Heatmap(
-                        z=obs[0],
+                        z=obs[0].tolist(),
                         colorscale=[[0, "rgb(0,0,0)"], [0.2, "rgb(128,128,128)"], [0.5, "rgb(255,165,0)"], [0.9, "rgb(255,255,255)"]],  # Wall (0.0)  # Unknown (0.2)  # Visited (0.5)  # Free (0.9)
                         showscale=False,
                         name="SLAM Map",

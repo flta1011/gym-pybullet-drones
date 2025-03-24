@@ -132,7 +132,7 @@ DEFAULT_Multiplier_Collision_Penalty = 2
 - M5:   DQN_NN_MIPolicy
 - SAC:  
 """
-MODEL_VERSION = "M1"
+MODEL_VERSION = "M3"
 
 """REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
 - R1:   Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
@@ -152,7 +152,7 @@ REWARD_VERSION = "R3"
 
 """
 
-OBSERVATION_TYPE = "O1"
+OBSERVATION_TYPE = "O3"
 
 """ActionType:'
 - A1: Vier Richtungen und zwei Drehungen
@@ -285,6 +285,7 @@ def run(
                     # learning_rate=0.0004, #nicht verwendet --> erst mal standard fürs Training
                     device="cuda:0",
                     verbose=1,
+                    buffer_size=5000,
                 )
 
         case "M3":  # M3: DQN_MLPPolicy
@@ -293,11 +294,12 @@ def run(
                 model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
             else:
                 print("[INFO] Creating new model with CNN-DQN with custom feature extractor")
-                model = PPO(
+                model = DQN(
                     "MlpPolicy",
                     train_env,
                     verbose=1,
                     learning_rate=0.0004,  # 0,0002 zu gering -> auf 0.0004 erhöht -> auf 0.0005 erhöht --> auf 0.0004 reduziert, da die Policy zu stark angepasst wurde, obwohl es schon 5s am Ziel war..
+                    buffer_size=5000,
                 )
 
         case "M4":  # M4: DQN_CNNPolicy_CustomFeatureExtractor
