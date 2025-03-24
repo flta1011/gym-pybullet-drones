@@ -54,3 +54,29 @@ def _observationSpace(self):
             low[4, :, :] = -1.0  # cos(yaw) lower bound
 
             return spaces.Box(low=low, high=high, dtype=np.float32)
+        
+        case "O3":  # 7 Kanäle für CNN-DQN
+            """
+            Returns the observation space for the CNN-DQN model.
+            The observation space is a Box with shape (7, grid_size, grid_size) containing:
+            - Channel 1: Normalized SLAM map (values in [0,1])
+            - Channel 2: Normalized x position (values in [0,1])
+            - Channel 3: Normalized y position (values in [0,1])
+            - Channel 4: sin(yaw) (values in [-1,1])
+            - Channel 5: cos(yaw) (values in [-1,1])
+            - Channel 6: last Clipped Action (values in [-1,1])
+            - Channel 7: second Last Clipped Action (values in [-1,1])
+            """
+            grid_size = self.slam.grid_size
+
+            # Create proper shaped arrays for low and high bounds
+            low = np.zeros((7, grid_size, grid_size), dtype=np.float32)
+            high = np.ones((7, grid_size, grid_size), dtype=np.float32)
+
+            # Set specific ranges for each channel
+            low[3, :, :] = -1.0  # sin(yaw) lower bound
+            low[4, :, :] = -1.0  # cos(yaw) lower bound
+            low[5, :, :] = -1.0  # last Clipped Action lower bound
+            low[6, :, :] = -1.0  # second Last Clipped Action lower bound
+
+            return spaces.Box(low=low, high=high, dtype=np.float32)

@@ -1167,6 +1167,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         if hasattr(self, "action"):
             last_action_VEL_X = self.action[0][0]
+            last_action_VEL_Y = self.action[0][1]
+            last_action_VEL_Z = self.action[0][2]
         else:
             last_action_VEL_X = 0
 
@@ -1188,11 +1190,13 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 self.ray_results_actual[3],  # right [24]
                 self.ray_results_actual[4],  # up [25]
                 last_action_VEL_X,
+                last_action_VEL_Y
             ]
         )  # last clipped action [26]: jetzt nur noch 1 Wert (10.2.25)
         return state.reshape(
-            27,
+            28,
         )  # von 30 auf 27 geändert, da nur 1 Wert in lastClipppedACtion (10.2.25)
+        # auf 28 geändert, da 2 Werte in lastClippedAction (24.03.25)
 
     ################################################################################
 

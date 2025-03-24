@@ -130,7 +130,7 @@ DEFAULT_DASH_ACTIVE = True
 
 - SAC
 """
-MODEL_VERSION = "M1"
+MODEL_VERSION = "M3"
 
 """REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
 - R1:   Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
@@ -143,9 +143,11 @@ REWARD_VERSION = "R1"
 """ObservationType:
 - O1: X, Y, Yaw, Raycast readings
 - O2: 5 Kanäliges Bild CNN
+- O3: 5 Kanäliges Bild CNN mit zweimal last Clipped Actions
+
 """
 
-OBSERVATION_TYPE = "O1"
+OBSERVATION_TYPE = "O3"
 
 """ActionType:'
 - A1: Vier Richtungen und zwei Drehungen
@@ -267,7 +269,7 @@ def run(
             else:
                 print(f"[INFO] Creating new model {MODEL_Version} with {REWARD_VERSION}")
                 model = DQN(
-                    "CNNPolicy",
+                    "CnnPolicy",
                     train_env,
                     # learning_rate=0.0004, #nicht verwendet --> erst mal standard fürs Training
                     device="cuda:0",
