@@ -427,5 +427,95 @@ def _computeReward(
             self.last_total_reward = reward  # Save the last total reward for the dashboard
 
             return reward
+        
+        case "R3":  # Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
+            # Initialisierung der Reward-Map und a-Star-etc.
+            if self.step_counter == 0:
+                # NOTE - Reward Map
+
+                # 0 = Unbesucht,
+                # 1 = Einmal besucht,
+                # 2 = Zweimal besucht,
+                # 3 = Dreimal besucht,
+                # 4 = Startpunkt,
+                # 5 = Zielpunkt,
+                # 6 = Wand
+
+                # Initializing Reward Map
+                self.reward_map = np.zeros((60, 60), dtype=int)
+                # Loading the Walls of the CSV Maze into the reward map as ones
+                reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_{Maze_Number}.csv"
+                # reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_1.csv"
+
+                with open(reward_map_file_path, "r") as file:
+                    reader = csv.reader(file)
+                    for i, row in enumerate(reader):
+                        for j, value in enumerate(row):
+                            if value == "1":
+                                self.reward_map[j, i] = 6  # Wand
+                # Mirror the reward map vertically
+                # self.reward_map = np.flipud(self.reward_map)
+                # Rotate the reward map 90° mathematically negative
+                # self.reward_map = np.rot90(self.reward_map, k=4)
+
+                if Maze_Number == 0:
+                    Start_position = self.INIT_XYZS[f"map{Maze_Number+1}"][0][random_number_Start]
+                    End_Position = self.TARGET_POSITION[f"map{Maze_Number+1}"][0][random_number_Target]
+                else:
+                    Start_position = self.INIT_XYZS[f"map{Maze_Number}"][0][random_number_Start]
+                    End_Position = self.TARGET_POSITION[f"map{Maze_Number}"][0][random_number_Target]
+
+
+                # Save the reward map to a CSV file
+                with open("reward_map.csv", "w", newline="") as file:
+                    writer = csv.writer(file)
+                    writer.writerows(self.reward_map)
+
+            reward = 0
+            state = self._getDroneStateVector(0)  # erste Drohne
+
+            #### Rewards initialisieren ####
+            self.reward_components["collision_penalty"] = 0
+            self.reward_components["distance_reward"] = 0
+            # self.reward_components["best_way_bonus"] = 0
+            self.reward_components["explore_bonus_new_field"] = 0
+            self.reward_components["explore_bonus_visited_field"] = 0
+            self.reward_components["Target_Hit_Reward"] = 0
+
+            ###### 1.PUNISHMENT FOR COLLISION ######
+            # NOTE - Collision Penalty über HeatMap muss noch gemacht werden
+
+            # Get current position
+            current_position = [int(state[0] / 0.05), int(state[1] / 0.05)]
+
+
+
+            ###### 4. REWARD FOR EXPLORING NEW AREAS ######
+            # Vereinfachung 18.3: 5x5 grid um die Drohne herum
+            x, y = current_position[0], current_position[1]
+
+            # Iterate through 5x5 grid centered on current position --> 3x3 grid
+            for i in range(max(0, x - 2), min(60, x + 2)):
+                for j in range(max(0, y - 2), min(60, y + 2)):
+                    if self.reward_map[i, j] == 0:
+                        self.reward_map[i, j] = 1
+                        self.reward_components["explore_bonus_new_field"] += 5
+
+            # Save the reward map to a CSV file
+            with open("gym_pybullet_drones/examples/MAZE_TRAINING/reward_map.csv", "w", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerows(self.reward_map)
+
+            # COMPUTE TOTAL REWARD
+            reward = (
+                self.reward_components["collision_penalty"]
+                + self.reward_components["distance_reward"]
+                + self.reward_components["explore_bonus_new_field"]
+                + self.reward_components["explore_bonus_visited_field"]
+                + self.reward_components["Target_Hit_Reward"]
+            )
+            self.last_total_reward = reward  # Save the last total reward for the dashboard
+
+            return reward
         case _:
             raise ValueError(f"Unknown reward version: {self.REWARD_VERSION}")

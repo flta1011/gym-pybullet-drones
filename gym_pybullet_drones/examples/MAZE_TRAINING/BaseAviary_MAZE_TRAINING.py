@@ -1165,15 +1165,18 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             - 4x actual raycast readings (front, back, left, right,up) [21:26] -> 0 to 9999
             - 1x Last action [26]             -> -1, 0, or 1 (velocity in x direction)
         """
-
+       # match MODEL_Version:
+            #case "M1":  # M1: PPO
         self.ray_results_actual = self.check_distance_sensors(nth_drone)  # get new actual raycast readings
 
         if hasattr(self, "action"):
-            last_action_VEL_X = self.action[0][0]
-            last_action_VEL_Y = self.action[0][1]
-            last_action_VEL_Z = self.action[0][2]
+            last_action_VEL_1 = self.action[0][0]
+            last_action_VEL_2 = self.action[0][1]
+            last_action_VEL_3 = self.action[0][2]
         else:
-            last_action_VEL_X = 0
+            last_action_VEL_1 = 0
+            last_action_VEL_2 = 0
+            last_action_VEL_3 = 0
 
         state = np.hstack(
             [
@@ -1192,14 +1195,15 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 self.ray_results_actual[2],  # left [23]
                 self.ray_results_actual[3],  # right [24]
                 self.ray_results_actual[4],  # up [25]
-                last_action_VEL_X,
-                last_action_VEL_Y,
+                last_action_VEL_1,
+                last_action_VEL_2,
+                last_action_VEL_3
             ]
         )  # last clipped action [26]: jetzt nur noch 1 Wert (10.2.25)
         return state.reshape(
-            28,
+            29,
         )  # von 30 auf 27 geändert, da nur 1 Wert in lastClipppedACtion (10.2.25)
-        # auf 28 geändert, da 2 Werte in lastClippedAction (24.03.25)
+                # auf 28 geändert, da 2 Werte in lastClippedAction (24.03.25)
 
     ################################################################################
 
@@ -1758,14 +1762,14 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         Scale_Grid = 0.05
 
         # Erstelle ein Raster mit Potentialwerten
-        potential_map = np.zeros_like(self.reward_map, dtype=float)
+        self.potential_map = np.zeros_like(self.reward_map, dtype=float)
 
         # Extrahiere Wandpositionen (Indizes der Wandpositionen)
         walls = np.argwhere(self.reward_map == 6)
 
         # Berechne Potentialfeld für jedes Pixel im Grid
-        for x in range(potential_map.shape[0]):
-            for y in range(potential_map.shape[1]):
+        for x in range(self.potential_map.shape[0]):
+            for y in range(self.potential_map.shape[1]):
                 pos = np.array([x, y])
 
                 # Abstoßungs-Potential (von Wänden)
@@ -1775,7 +1779,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                     if 0 < d < d0:
                         U_rep += k_rep * (1 / d - 1 / d0) ** 2
 
-                potential_map[x, y] = U_rep
+                self.potential_map[x, y] = U_rep
 
         # Visualisiere das Potentialfeld
         # Create output folder if it doesn't exist
@@ -1786,7 +1790,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # Create and save the plot without displaying
         plt.ioff()  # Turn off interactive mode
         fig = plt.figure(figsize=(10, 10))
-        plt.imshow(potential_map, cmap="viridis", origin="lower")
+        plt.imshow(self.potential_map, cmap="viridis", origin="lower")
         plt.colorbar(label="Potential")
         plt.title("Potentialfeld")
         plt.xlabel("x")
@@ -1796,7 +1800,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         plt.savefig(os.path.join(output_folder, f"potential_field_{timestamp}.png"))
         plt.close()
 
-        return potential_map
+        return self.potential_map
 
     ################################################################################
     def _initialize_Reward_Map_and_Best_Way_Map(self, Maze_Number):
@@ -1817,7 +1821,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # Initializing Reward Map
         self.reward_map = np.zeros((60, 60), dtype=int)
         # reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_{Maze_Number}.csv"
-        reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_0.csv"
+        reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_21.csv"
 
         with open(reward_map_file_path, "r") as file:
             reader = csv.reader(file)

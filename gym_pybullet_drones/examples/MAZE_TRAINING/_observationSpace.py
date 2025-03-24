@@ -80,3 +80,46 @@ def _observationSpace(self):
             low[6, :, :] = -1.0  # second Last Clipped Action lower bound
 
             return spaces.Box(low=low, high=high, dtype=np.float32)
+        
+        case "O4":  # 1 Kanal für CNN-DQN nur das Bild
+            """
+            Returns the observation space for the CNN-DQN model.
+            The observation space is a Box with shape (1, grid_size, grid_size) containing:
+            - Channel 1: Normalized SLAM map (values in [0,1])
+            """
+            grid_size = self.slam.grid_size
+
+            # Create proper shaped arrays for low and high bounds
+            low = np.zeros((1, grid_size, grid_size), dtype=np.float32)
+            high = np.ones((1, grid_size, grid_size), dtype=np.float32)
+
+            return spaces.Box(low=low, high=high, dtype=np.float32)
+        
+        case "O5":  # X, Y, YAW, Raycast readings, last clipped action, second last clipped action, third last clipped action
+            """Returns the observation space.
+            Simplified observation space with key state variables.
+
+            10.2.25: deutlich vereinfachte Observation Space, damit es für den PPO einfacher ist, die Zuammenhänge zwischen den relevanten Observations und dem dafür erhaltenen Reward zu erkennen.
+
+            Returns
+            -------
+            ndarray
+                A Box() of shape (NUM_DRONES,H,W,4) or (NUM_DRONES,21) depending on the observation type.
+
+                Information of the self._getDroneStateVector:
+                    ndarray
+                    1x Raycast reading (forward) [21]          -> 0 bis 9999
+
+            """
+
+            lo = -np.inf
+            hi = np.inf
+            obs_lower_bound = np.array(
+                [-99, -99, -2 * np.pi, 0, 0, 0, 0, 0, -1, -1, -1]
+            )  # x,y,yaw, Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
+
+            obs_upper_bound = np.array(
+                [99, 99, 2 * np.pi, 9999, 9999, 9999, 9999, 9999, 1, 1, 1]
+            )  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
+
+            return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)

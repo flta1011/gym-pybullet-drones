@@ -110,8 +110,8 @@ DEFAULT_OUTPUT_FOLDER = "results"
 DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
-DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 5  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
-DEFAULT_EPISODE_LEN_SEC = 20  # 10 * 60  # 15 * 60
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
+DEFAULT_EPISODE_LEN_SEC = 10 * 60  # 15 * 60
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 DEFAULT_PUSHBACK_ACTIVE = False
 
@@ -120,7 +120,7 @@ DEFAULT_ACT = ActionType("vel")  # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'on
 DEFAULT_AGENTS = 1
 DEFAULT_MA = False
 
-DEFAULT_DASH_ACTIVE = True
+DEFAULT_DASH_ACTIVE = False
 
 """MODEL_Versionen: 
 - M1:   PPO
@@ -130,7 +130,7 @@ DEFAULT_DASH_ACTIVE = True
 - M5:   DQN_NN_MIPolicy
 - SAC:
 """
-MODEL_VERSION = "M3"
+MODEL_VERSION = "M1"
 
 """REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
 - R1:   Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
@@ -144,13 +144,19 @@ REWARD_VERSION = "R1"
 - O1: X, Y, Yaw, Raycast readings
 - O2: 5 Kanäliges Bild CNN
 - O3: 5 Kanäliges Bild CNN mit zweimal last Clipped Actions
+- 04: Kanal 1: Normalisierte SLAM Map (Occupancy Map)
+- O5: XYZ Position, Yaw, Raycast readings, 3 last clipped actions
+
+
 """
+
 OBSERVATION_TYPE = "O3"
 
 """ActionType:'
 - A1: Vier Richtungen und zwei Drehungen
 - A2: Vier Richtungen
 """
+
 ACTION_TYPE = "A1"
 
 # TODO: Implementierung Actionspace und ObsSpace Auswahl
@@ -309,6 +315,7 @@ def run(
                     seed=42,
                     buffer_size=5000,
                 )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
+    #NOTE - OHNE ZUFALLSWERTE AM ANFANG
 
         case "M5":  # M4: DQN_NN_MIPolicy
             # ANCHOR - NN-DQN-MI

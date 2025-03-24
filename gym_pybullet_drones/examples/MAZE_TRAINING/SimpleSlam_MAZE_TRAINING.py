@@ -33,6 +33,11 @@ class SimpleSlam:
         return grid_x, grid_y
 
     def update(self, drone_pos, drone_yaw, raycast_results):
+
+        #NOTE - Werte anpassen wie ich welches Szenario darstellen möchte TBD 24.03.2025
+        #NOTE - 0.2: unbekannt, 0.9: frei, 0.0: Wand, 0.5: besucht (Sensor oben frei)
+        #NOTE - 0.5: unbekannt, 0.7: frei, 0.0: Wand, 0.5: besucht (Sensor oben frei)
+
         """
         Aktualisiert die Map anhand der Sensorwerte.
         Args:

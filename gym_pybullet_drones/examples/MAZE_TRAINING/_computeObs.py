@@ -112,7 +112,7 @@ def _computeObs(self):
         
         case "O3":  # 4 Kanalig Bild Slam, X, Y, Yaw Position
             """
-            Baut einen 5-Kanal-Tensor auf:
+            Baut einen 8-Kanal-Tensor auf:
             - Kanal 1: Normalisierte SLAM Map (Occupancy Map)
             - Kanal 2: Konstanter Wert des normierten x (angenommen, x ∈ [-4,4])
             - Kanal 3: Konstanter Wert des normierten y (angenommen, y ∈ [-4,4])
@@ -151,14 +151,16 @@ def _computeObs(self):
 
             last_Action_1 = state[26]  # [25]=last_Action
             last_Action_2 = state[27]  # [26]=last_Action
+            last_Action_3 = state[28]  # [27]=last_Action
             last_Action_channel_1 = np.full((self.grid_size, self.grid_size), last_Action_1, dtype=np.float32)
             last_Action_channel_2 = np.full((self.grid_size, self.grid_size), last_Action_2, dtype=np.float32)
+            last_Action_channel_3 = np.full((self.grid_size, self.grid_size), last_Action_3, dtype=np.float32)
 
             
 
             # Staple die 5 Kanäle zusammen: Shape = (5, grid_size, grid_size)
             # obs = np.stack([slam_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel], axis=0)
-            obs = np.stack([slam_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel, last_Action_channel_1, last_Action_channel_2], axis=0)
+            obs = np.stack([slam_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel, last_Action_channel_1, last_Action_channel_2, last_Action_channel_3], axis=0)
             self.obs = obs  # für Visualisierung in dem Dashboard
 
             # # Save the SLAM map as an image
@@ -176,3 +178,54 @@ def _computeObs(self):
             # plt.close()
 
             return obs
+        
+        case "O4":  # 4 Kanalig Bild Slam, X, Y, Yaw Position
+            """
+            Baut einen 1-Kanal-Tensor auf:
+            - Kanal 1: Normalisierte SLAM Map (Occupancy Map)
+            """
+
+            # Get SLAM map and normalize it
+            slam_map = self.slam.occupancy_grid
+           
+
+            obs = np.stack([slam_map], axis=0)
+            self.obs = obs  # für Visualisierung in dem Dashboard
+
+         
+            return obs
+        
+        case "O5":  # XYZ Position, Yaw, Raycast readings, 3 last clipped actions
+            # Get the current state of the drone
+            state = self._getDroneStateVector(0)
+
+            # Select specific values from obs and concatenate them directly
+            obs = [state[21], state[22], state[23], state[24]]  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
+
+            # NOTE - nachfolgend auf vereinfachte Observation Space umgestellt (28.2.25):
+            # Modify observation based on distance thresholds
+            modified_obs = []
+
+            last_Action_1 = state[26]  # [25]=last_Action
+            last_Action_2 = state[27]  # [26]=last_Action
+            last_Action_3 = state[28]  # [27]=last_Action
+
+            # NOTE - neue Tests mit X,Y, Yaw Position der Drohne (28.2.25) übergeben
+            modified_obs.append(round(state[0], 3))  # x-Position
+            modified_obs.append(round(state[1], 3))  # y-Position
+            modified_obs.append(round(state[9], 3))  # Yaw-Position
+            modified_obs.append(last_Action_1)  # last Action
+            modified_obs.append(last_Action_2)  # last Action
+            modified_obs.append(last_Action_3)  # last Action
+
+            # abstände anhängen mit 3 Nachkommastellen
+            for distance in obs:
+                modified_obs.append(round(distance, 3))
+
+            # raycast oben noch anhängen
+            if state[25] < 1:
+                modified_obs.append(1)
+            else:
+                modified_obs.append(9999)
+
+            return np.array(modified_obs, dtype=np.float32)  # vorne (0,1,2), hinten (0,1,2), links (0,1,2), rechts (0,1,2), oben (1,9999)
