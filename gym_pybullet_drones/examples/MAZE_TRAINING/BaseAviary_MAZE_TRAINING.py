@@ -96,7 +96,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         REWARD_VERSION="R1",
         ACTION_TYPE="A1",
         OBSERVATION_TYPE="O1",
-        Pushback_active=False
+        Pushback_active=False,
+        DEFAULT_Multiplier_Collision_Penalty=2,
     ):
         """Initialization of a generic aviary environment.
 
@@ -193,6 +194,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.distance_10_step_ago = 0
         self.distance_50_step_ago = 0
         self.differnece_threshold = 0.05
+        self.DEFAULT_Multiplier_Collision_Penalty = DEFAULT_Multiplier_Collision_Penalty
 
         
 
@@ -369,8 +371,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         if act == ActionType.VEL:
             self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000 / 3600)
 
-        # Erstellen der Heatmap für die Belohnung des Abstandes zur Wand
-        self._compute_potential_fields()
 
         #### Start Dash server #####################################
         if self.DASH_ACTIVE:
@@ -635,13 +635,13 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             self.RewardCounterActualTrainRun = 0
             self.List_Of_Tuples_Of_Reward_And_Action = []
 
-        # Übersetzten in World-Koordinaten
-        state = self._getDroneStateVector(0)
-
         input_action_local = action_to_movement_direction_local[actual_action_0_bis_8]
 
         action = input_action_local
         self.action = input_action_local
+
+        # Übersetzten in World-Koordinaten
+        state = self._getDroneStateVector(0)
 
 
         if self.PUSHBACK_ACTIVE == True:
@@ -664,9 +664,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             action = input_action_complete_world
             self.action = input_action_complete_world
 
-        
-       
-
+    
         
 
         #### Save PNG video frames if RECORD=True and GUI=False ####
@@ -1799,6 +1797,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                         U_rep += k_rep * (1 / d - 1 / d0) ** 2
 
                 self.potential_map[x, y] = U_rep
+        
 
         # Visualisiere das Potentialfeld
         # Create output folder if it doesn't exist
@@ -1806,18 +1805,18 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
 
-        # Create and save the plot without displaying
-        plt.ioff()  # Turn off interactive mode
-        fig = plt.figure(figsize=(10, 10))
-        plt.imshow(self.potential_map, cmap="viridis", origin="lower")
-        plt.colorbar(label="Potential")
-        plt.title("Potentialfeld")
-        plt.xlabel("x")
+        # # Create and save the plot without displaying
+        # plt.ioff()  # Turn off interactive mode
+        # fig = plt.figure(figsize=(10, 10))
+        # plt.imshow(self.potential_map, cmap="viridis", origin="lower")
+        # plt.colorbar(label="Potential")
+        # plt.title("Potentialfeld")
+        # plt.xlabel("x")
 
-        # Generate timestamp and save
-        timestamp = time.strftime("%Y%m%d-%H%M%S")
-        plt.savefig(os.path.join(output_folder, f"potential_field_{timestamp}.png"))
-        plt.close()
+        # # Generate timestamp and save
+        # timestamp = time.strftime("%Y%m%d-%H%M%S")
+        # plt.savefig(os.path.join(output_folder, f"potential_field_{timestamp}.png"))
+        # plt.close()
 
         #return self.potential_map
 
@@ -1839,8 +1838,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         # Initializing Reward Map
         self.reward_map = np.zeros((60, 60), dtype=int)
-        reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_{Maze_Number}.csv"
-        #reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_21.csv"
+        # reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_{Maze_Number}.csv"
+        reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_21.csv"
 
         with open(reward_map_file_path, "r") as file:
             reader = csv.reader(file)
@@ -1871,7 +1870,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         #     writer = csv.writer(file)
         #     writer.writerows(self.best_way_map)
 
-        #Save the reward map to a CSV file
-        with open("reward_map_DQN.csv", "w", newline="") as file:
-            writer = csv.writer(file)
-            writer.writerows(self.reward_map)
+        # Save the reward map to a CSV file
+        # with open("reward_map_DQN.csv", "w", newline="") as file:
+        #     writer = csv.writer(file)
+        #     writer.writerows(self.reward_map)

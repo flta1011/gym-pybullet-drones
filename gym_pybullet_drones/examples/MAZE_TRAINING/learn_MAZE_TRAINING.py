@@ -54,7 +54,7 @@ from gym_pybullet_drones.utils.enums import (
 from gym_pybullet_drones.utils.utils import str2bool, sync
 
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
-DEFAULT_GUI_TRAIN = False
+DEFAULT_GUI_TRAIN = True
 DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_ADVANCED_STATUS_PLOT = False
 
@@ -120,7 +120,9 @@ DEFAULT_ACT = ActionType("vel")  # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'on
 DEFAULT_AGENTS = 1
 DEFAULT_MA = False
 
-DEFAULT_DASH_ACTIVE = False
+DEFAULT_DASH_ACTIVE = True
+
+DEFAULT_Multiplier_Collision_Penalty = 2
 
 """MODEL_Versionen: 
 - M1:   PPO
@@ -135,7 +137,7 @@ MODEL_VERSION = "M1"
 """REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
 - R1:   Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
 - R2:   Zusätzlich Bestrafung für zu nah an der Wand
-- R3:   Heatmap
+- R3:   Collision zieht je nach Wert auf Heatmap diesen von der Reward ab (7 etwa Wand, 2 nahe Wand, 0.)
 - R4:
 """
 REWARD_VERSION = "R3"
@@ -187,6 +189,7 @@ def run(
     ObservationType=OBSERVATION_TYPE,
     Action_Type=ACTION_TYPE,
     Pushback_active=DEFAULT_PUSHBACK_ACTIVE,
+    DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
 ):
 
     filename = os.path.join(output_folder, "save-" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
@@ -214,7 +217,8 @@ def run(
                 REWARD_VERSION=reward_version,
                 ACTION_TYPE=Action_Type,
                 OBSERVATION_TYPE=ObservationType,
-                Pushback_active=Pushback_active
+                Pushback_active=Pushback_active,
+                DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
             ),
             n_envs=1,
             seed=0,
@@ -241,7 +245,8 @@ def run(
                 REWARD_VERSION=reward_version,
                 ACTION_TYPE=Action_Type,
                 OBSERVATION_TYPE=ObservationType,
-                Pushback_active=Pushback_active
+                Pushback_active=Pushback_active,
+                DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty
             ),
             n_envs=1,
             seed=0,

@@ -471,6 +471,9 @@ def _computeReward(
                     writer = csv.writer(file)
                     writer.writerows(self.reward_map)
 
+                # Erstellen der Heatmap für die Belohnung des Abstandes zur Wand
+                self._compute_potential_fields()
+
             reward = 0
             state = self._getDroneStateVector(0)  # erste Drohne
 
@@ -482,16 +485,12 @@ def _computeReward(
             self.reward_components["explore_bonus_visited_field"] = 0
             self.reward_components["Target_Hit_Reward"] = 0
 
-            ###### 1.PUNISHMENT FOR COLLISION ######
-            # NOTE - Collision Penalty über HeatMap muss noch gemacht werden
-            self.potential_map
-
-            # Get current position
-            current_position = [int(state[0] / 0.05), int(state[1] / 0.05)]
-
 
 
             ###### 4. REWARD FOR EXPLORING NEW AREAS ######
+
+            # Get current position
+            current_position = [int(state[0] / 0.05), int(state[1] / 0.05)]
             # Vereinfachung 18.3: 5x5 grid um die Drohne herum
             x, y = current_position[0], current_position[1]
 
@@ -506,6 +505,27 @@ def _computeReward(
             with open("gym_pybullet_drones/examples/MAZE_TRAINING/reward_map.csv", "w", newline="") as file:
                 writer = csv.writer(file)
                 writer.writerows(self.reward_map)
+
+
+            ###### 1.PUNISHMENT FOR COLLISION ######
+            # NOTE - Collision Penalty über HeatMap muss noch gemacht werden
+
+            # 7.783662131519274 Wert für Mitte eines Objekts
+            # 7.0619562663615865 Wert für eine zeile/spalte um die mitte
+            # 2.1139027463965774 Wert für zwei zeilen/spalte um die mitte
+            # 0.8171304187933945 Wert für drei zeilen/spalte um die mitte
+            # 0.3265204823040592 Wert für vier zeilen/spalte um die mitte
+            # 0.11973387347488995 Wert für fünf zeilen/spalte um die mitte
+            # 0.03434013766226782 Wert für sechs zeilen/spalte um die mitte
+            # 0.0049732348218131705 Wert für sieben zeilen/spalte um die mitte
+
+
+
+            Value_on_Heatmap = self.potential_map[x,y] 
+
+            self.reward_components["collision_penalty"] = -Value_on_Heatmap * self.Multiplier_Collision_Penalty
+
+            
 
             # COMPUTE TOTAL REWARD
             reward = (
