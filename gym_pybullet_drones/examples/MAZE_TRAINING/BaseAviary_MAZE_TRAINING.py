@@ -1206,7 +1206,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 self.ray_results_actual[4],  # up [25]
                 last_action_VEL_1,
                 last_action_VEL_2,
-                last_action_VEL_3,
+                last_action_VEL_3
             ]
         )  # last clipped action [26]: jetzt nur noch 1 Wert (10.2.25)
         return state.reshape(

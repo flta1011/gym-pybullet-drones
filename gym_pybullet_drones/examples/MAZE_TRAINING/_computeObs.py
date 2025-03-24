@@ -214,9 +214,7 @@ def _computeObs(self):
             modified_obs.append(round(state[0], 3))  # x-Position
             modified_obs.append(round(state[1], 3))  # y-Position
             modified_obs.append(round(state[9], 3))  # Yaw-Position
-            modified_obs.append(last_Action_1)  # last Action
-            modified_obs.append(last_Action_2)  # last Action
-            modified_obs.append(last_Action_3)  # last Action
+          
 
             # abstände anhängen mit 3 Nachkommastellen
             for distance in obs:
@@ -227,5 +225,9 @@ def _computeObs(self):
                 modified_obs.append(1)
             else:
                 modified_obs.append(9999)
+
+            modified_obs.append(last_Action_1)  # last Action
+            modified_obs.append(last_Action_2)  # last Action
+            modified_obs.append(last_Action_3)  # last Action
 
             return np.array(modified_obs, dtype=np.float32)  # vorne (0,1,2), hinten (0,1,2), links (0,1,2), rechts (0,1,2), oben (1,9999)

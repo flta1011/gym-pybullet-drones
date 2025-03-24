@@ -44,6 +44,10 @@ from gym_pybullet_drones.examples.MAZE_TRAINING.BaseAviary_MAZE_TRAINING import 
 from gym_pybullet_drones.examples.MAZE_TRAINING.custom_CNN_V0_0 import (
     CustomCNNFeatureExtractor,
 )
+from gym_pybullet_drones.examples.MAZE_TRAINING.custom_NN_V0_0 import (
+    CustomNNFeatureExtractor,
+)
+
 from gym_pybullet_drones.examples.MAZE_TRAINING.Logger_MAZE_TRAINING_BUGGY import Logger
 from gym_pybullet_drones.utils.enums import (
     ActionType,
@@ -111,7 +115,7 @@ DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
 DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
-DEFAULT_EPISODE_LEN_SEC = 10 * 60  # 15 * 60
+DEFAULT_EPISODE_LEN_SEC = 3 * 60  # 15 * 60
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 DEFAULT_PUSHBACK_ACTIVE = False
 
@@ -132,7 +136,7 @@ DEFAULT_Multiplier_Collision_Penalty = 2
 - M5:   DQN_NN_MIPolicy
 - SAC:  
 """
-MODEL_VERSION = "M3"
+MODEL_VERSION = "M5"
 
 """REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
 - R1:   Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
@@ -152,7 +156,7 @@ REWARD_VERSION = "R3"
 
 """
 
-OBSERVATION_TYPE = "O3"
+OBSERVATION_TYPE = "O5"
 
 """ActionType:'
 - A1: Vier Richtungen und zwei Drehungen
@@ -305,7 +309,7 @@ def run(
         case "M4":  # M4: DQN_CNNPolicy_CustomFeatureExtractor
             # ANCHOR - CNN-DQN
             # Setze die policy_kwargs, um deinen Custom Feature Extractor zu nutzen:
-            policy_kwargs = dict(features_extractor_class=CustomCNNFeatureExtractor, features_extractor_kwargs=dict(features_dim=512))
+            policy_kwargs = dict(features_extractor_class=CustomCNNFeatureExtractor(), features_extractor_kwargs=dict(features_dim=4))
             if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
                 print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
                 model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
@@ -327,20 +331,22 @@ def run(
         case "M5":  # M5: DQN_NN_MIPolicy
             # ANCHOR - NN-DQN-MI
             # Setze die policy_kwargs, um deinen Custom Feature Extractor zu nutzen:
+            policy_kwargs = dict(features_extractor_class=CustomNNFeatureExtractor, features_extractor_kwargs=dict(features_dim=4))
             if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
                 print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
                 model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
             else:
-                print("[INFO] Creating new model with NN-DQN with custom feature extractor")
                 model = DQN(
                     "MultiInputPolicy",
                     train_env,
                     device="cuda:0",
                     # learning_rate=0.0004,
+                    policy_kwargs=policy_kwargs,
                     learning_rate=0.001,
                     verbose=1,
                     seed=42,
                     buffer_size=5000,
+                    gamma=0.99,
                 )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
     #### Target cumulative rewards (problem-dependent) ##########
     target_reward = DEFAULT_TARGET_REWARD
