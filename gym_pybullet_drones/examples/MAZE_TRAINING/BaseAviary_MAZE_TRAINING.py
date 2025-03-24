@@ -96,6 +96,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         REWARD_VERSION="R1",
         ACTION_TYPE="A1",
         OBSERVATION_TYPE="O1",
+        PUSHBACK_ACTIVE=False,
     ):
         """Initialization of a generic aviary environment.
 
@@ -135,6 +136,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.REWARD_VERSION = REWARD_VERSION
         self.ACTION_SPACE_VERSION = ACTION_TYPE
         self.OBSERVATION_TYPE = OBSERVATION_TYPE
+        self.PUSHBACK_ACTIVE = PUSHBACK_ACTIVE
         self.G = 9.8
         self.RAD2DEG = 180 / np.pi
         self.DEG2RAD = np.pi / 180
@@ -398,11 +400,11 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
                 # Add SLAM map heatmap
                 ##NOTE - ValueError:  HIER  KOMMT ERRORs
-    # Invalid value of type 'numpy.float32' received for the 'z' property of heatmap
-    #     Received value: 1.8
+                # Invalid value of type 'numpy.float32' received for the 'z' property of heatmap
+                #     Received value: 1.8
 
-    # The 'z' property is an array that may be specified as a tuple,
-    # list, numpy array, or pandas Series
+                # The 'z' property is an array that may be specified as a tuple,
+                # list, numpy array, or pandas Series
                 obs_fig.add_trace(
                     go.Heatmap(
                         z=obs[0],
@@ -626,14 +628,15 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             self.RewardCounterActualTrainRun = 0
             self.List_Of_Tuples_Of_Reward_And_Action = []
 
-        # self.action = np.zeros((self.NUM_DRONES, 4))
-        self.action_change_because_of_Collision_Danger = False
+        if self.PUSHBACK_ACTIVE == True:
+            # self.action = np.zeros((self.NUM_DRONES, 4))
+            self.action_change_because_of_Collision_Danger = False
 
-        # Get movement direction based on action
-        input_action_local = action_to_movement_direction_local[actual_action_0_bis_8]
+            # Get movement direction based on action
+            input_action_local = action_to_movement_direction_local[actual_action_0_bis_8]
 
-        # New Function to check for Collision Danger and change the action if necessary
-        self.action_change_because_of_Collision_Danger, action_with_or_without_Collision_Danger_correction = self._check_for_Collision_Danger(input_action_local)
+            # New Function to check for Collision Danger and change the action if necessary
+            self.action_change_because_of_Collision_Danger, action_with_or_without_Collision_Danger_correction = self._check_for_Collision_Danger(input_action_local)
 
         # Übersetzten in World-Koordinaten
         state = self._getDroneStateVector(0)
@@ -1190,7 +1193,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 self.ray_results_actual[3],  # right [24]
                 self.ray_results_actual[4],  # up [25]
                 last_action_VEL_X,
-                last_action_VEL_Y
+                last_action_VEL_Y,
             ]
         )  # last clipped action [26]: jetzt nur noch 1 Wert (10.2.25)
         return state.reshape(

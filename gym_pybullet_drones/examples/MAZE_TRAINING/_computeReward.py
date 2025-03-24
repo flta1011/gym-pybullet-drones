@@ -219,15 +219,16 @@ def _computeReward(
             #     self.reward_components["explore_bonus_visited_field"] = -0.1# darf keine Bestrafung geben, wenn er noch mal auf ein bereits besuchtes Feld fliegt, aber auch keine Belohnung
             #     self.reward_map[current_position[0], current_position[1]] = 3
 
-            # Save the best way map to a CSV file
-            with open("gym_pybullet_drones/examples/MAZE_TRAINING/best_way_map.csv", "w", newline="") as file:
-                writer = csv.writer(file)
-                writer.writerows(self.best_way_map)
+            if self.DASH_Active == True:
+                # Save the best way map to a CSV file
+                with open("gym_pybullet_drones/examples/MAZE_TRAINING/best_way_map.csv", "w", newline="") as file:
+                    writer = csv.writer(file)
+                    writer.writerows(self.best_way_map)
 
-            # Save the reward map to a CSV file
-            with open("gym_pybullet_drones/examples/MAZE_TRAINING/reward_map.csv", "w", newline="") as file:
-                writer = csv.writer(file)
-                writer.writerows(self.reward_map)
+                # Save the reward map to a CSV file
+                with open("gym_pybullet_drones/examples/MAZE_TRAINING/reward_map.csv", "w", newline="") as file:
+                    writer = csv.writer(file)
+                    writer.writerows(self.reward_map)
 
             # COMPUTE TOTAL REWARD
             reward = (
@@ -346,15 +347,16 @@ def _computeReward(
                     for position in path:
                         self.best_way_map[position[0], position[1]] = 1
 
-                # Save the best way map to a CSV file
-                with open("best_way_map.csv", "w", newline="") as file:
-                    writer = csv.writer(file)
-                    writer.writerows(self.best_way_map)
+                if self.DASH_ACTIVATED == True:
+                    # Save the best way map to a CSV file
+                    with open("best_way_map.csv", "w", newline="") as file:
+                        writer = csv.writer(file)
+                        writer.writerows(self.best_way_map)
 
-                # Save the reward map to a CSV file
-                with open("reward_map.csv", "w", newline="") as file:
-                    writer = csv.writer(file)
-                    writer.writerows(self.reward_map)
+                    # Save the reward map to a CSV file
+                    with open("reward_map.csv", "w", newline="") as file:
+                        writer = csv.writer(file)
+                        writer.writerows(self.reward_map)
 
             reward = 0
             state = self._getDroneStateVector(0)  # erste Drohne

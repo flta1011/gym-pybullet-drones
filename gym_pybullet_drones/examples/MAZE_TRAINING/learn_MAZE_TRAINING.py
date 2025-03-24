@@ -54,7 +54,7 @@ from gym_pybullet_drones.utils.enums import (
 from gym_pybullet_drones.utils.utils import str2bool, sync
 
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
-DEFAULT_GUI_TRAIN = True
+DEFAULT_GUI_TRAIN = False
 DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_ADVANCED_STATUS_PLOT = False
 
@@ -110,15 +110,15 @@ DEFAULT_OUTPUT_FOLDER = "results"
 DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
-DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
-DEFAULT_EPISODE_LEN_SEC = 10 * 60  # 15 * 60
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 5  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
+DEFAULT_EPISODE_LEN_SEC = 20  # 10 * 60  # 15 * 60
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
+DEFAULT_PUSHBACK_ACTIVE = False
 
 DEFAULT_OBS = ObservationType("kin")  # 'kin' or 'rgb'
 DEFAULT_ACT = ActionType("vel")  # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'one_d_pid'
 DEFAULT_AGENTS = 1
 DEFAULT_MA = False
-
 
 DEFAULT_DASH_ACTIVE = True
 
@@ -127,8 +127,8 @@ DEFAULT_DASH_ACTIVE = True
 - M2:   DQN_CNNPolicy_StandardFeatureExtractor
 - M3:   DQN_MLPPolicy
 - M4:   DQN_CNNPolicy_CustomFeatureExtractor
-
-- SAC
+- M5:   DQN_NN_MIPolicy
+- SAC:
 """
 MODEL_VERSION = "M3"
 
@@ -144,16 +144,13 @@ REWARD_VERSION = "R1"
 - O1: X, Y, Yaw, Raycast readings
 - O2: 5 Kanäliges Bild CNN
 - O3: 5 Kanäliges Bild CNN mit zweimal last Clipped Actions
-
 """
-
 OBSERVATION_TYPE = "O3"
 
 """ActionType:'
 - A1: Vier Richtungen und zwei Drehungen
 - A2: Vier Richtungen
 """
-
 ACTION_TYPE = "A1"
 
 # TODO: Implementierung Actionspace und ObsSpace Auswahl
@@ -183,6 +180,7 @@ def run(
     reward_version=REWARD_VERSION,
     ObservationType=OBSERVATION_TYPE,
     Action_Type=ACTION_TYPE,
+    Pushback_active=DEFAULT_PUSHBACK_ACTIVE,
 ):
 
     filename = os.path.join(output_folder, "save-" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
@@ -210,6 +208,7 @@ def run(
                 REWARD_VERSION=reward_version,
                 ACTION_TYPE=Action_Type,
                 OBSERVATION_TYPE=ObservationType,
+                Pushback_active=Pushback_active,
             ),
             n_envs=1,
             seed=0,
@@ -236,6 +235,7 @@ def run(
                 REWARD_VERSION=reward_version,
                 ACTION_TYPE=Action_Type,
                 OBSERVATION_TYPE=ObservationType,
+                Pushback_active=Pushback_active,
             ),
             n_envs=1,
             seed=0,
@@ -300,6 +300,27 @@ def run(
                 print("[INFO] Creating new model with CNN-DQN with custom feature extractor")
                 model = DQN(
                     "CnnPolicy",
+                    train_env,
+                    policy_kwargs=policy_kwargs,
+                    device="cuda:0",
+                    # learning_rate=0.0004,
+                    learning_rate=0.001,
+                    verbose=1,
+                    seed=42,
+                    buffer_size=5000,
+                )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
+
+        case "M5":  # M4: DQN_NN_MIPolicy
+            # ANCHOR - NN-DQN-MI
+            # Setze die policy_kwargs, um deinen Custom Feature Extractor zu nutzen:
+            policy_kwargs = dict(features_extractor_class=CustomCNNFeatureExtractor, features_extractor_kwargs=dict(features_dim=512))
+            if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
+                print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
+                model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
+            else:
+                print("[INFO] Creating new model with NN-DQN with custom feature extractor")
+                model = DQN(
+                    "MultiInputPolicy",
                     train_env,
                     policy_kwargs=policy_kwargs,
                     device="cuda:0",
