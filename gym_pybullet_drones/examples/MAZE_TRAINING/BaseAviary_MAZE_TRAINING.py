@@ -96,7 +96,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         REWARD_VERSION="R1",
         ACTION_TYPE="A1",
         OBSERVATION_TYPE="O1",
-        PUSHBACK_ACTIVE=False,
+        Pushback_active=False
     ):
         """Initialization of a generic aviary environment.
 
@@ -136,7 +136,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.REWARD_VERSION = REWARD_VERSION
         self.ACTION_SPACE_VERSION = ACTION_TYPE
         self.OBSERVATION_TYPE = OBSERVATION_TYPE
-        self.PUSHBACK_ACTIVE = PUSHBACK_ACTIVE
+        self.PUSHBACK_ACTIVE = Pushback_active
         self.G = 9.8
         self.RAD2DEG = 180 / np.pi
         self.DEG2RAD = np.pi / 180
@@ -193,6 +193,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.distance_10_step_ago = 0
         self.distance_50_step_ago = 0
         self.differnece_threshold = 0.05
+
+        
 
         # Initialize SLAM before calling the parent constructor
         self.slam = SimpleSlam(map_size=map_size_slam, resolution=resolution_slam)  # 10m x 10m map with 10cm resolution
@@ -314,6 +316,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 self.CAM_VIEW = p.computeViewMatrixFromYawPitchRoll(distance=3, yaw=-30, pitch=-30, roll=0, cameraTargetPosition=[0, 0, 0], upAxisIndex=2, physicsClientId=self.CLIENT)
                 self.CAM_PRO = p.computeProjectionMatrixFOV(fov=60.0, aspect=self.VID_WIDTH / self.VID_HEIGHT, nearVal=0.1, farVal=1000.0)
 
+
+
         if self.ADVANCED_STATUS_PLOT:
             # Matplotlib Setup für Live-Plot
             self.fig, self.ax = plt.subplots()
@@ -364,6 +368,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         #### Set a limit on the maximum target speed ###############
         if act == ActionType.VEL:
             self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000 / 3600)
+
+        # Erstellen der Heatmap für die Belohnung des Abstandes zur Wand
+        self._compute_potential_fields()
 
         #### Start Dash server #####################################
         if self.DASH_ACTIVE:
@@ -628,6 +635,15 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             self.RewardCounterActualTrainRun = 0
             self.List_Of_Tuples_Of_Reward_And_Action = []
 
+        # Übersetzten in World-Koordinaten
+        state = self._getDroneStateVector(0)
+
+        input_action_local = action_to_movement_direction_local[actual_action_0_bis_8]
+
+        action = input_action_local
+        self.action = input_action_local
+
+
         if self.PUSHBACK_ACTIVE == True:
             # self.action = np.zeros((self.NUM_DRONES, 4))
             self.action_change_because_of_Collision_Danger = False
@@ -635,20 +651,23 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             # Get movement direction based on action
             input_action_local = action_to_movement_direction_local[actual_action_0_bis_8]
 
+             # Convert quaternion to rotation matrix using NumPy
+            rot_matrix = np.array(p.getMatrixFromQuaternion(state[3:7])).reshape(3, 3)
+
             # New Function to check for Collision Danger and change the action if necessary
             self.action_change_because_of_Collision_Danger, action_with_or_without_Collision_Danger_correction = self._check_for_Collision_Danger(input_action_local)
 
-        # Übersetzten in World-Koordinaten
-        state = self._getDroneStateVector(0)
-        # Convert quaternion to rotation matrix using NumPy
-        rot_matrix = np.array(p.getMatrixFromQuaternion(state[3:7])).reshape(3, 3)
+            input_action_Velocity_World = rot_matrix.dot(action_with_or_without_Collision_Danger_correction[0][0:3])
 
-        input_action_Velocity_World = rot_matrix.dot(action_with_or_without_Collision_Danger_correction[0][0:3])
+            input_action_complete_world = np.array([np.concatenate((input_action_Velocity_World[0:2], np.array([0]), input_action_local[0][3:5]))])  # gedrehte x,y-Werte, z-Wert 0, yaw-Wert bleibt gleich
 
-        input_action_complete_world = np.array([np.concatenate((input_action_Velocity_World[0:2], np.array([0]), input_action_local[0][3:5]))])  # gedrehte x,y-Werte, z-Wert 0, yaw-Wert bleibt gleich
+            action = input_action_complete_world
+            self.action = input_action_complete_world
 
-        action = input_action_complete_world
-        self.action = input_action_complete_world
+        
+       
+
+        
 
         #### Save PNG video frames if RECORD=True and GUI=False ####
         if self.RECORD and not self.GUI and self.step_counter % self.CAPTURE_FREQ == 0:
@@ -1800,7 +1819,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         plt.savefig(os.path.join(output_folder, f"potential_field_{timestamp}.png"))
         plt.close()
 
-        return self.potential_map
+        #return self.potential_map
 
     ################################################################################
     def _initialize_Reward_Map_and_Best_Way_Map(self, Maze_Number):
@@ -1820,8 +1839,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         # Initializing Reward Map
         self.reward_map = np.zeros((60, 60), dtype=int)
-        # reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_{Maze_Number}.csv"
-        reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_21.csv"
+        reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_{Maze_Number}.csv"
+        #reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_21.csv"
 
         with open(reward_map_file_path, "r") as file:
             reader = csv.reader(file)
@@ -1848,11 +1867,11 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         # Save the best way map to a CSV file
         # self._compute_potential_fields([0, 0], only_forces=False)  # aktuell noch buggy, Übergabe [0, 0]
-        with open("best_way_map_DQN.csv", "w", newline="") as file:
-            writer = csv.writer(file)
-            writer.writerows(self.best_way_map)
+        # with open("best_way_map_DQN.csv", "w", newline="") as file:
+        #     writer = csv.writer(file)
+        #     writer.writerows(self.best_way_map)
 
-        # Save the reward map to a CSV file
+        #Save the reward map to a CSV file
         with open("reward_map_DQN.csv", "w", newline="") as file:
             writer = csv.writer(file)
             writer.writerows(self.reward_map)

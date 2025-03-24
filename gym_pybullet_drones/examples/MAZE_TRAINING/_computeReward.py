@@ -152,8 +152,8 @@ def _computeReward(
             self.reward_components["Target_Hit_Reward"] = 0
 
             ###### 1.PUNISHMENT FOR COLLISION ######
-            if self.action_change_because_of_Collision_Danger == True:
-                self.reward_components["collision_penalty"] = -10.0
+            # if self.action_change_because_of_Collision_Danger == True:
+            #     self.reward_components["collision_penalty"] = -10.0
 
             ###### 18.3: Ziel hat keinen Einfluss mehr, soll aufs erkunden belohnt werden
             # ###### 2.REWARD FOR DISTANCE TO TARGET (line of sight) ######
@@ -219,7 +219,7 @@ def _computeReward(
             #     self.reward_components["explore_bonus_visited_field"] = -0.1# darf keine Bestrafung geben, wenn er noch mal auf ein bereits besuchtes Feld fliegt, aber auch keine Belohnung
             #     self.reward_map[current_position[0], current_position[1]] = 3
 
-            if self.DASH_Active == True:
+            if self.DASH_ACTIVE == True:
                 # Save the best way map to a CSV file
                 with open("gym_pybullet_drones/examples/MAZE_TRAINING/best_way_map.csv", "w", newline="") as file:
                     writer = csv.writer(file)
@@ -347,7 +347,7 @@ def _computeReward(
                     for position in path:
                         self.best_way_map[position[0], position[1]] = 1
 
-                if self.DASH_ACTIVATED == True:
+                if self.DASH_ACTIVE == True:
                     # Save the best way map to a CSV file
                     with open("best_way_map.csv", "w", newline="") as file:
                         writer = csv.writer(file)
@@ -370,8 +370,8 @@ def _computeReward(
             self.reward_components["Target_Hit_Reward"] = 0
 
             ###### 1.PUNISHMENT FOR COLLISION ######
-            if self.action_change_because_of_Collision_Danger == True:
-                self.reward_components["collision_penalty"] = -1.0
+            # if self.action_change_because_of_Collision_Danger == True:
+            #     self.reward_components["collision_penalty"] = -1.0
 
             # Get current position
             current_position = [int(state[0] / 0.05), int(state[1] / 0.05)]
@@ -484,6 +484,7 @@ def _computeReward(
 
             ###### 1.PUNISHMENT FOR COLLISION ######
             # NOTE - Collision Penalty über HeatMap muss noch gemacht werden
+            self.potential_map
 
             # Get current position
             current_position = [int(state[0] / 0.05), int(state[1] / 0.05)]

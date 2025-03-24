@@ -128,36 +128,36 @@ DEFAULT_DASH_ACTIVE = False
 - M3:   DQN_MLPPolicy
 - M4:   DQN_CNNPolicy_CustomFeatureExtractor
 - M5:   DQN_NN_MIPolicy
-- SAC:
+- SAC:  
 """
 MODEL_VERSION = "M1"
 
 """REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
 - R1:   Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
 - R2:   Zusätzlich Bestrafung für zu nah an der Wand
-- R3:
+- R3:   Heatmap
 - R4:
 """
-REWARD_VERSION = "R1"
+REWARD_VERSION = "R3"
 
 """ObservationType:
-- O1: X, Y, Yaw, Raycast readings
+- O1: X, Y, Yaw, Raycast readings (nur PPO)
 - O2: 5 Kanäliges Bild CNN
 - O3: 5 Kanäliges Bild CNN mit zweimal last Clipped Actions
 - 04: Kanal 1: Normalisierte SLAM Map (Occupancy Map)
-- O5: XYZ Position, Yaw, Raycast readings, 3 last clipped actions
+- O5: XYZ Position, Yaw, Raycast readings, 3 last clipped actions 
 
 
 """
 
-OBSERVATION_TYPE = "O3"
+OBSERVATION_TYPE = "O1"
 
 """ActionType:'
 - A1: Vier Richtungen und zwei Drehungen
 - A2: Vier Richtungen
 """
 
-ACTION_TYPE = "A1"
+ACTION_TYPE = "A2"
 
 # TODO: Implementierung Actionspace und ObsSpace Auswahl
 
@@ -214,7 +214,7 @@ def run(
                 REWARD_VERSION=reward_version,
                 ACTION_TYPE=Action_Type,
                 OBSERVATION_TYPE=ObservationType,
-                Pushback_active=Pushback_active,
+                Pushback_active=Pushback_active
             ),
             n_envs=1,
             seed=0,
@@ -241,7 +241,7 @@ def run(
                 REWARD_VERSION=reward_version,
                 ACTION_TYPE=Action_Type,
                 OBSERVATION_TYPE=ObservationType,
-                Pushback_active=Pushback_active,
+                Pushback_active=Pushback_active
             ),
             n_envs=1,
             seed=0,
