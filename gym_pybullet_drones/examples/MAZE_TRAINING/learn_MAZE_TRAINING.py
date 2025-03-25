@@ -33,10 +33,12 @@ from stable_baselines3 import DQN, PPO, SAC
 from stable_baselines3.common.callbacks import (
     EvalCallback,
     StopTrainingOnRewardThreshold,
+    CheckpointCallback, CallbackList
 )
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
+from stable_baselines3.common.callbacks import CheckpointCallback
 
 from gym_pybullet_drones.examples.MAZE_TRAINING.BaseAviary_MAZE_TRAINING import (
     BaseRLAviary_MAZE_TRAINING,
@@ -58,7 +60,7 @@ from gym_pybullet_drones.utils.enums import (
 from gym_pybullet_drones.utils.utils import str2bool, sync
 
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
-DEFAULT_GUI_TRAIN = True
+DEFAULT_GUI_TRAIN = False
 DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_ADVANCED_STATUS_PLOT = False
 
@@ -115,7 +117,7 @@ DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
 DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 2  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
-DEFAULT_EPISODE_LEN_SEC = 10 * 60  # 15 * 60
+DEFAULT_EPISODE_LEN_SEC = 20 * 60  # 15 * 60
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 DEFAULT_PUSHBACK_ACTIVE = False
 
@@ -128,12 +130,14 @@ DEFAULT_DASH_ACTIVE = False
 
 DEFAULT_Multiplier_Collision_Penalty = 1
 
+DEFAULT_VelocityScale = 1
+
 """MODEL_Versionen: 
 - M1:   PPO
 - M2:   DQN_CNNPolicy_StandardFeatureExtractor
 - M3:   DQN_MLPPolicy
 - M4:   DQN_CNNPolicy_CustomFeatureExtractor
-- M5:   DQN_NN_MIPolicy
+- M5:   DQN_NN_MIPolicy mit fullyConnectLayer
 - SAC:  
 """
 MODEL_VERSION = "M5"
@@ -194,6 +198,7 @@ def run(
     Action_Type=ACTION_TYPE,
     Pushback_active=DEFAULT_PUSHBACK_ACTIVE,
     DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
+    DEFAULT_VelocityScale=DEFAULT_VelocityScale,
 ):
 
     filename = os.path.join(output_folder, "save-" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
@@ -223,6 +228,7 @@ def run(
                 OBSERVATION_TYPE=ObservationType,
                 Pushback_active=Pushback_active,
                 DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
+                VelocityScale=DEFAULT_VelocityScale
             ),
             n_envs=1,
             seed=0,
@@ -251,6 +257,7 @@ def run(
                 OBSERVATION_TYPE=ObservationType,
                 Pushback_active=Pushback_active,
                 DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
+                VelocityScale=DEFAULT_VelocityScale
             ),
             n_envs=1,
             seed=0,
@@ -378,7 +385,21 @@ def run(
     # callback: The callback to use during training, in this case, eval_callback.
     # log_interval: The number of timesteps between logging events.
     # In your code, the model will train for a specified number of timesteps, using the eval_callback for periodic evaluation, and log information every 100 timesteps.
-    model.learn(total_timesteps=DEFAULT_TRAIN_TIMESTEPS, callback=eval_callback, log_interval=1000, progress_bar=True)  # shorter training in GitHub Actions pytest
+
+
+    # Definiere den Speicherpfad und die Häufigkeit der Checkpoints (z.B. alle 10.000 Schritte)
+    checkpoint_callback = CheckpointCallback(
+        save_freq=1000,  # Speichert alle 10.000 Schritte
+        save_path=filename + "/",  # Speicherpfad für die Modelle
+        name_prefix=filename + "/",  # Präfix für die Modell-Dateien
+        save_replay_buffer=True,  # Speichert auch den Replay Buffer
+        save_vecnormalize=True  # Falls VecNormalize genutzt wird, wird es mitgespeichert
+    )
+
+    # Kombiniere beide Callbacks mit CallbackList
+    callback_list = CallbackList([checkpoint_callback, eval_callback])
+
+    model.learn(total_timesteps=DEFAULT_TRAIN_TIMESTEPS, callback=callback_list, log_interval=1000, progress_bar=True)  # shorter training in GitHub Actions pytest
 
     #### Save the model ########################################
     model.save(filename + "/final_model.zip")

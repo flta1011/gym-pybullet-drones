@@ -98,6 +98,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         OBSERVATION_TYPE="O1",
         Pushback_active=False,
         DEFAULT_Multiplier_Collision_Penalty=2,
+        VelocityScale = 1,
     ):
         """Initialization of a generic aviary environment.
 
@@ -195,6 +196,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.distance_50_step_ago = 0
         self.differnece_threshold = 0.05
         self.Multiplier_Collision_Penalty = DEFAULT_Multiplier_Collision_Penalty
+        self.VelocityScale = VelocityScale
 
         # Initialize SLAM before calling the parent constructor
         self.slam = SimpleSlam(map_size=map_size_slam, resolution=resolution_slam)  # 10m x 10m map with 10cm resolution
@@ -612,14 +614,14 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # Für die Maze-Trainings-Umgebung 8 Möglichkeiten
         action_to_movement_direction_local = {
             # 0: np.array([[0, 0, 0, 0.5, 0]]), # Fly 0° (Stay)
-            0: np.array([[1, 0, 0, 0.5, 0]]),  # Fly 90° (Forward)
-            1: np.array([[-1, 0, 0, 0.5, 0]]),  # Fly 180° (Backward)
-            2: np.array([[0, 1, 0, 0.5, 0]]),  # Fly 90° (Left)
-            3: np.array([[0, -1, 0, 0.5, 0]]),  # Fly 270° (Right)
+            0: np.array([[1, 0, 0, self.VelocityScale, 0]]),  # Fly 90° (Forward)
+            1: np.array([[-1, 0, 0, self.VelocityScale, 0]]),  # Fly 180° (Backward)
+            2: np.array([[0, 1, 0, self.VelocityScale, 0]]),  # Fly 90° (Left)
+            3: np.array([[0, -1, 0, self.VelocityScale, 0]]),  # Fly 270° (Right)
             4: np.array(
-                [[0, 0, 0, 0.5, 1 / 72 * np.pi]]
+                [[0, 0, 0, self.VelocityScale, 1 / 72 * np.pi]]
             ),  # 45° Left-Turn # NOTE - Tests mit 1/36*np.pi waren nicht so gut, da die Drohne scheinbar nicht verstanden hat, dass bei einer Drehung vorwärtsfliegen bedeutet
-            5: np.array([[0, 0, 0, 0.5, -1 / 72 * np.pi]]),  # 45° Right-Turn # NOTE - Ausgesetzt für Testzweicke 28.02.25
+            5: np.array([[0, 0, 0, self.VelocityScale, -1 / 72 * np.pi]]),  # 45° Right-Turn # NOTE - Ausgesetzt für Testzweicke 28.02.25
         }
 
         if self.step_counter == 0:
