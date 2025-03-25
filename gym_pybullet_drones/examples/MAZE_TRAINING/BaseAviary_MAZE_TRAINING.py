@@ -447,24 +447,24 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
                 return fig, obs_fig, bar_chart, current_reward_text
 
-        def is_port_in_use(port):
-            with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
-                return s.connect_ex(("localhost", port)) == 0
+            def is_port_in_use(port):
+                with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+                    return s.connect_ex(("localhost", port)) == 0
 
-        # Start Dash server in background thread
-        def run_dash_app():
-            logging.getLogger("werkzeug").setLevel(logging.ERROR)
-            self.app.run_server(debug=False, port=self.port)
+            # Start Dash server in background thread
+            def run_dash_app():
+                logging.getLogger("werkzeug").setLevel(logging.ERROR)
+                self.app.run_server(debug=False, port=self.port)
 
-        if not is_port_in_use(self.port):
-            self.dashboard_thread = Thread(target=run_dash_app, daemon=True)
-            self.dashboard_thread.start()
+            if not is_port_in_use(self.port):
+                self.dashboard_thread = Thread(target=run_dash_app, daemon=True)
+                self.dashboard_thread.start()
 
-            # Open web browser after a short delay to ensure server is running
-            time.sleep(1)  # Wait for server to start
-            webbrowser.open(f"http://localhost:{self.port}")
-        else:
-            print(f"Port {self.port} is already in use, cannot start Dash server.")
+                # Open web browser after a short delay to ensure server is running
+                time.sleep(1)  # Wait for server to start
+                webbrowser.open(f"http://localhost:{self.port}")
+            else:
+                print(f"Port {self.port} is already in use, cannot start Dash server.")
 
     ################################################################################
 

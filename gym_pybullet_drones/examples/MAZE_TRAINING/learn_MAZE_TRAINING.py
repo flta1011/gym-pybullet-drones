@@ -114,8 +114,8 @@ DEFAULT_OUTPUT_FOLDER = "results"
 DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
-DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
-DEFAULT_EPISODE_LEN_SEC = 3 * 60  # 15 * 60
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 2  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
+DEFAULT_EPISODE_LEN_SEC = 10 * 60  # 15 * 60
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 DEFAULT_PUSHBACK_ACTIVE = False
 
@@ -124,7 +124,7 @@ DEFAULT_ACT = ActionType("vel")  # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'on
 DEFAULT_AGENTS = 1
 DEFAULT_MA = False
 
-DEFAULT_DASH_ACTIVE = True
+DEFAULT_DASH_ACTIVE = False
 
 DEFAULT_Multiplier_Collision_Penalty = 2
 
@@ -342,11 +342,11 @@ def run(
                     device="cuda:0",
                     # learning_rate=0.0004,
                     policy_kwargs=policy_kwargs,
-                    learning_rate=0.001,
+                    learning_rate=0.004,
                     verbose=1,
                     seed=42,
                     buffer_size=5000,
-                    gamma=0.99,
+                    gamma=0.8,
                 )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
     #### Target cumulative rewards (problem-dependent) ##########
     target_reward = DEFAULT_TARGET_REWARD
