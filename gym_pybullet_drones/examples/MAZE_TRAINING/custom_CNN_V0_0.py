@@ -7,7 +7,7 @@ from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 
 # Custom Feature Extractor basierend auf unserer CNN-Architektur
 class CustomCNNFeatureExtractor(BaseFeaturesExtractor):
-    def __init__(self, observation_space, features_dim=512):
+    def __init__(self, observation_space, features_dim=6):
         """
         observation_space: Erwartet einen Tensor der Form (channels, height, width), z. B. (5, 60, 60).
         features_dim: Dimension der extrahierten Features.

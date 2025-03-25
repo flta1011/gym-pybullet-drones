@@ -1766,9 +1766,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # Parameter
         state = self._getDroneStateVector(0)
 
-        k_rep = 0.01  # Repulsion-Skalierun
-        d0 = 0.4  # Einflussradius für Wände
-        Scale_Grid = 0.05
+        k_rep = 0.01  # Repulsion-Skalierung
+        d0 = 1  # Einflussradius für Wände
+        Scale_Grid = 0.05  # Skalierung des Grids
 
         # Erstelle ein Raster mit Potentialwerten
         self.potential_map = np.zeros_like(self.reward_map, dtype=float)
@@ -1792,11 +1792,11 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         # Visualisiere das Potentialfeld
         # Create output folder if it doesn't exist
-        output_folder = os.path.join(os.path.dirname(__file__), "potenzial_fields")
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
+        # output_folder = os.path.join(os.path.dirname(__file__), "potenzial_fields")
+        # if not os.path.exists(output_folder):
+        #     os.makedirs(output_folder)
 
-        # # Create and save the plot without displaying
+        # # # Create and save the plot without displaying
         # plt.ioff()  # Turn off interactive mode
         # fig = plt.figure(figsize=(10, 10))
         # plt.imshow(self.potential_map, cmap="viridis", origin="lower")

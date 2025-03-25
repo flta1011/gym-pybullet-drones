@@ -525,8 +525,6 @@ def _computeReward(
 
             self.reward_components["collision_penalty"] = -Value_on_Heatmap * self.Multiplier_Collision_Penalty
 
-            
-
             # COMPUTE TOTAL REWARD
             reward = (
                 self.reward_components["collision_penalty"]

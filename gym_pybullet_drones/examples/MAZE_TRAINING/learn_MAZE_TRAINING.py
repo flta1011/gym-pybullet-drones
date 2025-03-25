@@ -126,7 +126,7 @@ DEFAULT_MA = False
 
 DEFAULT_DASH_ACTIVE = False
 
-DEFAULT_Multiplier_Collision_Penalty = 2
+DEFAULT_Multiplier_Collision_Penalty = 1
 
 """MODEL_Versionen: 
 - M1:   PPO
