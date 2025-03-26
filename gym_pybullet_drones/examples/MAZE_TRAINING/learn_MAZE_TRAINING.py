@@ -61,8 +61,8 @@ from gym_pybullet_drones.utils.utils import str2bool, sync
 
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
 DEFAULT_GUI_TRAIN = True
-Default_Train = False
-Default_Test = True
+Default_Train = True
+Default_Test = False
 Default_Test_filename_test = "Model_test"
 DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_ADVANCED_STATUS_PLOT = False
@@ -321,10 +321,15 @@ def run(
                     model = DQN(
                         "MlpPolicy",
                         train_env,
+                        device="cuda:0",
+                        # learning_rate=0.0004,
+                        #policy_kwargs=dict(net_arch=[128, 64, 32]),
+                        learning_rate=0.004,
                         verbose=1,
-                        learning_rate=0.0004,  # 0,0002 zu gering -> auf 0.0004 erhöht -> auf 0.0005 erhöht --> auf 0.0004 reduziert, da die Policy zu stark angepasst wurde, obwohl es schon 5s am Ziel war..
+                        seed=42,
                         buffer_size=5000,
-                    )
+                        gamma=0.8,
+                    ) 
 
             case "M4":  # M4: DQN_CNNPolicy_CustomFeatureExtractor
                 # ANCHOR - CNN-DQN
@@ -351,7 +356,7 @@ def run(
             case "M5":  # M5: DQN_NN_MIPolicy
                 # ANCHOR - NN-DQN-MI
                 # Setze die policy_kwargs, um deinen Custom Feature Extractor zu nutzen:
-                policy_kwargs = dict(features_extractor_class=CustomNNFeatureExtractor, features_extractor_kwargs=dict(features_dim=4))
+                #policy_kwargs = dict(features_extractor_class=CustomNNFeatureExtractor, features_extractor_kwargs=dict(features_dim=4))
                 if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
                     print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
                     model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
@@ -361,14 +366,13 @@ def run(
                         train_env,
                         device="cuda:0",
                         # learning_rate=0.0004,
-                        policy_kwargs=policy_kwargs,
+                        policy_kwargs=dict(net_arch=[128, 64, 32]),
                         learning_rate=0.004,
                         verbose=1,
                         seed=42,
                         buffer_size=5000,
                         gamma=0.8,
                     )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
-
               
         #### Target cumulative rewards (problem-dependent) ##########
         target_reward = DEFAULT_TARGET_REWARD

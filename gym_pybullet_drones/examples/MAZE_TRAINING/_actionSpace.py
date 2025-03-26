@@ -20,11 +20,11 @@ def _actionSpace(self):
 
     #
 
-    # match self.ACTION_SPACE_VERSION:
-    #     case "A1":  # Vier Richtugnen +- 1/72pi Drehung
+    match self.ACTION_SPACE_VERSION:
+        case "A1":  # Vier Richtugnen +- 1/72pi Drehung
 
-    #         return spaces.Discrete(6)
+            return spaces.Discrete(6)
 
-    #     case "A2":  # Vier Richtungen
+        case "A2":  # Vier Richtungen
 
-    return spaces.Discrete(4)
+            return spaces.Discrete(4)
