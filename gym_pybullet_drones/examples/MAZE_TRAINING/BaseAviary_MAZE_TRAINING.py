@@ -1211,7 +1211,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 self.ray_results_actual[2],  # left [23]
                 self.ray_results_actual[3],  # right [24]
                 self.ray_results_actual[4],  # up [25]
-                last_action_VEL_1,
+                last_action_VEL_1, 
                 last_action_VEL_2,
                 last_action_VEL_3
             ]

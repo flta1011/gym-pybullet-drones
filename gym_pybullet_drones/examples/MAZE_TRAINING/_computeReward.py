@@ -614,14 +614,14 @@ def _computeReward(
             # Prozentsatz der erkundeten Fläche
             Ratio_Area = self.Area_counter / self.Area_counter_Max
             Ratio_Area = round(Ratio_Area, 2)  # Round to 2 decimal places
-            Procent = Ratio_Area % self.Procent_Step
-            if Procent == 0:
-                if self.previous_Procent != Ratio_Area:
-                    print("Ratio_Area in Prozent", Ratio_Area * 100, "%")
-                    self.previous_Procent = Ratio_Area
-                    if Ratio_Area == 0.8:
-                        print("80 Prozent Felder erkundet")
-                        self.reward_components["Prozentual_Bonus"] = 100
+            #Procent = Ratio_Area % self.Procent_Step
+            # if Procent == 0:
+            if self.previous_Procent != Ratio_Area:
+                print("Erkundete Fläche in Prozent", Ratio_Area * 100, "%")
+                self.previous_Procent = Ratio_Area
+                if Ratio_Area == 0.8:
+                    print("80 Prozent Felder erkundet")
+                    self.reward_components["Prozentual_Bonus"] = 100
 
 
             # Save the reward map to a CSV file
