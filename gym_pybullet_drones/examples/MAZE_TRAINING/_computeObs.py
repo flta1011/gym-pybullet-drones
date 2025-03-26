@@ -269,3 +269,40 @@ def _computeObs(self):
             self.obs = obs  # für Visualisierung in dem Dashboard
 
             return obs
+        
+        case "O7":  # 4 Kanalig Bild Slam, X, Y, Yaw Position
+            """
+            Baut einen 8-Kanal-Tensor auf:
+            - Kanal 1: Normalisierte SLAM Map (Occupancy Map)
+            - Kanal 2: Konstanter Wert des normierten x (angenommen, x ∈ [-4,4])
+            - Kanal 3: Konstanter Wert des normierten y (angenommen, y ∈ [-4,4])
+            - Kanal 4: sin(yaw)
+            - Kanal 5: cos(yaw)
+            """
+
+            # Get current drone state
+            state = self._getDroneStateVector(0)
+
+            # Get SLAM map and normalize it
+            slam_map = self.slam.occupancy_grid
+            
+
+            raycasts = np.array[state[21], state[22], state[23], state[24]]  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
+
+            
+            # Get drone position from state
+            #pos = state[0:2]  # x,y position
+
+            # Achtung: in der Simulation sind nie negative Werte zu erwarten, da die Mazes so gespant sind, das Sie immer positive Werte aufweisen. In echt kann die Drohne aber später auch negative Werte erhalten.
+
+            # Yaw in zwei Kanäle: sin und cos
+            yaw = state[9]  # [9]=yaw-Winkel
+
+            
+
+            # Staple die 5 Kanäle zusammen: Shape = (5, grid_size, grid_size)
+            # obs = np.stack([slam_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel], axis=0)
+            obs = dict({"image":slam_map, "x":state[0], "y":state[1], "sin_yaw":np.sin(yaw), "cos_yaw":np.cos(yaw), "last_action":self.last_actions, "raycast":raycasts})
+            self.obs = obs  # für Visualisierung in dem Dashboard
+
+            return obs

@@ -29,7 +29,7 @@ def _computeTruncated(self):
     if self.step_counter / self.PYB_FREQ > self.EPISODE_LEN_SEC:
         Grund_Truncated = "Zeit abgelaufen"
         # wenn Zeit abgeaufen ist, dann wird die Drohne bestraft
-        self.RewardCounterActualTrainRun += -100
+        self.RewardCounterActualTrainRun += -10
         return True, Grund_Truncated
 
     Grund_Truncated = None

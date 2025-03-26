@@ -590,7 +590,6 @@ def _computeReward(
             self.reward_components["Step_counter"] = 0
             # self.reward_components["best_way_bonus"] = 0
             self.reward_components["explore_bonus_new_field"] = 0
-            self.reward_components["explore_bonus_visited_field"] = 0
             self.reward_components["Prozentual_Bonus"] = 0
 
             ###### 4. REWARD FOR EXPLORING NEW AREAS ######
@@ -608,18 +607,12 @@ def _computeReward(
                 for j in range(max(0, y - 2), min(60, y + 2)):
                     if self.reward_map[i, j] == 0:
                         self.reward_map[i, j] = 1
-                        self.reward_components["explore_bonus_new_field"] += 5
+                        self.reward_components["explore_bonus_new_field"] += 3
                         self.Area_counter += 1
             
-            # Prozentsatz der erkundeten Fläche
-            Ratio_Area = self.Area_counter / self.Area_counter_Max
-            Ratio_Area = round(Ratio_Area, 2)  # Round to 2 decimal places
-            #Procent = Ratio_Area % self.Procent_Step
-            # if Procent == 0:
-            if self.previous_Procent != Ratio_Area:
-                print("Erkundete Fläche in Prozent", Ratio_Area * 100, "%")
-                self.previous_Procent = Ratio_Area
-                if Ratio_Area == 0.8:
+            
+
+                if self.Ratio_Area == 0.8:
                     print("80 Prozent Felder erkundet")
                     self.reward_components["Prozentual_Bonus"] = 100
 
@@ -642,8 +635,6 @@ def _computeReward(
             # 0.03434013766226782 Wert für sechs zeilen/spalte um die mitte
             # 0.0049732348218131705 Wert für sieben zeilen/spalte um die mitte
 
-
-
             Value_on_Heatmap = self.potential_map[x,y] 
 
             self.reward_components["collision_penalty"] = -Value_on_Heatmap * self.Multiplier_Collision_Penalty
@@ -653,7 +644,6 @@ def _computeReward(
                 self.reward_components["collision_penalty"]
                 + self.reward_components["Step_counter"]
                 + self.reward_components["explore_bonus_new_field"]
-                + self.reward_components["explore_bonus_visited_field"]
                 + self.reward_components["Prozentual_Bonus"]
             )
             self.last_total_reward = reward  # Save the last total reward for the dashboard

@@ -144,7 +144,7 @@ DEFAULT_Procent_Step = 0.01
 - M2:   DQN_CNNPolicy_StandardFeatureExtractor
 - M3:   DQN_MLPPolicy
 - M4:   DQN_CNNPolicy_CustomFeatureExtractor
-- M5:   DQN_NN_MIPolicy mit fullyConnectLayer
+- M5:   DQN_NN_MultiInputPolicy mit fullyConnectLayer
 - SAC:  
 """
 MODEL_VERSION = "M5"
@@ -162,12 +162,13 @@ REWARD_VERSION = "R4"
 - O2: 5 Kanäliges Bild CNN
 - O3: 5 Kanäliges Bild CNN mit zweimal last Clipped Actions
 - 04: Kanal 1: Normalisierte SLAM Map (Occupancy Map)
-- O5: XYZ Position, Yaw, Raycast readings, 3 last clipped actions 
-
+- O5: XY Position, Yaw (sin,cos), Raycast readings, last clipped actions 
+- 06: Slam-image, XY Position, Yaw (sin,cos), last actions (n Stück)
+- 07: Slam-image, XY Position, Yaw (sin,cos), last actions (n Stück), raycasts 
 
 """
 
-OBSERVATION_TYPE = "O5"
+OBSERVATION_TYPE = "O7"
 
 """ActionType:'
 - A1: Vier Richtungen und zwei Drehungen
@@ -356,7 +357,7 @@ def run(
                     )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
             # NOTE - OHNE ZUFALLSWERTE AM ANFANG
 
-            case "M5":  # M5: DQN_NN_MIPolicy
+            case "M5":  # M5: DQN_NN_MulitInputPolicy
                 # ANCHOR - NN-DQN-MI
                 # Setze die policy_kwargs, um deinen Custom Feature Extractor zu nutzen:
                 # policy_kwargs = dict(features_extractor_class=CustomNNFeatureExtractor, features_extractor_kwargs=dict(features_dim=4))
@@ -368,10 +369,10 @@ def run(
                         "MultiInputPolicy",
                         train_env,
                         device="cuda:0",
-                        # learning_rate=0.0004,
-                        policy_kwargs=dict(net_arch=[128, 64, 32]),
+                        #policy_kwargs=dict(net_arch=[128, 64, 32]),
                         learning_rate=0.004,
                         verbose=1,
+                        batch_size=32,
                         seed=42,
                         buffer_size=5000,
                         gamma=0.8,

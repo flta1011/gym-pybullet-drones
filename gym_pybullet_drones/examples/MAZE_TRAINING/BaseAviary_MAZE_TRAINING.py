@@ -201,10 +201,12 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.differnece_threshold = 0.05
         self.Multiplier_Collision_Penalty = DEFAULT_Multiplier_Collision_Penalty
         self.VelocityScale = VelocityScale
+        self.Ratio_Area = 0
         self.Area_counter = 0
         self.Area_counter_Max = 0
         self.previous_Procent = 1
         self.Procent_Step = Procent_Step
+        self.too_close_to_wall_counter = 0
 
         # Initialize SLAM before calling the parent constructor
         self.slam = SimpleSlam(map_size=map_size_slam, resolution=resolution_slam)  # 10m x 10m map with 10cm resolution
@@ -510,8 +512,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             # self.Maze_number = np.random.choice((1, 20))
             self.Maze_number = 21
 
-            print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
-            print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
+            
             print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
             self.New_Maze_number_counter = 0
         else:
@@ -779,6 +780,10 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             #                              physicsClientId=self.CLIENT
             #                              )
 
+            #erhöhe den Step-Counter für die Zählung der Momente, die zu Nah an der Wand waren
+            if self.distance_map[round(self.pos[0]/0.05), round(self.pos[1]/0.05)] < 0.25:
+                self.too_close_to_wall_counter += 1
+
         else:  # Reward-/Action-Änderungsfrequenz ist kleiner als die Ctrl-Frequenz --> Loop muss öfters durch die Contrl-Freq bzw. Physics-Frequenz durchlaufen werden
             # setzte den Step-Counter für die Zählung der Physics-Frequenz auf 0
             self.PYB_STEPS_IN_ACTUAL_STEP_CALL = 0
@@ -829,6 +834,10 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 #### Update and store the drones kinematic information #####
                 self._updateAndStoreKinematicInformation()
 
+                #erhöhe den Step-Counter für die Zählung der Momente, die zu Nah an der Wand waren (in jeden Control-Freq.)
+                if self.distance_map[round(self.pos[0]/0.05), round(self.pos[1]/0.05)] < 0.25:
+                    self.too_close_to_wall_counter += 1
+
         #########################################################################################
         # SLAM-Update
         pos = state[0:3]
@@ -876,6 +885,19 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             if terminated:
                 print(f"Grund für Terminated: {Grund_Terminated}")
                 print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
+
+
+        # Prozentsatz der erkundeten Fläche
+        self.Ratio_Area = self.Area_counter / self.Area_counter_Max
+        self.Ratio_Area = round(self.Ratio_Area, 2)  # Round to 2 decimal places
+        #Procent = Ratio_Area % self.Procent_Step
+        # if Procent == 0:
+        if self.previous_Procent != self.Ratio_Area:
+            print("Erkundete Fläche in Prozent", self.Ratio_Area * 100, "%")
+            self.previous_Procent = self.Ratio_Area
+ 
+        if self.step_counter % 500 == 0:
+            print(f"Erkundete Fläche in Prozent {self.Ratio_Area * 100}% ###### Anzahl der Steps, zu Nahe an der Wand: {self.too_close_to_wall_counter}")
 
         # if self.GUI: #deaktiviert, damit der nachfolgende Plot immer kommt, auch wenn keine GUI eingeschaltet ist
         if truncated:
@@ -1223,7 +1245,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             ]
         )  # last clipped action [26]: jetzt nur noch 1 Wert (10.2.25)
         return state.reshape(
-            29,
+            26,
         )  # von 30 auf 27 geändert, da nur 1 Wert in lastClipppedACtion (10.2.25)
         # auf 28 geändert, da 2 Werte in lastClippedAction (24.03.25)
 
@@ -1777,14 +1799,14 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
     def _compute_potential_fields(self):
         # Parameter
-        state = self._getDroneStateVector(0)
 
         k_rep = 0.01  # Repulsion-Skalierung
-        d0 = 1  # Einflussradius für Wände
+        d0 = 0.8  # Einflussradius für Wände
         Scale_Grid = 0.05  # Skalierung des Grids
 
         # Erstelle ein Raster mit Potentialwerten
         self.potential_map = np.zeros_like(self.reward_map, dtype=float)
+        self.distance_map = np.zeros_like(self.reward_map, dtype=float)
 
         # Extrahiere Wandpositionen (Indizes der Wandpositionen)
         walls = np.argwhere(self.reward_map == 6)
@@ -1800,6 +1822,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 U_rep = 0
                 for wall in walls:
                     d = np.linalg.norm(pos - wall) * Scale_Grid
+                    self.distance_map[x, y] = d
                     if 0 < d < d0:
                         U_rep += k_rep * (1 / d - 1 / d0) ** 2
 
