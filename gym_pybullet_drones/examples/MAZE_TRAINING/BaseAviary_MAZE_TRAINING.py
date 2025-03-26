@@ -142,6 +142,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.OBSERVATION_TYPE = OBSERVATION_TYPE
         self.PUSHBACK_ACTIVE = Pushback_active
         self.number_last_actions = number_last_actions
+        self.last_actions = np.zeros(self.number_last_actions)
         self.G = 9.8
         self.RAD2DEG = 180 / np.pi
         self.DEG2RAD = np.pi / 180
@@ -613,7 +614,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # # Find wheter and what sort of action is taken
         # print(action)
 
-        self.last_actions = np.zeros(self.number_last_actions)
         self.last_actions = np.roll(self.last_actions, 1)
         self.last_actions[0] = action
 
