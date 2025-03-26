@@ -60,7 +60,7 @@ from gym_pybullet_drones.utils.enums import (
 from gym_pybullet_drones.utils.utils import str2bool, sync
 
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
-DEFAULT_GUI_TRAIN = False
+DEFAULT_GUI_TRAIN = True
 DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_ADVANCED_STATUS_PLOT = False
 
@@ -116,8 +116,8 @@ DEFAULT_OUTPUT_FOLDER = "results"
 DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
-DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 2  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
-DEFAULT_EPISODE_LEN_SEC = 20 * 60  # 15 * 60
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 3  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
+DEFAULT_EPISODE_LEN_SEC = 10 * 60  # 15 * 60
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 DEFAULT_PUSHBACK_ACTIVE = False
 
@@ -131,6 +131,10 @@ DEFAULT_DASH_ACTIVE = False
 DEFAULT_Multiplier_Collision_Penalty = 1
 
 DEFAULT_VelocityScale = 1
+
+# Bei wie viel Prozent der Fläche einen Print ausgeben
+DEFAULT_Procent_Step = 0.05
+
 
 """MODEL_Versionen: 
 - M1:   PPO
@@ -146,9 +150,9 @@ MODEL_VERSION = "M5"
 - R1:   Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
 - R2:   Zusätzlich Bestrafung für zu nah an der Wand
 - R3:   Collision zieht je nach Wert auf Heatmap diesen von der Reward ab (7 etwa Wand, 2 nahe Wand, 0.)
-- R4:
-"""
-REWARD_VERSION = "R3"
+- R4:   Collision zieht je nach Wert auf Heatmap diesen von der Reward ab (7 etwa Wand, 2 nahe Wand, 0.) und Abzug für jeden Step
+""" 
+REWARD_VERSION = "R4"
 
 """ObservationType:
 - O1: X, Y, Yaw, Raycast readings (nur PPO)
@@ -199,6 +203,7 @@ def run(
     Pushback_active=DEFAULT_PUSHBACK_ACTIVE,
     DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
     DEFAULT_VelocityScale=DEFAULT_VelocityScale,
+    Procent_Step = DEFAULT_Procent_Step,
 ):
 
     filename = os.path.join(output_folder, "save-" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
@@ -228,7 +233,8 @@ def run(
                 OBSERVATION_TYPE=ObservationType,
                 Pushback_active=Pushback_active,
                 DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
-                VelocityScale=DEFAULT_VelocityScale
+                VelocityScale=DEFAULT_VelocityScale,
+                Procent_Step = Procent_Step
             ),
             n_envs=1,
             seed=0,
@@ -257,7 +263,8 @@ def run(
                 OBSERVATION_TYPE=ObservationType,
                 Pushback_active=Pushback_active,
                 DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
-                VelocityScale=DEFAULT_VelocityScale
+                VelocityScale=DEFAULT_VelocityScale,
+                Procent_Step = Procent_Step
             ),
             n_envs=1,
             seed=0,

@@ -99,6 +99,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         Pushback_active=False,
         DEFAULT_Multiplier_Collision_Penalty=2,
         VelocityScale = 1,
+        Procent_Step = 0.05
     ):
         """Initialization of a generic aviary environment.
 
@@ -197,6 +198,10 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.differnece_threshold = 0.05
         self.Multiplier_Collision_Penalty = DEFAULT_Multiplier_Collision_Penalty
         self.VelocityScale = VelocityScale
+        self.Area_counter = 0
+        self.Area_counter_Max = 0
+        self.previous_Procent = 1
+        self.Procent_Step = Procent_Step
 
         # Initialize SLAM before calling the parent constructor
         self.slam = SimpleSlam(map_size=map_size_slam, resolution=resolution_slam)  # 10m x 10m map with 10cm resolution
@@ -1778,6 +1783,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # Extrahiere Wandpositionen (Indizes der Wandpositionen)
         walls = np.argwhere(self.reward_map == 6)
 
+        Empty_Fields = self.reward_map.size - (walls.size/2)
+        self.Area_counter_Max = Empty_Fields
         # Berechne Potentialfeld für jedes Pixel im Grid
         for x in range(self.potential_map.shape[0]):
             for y in range(self.potential_map.shape[1]):
