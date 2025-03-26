@@ -1191,14 +1191,14 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # case "M1":  # M1: PPO
         self.ray_results_actual = self.check_distance_sensors(nth_drone)  # get new actual raycast readings
 
-        if hasattr(self, "action"):
-            last_action_VEL_1 = self.action[0][0]
-            last_action_VEL_2 = self.action[0][1]
-            last_action_VEL_3 = self.action[0][2]
-        else:
-            last_action_VEL_1 = 0
-            last_action_VEL_2 = 0
-            last_action_VEL_3 = 0
+        # if hasattr(self, "action"):
+        #     last_action_VEL_1 = self.action[0][0]
+        #     last_action_VEL_2 = self.action[0][1]
+        #     last_action_VEL_3 = self.action[0][2]
+        # else:
+        #     last_action_VEL_1 = 0
+        #     last_action_VEL_2 = 0
+        #     last_action_VEL_3 = 0
 
         state = np.hstack(
             [
@@ -1217,9 +1217,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 self.ray_results_actual[2],  # left [23]
                 self.ray_results_actual[3],  # right [24]
                 self.ray_results_actual[4],  # up [25]
-                last_action_VEL_1,
-                last_action_VEL_2,
-                last_action_VEL_3,
+                # last_action_VEL_1, 
+                # last_action_VEL_2,
+                # last_action_VEL_3
             ]
         )  # last clipped action [26]: jetzt nur noch 1 Wert (10.2.25)
         return state.reshape(

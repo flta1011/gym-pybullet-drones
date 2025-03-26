@@ -254,28 +254,18 @@ def _computeObs(self):
             # norm_map[slam_map == 2] = 0.5    # besucht
 
             # Get drone position from state
-            pos = state[0:2]  # x,y position
+            #pos = state[0:2]  # x,y position
 
             # Achtung: in der Simulation sind nie negative Werte zu erwarten, da die Mazes so gespant sind, das Sie immer positive Werte aufweisen. In echt kann die Drohne aber später auch negative Werte erhalten.
-
-            # Normalisiere x und y: Angenommener Bereich [-5, 5]
-            norm_x = (pos[0] + 4) / 8
-            norm_y = (pos[1] + 4) / 8
-
-
 
             # Yaw in zwei Kanäle: sin und cos
             yaw = state[9]  # [9]=yaw-Winkel
 
-
-            last_Action_1 = state[26]  # [25]=last_Action
-            last_Action_2 = state[27]  # [26]=last_Action
-            last_Action_3 = state[28]  # [27]=last_Action
             
 
             # Staple die 5 Kanäle zusammen: Shape = (5, grid_size, grid_size)
             # obs = np.stack([slam_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel], axis=0)
-            obs = dict({"Image":slam_map, "Pos_X":norm_x, "Pos_Y":norm_y, "Yaw_sin":np.sin(yaw), "Yaw_cos":np.cos(yaw), "lastAction1":last_Action_1, "lastAction2":last_Action_2, "lastAction3":last_Action_3})
+            obs = dict({"image":slam_map, "x":state[0], "y":state[1], "sin_yaw":np.sin(yaw), "cos_yaw":np.cos(yaw), "last_action":self.last_actions})
             self.obs = obs  # für Visualisierung in dem Dashboard
 
             return obs
