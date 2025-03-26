@@ -98,8 +98,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         OBSERVATION_TYPE="O1",
         Pushback_active=False,
         DEFAULT_Multiplier_Collision_Penalty=2,
-        VelocityScale = 1,
-        Procent_Step = 0.05
+        VelocityScale=1,
+        Procent_Step=0.05,
+        number_last_actions=20,
     ):
         """Initialization of a generic aviary environment.
 
@@ -140,6 +141,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.ACTION_SPACE_VERSION = ACTION_TYPE
         self.OBSERVATION_TYPE = OBSERVATION_TYPE
         self.PUSHBACK_ACTIVE = Pushback_active
+        self.number_last_actions = number_last_actions
         self.G = 9.8
         self.RAD2DEG = 180 / np.pi
         self.DEG2RAD = np.pi / 180
@@ -610,6 +612,10 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         # # Find wheter and what sort of action is taken
         # print(action)
+
+        self.last_actions = np.zeros(self.number_last_actions)
+        self.last_actions = np.roll(self.last_actions, 1)
+        self.last_actions[0] = action
 
         actual_action_0_bis_8 = int(action.item())
 
@@ -1211,9 +1217,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 self.ray_results_actual[2],  # left [23]
                 self.ray_results_actual[3],  # right [24]
                 self.ray_results_actual[4],  # up [25]
-                last_action_VEL_1, 
+                last_action_VEL_1,
                 last_action_VEL_2,
-                last_action_VEL_3
+                last_action_VEL_3,
             ]
         )  # last clipped action [26]: jetzt nur noch 1 Wert (10.2.25)
         return state.reshape(
@@ -1783,7 +1789,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # Extrahiere Wandpositionen (Indizes der Wandpositionen)
         walls = np.argwhere(self.reward_map == 6)
 
-        Empty_Fields = self.reward_map.size - (walls.size/2)
+        Empty_Fields = self.reward_map.size - (walls.size / 2)
         self.Area_counter_Max = Empty_Fields
         # Berechne Potentialfeld für jedes Pixel im Grid
         for x in range(self.potential_map.shape[0]):

@@ -31,14 +31,14 @@ import torch.nn.functional as F
 import yaml
 from stable_baselines3 import DQN, PPO, SAC
 from stable_baselines3.common.callbacks import (
+    CallbackList,
+    CheckpointCallback,
     EvalCallback,
     StopTrainingOnRewardThreshold,
-    CheckpointCallback, CallbackList
 )
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
-from stable_baselines3.common.callbacks import CheckpointCallback
 
 from gym_pybullet_drones.examples.MAZE_TRAINING.BaseAviary_MAZE_TRAINING import (
     BaseRLAviary_MAZE_TRAINING,
@@ -49,7 +49,6 @@ from gym_pybullet_drones.examples.MAZE_TRAINING.custom_CNN_V0_0 import (
 from gym_pybullet_drones.examples.MAZE_TRAINING.custom_NN_V0_0 import (
     CustomNNFeatureExtractor,
 )
-
 from gym_pybullet_drones.examples.MAZE_TRAINING.Logger_MAZE_TRAINING_BUGGY import Logger
 from gym_pybullet_drones.utils.enums import (
     ActionType,
@@ -80,6 +79,7 @@ DEFAULT_EVAL_EPISODES = 1
 
 DEFAULT_TRAIN_TIMESTEPS = 10 * 1e5  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULT_TARGET_REWARD = 99999999999999
+DEFAULF_NUMBER_LAST_ACTIONS = 20
 
 
 # file_path = "gym_pybullet_drones/examples/MAZE_TRAINING/Maze_init_target.yaml"
@@ -154,7 +154,7 @@ MODEL_VERSION = "M5"
 - R2:   Zusätzlich Bestrafung für zu nah an der Wand
 - R3:   Collision zieht je nach Wert auf Heatmap diesen von der Reward ab (7 etwa Wand, 2 nahe Wand, 0.)
 - R4:   Collision zieht je nach Wert auf Heatmap diesen von der Reward ab (7 etwa Wand, 2 nahe Wand, 0.) und Abzug für jeden Step
-""" 
+"""
 REWARD_VERSION = "R4"
 
 """ObservationType:
@@ -206,12 +206,13 @@ def run(
     Pushback_active=DEFAULT_PUSHBACK_ACTIVE,
     DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
     DEFAULT_VelocityScale=DEFAULT_VelocityScale,
-    Procent_Step = DEFAULT_Procent_Step,
+    Procent_Step=DEFAULT_Procent_Step,
     TRAIN=Default_Train,
     TEST=Default_Test,
-    filename_test = Default_Test_filename_test
+    filename_test=Default_Test_filename_test,
+    number_last_actions=DEFAULF_NUMBER_LAST_ACTIONS,
 ):
-    if TRAIN:  
+    if TRAIN:
         filename = os.path.join(output_folder, "save-" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
         if not os.path.exists(filename):
             os.makedirs(filename + "/")
@@ -240,7 +241,8 @@ def run(
                     Pushback_active=Pushback_active,
                     DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
                     VelocityScale=DEFAULT_VelocityScale,
-                    Procent_Step = Procent_Step
+                    Procent_Step=Procent_Step,
+                    number_last_actions=number_last_actions,
                 ),
                 n_envs=1,
                 seed=0,
@@ -270,7 +272,8 @@ def run(
                     Pushback_active=Pushback_active,
                     DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
                     VelocityScale=DEFAULT_VelocityScale,
-                    Procent_Step = Procent_Step
+                    Procent_Step=Procent_Step,
+                    number_last_actions=number_last_actions,
                 ),
                 n_envs=1,
                 seed=0,
@@ -323,13 +326,13 @@ def run(
                         train_env,
                         device="cuda:0",
                         # learning_rate=0.0004,
-                        #policy_kwargs=dict(net_arch=[128, 64, 32]),
+                        # policy_kwargs=dict(net_arch=[128, 64, 32]),
                         learning_rate=0.004,
                         verbose=1,
                         seed=42,
                         buffer_size=5000,
                         gamma=0.8,
-                    ) 
+                    )
 
             case "M4":  # M4: DQN_CNNPolicy_CustomFeatureExtractor
                 # ANCHOR - CNN-DQN
@@ -356,7 +359,7 @@ def run(
             case "M5":  # M5: DQN_NN_MIPolicy
                 # ANCHOR - NN-DQN-MI
                 # Setze die policy_kwargs, um deinen Custom Feature Extractor zu nutzen:
-                #policy_kwargs = dict(features_extractor_class=CustomNNFeatureExtractor, features_extractor_kwargs=dict(features_dim=4))
+                # policy_kwargs = dict(features_extractor_class=CustomNNFeatureExtractor, features_extractor_kwargs=dict(features_dim=4))
                 if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
                     print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
                     model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
@@ -373,7 +376,7 @@ def run(
                         buffer_size=5000,
                         gamma=0.8,
                     )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
-              
+
         #### Target cumulative rewards (problem-dependent) ##########
         target_reward = DEFAULT_TARGET_REWARD
         print(target_reward)
@@ -405,14 +408,13 @@ def run(
         # log_interval: The number of timesteps between logging events.
         # In your code, the model will train for a specified number of timesteps, using the eval_callback for periodic evaluation, and log information every 100 timesteps.
 
-
         # Definiere den Speicherpfad und die Häufigkeit der Checkpoints (z.B. alle 10.000 Schritte)
         checkpoint_callback = CheckpointCallback(
             save_freq=1000,  # Speichert alle 10.000 Schritte
             save_path=filename + "/",  # Speicherpfad für die Modelle
             name_prefix=filename + "/",  # Präfix für die Modell-Dateien
             save_replay_buffer=True,  # Speichert auch den Replay Buffer
-            save_vecnormalize=True  # Falls VecNormalize genutzt wird, wird es mitgespeichert
+            save_vecnormalize=True,  # Falls VecNormalize genutzt wird, wird es mitgespeichert
         )
 
         # Kombiniere beide Callbacks mit CallbackList
@@ -468,13 +470,13 @@ def run(
                 Pushback_active=Pushback_active,
                 DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
                 VelocityScale=DEFAULT_VelocityScale,
-                Procent_Step = Procent_Step
+                Procent_Step=Procent_Step,
             ),
             n_envs=1,
             seed=0,
         )
 
-        #logger = Logger(logging_freq_hz=int(test_env.CTRL_FREQ), num_drones=DEFAULT_AGENTS if multiagent else 1, output_folder=output_folder, colab=colab)
+        # logger = Logger(logging_freq_hz=int(test_env.CTRL_FREQ), num_drones=DEFAULT_AGENTS if multiagent else 1, output_folder=output_folder, colab=colab)
         # The evaluate_policy function is used to evaluate the performance of the trained model.
         # model: The trained model to be evaluated.
         # test_env_nogui: The environment used for evaluation without GUI.
