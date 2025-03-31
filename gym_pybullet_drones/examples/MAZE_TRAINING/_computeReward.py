@@ -471,8 +471,6 @@ def _computeReward(
                     writer = csv.writer(file)
                     writer.writerows(self.reward_map)
 
-                # Erstellen der Heatmap für die Belohnung des Abstandes zur Wand
-                self._compute_potential_fields()
 
             reward = 0
             state = self._getDroneStateVector(0)  # erste Drohne
@@ -578,8 +576,7 @@ def _computeReward(
                     writer = csv.writer(file)
                     writer.writerows(self.reward_map)
 
-                # Erstellen der Heatmap für die Belohnung des Abstandes zur Wand
-                self._compute_potential_fields()
+
                 self.Area_counter = 0
 
             reward = 0

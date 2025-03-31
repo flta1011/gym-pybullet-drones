@@ -207,7 +207,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.previous_Procent = 1
         self.Procent_Step = Procent_Step
         self.too_close_to_wall_counter = 0
-
+        # Erstellen der Heatmap für die Belohnung des Abstandes zur Wand
+        self._compute_potential_fields()
         # Initialize SLAM before calling the parent constructor
         self.slam = SimpleSlam(map_size=map_size_slam, resolution=resolution_slam)  # 10m x 10m map with 10cm resolution
         self.grid_size = int(map_size_slam / resolution_slam)
@@ -771,6 +772,10 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             #### Update and store the drones kinematic information #####
             self._updateAndStoreKinematicInformation()
 
+            # Erhöhe den Step-Counter für die Zählung der Momente, die zu nah an der Wand waren (in jeden Control-Freq.)
+            if self.distance_map[int(np.round(self.pos[0][0] / 0.05)), int(np.round(self.pos[0][1] / 0.05))] < 0.25:
+                self.too_close_to_wall_counter += 1
+
             #### Kamera-Einstellungen, scheint aber nicht zu funktionieren (9.2)####
             # p.resetDebugVisualizerCamera(cameraDistance=3,
             #                              cameraYaw=self.rpy[0][2]-30,
@@ -780,9 +785,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             #                              physicsClientId=self.CLIENT
             #                              )
 
-            #erhöhe den Step-Counter für die Zählung der Momente, die zu Nah an der Wand waren
-            if self.distance_map[round(self.pos[0]/0.05), round(self.pos[1]/0.05)] < 0.25:
-                self.too_close_to_wall_counter += 1
+            # #erhöhe den Step-Counter für die Zählung der Momente, die zu Nah an der Wand waren
+            # if self.distance_map[round(self.pos[0]/0.05), round(self.pos[1]/0.05)] < 0.25:
+            #     self.too_close_to_wall_counter += 1
 
         else:  # Reward-/Action-Änderungsfrequenz ist kleiner als die Ctrl-Frequenz --> Loop muss öfters durch die Contrl-Freq bzw. Physics-Frequenz durchlaufen werden
             # setzte den Step-Counter für die Zählung der Physics-Frequenz auf 0
@@ -834,9 +839,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 #### Update and store the drones kinematic information #####
                 self._updateAndStoreKinematicInformation()
 
-                #erhöhe den Step-Counter für die Zählung der Momente, die zu Nah an der Wand waren (in jeden Control-Freq.)
-                if self.distance_map[round(self.pos[0]/0.05), round(self.pos[1]/0.05)] < 0.25:
-                    self.too_close_to_wall_counter += 1
+                
 
         #########################################################################################
         # SLAM-Update
@@ -862,6 +865,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         info = self._computeInfo()
         ###Debugging Plots
         state = self._getDroneStateVector(0)  # Einführung neuste
+
 
         self.timestamp_actual = self.step_counter * self.PYB_TIMESTEP  # Use simulation time instead of real time
         if reward is not None:
@@ -896,7 +900,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             print("Erkundete Fläche in Prozent", self.Ratio_Area * 100, "%")
             self.previous_Procent = self.Ratio_Area
  
-        if self.step_counter % 500 == 0:
+        if self.step_counter % 1 == 0:
             print(f"Erkundete Fläche in Prozent {self.Ratio_Area * 100}% ###### Anzahl der Steps, zu Nahe an der Wand: {self.too_close_to_wall_counter}")
 
         # if self.GUI: #deaktiviert, damit der nachfolgende Plot immer kommt, auch wenn keine GUI eingeschaltet ist

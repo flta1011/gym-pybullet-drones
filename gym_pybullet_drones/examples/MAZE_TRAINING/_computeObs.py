@@ -287,7 +287,7 @@ def _computeObs(self):
             slam_map = self.slam.occupancy_grid
             
 
-            raycasts = np.array[state[21], state[22], state[23], state[24]]  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
+            raycasts = [state[21], state[22], state[23], state[24]]  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
 
             
             # Get drone position from state
