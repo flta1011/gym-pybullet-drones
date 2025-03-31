@@ -546,6 +546,8 @@ def _computeReward(
                 # 5 = Zielpunkt,
                 # 6 = Wand
 
+                
+
                 # Initializing Reward Map
                 self.reward_map = np.zeros((60, 60), dtype=int)
                 # Loading the Walls of the CSV Maze into the reward map as ones
@@ -562,6 +564,9 @@ def _computeReward(
                 # self.reward_map = np.flipud(self.reward_map)
                 # Rotate the reward map 90° mathematically negative
                 # self.reward_map = np.rot90(self.reward_map, k=4)
+
+                # Erstellen der Heatmap für die Belohnung des Abstandes zur Wand und die DistanzMap
+                self._compute_potential_fields()
 
                 if Maze_Number == 0:
                     Start_position = self.INIT_XYZS[f"map{Maze_Number+1}"][0][random_number_Start]
@@ -607,17 +612,14 @@ def _computeReward(
                         self.reward_components["explore_bonus_new_field"] += 3
                         self.Area_counter += 1
             
-            
+                # if self.Ratio_Area == 0.6:
+                #     print("80 Prozent Felder erkundet")
+                #     self.reward_components["Prozentual_Bonus"] = 100
 
-                if self.Ratio_Area == 0.8:
-                    print("80 Prozent Felder erkundet")
-                    self.reward_components["Prozentual_Bonus"] = 100
+                # if self.Ratio_Area == 0.8:
+                #     print("80 Prozent Felder erkundet")
+                #     self.reward_components["Prozentual_Bonus"] = 100
 
-
-            # Save the reward map to a CSV file
-            with open("gym_pybullet_drones/examples/MAZE_TRAINING/reward_map.csv", "w", newline="") as file:
-                writer = csv.writer(file)
-                writer.writerows(self.reward_map)
 
 
             ###### 1.PUNISHMENT FOR COLLISION ######

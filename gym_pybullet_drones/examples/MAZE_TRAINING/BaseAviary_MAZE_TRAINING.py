@@ -207,8 +207,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.previous_Procent = 1
         self.Procent_Step = Procent_Step
         self.too_close_to_wall_counter = 0
-        # Erstellen der Heatmap für die Belohnung des Abstandes zur Wand
-        self._compute_potential_fields()
+
         # Initialize SLAM before calling the parent constructor
         self.slam = SimpleSlam(map_size=map_size_slam, resolution=resolution_slam)  # 10m x 10m map with 10cm resolution
         self.grid_size = int(map_size_slam / resolution_slam)
@@ -523,45 +522,10 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         p.resetSimulation(physicsClientId=self.CLIENT)
 
-        # if self.USER_DEBUG:
-        #     #### Housekeeping ##########################################
-        #     print("Start housekeeping - INIT_XYZS:", self.INIT_XYZS)
-        #     self._housekeeping()
-        #     print("End housekeeping - INIT_XYZS:", self.INIT_XYZS)
+        
+        self.too_close_to_wall_counter = 0
 
-        #     #### Start video recording #################################
-        #     self._startVideoRecording()
-        #     #### Update and store the drones kinematic information #####
-        #     print("Start kinematic update - INIT_XYZS:", self.INIT_XYZS)
-        #     print(f"self.pos vor Update: {self.pos}")
-        #     self._updateAndStoreKinematicInformation()
-        #     print(f"self.pos nach Update: {self.pos}")
-        #     print("End kinematic update - INIT_XYZS:", self.INIT_XYZS)
-        #     #### Start video recording #################################
-        #     self._startVideoRecording()
-        #     #### Return the initial observation ########################
-        #     initial_obs = None
-        #     initial_obs = self._computeObs()
-        #     nth_drone = 0 #weil das so standardmäßig im computeObs festegelegt ist
-        #     print(f"Getting state for nth_drone: {nth_drone}")
-
-        #     # Get all bodies in simulation
-        #     all_bodies = p.getNumBodies(physicsClientId=self.CLIENT)
-        #     print(f"Bodies in simulation: {all_bodies}")
-
-        #     # Get the actual drone ID
-        #     drone_id = nth_drone + 1  # If this is the issue, you might need to adjust this
-        #     print(f"Accessing drone ID: {drone_id}")
-
-        #     # Verify the body is actually a drone
-        #     body_info = p.getBodyInfo(drone_id, physicsClientId=self.CLIENT)
-        #     print(f"Body info for ID {drone_id}: {body_info}")
-
-        #     print(f"Environment resettet, initial_obs: {initial_obs}\n")
-
-        #     initial_info = self._computeInfo()
-
-        #     return initial_obs, initial_info
+       
 
         #### Housekeeping ##########################################
         self._housekeeping()
@@ -772,9 +736,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             #### Update and store the drones kinematic information #####
             self._updateAndStoreKinematicInformation()
 
-            # Erhöhe den Step-Counter für die Zählung der Momente, die zu nah an der Wand waren (in jeden Control-Freq.)
-            if self.distance_map[int(np.round(self.pos[0][0] / 0.05)), int(np.round(self.pos[0][1] / 0.05))] < 0.25:
-                self.too_close_to_wall_counter += 1
 
             #### Kamera-Einstellungen, scheint aber nicht zu funktionieren (9.2)####
             # p.resetDebugVisualizerCamera(cameraDistance=3,
@@ -839,12 +800,16 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 #### Update and store the drones kinematic information #####
                 self._updateAndStoreKinematicInformation()
 
-                
+
+            
 
         #########################################################################################
         # SLAM-Update
         pos = state[0:3]
         yaw = state[9]  # Assuming this is the yaw angle
+
+
+        
 
         # Get raycast results
         raycast_results = {"front": state[21], "back": state[22], "left": state[23], "right": state[24], "up": state[25]}
@@ -866,6 +831,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         ###Debugging Plots
         state = self._getDroneStateVector(0)  # Einführung neuste
 
+        # Erhöhe den Step-Counter für die Zählung der Momente, die zu nah an der Wand waren (in jeden Control-Freq.)
+        if self.distance_map[int(np.round(self.pos[0][0] / 0.05)), int(np.round(self.pos[0][1] / 0.05))] < 0.25:
+            self.too_close_to_wall_counter += 1
 
         self.timestamp_actual = self.step_counter * self.PYB_TIMESTEP  # Use simulation time instead of real time
         if reward is not None:
@@ -899,9 +867,26 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         if self.previous_Procent != self.Ratio_Area:
             print("Erkundete Fläche in Prozent", self.Ratio_Area * 100, "%")
             self.previous_Procent = self.Ratio_Area
- 
-        if self.step_counter % 1 == 0:
+
+        if self.step_counter % 200 == 0:
             print(f"Erkundete Fläche in Prozent {self.Ratio_Area * 100}% ###### Anzahl der Steps, zu Nahe an der Wand: {self.too_close_to_wall_counter}")
+            
+        # # Save the reward map to a CSV file
+        if self.step_counter % 1000 == 0:
+            output_folder = "gym_pybullet_drones/examples/MAZE_TRAINING/Explored_areas"
+            os.makedirs(output_folder, exist_ok=True)
+            timestamp = time.strftime("%Y%m%d-%H%M%S")
+            output_path = os.path.join(output_folder, f"reward_map_{timestamp}.png")
+            
+            plt.ioff()  # Turn off interactive mode
+            plt.figure(figsize=(10, 10))
+            plt.imshow(self.reward_map, cmap="viridis", origin="lower")
+            plt.colorbar(label="Reward Value")
+            plt.title("Reward Map")
+            plt.xlabel("x")
+            plt.ylabel("y")
+            plt.savefig(output_path)
+            plt.close()
 
         # if self.GUI: #deaktiviert, damit der nachfolgende Plot immer kommt, auch wenn keine GUI eingeschaltet ist
         if truncated:
@@ -1824,12 +1809,15 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
                 # Abstoßungs-Potential (von Wänden)
                 U_rep = 0
+                d_min = 99
                 for wall in walls:
                     d = np.linalg.norm(pos - wall) * Scale_Grid
-                    self.distance_map[x, y] = d
-                    if 0 < d < d0:
-                        U_rep += k_rep * (1 / d - 1 / d0) ** 2
+                    if d < d_min:
+                        d_min = d
 
+                if 0 < d_min < d0:
+                    U_rep += k_rep * (1 / d_min - 1 / d0) ** 2
+                self.distance_map[x, y] = d_min
                 self.potential_map[x, y] = U_rep
 
         # Visualisiere das Potentialfeld
@@ -1838,7 +1826,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # if not os.path.exists(output_folder):
         #     os.makedirs(output_folder)
 
-        # # # Create and save the plot without displaying
+        # # Plot and save the potential map
         # plt.ioff()  # Turn off interactive mode
         # fig = plt.figure(figsize=(10, 10))
         # plt.imshow(self.potential_map, cmap="viridis", origin="lower")
@@ -1851,59 +1839,13 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # plt.savefig(os.path.join(output_folder, f"potential_field_{timestamp}.png"))
         # plt.close()
 
-        # return self.potential_map
+        # # Plot and save the distance map
+        # fig = plt.figure(figsize=(10, 10))
+        # plt.imshow(self.distance_map, cmap="viridis", origin="lower")
+        # plt.colorbar(label="Distance")
+        # plt.title("Distance Map")
+        # plt.xlabel("x")
+        # plt.ylabel("y")
+        # plt.savefig(os.path.join(output_folder, f"distance_map_{timestamp}.png"))
+        # plt.close()
 
-    ################################################################################
-    def _initialize_Reward_Map_and_Best_Way_Map(self, Maze_Number):
-        """Initializes the reward map and the best way map.
-        uses potential fields to find the best way from start to goal.
-        """
-
-        # NOTE - Reward Map
-
-        # 0 = Unbesucht,
-        # 1 = Einmal besucht,
-        # 2 = Zweimal besucht,
-        # 3 = Dreimal besucht,
-        # 4 = Startpunkt,
-        # 5 = Zielpunkt,
-        # 6 = Wand
-
-        # Initializing Reward Map
-        self.reward_map = np.zeros((60, 60), dtype=int)
-        # reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_{Maze_Number}.csv"
-        reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_21.csv"
-
-        with open(reward_map_file_path, "r") as file:
-            reader = csv.reader(file)
-            for i, row in enumerate(reader):
-                for j, value in enumerate(row):
-                    if value == "1":
-                        self.reward_map[j, i] = 6  # Wand
-                        self.wall_pixel_counter += 1
-
-        # with open(reward_map_file_path, 'r') as file:
-        #     reader = csv.reader(file)
-        #     for i, row in enumerate(reader):
-        #         for j, value in enumerate(row):
-        #             if value == "1":
-        #                 self.reward_map[j, i] = 6 # Wand
-
-        # Mirror the reward map vertically
-        # self.reward_map = np.flipud(self.reward_map)
-        # Rotate the reward map 90° mathematically negative
-        # self.reward_map = np.rot90(self.reward_map, k=4)
-
-        # Amount of pixel in the map without walls
-        self.amount_of_pixel_in_map_without_walls = self.amount_of_pixel_in_map - self.wall_pixel_counter
-
-        # Save the best way map to a CSV file
-        # self._compute_potential_fields([0, 0], only_forces=False)  # aktuell noch buggy, Übergabe [0, 0]
-        # with open("best_way_map_DQN.csv", "w", newline="") as file:
-        #     writer = csv.writer(file)
-        #     writer.writerows(self.best_way_map)
-
-        # Save the reward map to a CSV file
-        # with open("reward_map_DQN.csv", "w", newline="") as file:
-        #     writer = csv.writer(file)
-        #     writer.writerows(self.reward_map)
