@@ -545,7 +545,7 @@ def _computeReward(
                 # 4 = Startpunkt,
                 # 5 = Zielpunkt,
                 # 6 = Wand
-                self.reward_components["Start"] = -50
+                self.reward_components["Start"] = -30
                 
 
                 # Initializing Reward Map
@@ -596,10 +596,11 @@ def _computeReward(
             
 
 
+
             ###### 4. REWARD FOR EXPLORING NEW AREAS ######
 
             if self.step_counter % 1 == 0:
-                self.reward_components["Step_counter"] = -1
+                self.reward_components["Step_counter"] = self.Punishment_for_Step
 
             # Get current position
             current_position = [int(state[0] / 0.05), int(state[1] / 0.05)]
@@ -611,7 +612,7 @@ def _computeReward(
                 for j in range(max(0, y - 2), min(60, y + 2)):
                     if self.reward_map[i, j] == 0:
                         self.reward_map[i, j] = 1
-                        self.reward_components["explore_bonus_new_field"] += 2
+                        self.reward_components["explore_bonus_new_field"] += self.Reward_for_new_field
                         self.Area_counter += 1
             
                 # if self.Ratio_Area == 0.6:

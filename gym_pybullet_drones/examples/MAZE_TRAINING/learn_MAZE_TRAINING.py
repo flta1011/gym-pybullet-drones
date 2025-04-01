@@ -23,6 +23,8 @@ from datetime import datetime
 
 import gymnasium as gym
 import numpy as np
+import csv
+import shutil
 
 # Importiere benötigte Module für CNN-DQN
 import torch
@@ -60,8 +62,8 @@ from gym_pybullet_drones.utils.utils import str2bool, sync
 
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
 DEFAULT_GUI_TRAIN = True
-Default_Train = False
-Default_Test = True
+Default_Train = True
+Default_Test = False
 Default_Test_filename_test = "Model_test"
 DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_ADVANCED_STATUS_PLOT = False
@@ -76,8 +78,8 @@ DEFAULT_PRETRAINED_MODEL_PATH = "/home/moritz_s/Documents/RKIM_1/F_u_E_Drohnenre
 DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
 
-DEFAULT_TRAIN_TIMESTEPS = 10 * 1e5  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
-DEFAULT_TARGET_REWARD = 99999999999999
+DEFAULT_TRAIN_TIMESTEPS = 2 * 1e5  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
+DEFAULT_TARGET_REWARD = 99999
 DEFAULF_NUMBER_LAST_ACTIONS = 20
 
 # file_path = "gym_pybullet_drones/examples/MAZE_TRAINING/Maze_init_target.yaml"
@@ -133,6 +135,8 @@ DEFAULT_VelocityScale = 1
 
 # Bei wie viel Prozent der Fläche einen Print ausgeben
 DEFAULT_Procent_Step = 0.01
+DEFAULT_REWARD_FOR_NEW_FIELD = 2
+DEFAULT_Punishment_for_Step = -1
 
 
 """MODEL_Versionen: 
@@ -173,7 +177,79 @@ OBSERVATION_TYPE = "O7"
 
 ACTION_TYPE = "A2"
 
-# TODO: Implementierung Actionspace und ObsSpace Auswahl
+#######################################CSV ERSTELLEN####################
+
+# Der Dateipfad zur CSV-Datei
+timestamp = time.strftime("%Y%m%d-%H%M%S")
+Auswertungs_CSV_Datei = f"gym_pybullet_drones/Auswertungen_der_Modelle/{MODEL_VERSION}_{REWARD_VERSION}_{OBSERVATION_TYPE}_{ACTION_TYPE}_{timestamp}.csv"
+# Funktion, um eine CSV zu erstellen (beim ersten Aufruf) oder zu erweitern
+
+# Prüfen, ob die Datei existiert
+datei_existiert = os.path.exists(Auswertungs_CSV_Datei)
+
+header_params = [
+        "DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ", 
+        "DEFAULT_EPISODE_LEN_SEC", 
+        "DEFAULT_REWARD_FOR_NEW_FIELD", 
+        "DEFAULT_Punishment_for_Step",
+        "DEFAULT_EVAL_FREQ",
+        "DEFAULT_EVAL_EPISODES",
+        "DEFAULT_TRAIN_TIMESTEPS",
+        "DEFAULT_TARGET_REWARD",
+        "DEFAULF_NUMBER_LAST_ACTIONS",
+        "DEFAULT_PYB_FREQ",
+        "DEFAULT_CTRL_FREQ",
+        "DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ",
+        "DEFAULT_EPISODE_LEN_SEC",
+        "DEFAULT_Multiplier_Collision_Penalty",
+        "DEFAULT_VelocityScale",
+        "DEFAULT_Procent_Step",
+    ]
+
+# Header für die dynamischen Daten (Trainingsergebnisse)
+header_training = [
+    "Runde", 
+    "Terminated", 
+    "Truncated", 
+    "Map-Abgedeckt", 
+    "Wand berührungen", 
+    "Summe Reward",
+    "Maze_number",
+]
+
+        # Beispielwerte für die Parameter (statisch)
+parameter_daten = [
+    DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,  # DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ
+    DEFAULT_EPISODE_LEN_SEC,  # DEFAULT_EPISODE_LEN_SEC
+    DEFAULT_REWARD_FOR_NEW_FIELD,  # Bonus_new_Field
+    DEFAULT_Punishment_for_Step,  # Punish_Step_Counter
+    DEFAULT_EVAL_FREQ,
+    DEFAULT_EVAL_EPISODES,
+    DEFAULT_TRAIN_TIMESTEPS,
+    DEFAULT_TARGET_REWARD,
+    DEFAULF_NUMBER_LAST_ACTIONS,
+    DEFAULT_PYB_FREQ,
+    DEFAULT_CTRL_FREQ,
+    DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,
+    DEFAULT_EPISODE_LEN_SEC,
+    DEFAULT_Multiplier_Collision_Penalty,
+    DEFAULT_VelocityScale,
+    DEFAULT_Procent_Step,
+]
+
+
+# Öffnen oder Erstellen der CSV-Datei
+with open(Auswertungs_CSV_Datei, mode='a', newline='') as file:
+    writer = csv.writer(file)
+    
+if not datei_existiert:
+    with open(Auswertungs_CSV_Datei, mode='a', newline='') as file:
+        writer = csv.writer(file)
+        # Wenn die Datei nicht existiert oder wir neue Werte beim ersten Aufruf schreiben, dann Header hinzufügen
+        writer.writerow(header_params)  # Die statischen Parameter (Header)
+        writer.writerow(parameter_daten)  # Die zugehörigen Parameter-Werte
+        writer.writerow([])  # Leere Zeile zur Trennung der Tabellen
+        writer.writerow(header_training)  # Header für die dynamischen Trainingsdaten
 
 ################################################################################
 
@@ -208,6 +284,9 @@ def run(
     TEST=Default_Test,
     filename_test=Default_Test_filename_test,
     number_last_actions=DEFAULF_NUMBER_LAST_ACTIONS,
+    Reward_for_new_field=DEFAULT_REWARD_FOR_NEW_FIELD,
+    Punishment_for_Step=DEFAULT_Punishment_for_Step,
+    Auswertungs_CSV_Datei = Auswertungs_CSV_Datei
 ):
     if TRAIN:
         filename = os.path.join(output_folder, "save-" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
@@ -240,6 +319,9 @@ def run(
                     VelocityScale=DEFAULT_VelocityScale,
                     Procent_Step=Procent_Step,
                     number_last_actions=number_last_actions,
+                    Punishment_for_Step = Punishment_for_Step,
+                    Reward_for_new_field = Reward_for_new_field,
+                    csv_file_path = Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
                 ),
                 n_envs=1,
                 seed=0,
@@ -271,6 +353,9 @@ def run(
                     VelocityScale=DEFAULT_VelocityScale,
                     Procent_Step=Procent_Step,
                     number_last_actions=number_last_actions,
+                    Punishment_for_Step = Punishment_for_Step,
+                    Reward_for_new_field = Reward_for_new_field,
+                    csv_file_path = Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
                 ),
                 n_envs=1,
                 seed=0,
@@ -374,6 +459,10 @@ def run(
                         gamma=0.8,
                     )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
 
+        ## Schreiben der CSV für die Auswertung unserer Ergebnisse
+        
+
+        
         #### Target cumulative rewards (problem-dependent) ##########
         target_reward = DEFAULT_TARGET_REWARD
         print(target_reward)
@@ -420,6 +509,32 @@ def run(
         model.learn(total_timesteps=DEFAULT_TRAIN_TIMESTEPS, callback=callback_list, log_interval=1000, progress_bar=True)  # shorter training in GitHub Actions pytest
 
         #### Save the model ########################################
+
+        # Überprüfen, ob das Verzeichnis existiert
+        if os.path.exists(filename):
+            # Extrahiere den letzten Ordnernamen
+            last_folder = os.path.basename(filename)
+            
+            # Erstelle den vollständigen Pfad zum Ordner, dessen Inhalt du löschen möchtest
+            target_folder = os.path.join("results", last_folder)
+
+            # Überprüfen, ob das Zielverzeichnis existiert
+            if os.path.exists(target_folder):
+                # Alle Dateien und Ordner im Verzeichnis durchgehen
+                for item in os.listdir(target_folder):
+                    item_path = os.path.join(target_folder, item)  # Vollständiger Pfad zu den Dateien/Ordnern
+                    try:
+                        if os.path.isdir(item_path):
+                            shutil.rmtree(item_path)  # Wenn es ein Verzeichnis ist, entferne es rekursiv
+                        else:
+                            os.remove(item_path)  # Wenn es eine Datei ist, entferne sie
+                    except Exception as e:
+                        print(f"Fehler beim Löschen von {item_path}: {e}")
+            else:
+                print(f"Verzeichnis {target_folder} existiert nicht.")
+        else:
+            print(f"Verzeichnis {filename} existiert nicht.")
+
         model.save(filename + "/final_model.zip")
         print(filename)
 
@@ -468,6 +583,9 @@ def run(
                 DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
                 VelocityScale=DEFAULT_VelocityScale,
                 Procent_Step=Procent_Step,
+                Punishment_for_Step = Punishment_for_Step,
+                Reward_for_new_field = Reward_for_new_field,
+                csv_file_path = Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
             ),
             n_envs=1,
             seed=0,

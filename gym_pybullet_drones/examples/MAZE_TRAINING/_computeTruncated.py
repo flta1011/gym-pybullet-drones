@@ -25,11 +25,13 @@ def _computeTruncated(self):
     #     Grund_Truncated = f"Zu nah an der Wand (<{Abstand_truncated} m)"
     #     return True, Grund_Truncated
 
+
     # Wenn die Zeit abgelaufen ist, beenden!
     if self.step_counter / self.PYB_FREQ > self.EPISODE_LEN_SEC:
         Grund_Truncated = "Zeit abgelaufen"
         # wenn Zeit abgeaufen ist, dann wird die Drohne bestraft
-        self.RewardCounterActualTrainRun += -10
+        #self.RewardCounterActualTrainRun += -10
+        self.Terminated_Truncated_Counter += 1
         return True, Grund_Truncated
 
     Grund_Truncated = None

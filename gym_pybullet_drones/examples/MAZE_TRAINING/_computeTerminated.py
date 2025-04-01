@@ -29,6 +29,7 @@ def _computeTerminated(self):
 
     if self.previous_Procent >= 0.8:
         Grund_Terminated = "80 Prozent der Fläche wurde erkundet"
+        self.Terminated_Truncated_Counter += 1
         return True, Grund_Terminated
 
     return False, Grund_Terminated

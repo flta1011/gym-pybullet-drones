@@ -101,6 +101,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         VelocityScale=1,
         Procent_Step=0.05,
         number_last_actions=20,
+        Punishment_for_Step = -1,
+        Reward_for_new_field = 1,
+        csv_file_path = "maze_training_results.csv",
     ):
         """Initialization of a generic aviary environment.
 
@@ -143,6 +146,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.PUSHBACK_ACTIVE = Pushback_active
         self.number_last_actions = number_last_actions
         self.last_actions = np.zeros(self.number_last_actions)
+        self.Punishment_for_Step = Punishment_for_Step
+        self.Reward_for_new_field = Reward_for_new_field
+        self.csv_file_path = csv_file_path
         self.G = 9.8
         self.RAD2DEG = 180 / np.pi
         self.DEG2RAD = np.pi / 180
@@ -204,9 +210,10 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.Ratio_Area = 0
         self.Area_counter = 0
         self.Area_counter_Max = 0
-        self.previous_Procent = 1
+        self.previous_Procent = 0.3
         self.Procent_Step = Procent_Step
         self.too_close_to_wall_counter = 0
+        self.Terminated_Truncated_Counter = 0
 
         # Initialize SLAM before calling the parent constructor
         self.slam = SimpleSlam(map_size=map_size_slam, resolution=resolution_slam)  # 10m x 10m map with 10cm resolution
@@ -246,6 +253,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # The random number to generate the init and target position
         self.random_number_Start = 1
         self.random_number_Target = 2
+        
         print(
             "[INFO] BaseAviary.__init__() loaded parameters from the drone's .urdf:\n[INFO] m {:f}, L {:f},\n[INFO] ixx {:f}, iyy {:f}, izz {:f},\n[INFO] kf {:f}, km {:f},\n[INFO] t2w {:f}, max_speed_kmh {:f},\n[INFO] gnd_eff_coeff {:f}, prop_radius {:f},\n[INFO] drag_xy_coeff {:f}, drag_z_coeff {:f},\n[INFO] dw_coeff_1 {:f}, dw_coeff_2 {:f}, dw_coeff_3 {:f}".format(
                 self.M,
@@ -524,8 +532,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         
         self.too_close_to_wall_counter = 0
-
-       
+        #self.Terminated_Truncated_Counter = 0
+        self.previous_Procent = 0.3
 
         #### Housekeeping ##########################################
         self._housekeeping()
@@ -864,29 +872,29 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.Ratio_Area = round(self.Ratio_Area, 2)  # Round to 2 decimal places
         #Procent = Ratio_Area % self.Procent_Step
         # if Procent == 0:
-        if self.previous_Procent != self.Ratio_Area:
-            print("Erkundete Fläche in Prozent", self.Ratio_Area * 100, "%")
-            self.previous_Procent = self.Ratio_Area
+        # if self.previous_Procent != self.Ratio_Area:
+        #     print("Erkundete Fläche in Prozent", self.Ratio_Area * 100, "%")
+        #     self.previous_Procent = self.Ratio_Area
 
-        if self.step_counter % 200 == 0:
-            print(f"Erkundete Fläche in Prozent {self.Ratio_Area * 100}% ###### Anzahl der Steps, zu Nahe an der Wand: {self.too_close_to_wall_counter}")
+        # if self.step_counter % 1000 == 0:
+        #     print(f"Erkundete Fläche in Prozent {self.Ratio_Area * 100}% ###### Anzahl der Steps, zu Nahe an der Wand: {self.too_close_to_wall_counter}")
             
-        # # Save the reward map to a CSV file
-        if self.step_counter % 1000 == 0:
-            output_folder = "gym_pybullet_drones/examples/MAZE_TRAINING/Explored_areas"
-            os.makedirs(output_folder, exist_ok=True)
-            timestamp = time.strftime("%Y%m%d-%H%M%S")
-            output_path = os.path.join(output_folder, f"reward_map_{timestamp}.png")
+        # # # Save the reward map to a CSV file
+        # if self.step_counter % 15000 == 0:
+        #     output_folder = "gym_pybullet_drones/examples/MAZE_TRAINING/Explored_areas"
+        #     os.makedirs(output_folder, exist_ok=True)
+        #     timestamp = time.strftime("%Y%m%d-%H%M%S")
+        #     output_path = os.path.join(output_folder, f"reward_map_{timestamp}.png")
             
-            plt.ioff()  # Turn off interactive mode
-            plt.figure(figsize=(10, 10))
-            plt.imshow(self.reward_map, cmap="viridis", origin="lower")
-            plt.colorbar(label="Reward Value")
-            plt.title("Reward Map")
-            plt.xlabel("x")
-            plt.ylabel("y")
-            plt.savefig(output_path)
-            plt.close()
+        #     plt.ioff()  # Turn off interactive mode
+        #     plt.figure(figsize=(10, 10))
+        #     plt.imshow(self.reward_map, cmap="viridis", origin="lower")
+        #     plt.colorbar(label="Reward Value")
+        #     plt.title("Reward Map")
+        #     plt.xlabel("x")
+        #     plt.ylabel("y")
+        #     plt.savefig(output_path)
+        #     plt.close()
 
         # if self.GUI: #deaktiviert, damit der nachfolgende Plot immer kommt, auch wenn keine GUI eingeschaltet ist
         if truncated:
@@ -897,12 +905,30 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 f"Observations: x,y,yaw: {state[0]:.3f}, {state[1]:.3f}, {state[9]:.3f}, RayFront/Back: {state[21]:.1f}, {state[22]:.1f}, RayLeft/Right: {state[23]:.1f}, {state[24]:.1f}, RayUp: {state[25]:.1f}"
             )
             print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
+
+            # Header für die dynamischen Daten (Trainingsergebnisse)
+            #header_training = ["Runde", "Terminated", "Truncated", "Map-Abgedeckt", "Wand berührungen", "Summe Reward", Maze_number]
+            training_daten = [self.Terminated_Truncated_Counter, "kein_Terminated", Grund_Truncated,  self.Ratio_Area, self.too_close_to_wall_counter, self.RewardCounterActualTrainRun, self.Maze_number]
+
+            # Aufruf zum Hinzufügen von Trainingsdaten
+            self.schreibe_csv(training_daten=training_daten, csv_datei=self.csv_file_path)
+            
+
+
         if terminated:
+
             print(f"Zusammenfassung Trainingslauf Terminated (Grund: {Grund_Terminated}):")
             print(
                 f"Observations: x,y,yaw: {state[0]:.3f}, {state[1]:.3f}, {state[9]:.3f}, RayFront/Back: {state[21]:.1f}, {state[22]:.1f}, RayLeft/Right: {state[23]:.1f}, {state[24]:.1f}, RayUp: {state[25]:.1f}"
             )
             print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
+
+            # Header für die dynamischen Daten (Trainingsergebnisse)
+            #header_training = ["Runde", "Terminated", "Truncated", "Map-Abgedeckt", "Wand berührungen", "Summe Reward", Maze_number]
+            training_daten = [self.Terminated_Truncated_Counter, "kein_Terminated", Grund_Truncated,  self.Ratio_Area, self.too_close_to_wall_counter, self.RewardCounterActualTrainRun, self.Maze_number]
+
+            # Aufruf zum Hinzufügen von Trainingsdaten
+            self.schreibe_csv(training_daten=training_daten, csv_datei=self.csv_file_path)
 
         # nachfolgendes war nur zum Debugging der getDroneStateVector Funktion genutzt worden
         # ray_cast_readings = self.check_distance_sensors(0)
@@ -1822,30 +1848,44 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         # Visualisiere das Potentialfeld
         # Create output folder if it doesn't exist
-        output_folder = os.path.join(os.path.dirname(__file__), "potenzial_fields")
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
+        # output_folder = os.path.join(os.path.dirname(__file__), "potenzial_fields")
+        # if not os.path.exists(output_folder):
+        #     os.makedirs(output_folder)
 
-        # Plot and save the potential map
-        plt.ioff()  # Turn off interactive mode
-        fig = plt.figure(figsize=(10, 10))
-        plt.imshow(self.potential_map, cmap="viridis", origin="lower")
-        plt.colorbar(label="Potential")
-        plt.title("Potentialfeld")
-        plt.xlabel("x")
+        # # Plot and save the potential map
+        # plt.ioff()  # Turn off interactive mode
+        # fig = plt.figure(figsize=(10, 10))
+        # plt.imshow(self.potential_map, cmap="viridis", origin="lower")
+        # plt.colorbar(label="Potential")
+        # plt.title("Potentialfeld")
+        # plt.xlabel("x")
 
-        # Generate timestamp and save
-        timestamp = time.strftime("%Y%m%d-%H%M%S")
-        plt.savefig(os.path.join(output_folder, f"potential_field_{timestamp}.png"))
-        plt.close()
+        # # Generate timestamp and save
+        # timestamp = time.strftime("%Y%m%d-%H%M%S")
+        # plt.savefig(os.path.join(output_folder, f"potential_field_{timestamp}.png"))
+        # plt.close()
 
-        # Plot and save the distance map
-        fig = plt.figure(figsize=(10, 10))
-        plt.imshow(self.distance_map, cmap="viridis", origin="lower")
-        plt.colorbar(label="Distance")
-        plt.title("Distance Map")
-        plt.xlabel("x")
-        plt.ylabel("y")
-        plt.savefig(os.path.join(output_folder, f"distance_map_{timestamp}.png"))
-        plt.close()
+        # # Plot and save the distance map
+        # fig = plt.figure(figsize=(10, 10))
+        # plt.imshow(self.distance_map, cmap="viridis", origin="lower")
+        # plt.colorbar(label="Distance")
+        # plt.title("Distance Map")
+        # plt.xlabel("x")
+        # plt.ylabel("y")
+        # plt.savefig(os.path.join(output_folder, f"distance_map_{timestamp}.png"))
+        # plt.close()
+
+    # Funktion zum Schreiben der CSV-Datei
+    def schreibe_csv(self, training_daten=None, csv_datei="training_data.csv"):
+
+        datei_existiert = os.path.exists(self.csv_file_path)
+        
+        # Öffne die CSV-Datei zum Anhängen oder Erstellen
+        with open(self.csv_file_path, mode='a', newline='') as file:
+            writer = csv.writer(file)
+
+            if training_daten and datei_existiert:
+                # Schreibe die Trainingsdaten in die zweite Tabelle
+                writer.writerow(training_daten)
+                #print("Trainingsergebnisse wurden hinzugefügt.")
 
