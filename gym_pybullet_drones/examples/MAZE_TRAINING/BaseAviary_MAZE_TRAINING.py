@@ -1789,8 +1789,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
     def _compute_potential_fields(self):
         # Parameter
 
-        k_rep = 0.01  # Repulsion-Skalierung
-        d0 = 0.8  # Einflussradius für Wände
+        k_rep = 0.2  # Repulsion-Skalierung
+        d0 = 0.35  # Einflussradius für Wände
         Scale_Grid = 0.05  # Skalierung des Grids
 
         # Erstelle ein Raster mit Potentialwerten
@@ -1822,30 +1822,30 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         # Visualisiere das Potentialfeld
         # Create output folder if it doesn't exist
-        # output_folder = os.path.join(os.path.dirname(__file__), "potenzial_fields")
-        # if not os.path.exists(output_folder):
-        #     os.makedirs(output_folder)
+        output_folder = os.path.join(os.path.dirname(__file__), "potenzial_fields")
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
 
-        # # Plot and save the potential map
-        # plt.ioff()  # Turn off interactive mode
-        # fig = plt.figure(figsize=(10, 10))
-        # plt.imshow(self.potential_map, cmap="viridis", origin="lower")
-        # plt.colorbar(label="Potential")
-        # plt.title("Potentialfeld")
-        # plt.xlabel("x")
+        # Plot and save the potential map
+        plt.ioff()  # Turn off interactive mode
+        fig = plt.figure(figsize=(10, 10))
+        plt.imshow(self.potential_map, cmap="viridis", origin="lower")
+        plt.colorbar(label="Potential")
+        plt.title("Potentialfeld")
+        plt.xlabel("x")
 
-        # # Generate timestamp and save
-        # timestamp = time.strftime("%Y%m%d-%H%M%S")
-        # plt.savefig(os.path.join(output_folder, f"potential_field_{timestamp}.png"))
-        # plt.close()
+        # Generate timestamp and save
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        plt.savefig(os.path.join(output_folder, f"potential_field_{timestamp}.png"))
+        plt.close()
 
-        # # Plot and save the distance map
-        # fig = plt.figure(figsize=(10, 10))
-        # plt.imshow(self.distance_map, cmap="viridis", origin="lower")
-        # plt.colorbar(label="Distance")
-        # plt.title("Distance Map")
-        # plt.xlabel("x")
-        # plt.ylabel("y")
-        # plt.savefig(os.path.join(output_folder, f"distance_map_{timestamp}.png"))
-        # plt.close()
+        # Plot and save the distance map
+        fig = plt.figure(figsize=(10, 10))
+        plt.imshow(self.distance_map, cmap="viridis", origin="lower")
+        plt.colorbar(label="Distance")
+        plt.title("Distance Map")
+        plt.xlabel("x")
+        plt.ylabel("y")
+        plt.savefig(os.path.join(output_folder, f"distance_map_{timestamp}.png"))
+        plt.close()
 

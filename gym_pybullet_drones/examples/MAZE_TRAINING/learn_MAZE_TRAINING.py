@@ -60,8 +60,8 @@ from gym_pybullet_drones.utils.utils import str2bool, sync
 
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
 DEFAULT_GUI_TRAIN = True
-Default_Train = True
-Default_Test = False
+Default_Train = False
+Default_Test = True
 Default_Test_filename_test = "Model_test"
 DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_ADVANCED_STATUS_PLOT = False
@@ -73,7 +73,6 @@ DEFAULT_USE_PRETRAINED_MODEL = False
 # DEFAULT_PRETRAINED_MODEL_PATH = "/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/results/save-03.07.2025_02.23.46/best_model.zip"
 DEFAULT_PRETRAINED_MODEL_PATH = "/home/moritz_s/Documents/RKIM_1/F_u_E_Drohnenrennen/GitRepo/gym-pybullet-drones/results/save-03.19.2025_22.33.41/best_model.zip"
 
-
 DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
 
@@ -81,10 +80,8 @@ DEFAULT_TRAIN_TIMESTEPS = 10 * 1e5  # nach 100000 Steps sollten schon mehrbahre 
 DEFAULT_TARGET_REWARD = 99999999999999
 DEFAULF_NUMBER_LAST_ACTIONS = 20
 
-
 # file_path = "gym_pybullet_drones/examples/MAZE_TRAINING/Maze_init_target.yaml"
 file_path = os.path.join(os.path.dirname(__file__), "Maze_init_target.yaml")
-
 
 def loadyaml_(file_path):
     with open(file_path, "r") as file:
@@ -113,14 +110,13 @@ for map_name, map_values in Target_Start_Values.items():
     DEFAULT_TARGET_POSITION[map_name] = (map_values["target_position"],)
     # INIT_RPYS = map_values['initial_rpys']
 
-
 DEFAULT_RECORD_VIDEO = False
 DEFAULT_OUTPUT_FOLDER = "results"
 DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
-DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 3  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
-DEFAULT_EPISODE_LEN_SEC = 10 * 60  # 15 * 60
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 2 # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
+DEFAULT_EPISODE_LEN_SEC = 5 * 60  # 15 * 60
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 DEFAULT_PUSHBACK_ACTIVE = False
 
@@ -411,7 +407,7 @@ def run(
 
         # Definiere den Speicherpfad und die Häufigkeit der Checkpoints (z.B. alle 10.000 Schritte)
         checkpoint_callback = CheckpointCallback(
-            save_freq=1000,  # Speichert alle 10.000 Schritte
+            save_freq=10000,  # Speichert alle 10.000 Schritte
             save_path=filename + "/",  # Speicherpfad für die Modelle
             name_prefix=filename + "/",  # Präfix für die Modell-Dateien
             save_replay_buffer=True,  # Speichert auch den Replay Buffer

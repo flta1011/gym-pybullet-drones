@@ -27,8 +27,8 @@ def _computeTerminated(self):
 
     Grund_Terminated = None
 
-    if self.previous_Procent >= 0.9:
-        Grund_Terminated = "90 Prozent der Fläche wurde erkundet"
+    if self.previous_Procent >= 0.8:
+        Grund_Terminated = "80 Prozent der Fläche wurde erkundet"
         return True, Grund_Terminated
 
     return False, Grund_Terminated
