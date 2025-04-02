@@ -545,7 +545,9 @@ def _computeReward(
                 # 4 = Startpunkt,
                 # 5 = Zielpunkt,
                 # 6 = Wand
-                self.reward_components["Start"] = -30
+                
+                Explore_Matrix_Size_Init_Punishment = self.Explore_Matrix_Size * self.Explore_Matrix_Size * self.Reward_for_new_field
+                self.reward_components["Start"] = Explore_Matrix_Size_Init_Punishment
                 
 
                 # Initializing Reward Map
@@ -607,9 +609,13 @@ def _computeReward(
             # Vereinfachung 18.3: 5x5 grid um die Drohne herum
             x, y = current_position[0], current_position[1]
 
+            Value1_for_Matrix = int(self.Explore_Matrix_Size / 2 - 0.5)
+            Value2_for_Matrix = int(self.Explore_Matrix_Size / 2 + 0.5)
+
+
             # Iterate through 5x5 grid centered on current position
-            for i in range(max(0, x - 2), min(60, x + 3)):
-                for j in range(max(0, y - 2), min(60, y + 3)):
+            for i in range(max(0, x - Value1_for_Matrix), min(60, x + Value2_for_Matrix)):
+                for j in range(max(0, y - Value1_for_Matrix), min(60, y + Value2_for_Matrix)):
                     if self.reward_map[i, j] == 0:
                         self.reward_map[i, j] = 1
                         self.reward_components["explore_bonus_new_field"] += self.Reward_for_new_field

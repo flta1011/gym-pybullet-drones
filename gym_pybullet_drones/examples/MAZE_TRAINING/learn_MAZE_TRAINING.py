@@ -129,7 +129,7 @@ DEFAULT_MA = False
 
 DEFAULT_DASH_ACTIVE = False
 
-DEFAULT_Multiplier_Collision_Penalty = 1
+DEFAULT_Multiplier_Collision_Penalty = 5
 
 DEFAULT_VelocityScale = 1
 
@@ -137,6 +137,8 @@ DEFAULT_VelocityScale = 1
 DEFAULT_Procent_Step = 0.01
 DEFAULT_REWARD_FOR_NEW_FIELD = 2
 DEFAULT_Punishment_for_Step = -1
+# 5 bedeutet eine 5x5 Matrix
+DEFAULT_explore_Matrix_Size = 5 
 
 
 """MODEL_Versionen: 
@@ -147,7 +149,7 @@ DEFAULT_Punishment_for_Step = -1
 - M5:   DQN_NN_MultiInputPolicy mit fullyConnectLayer
 - SAC:  
 """
-MODEL_VERSION = "M1"
+MODEL_VERSION = "M5"
 
 """REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
 - R1:   Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
@@ -168,7 +170,7 @@ REWARD_VERSION = "R4"
 
 """
 
-OBSERVATION_TYPE = "O5"
+OBSERVATION_TYPE = "O7"
 
 """ActionType:'
 - A1: Vier Richtungen und zwei Drehungen
@@ -204,6 +206,7 @@ header_params = [
         "DEFAULT_Multiplier_Collision_Penalty",
         "DEFAULT_VelocityScale",
         "DEFAULT_Procent_Step",
+        "DEFAULT_explore_Matrix_Size"
     ]
 
 # Header für die dynamischen Daten (Trainingsergebnisse)
@@ -235,6 +238,7 @@ parameter_daten = [
     DEFAULT_Multiplier_Collision_Penalty,
     DEFAULT_VelocityScale,
     DEFAULT_Procent_Step,
+    DEFAULT_explore_Matrix_Size,
 ]
 
 
@@ -286,7 +290,8 @@ def run(
     number_last_actions=DEFAULF_NUMBER_LAST_ACTIONS,
     Reward_for_new_field=DEFAULT_REWARD_FOR_NEW_FIELD,
     Punishment_for_Step=DEFAULT_Punishment_for_Step,
-    Auswertungs_CSV_Datei = Auswertungs_CSV_Datei
+    Auswertungs_CSV_Datei = Auswertungs_CSV_Datei,
+    Explore_Matrix_Size = DEFAULT_explore_Matrix_Size
 ):
     if TRAIN:
         filename = os.path.join(output_folder, "save-" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))

@@ -104,6 +104,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         Punishment_for_Step = -1,
         Reward_for_new_field = 1,
         csv_file_path = "maze_training_results.csv",
+        Explore_Matrix_Size = 7,
     ):
         """Initialization of a generic aviary environment.
 
@@ -148,6 +149,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.last_actions = np.zeros(self.number_last_actions)
         self.Punishment_for_Step = Punishment_for_Step
         self.Reward_for_new_field = Reward_for_new_field
+        self.Explore_Matrix_Size = Explore_Matrix_Size
         self.csv_file_path = csv_file_path
         self.G = 9.8
         self.RAD2DEG = 180 / np.pi
