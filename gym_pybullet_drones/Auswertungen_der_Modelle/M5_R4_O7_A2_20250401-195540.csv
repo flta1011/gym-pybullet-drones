@@ -1,0 +1,33 @@
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_REWARD_FOR_NEW_FIELD,DEFAULT_Punishment_for_Step,DEFAULT_EVAL_FREQ,DEFAULT_EVAL_EPISODES,DEFAULT_TRAIN_TIMESTEPS,DEFAULT_TARGET_REWARD,DEFAULF_NUMBER_LAST_ACTIONS,DEFAULT_PYB_FREQ,DEFAULT_CTRL_FREQ,DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_Multiplier_Collision_Penalty,DEFAULT_VelocityScale,DEFAULT_Procent_Step
+2,300,2,-1,50000.0,1,200000.0,99999,20,100,50,2,300,1,1,0.01
+
+Runde,Terminated,Truncated,Map-Abgedeckt,Wand berührungen,Summe Reward,Maze_number
+1,kein_Terminated,Zeit abgelaufen,0.33,161,589.5753799570518,21
+2,kein_Terminated,Zeit abgelaufen,0.35,216,391.2313021086007,21
+3,kein_Terminated,Zeit abgelaufen,0.28,169,317.96135813361866,21
+4,kein_Terminated,Zeit abgelaufen,0.35,212,562.216906222412,21
+5,kein_Terminated,Zeit abgelaufen,0.37,179,597.4941930020541,21
+6,kein_Terminated,Zeit abgelaufen,0.32,223,-2.796154935975423,21
+7,kein_Terminated,Zeit abgelaufen,0.46,238,888.1572287092488,21
+8,kein_Terminated,Zeit abgelaufen,0.35,351,-545.8465546261098,21
+9,kein_Terminated,Zeit abgelaufen,0.31,185,267.4066700973054,21
+10,kein_Terminated,Zeit abgelaufen,0.41,248,362.323051927647,21
+11,kein_Terminated,Zeit abgelaufen,0.42,180,1080.4288604448402,21
+12,kein_Terminated,Zeit abgelaufen,0.34,187,420.2645630989159,21
+13,kein_Terminated,Zeit abgelaufen,0.26,124,315.4854053020806,21
+14,kein_Terminated,Zeit abgelaufen,0.31,135,587.2833999148165,21
+15,kein_Terminated,Zeit abgelaufen,0.35,51,1415.6330929733836,21
+16,kein_Terminated,Zeit abgelaufen,0.3,55,1215.4612244897953,21
+17,kein_Terminated,Zeit abgelaufen,0.37,188,835.3961841109044,21
+18,kein_Terminated,Zeit abgelaufen,0.49,167,1874.0706447279458,21
+19,kein_Terminated,Zeit abgelaufen,0.47,213,1375.9865256692572,21
+20,kein_Terminated,Zeit abgelaufen,0.38,225,541.7952699282638,21
+21,kein_Terminated,Zeit abgelaufen,0.34,171,701.0230528381383,21
+22,kein_Terminated,Zeit abgelaufen,0.55,269,1495.089232035935,21
+23,kein_Terminated,Zeit abgelaufen,0.57,222,1778.2283603076366,21
+24,kein_Terminated,Zeit abgelaufen,0.47,226,979.2169667760954,21
+25,kein_Terminated,Zeit abgelaufen,0.33,171,446.9673444511103,21
+26,kein_Terminated,Zeit abgelaufen,0.27,116,565.4717437497902,21
+27,kein_Terminated,Zeit abgelaufen,0.51,135,2094.407821129034,21
+28,kein_Terminated,Zeit abgelaufen,0.4,123,1226.4159508721493,21
+29,kein_Terminated,Zeit abgelaufen,0.52,129,2236.4864279908575,21
