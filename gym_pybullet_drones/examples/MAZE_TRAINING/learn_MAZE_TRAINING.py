@@ -218,6 +218,7 @@ header_training = [
     "Wand berührungen", 
     "Summe Reward",
     "Maze_number",
+    "Uhrzeit",
 ]
 
         # Beispielwerte für die Parameter (statisch)
@@ -511,7 +512,24 @@ def run(
         # Kombiniere beide Callbacks mit CallbackList
         callback_list = CallbackList([checkpoint_callback, eval_callback])
 
+        start_time = time.time()  # Startzeit erfassen
         model.learn(total_timesteps=DEFAULT_TRAIN_TIMESTEPS, callback=callback_list, log_interval=1000, progress_bar=True)  # shorter training in GitHub Actions pytest
+        end_time = time.time()  # Endzeit erfassen
+        elapsed_time = end_time - start_time  # Dauer berechnen
+        print(f"Training abgeschlossen. Dauer: {elapsed_time:.2f} Sekunden")
+
+        datei_existiert = os.path.exists(Auswertungs_CSV_Datei)
+        
+        # Öffne die CSV-Datei zum Anhängen oder Erstellen
+        with open(Auswertungs_CSV_Datei, mode='a', newline='') as file:
+            writer = csv.writer(file)
+
+            if datei_existiert:
+                # Schreibe die Trainingsdaten in die zweite Tabelle
+                writer.writerow([]) 
+                writer.writerow("Traingingszeit")
+                writer.writerow(elapsed_time)
+
 
         #### Save the model ########################################
 

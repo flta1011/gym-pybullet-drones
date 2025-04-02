@@ -908,9 +908,10 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             )
             print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
 
+            timestamp = time.strftime("%Y%m%d-%H%M%S")
             # Header für die dynamischen Daten (Trainingsergebnisse)
-            #header_training = ["Runde", "Terminated", "Truncated", "Map-Abgedeckt", "Wand berührungen", "Summe Reward", Maze_number]
-            training_daten = [self.Terminated_Truncated_Counter, "kein_Terminated", Grund_Truncated,  self.Ratio_Area, self.too_close_to_wall_counter, self.RewardCounterActualTrainRun, self.Maze_number]
+            #header_training = ["Runde", "Terminated", "Truncated", "Map-Abgedeckt", "Wand berührungen", "Summe Reward", Maze_number, Uhrzeit]
+            training_daten = [self.Terminated_Truncated_Counter, "kein_Terminated", Grund_Truncated,  self.Ratio_Area, self.too_close_to_wall_counter, self.RewardCounterActualTrainRun, self.Maze_number, timestamp]
 
             # Aufruf zum Hinzufügen von Trainingsdaten
             self.schreibe_csv(training_daten=training_daten, csv_datei=self.csv_file_path)
@@ -927,7 +928,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
             # Header für die dynamischen Daten (Trainingsergebnisse)
             #header_training = ["Runde", "Terminated", "Truncated", "Map-Abgedeckt", "Wand berührungen", "Summe Reward", Maze_number]
-            training_daten = [self.Terminated_Truncated_Counter, "kein_Terminated", Grund_Truncated,  self.Ratio_Area, self.too_close_to_wall_counter, self.RewardCounterActualTrainRun, self.Maze_number]
+            training_daten = [self.Terminated_Truncated_Counter, Grund_Terminated, "kein_Truncared",  self.Ratio_Area, self.too_close_to_wall_counter, self.RewardCounterActualTrainRun, self.Maze_number]
 
             # Aufruf zum Hinzufügen von Trainingsdaten
             self.schreibe_csv(training_daten=training_daten, csv_datei=self.csv_file_path)
