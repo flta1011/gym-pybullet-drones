@@ -607,9 +607,9 @@ def _computeReward(
             # Vereinfachung 18.3: 5x5 grid um die Drohne herum
             x, y = current_position[0], current_position[1]
 
-            # Iterate through 5x5 grid centered on current position --> 3x3 grid
-            for i in range(max(0, x - 2), min(60, x + 2)):
-                for j in range(max(0, y - 2), min(60, y + 2)):
+            # Iterate through 5x5 grid centered on current position
+            for i in range(max(0, x - 2), min(60, x + 3)):
+                for j in range(max(0, y - 2), min(60, y + 3)):
                     if self.reward_map[i, j] == 0:
                         self.reward_map[i, j] = 1
                         self.reward_components["explore_bonus_new_field"] += self.Reward_for_new_field

@@ -206,9 +206,9 @@ def _computeObs(self):
             # Modify observation based on distance thresholds
             modified_obs = []
 
-            last_Action_1 = state[26]  # [25]=last_Action
-            last_Action_2 = state[27]  # [26]=last_Action
-            last_Action_3 = state[28]  # [27]=last_Action
+            # last_Action_1 = state[26]  # [25]=last_Action
+            # last_Action_2 = state[27]  # [26]=last_Action
+            # last_Action_3 = state[28]  # [27]=last_Action
 
             # NOTE - neue Tests mit X,Y, Yaw Position der Drohne (28.2.25) übergeben
             modified_obs.append(round(state[0], 3))  # x-Position
@@ -226,9 +226,12 @@ def _computeObs(self):
             else:
                 modified_obs.append(9999)
 
-            modified_obs.append(last_Action_1)  # last Action
-            modified_obs.append(last_Action_2)  # last Action
-            modified_obs.append(last_Action_3)  # last Action
+            # Ensure last_actions is flattened and appended correctly
+            if isinstance(self.last_actions, (list, np.ndarray)):
+                modified_obs.extend(self.last_actions)  # Append elements individually
+            else:
+                modified_obs.append(self.last_actions)  # Append directly if it's a single value
+            
 
             return np.array(modified_obs, dtype=np.float32)  # vorne (0,1,2), hinten (0,1,2), links (0,1,2), rechts (0,1,2), oben (1,9999)
 

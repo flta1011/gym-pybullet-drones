@@ -115,18 +115,19 @@ def _observationSpace(self):
                 Information of the self._getDroneStateVector:
                     ndarray
                     1x Raycast reading (forward) [21]          -> 0 bis 9999
-
+                    Last Action (values in [-1,1])
+            self.number_last_actions
             """
 
             lo = -np.inf
             hi = np.inf
             obs_lower_bound = np.array(
-                [-99, -99, -2 * np.pi, 0, 0, 0, 0, 0, -1, -1, -1]
-            )  # x,y,yaw, Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
+                [-99, -99, -2 * np.pi, 0, 0, 0, 0, 0] + [-1] * self.number_last_actions
+            )  # x,y,yaw, Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up, last actions
 
             obs_upper_bound = np.array(
-                [99, 99, 2 * np.pi, 9999, 9999, 9999, 9999, 9999, 1, 1, 1]
-            )  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
+                [99, 99, 2 * np.pi, 9999, 9999, 9999, 9999, 9999] + [1] * self.number_last_actions
+            )  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up, last actions
 
             return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
         
