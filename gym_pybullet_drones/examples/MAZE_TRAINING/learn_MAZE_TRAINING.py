@@ -78,7 +78,7 @@ DEFAULT_PRETRAINED_MODEL_PATH = "/home/moritz_s/Documents/RKIM_1/F_u_E_Drohnenre
 DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
 
-DEFAULT_TRAIN_TIMESTEPS = 1 * 1e5  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
+DEFAULT_TRAIN_TIMESTEPS = 2 * 1e5  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULT_TARGET_REWARD = 99999
 DEFAULF_NUMBER_LAST_ACTIONS = 20
 
@@ -117,7 +117,7 @@ DEFAULT_OUTPUT_FOLDER = "results"
 DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
-DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 2 # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 4 # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
 DEFAULT_EPISODE_LEN_SEC = 5 * 60  # 15 * 60
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 DEFAULT_PUSHBACK_ACTIVE = False

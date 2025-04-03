@@ -1819,7 +1819,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # Parameter
 
         k_rep = 0.2  # Repulsion-Skalierung
-        d0 = 0.35  # Einflussradius für Wände
+        d0 = 0.55  # Einflussradius für Wände
         Scale_Grid = 0.05  # Skalierung des Grids
 
         # Erstelle ein Raster mit Potentialwerten
