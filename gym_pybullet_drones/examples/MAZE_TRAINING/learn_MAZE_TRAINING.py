@@ -11,51 +11,56 @@ In a terminal, run as:
 
 Notes
 -----
-This is a minimal working example integrating `gym-pybullet-drones` with 
+This is a minimal working example integrating `gym-pybullet-drones` with
 reinforcement learning library `stable-baselines3`.
 
 """
-import os
+
+import argparse
 import csv
+import os
 import shutil
 import time
 from datetime import datetime
-import argparse
+
 import gymnasium as gym
 import numpy as np
 import torch
-from stable_baselines3 import PPO, DQN, SAC
-from stable_baselines3.common.env_util import make_vec_env
+import yaml
+from stable_baselines3 import DQN, PPO, SAC
 from stable_baselines3.common.callbacks import (
     CallbackList,
     CheckpointCallback,
     EvalCallback,
     StopTrainingOnRewardThreshold,
 )
+from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
 
 from gym_pybullet_drones.examples.MAZE_TRAINING.Logger_MAZE_TRAINING_BUGGY import Logger
-from gym_pybullet_drones.utils.utils import sync, str2bool
-from gym_pybullet_drones.utils.enums import ObservationType, ActionType
-
-from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType
-import yaml
+from gym_pybullet_drones.utils.enums import (
+    ActionType,
+    DroneModel,
+    ObservationType,
+    Physics,
+)
+from gym_pybullet_drones.utils.utils import str2bool, sync
 
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
 
 
 Training_Mode = "Training"  # "Training" oder "Test"
-GUI_Mode = "Train"            # "Train" oder "Test" oder "NoGUI"
+GUI_Mode = "Train"  # "Train" oder "Test" oder "NoGUI"
 
 
 ################################
 if Training_Mode == "Training":
     Default_Train = True
-    Default_Test = False    
+    Default_Test = False
 elif Training_Mode == "Test":
     Default_Train = False
     Default_Test = True
-    
+
 if GUI_Mode == "Train":
     DEFAULT_GUI_TRAIN = True
     DEFAULT_GUI_TEST = False
@@ -65,13 +70,11 @@ elif GUI_Mode == "Test":
 elif GUI_Mode == "NoGUI":
     DEFAULT_GUI_TRAIN = False
     DEFAULT_GUI_TEST = False
-######################################    
-    
+######################################
+
 
 Default_Test_filename_test = "Model_test"
 DEFAULT_USER_DEBUG_GUI = False
-
-
 
 
 DEFAULT_USE_PRETRAINED_MODEL = False
@@ -80,18 +83,18 @@ DEFAULT_USE_PRETRAINED_MODEL = False
 DEFAULT_PRETRAINED_MODEL_PATH = "/home/moritz_s/Documents/RKIM_1/F_u_E_Drohnenrennen/GitRepo/gym-pybullet-drones/results/save-03.19.2025_22.33.41/best_model.zip"
 
 
-Ziel_Training_TIME_In_Simulation = 5*60*60 # 5 Stunden
+Ziel_Training_TIME_In_Simulation = 24 * 60 * 60  # 5 Stunden
 
 
+file_path = "gym_pybullet_drones/examples/MAZE_TRAINING/Maze_init_target.yaml"
 
 
-file_path = 'gym_pybullet_drones/examples/MAZE_TRAINING/Maze_init_target.yaml'
 def loadyaml_(file_path):
-    with open(file_path, 'r') as file:
+    with open(file_path, "r") as file:
         return yaml.safe_load(file)
 
-Target_Start_Values = loadyaml_(file_path)
 
+Target_Start_Values = loadyaml_(file_path)
 
 
 # Initialisieren Sie das Dictionary, um die Werte zu speichern
@@ -100,59 +103,61 @@ DEFAULT_TARGET_POSITION = {}
 
 DEFAULT_ALTITUDE = 0.5
 
-#INIT_RPYS = {}
-INIT_RPYS = np.array([
-                          [0, 0, 0],
-                          ])
+# INIT_RPYS = {}
+INIT_RPYS = np.array(
+    [
+        [0, 0, 0],
+    ]
+)
 
 # Iterieren Sie über die Maps und speichern Sie die Werte im Dictionary
 for map_name, map_values in Target_Start_Values.items():
-        INIT_XYZS[map_name] = map_values['initial_xyzs'],
-        DEFAULT_TARGET_POSITION[map_name] = map_values['target_position'],
-        #INIT_RPYS = map_values['initial_rpys']
+    INIT_XYZS[map_name] = (map_values["initial_xyzs"],)
+    DEFAULT_TARGET_POSITION[map_name] = (map_values["target_position"],)
+    # INIT_RPYS = map_values['initial_rpys']
 
 
 DEFAULT_RECORD_VIDEO = False
-DEFAULT_OUTPUT_FOLDER = 'results' 
+DEFAULT_OUTPUT_FOLDER = "results"
 DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
-DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 5 # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
-DEFAULT_EPISODE_LEN_SEC= 5*60 # Zeit je Episode auf 5 Minuten festgelegt
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
+DEFAULT_EPISODE_LEN_SEC = 5 * 60  # Zeit je Episode auf 5 Minuten festgelegt
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 DEFAULT_PUSHBACK_ACTIVE = False
 
-DEFAULT_EVAL_FREQ = 5*1e4
+DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
 
-DEFAULT_TRAIN_TIMESTEPS = Ziel_Training_TIME_In_Simulation * DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
+DEFAULT_TRAIN_TIMESTEPS = Ziel_Training_TIME_In_Simulation * DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULT_TARGET_REWARD = 99999999999999
 
-DEFAULF_NUMBER_LAST_ACTIONS = 20
+DEFAULF_NUMBER_LAST_ACTIONS = 80
 
-DEFAULT_OBS = ObservationType('kin') # 'kin' or 'rgb'
-DEFAULT_ACT = ActionType('vel') # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'one_d_pid'
+DEFAULT_OBS = ObservationType("kin")  # 'kin' or 'rgb'
+DEFAULT_ACT = ActionType("vel")  # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'one_d_pid'
 DEFAULT_AGENTS = 1
 DEFAULT_MA = False
 
 DEFAULT_DASH_ACTIVE = False
 
-DEFAULT_Multiplier_Collision_Penalty = 5
+DEFAULT_Multiplier_Collision_Penalty = 10
 
-DEFAULT_VelocityScale = 1
+DEFAULT_VelocityScale = 0.5
 
 # Bei wie viel Prozent der Fläche einen Print ausgeben
 DEFAULT_Procent_Step = 0.01
 DEFAULT_REWARD_FOR_NEW_FIELD = 2
-DEFAULT_Punishment_for_Step = 0  # -0.5 bei 5Hz bzw -1 bei 2Hz
+DEFAULT_Punishment_for_Step = -0.25  # -0.5 bei 5Hz bzw -1 bei 2Hz
 # 5 bedeutet eine 5x5 Matrix
 DEFAULT_explore_Matrix_Size = 5
-DEFAULT_BESTRAFUNGSABSTAND_WAND = 0.35
-DEFAULT_SCALE_BESTRAFUNG_WAND = 0.1
+DEFAULT_BESTRAFUNGSABSTAND_WAND = 0.40
+DEFAULT_SCALE_BESTRAFUNG_WAND = 0.12
 
-DEFAULT_TOO_CLOSE_TO_WALL_DISTANCE = 0.15
+DEFAULT_TOO_CLOSE_TO_WALL_DISTANCE = 0.20
 
-DEFAULT_INIT_MAZE_NUMBER = 21 # 21 ist die vereinfachte Version mit lediglich 2 einfachen Störkonturen, 0 wäre eine leicht vereinfachte Version des Mazes 1 und Maze 1-20 sind Standard Mazes, deren Schwierigkeit doch recht hoch ist
+DEFAULT_INIT_MAZE_NUMBER = 21  # 21 ist die vereinfachte Version mit lediglich 2 einfachen Störkonturen, 0 wäre eine leicht vereinfachte Version des Mazes 1 und Maze 1-20 sind Standard Mazes, deren Schwierigkeit doch recht hoch ist
 
 """MODEL_Versionen: 
 - M1:   PPO
@@ -181,9 +186,13 @@ ACTION_TYPE = "A2"
 ################################################################################
 
 if MODEL_VERSION == "M6":
-    from gym_pybullet_drones.examples.MAZE_TRAINING.BaseRLAviary_MAZE_TRAINING_CONTINUOUS_ACTIONSPACE import BaseRLAviary_MAZE_TRAINING
+    from gym_pybullet_drones.examples.MAZE_TRAINING.BaseRLAviary_MAZE_TRAINING_CONTINUOUS_ACTIONSPACE import (
+        BaseRLAviary_MAZE_TRAINING,
+    )
 else:
-    from gym_pybullet_drones.examples.MAZE_TRAINING.BaseRLAviary_MAZE_TRAINING_DISCRETE_ACTIONSPACE import BaseRLAviary_MAZE_TRAINING
+    from gym_pybullet_drones.examples.MAZE_TRAINING.BaseRLAviary_MAZE_TRAINING_DISCRETE_ACTIONSPACE import (
+        BaseRLAviary_MAZE_TRAINING,
+    )
 
 
 #######################################CSV ERSTELLEN####################
@@ -197,44 +206,43 @@ Auswertungs_CSV_Datei = f"gym_pybullet_drones/Auswertungen_der_Modelle/{MODEL_VE
 datei_existiert = os.path.exists(Auswertungs_CSV_Datei)
 
 
-
 header_params = [
-        "DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ", 
-        "DEFAULT_EPISODE_LEN_SEC", 
-        "DEFAULT_REWARD_FOR_NEW_FIELD", 
-        "DEFAULT_Punishment_for_Step",
-        "DEFAULT_EVAL_FREQ",
-        "DEFAULT_EVAL_EPISODES",
-        "DEFAULT_TRAIN_TIMESTEPS",
-        "DEFAULT_TARGET_REWARD",
-        "DEFAULF_NUMBER_LAST_ACTIONS",
-        "DEFAULT_PYB_FREQ",
-        "DEFAULT_CTRL_FREQ",
-        "DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ",
-        "DEFAULT_EPISODE_LEN_SEC",
-        "DEFAULT_Multiplier_Collision_Penalty",
-        "DEFAULT_VelocityScale",
-        "DEFAULT_Procent_Step",
-        "DEFAULT_explore_Matrix_Size",
-        "DEFAULT_BESTRAFUNGSABSTAND_WAND",
-        "DEFAULT_SCALE_BESTRAFUNG_WAND",
-        "DEFAULT_TOO_CLOSE_TO_WALL_DISTANCE",
-        "DEFAULT_INIT_MAZE_NUMBER"
-    ]
+    "DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ",
+    "DEFAULT_EPISODE_LEN_SEC",
+    "DEFAULT_REWARD_FOR_NEW_FIELD",
+    "DEFAULT_Punishment_for_Step",
+    "DEFAULT_EVAL_FREQ",
+    "DEFAULT_EVAL_EPISODES",
+    "DEFAULT_TRAIN_TIMESTEPS",
+    "DEFAULT_TARGET_REWARD",
+    "DEFAULF_NUMBER_LAST_ACTIONS",
+    "DEFAULT_PYB_FREQ",
+    "DEFAULT_CTRL_FREQ",
+    "DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ",
+    "DEFAULT_EPISODE_LEN_SEC",
+    "DEFAULT_Multiplier_Collision_Penalty",
+    "DEFAULT_VelocityScale",
+    "DEFAULT_Procent_Step",
+    "DEFAULT_explore_Matrix_Size",
+    "DEFAULT_BESTRAFUNGSABSTAND_WAND",
+    "DEFAULT_SCALE_BESTRAFUNG_WAND",
+    "DEFAULT_TOO_CLOSE_TO_WALL_DISTANCE",
+    "DEFAULT_INIT_MAZE_NUMBER",
+]
 
 # Header für die dynamischen Daten (Trainingsergebnisse)
 header_training = [
-    "Runde", 
-    "Terminated", 
-    "Truncated", 
-    "Map-Abgedeckt", 
-    "Wand berührungen", 
+    "Runde",
+    "Terminated",
+    "Truncated",
+    "Map-Abgedeckt",
+    "Wand berührungen",
     "Summe Reward",
     "Maze_number",
     "Uhrzeit",
 ]
 
-        # Beispielwerte für die Parameter (statisch)
+# Beispielwerte für die Parameter (statisch)
 parameter_daten = [
     DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,  # DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ
     DEFAULT_EPISODE_LEN_SEC,  # DEFAULT_EPISODE_LEN_SEC
@@ -256,27 +264,29 @@ parameter_daten = [
     DEFAULT_BESTRAFUNGSABSTAND_WAND,
     DEFAULT_SCALE_BESTRAFUNG_WAND,
     DEFAULT_TOO_CLOSE_TO_WALL_DISTANCE,
-    DEFAULT_INIT_MAZE_NUMBER
+    DEFAULT_INIT_MAZE_NUMBER,
 ]
 
 
 # Öffnen oder Erstellen der CSV-Datei
-with open(Auswertungs_CSV_Datei, mode='a', newline='') as file:
+with open(Auswertungs_CSV_Datei, mode="a", newline="") as file:
     writer = csv.writer(file)
-    
+
 if not datei_existiert:
-    with open(Auswertungs_CSV_Datei, mode='a', newline='') as file:
+    with open(Auswertungs_CSV_Datei, mode="a", newline="") as file:
         writer = csv.writer(file)
         # Wenn die Datei nicht existiert oder wir neue Werte beim ersten Aufruf schreiben, dann Header hinzufügen
         writer.writerow(header_params)  # Die statischen Parameter (Header)
         writer.writerow(parameter_daten)  # Die zugehörigen Parameter-Werte
         writer.writerow([])  # Leere Zeile zur Trennung der Tabellen
         writer.writerow(header_training)  # Header für die dynamischen Trainingsdaten
-        
+
 
 ################################################################################
 
-def run(multiagent=DEFAULT_MA,
+
+def run(
+    multiagent=DEFAULT_MA,
     output_folder=DEFAULT_OUTPUT_FOLDER,
     gui_Train=DEFAULT_GUI_TRAIN,
     gui_Test=DEFAULT_GUI_TEST,
@@ -306,12 +316,13 @@ def run(multiagent=DEFAULT_MA,
     number_last_actions=DEFAULF_NUMBER_LAST_ACTIONS,
     Reward_for_new_field=DEFAULT_REWARD_FOR_NEW_FIELD,
     Punishment_for_Step=DEFAULT_Punishment_for_Step,
-    Auswertungs_CSV_Datei = Auswertungs_CSV_Datei,
-    Explore_Matrix_Size = DEFAULT_explore_Matrix_Size,
-    Bestrafungsabstand_Wand = DEFAULT_BESTRAFUNGSABSTAND_WAND,
-    Skalierung_Bestrafung_Wand = DEFAULT_SCALE_BESTRAFUNG_WAND,
-    Too_Close_to_Wall_Distance = DEFAULT_TOO_CLOSE_TO_WALL_DISTANCE,
-    INIT_Maze_number = DEFAULT_INIT_MAZE_NUMBER):
+    Auswertungs_CSV_Datei=Auswertungs_CSV_Datei,
+    Explore_Matrix_Size=DEFAULT_explore_Matrix_Size,
+    Bestrafungsabstand_Wand=DEFAULT_BESTRAFUNGSABSTAND_WAND,
+    Skalierung_Bestrafung_Wand=DEFAULT_SCALE_BESTRAFUNG_WAND,
+    Too_Close_to_Wall_Distance=DEFAULT_TOO_CLOSE_TO_WALL_DISTANCE,
+    INIT_Maze_number=DEFAULT_INIT_MAZE_NUMBER,
+):
 
     if TRAIN:
         filename = os.path.join(output_folder, "save-" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
@@ -344,14 +355,14 @@ def run(multiagent=DEFAULT_MA,
                     VelocityScale=DEFAULT_VelocityScale,
                     Procent_Step=Procent_Step,
                     number_last_actions=number_last_actions,
-                    Punishment_for_Step = Punishment_for_Step,
-                    Reward_for_new_field = Reward_for_new_field,
-                    csv_file_path = Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
-                    Explore_Matrix_Size = Explore_Matrix_Size,
-                    Bestrafungsabstand_Wand = Bestrafungsabstand_Wand,
-                    Skalierung_Bestrafung_Wand = Skalierung_Bestrafung_Wand,
-                    Too_Close_to_Wall_Distance = Too_Close_to_Wall_Distance,
-                    INIT_Maze_number = INIT_Maze_number
+                    Punishment_for_Step=Punishment_for_Step,
+                    Reward_for_new_field=Reward_for_new_field,
+                    csv_file_path=Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
+                    Explore_Matrix_Size=Explore_Matrix_Size,
+                    Bestrafungsabstand_Wand=Bestrafungsabstand_Wand,
+                    Skalierung_Bestrafung_Wand=Skalierung_Bestrafung_Wand,
+                    Too_Close_to_Wall_Distance=Too_Close_to_Wall_Distance,
+                    INIT_Maze_number=INIT_Maze_number,
                 ),
                 n_envs=1,
                 seed=0,
@@ -383,13 +394,13 @@ def run(multiagent=DEFAULT_MA,
                     VelocityScale=DEFAULT_VelocityScale,
                     Procent_Step=Procent_Step,
                     number_last_actions=number_last_actions,
-                    Punishment_for_Step = Punishment_for_Step,
-                    Reward_for_new_field = Reward_for_new_field,
-                    csv_file_path = Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
-                    Bestrafungsabstand_Wand = Bestrafungsabstand_Wand,
-                    Skalierung_Bestrafung_Wand = Skalierung_Bestrafung_Wand,
-                    Too_Close_to_Wall_Distance = Too_Close_to_Wall_Distance,
-                    INIT_Maze_number = INIT_Maze_number
+                    Punishment_for_Step=Punishment_for_Step,
+                    Reward_for_new_field=Reward_for_new_field,
+                    csv_file_path=Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
+                    Bestrafungsabstand_Wand=Bestrafungsabstand_Wand,
+                    Skalierung_Bestrafung_Wand=Skalierung_Bestrafung_Wand,
+                    Too_Close_to_Wall_Distance=Too_Close_to_Wall_Distance,
+                    INIT_Maze_number=INIT_Maze_number,
                 ),
                 n_envs=1,
                 seed=0,
@@ -445,8 +456,8 @@ def run(multiagent=DEFAULT_MA,
                         # policy_kwargs=dict(net_arch=[128, 64, 32]),
                         verbose=1,
                         seed=42,
-                        buffer_size=1000000, # default = 1000000, evtl. wegen Speicher auf 5000 reduzieren
-                        gamma=0.99, # gamma default = 0.99, AUCH 0.8 testen!
+                        buffer_size=1000000,  # default = 1000000, evtl. wegen Speicher auf 5000 reduzieren
+                        gamma=0.99,  # gamma default = 0.99, AUCH 0.8 testen!
                     )
 
             # case "M4":  # M4: DQN_CNNPolicy_CustomFeatureExtractor
@@ -491,8 +502,7 @@ def run(multiagent=DEFAULT_MA,
             #             buffer_size=5000,
             #             gamma=0.8,
             #         )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
-                    
-                    
+
             case "M6":  # M6: SAC
                 if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
                     print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
@@ -504,12 +514,9 @@ def run(multiagent=DEFAULT_MA,
                         train_env,
                         verbose=1,
                     )
-                    
 
         ## Schreiben der CSV für die Auswertung unserer Ergebnisse
-        
 
-        
         #### Target cumulative rewards (problem-dependent) ##########
         target_reward = DEFAULT_TARGET_REWARD
         print(target_reward)
@@ -560,17 +567,16 @@ def run(multiagent=DEFAULT_MA,
         print(f"Training abgeschlossen. Dauer: {elapsed_time:.2f} Sekunden")
 
         datei_existiert = os.path.exists(Auswertungs_CSV_Datei)
-        
+
         # Öffne die CSV-Datei zum Anhängen oder Erstellen
-        with open(Auswertungs_CSV_Datei, mode='a', newline='') as file:
+        with open(Auswertungs_CSV_Datei, mode="a", newline="") as file:
             writer = csv.writer(file)
 
             if datei_existiert:
                 # Schreibe die Trainingsdaten in die zweite Tabelle
-                writer.writerow([]) 
+                writer.writerow([])
                 writer.writerow("Traingingszeit")
                 writer.writerow(elapsed_time)
-
 
         #### Save the model ########################################
 
@@ -578,7 +584,7 @@ def run(multiagent=DEFAULT_MA,
         if os.path.exists(filename):
             # Extrahiere den letzten Ordnernamen
             last_folder = os.path.basename(filename)
-            
+
             # Erstelle den vollständigen Pfad zum Ordner, dessen Inhalt du löschen möchtest
             target_folder = os.path.join("results", last_folder)
 
@@ -647,14 +653,14 @@ def run(multiagent=DEFAULT_MA,
                 DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
                 VelocityScale=DEFAULT_VelocityScale,
                 Procent_Step=Procent_Step,
-                Punishment_for_Step = Punishment_for_Step,
-                Reward_for_new_field = Reward_for_new_field,
-                csv_file_path = Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
-                Explore_Matrix_Size = Explore_Matrix_Size,
-                Bestrafungsabstand_Wand = Bestrafungsabstand_Wand,
-                Skalierung_Bestrafung_Wand = Skalierung_Bestrafung_Wand,
-                Too_Close_to_Wall_Distance = Too_Close_to_Wall_Distance,
-                INIT_Maze_number = INIT_Maze_number
+                Punishment_for_Step=Punishment_for_Step,
+                Reward_for_new_field=Reward_for_new_field,
+                csv_file_path=Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
+                Explore_Matrix_Size=Explore_Matrix_Size,
+                Bestrafungsabstand_Wand=Bestrafungsabstand_Wand,
+                Skalierung_Bestrafung_Wand=Skalierung_Bestrafung_Wand,
+                Too_Close_to_Wall_Distance=Too_Close_to_Wall_Distance,
+                INIT_Maze_number=INIT_Maze_number,
             ),
             n_envs=1,
             seed=0,
