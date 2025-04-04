@@ -65,7 +65,9 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         csv_file_path = "maze_training_results.csv",
         Explore_Matrix_Size = 5,
         Bestrafungsabstand_Wand = 0.5,
-        Skalierung_Bestrafung_Wand = 0.1
+        Skalierung_Bestrafung_Wand = 0.1,
+        Too_Close_to_Wall_Distance = 0.15,
+        INIT_Maze_number = 21
     ):
         """Initialization of a generic single and multi-agent RL environment.
 
@@ -180,7 +182,9 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
                          Danger_Threshold_Wall=Danger_Threshold_Wall,
                          REWARD_VERSION=REWARD_VERSION,
                          pushback_active=Pushback_active,
-                         output_folder=output_folder
+                         output_folder=output_folder,
+                         Too_Close_to_Wall_Distance=Too_Close_to_Wall_Distance,
+                         INIT_Maze_number=INIT_Maze_number
                          )
         
         #### Set a limit on the maximum target speed ###############
@@ -545,6 +549,10 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         state = self._getDroneStateVector(0)
         if abs(state[7]) > .4 or abs(state[8]) > .4: 
             Grund_Truncated = "Zu tilted"
+            return True, Grund_Truncated
+        
+        if self.too_close_to_wall_counter > 0:
+            Grund_Truncated = "Zu nahe an der Wand"
             return True, Grund_Truncated
         
         # TBD wenn die Drone abstürzt, dann auch truncaten

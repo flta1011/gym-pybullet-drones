@@ -144,11 +144,15 @@ DEFAULT_VelocityScale = 1
 # Bei wie viel Prozent der Fläche einen Print ausgeben
 DEFAULT_Procent_Step = 0.01
 DEFAULT_REWARD_FOR_NEW_FIELD = 2
-DEFAULT_Punishment_for_Step = -0.5
+DEFAULT_Punishment_for_Step = 0  # -0.5 bei 5Hz bzw -1 bei 2Hz
 # 5 bedeutet eine 5x5 Matrix
 DEFAULT_explore_Matrix_Size = 5
 DEFAULT_BESTRAFUNGSABSTAND_WAND = 0.35
 DEFAULT_SCALE_BESTRAFUNG_WAND = 0.1
+
+DEFAULT_TOO_CLOSE_TO_WALL_DISTANCE = 0.15
+
+DEFAULT_INIT_MAZE_NUMBER = 21 # 21 ist die vereinfachte Version mit lediglich 2 einfachen Störkonturen, 0 wäre eine leicht vereinfachte Version des Mazes 1 und Maze 1-20 sind Standard Mazes, deren Schwierigkeit doch recht hoch ist
 
 """MODEL_Versionen: 
 - M1:   PPO
@@ -213,7 +217,9 @@ header_params = [
         "DEFAULT_Procent_Step",
         "DEFAULT_explore_Matrix_Size",
         "DEFAULT_BESTRAFUNGSABSTAND_WAND",
-        "DEFAULT_SCALE_BESTRAFUNG_WAND"
+        "DEFAULT_SCALE_BESTRAFUNG_WAND",
+        "DEFAULT_TOO_CLOSE_TO_WALL_DISTANCE",
+        "DEFAULT_INIT_MAZE_NUMBER"
     ]
 
 # Header für die dynamischen Daten (Trainingsergebnisse)
@@ -248,7 +254,9 @@ parameter_daten = [
     DEFAULT_Procent_Step,
     DEFAULT_explore_Matrix_Size,
     DEFAULT_BESTRAFUNGSABSTAND_WAND,
-    DEFAULT_SCALE_BESTRAFUNG_WAND
+    DEFAULT_SCALE_BESTRAFUNG_WAND,
+    DEFAULT_TOO_CLOSE_TO_WALL_DISTANCE,
+    DEFAULT_INIT_MAZE_NUMBER
 ]
 
 
@@ -301,7 +309,9 @@ def run(multiagent=DEFAULT_MA,
     Auswertungs_CSV_Datei = Auswertungs_CSV_Datei,
     Explore_Matrix_Size = DEFAULT_explore_Matrix_Size,
     Bestrafungsabstand_Wand = DEFAULT_BESTRAFUNGSABSTAND_WAND,
-    Skalierung_Bestrafung_Wand = DEFAULT_SCALE_BESTRAFUNG_WAND):
+    Skalierung_Bestrafung_Wand = DEFAULT_SCALE_BESTRAFUNG_WAND,
+    Too_Close_to_Wall_Distance = DEFAULT_TOO_CLOSE_TO_WALL_DISTANCE,
+    INIT_Maze_number = DEFAULT_INIT_MAZE_NUMBER):
 
     if TRAIN:
         filename = os.path.join(output_folder, "save-" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
@@ -339,7 +349,9 @@ def run(multiagent=DEFAULT_MA,
                     csv_file_path = Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
                     Explore_Matrix_Size = Explore_Matrix_Size,
                     Bestrafungsabstand_Wand = Bestrafungsabstand_Wand,
-                    Skalierung_Bestrafung_Wand = Skalierung_Bestrafung_Wand
+                    Skalierung_Bestrafung_Wand = Skalierung_Bestrafung_Wand,
+                    Too_Close_to_Wall_Distance = Too_Close_to_Wall_Distance,
+                    INIT_Maze_number = INIT_Maze_number
                 ),
                 n_envs=1,
                 seed=0,
@@ -375,7 +387,9 @@ def run(multiagent=DEFAULT_MA,
                     Reward_for_new_field = Reward_for_new_field,
                     csv_file_path = Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
                     Bestrafungsabstand_Wand = Bestrafungsabstand_Wand,
-                    Skalierung_Bestrafung_Wand = Skalierung_Bestrafung_Wand
+                    Skalierung_Bestrafung_Wand = Skalierung_Bestrafung_Wand,
+                    Too_Close_to_Wall_Distance = Too_Close_to_Wall_Distance,
+                    INIT_Maze_number = INIT_Maze_number
                 ),
                 n_envs=1,
                 seed=0,
@@ -638,7 +652,9 @@ def run(multiagent=DEFAULT_MA,
                 csv_file_path = Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
                 Explore_Matrix_Size = Explore_Matrix_Size,
                 Bestrafungsabstand_Wand = Bestrafungsabstand_Wand,
-                Skalierung_Bestrafung_Wand = Skalierung_Bestrafung_Wand
+                Skalierung_Bestrafung_Wand = Skalierung_Bestrafung_Wand,
+                Too_Close_to_Wall_Distance = Too_Close_to_Wall_Distance,
+                INIT_Maze_number = INIT_Maze_number
             ),
             n_envs=1,
             seed=0,

@@ -45,7 +45,9 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
                  target_position=np.array([0, 0, 0]),
                  Danger_Threshold_Wall=0.15,
                  REWARD_VERSION="REWARD_VERSION_1",
-                 pushback_active=False
+                 pushback_active=False,
+                 Too_Close_to_Wall_Distance=0.15,
+                 INIT_Maze_number=21
                  ):
         """Initialization of a generic aviary environment.
 
@@ -129,14 +131,15 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         self.DW_COEFF_2, \
         self.DW_COEFF_3 = self._parseURDFParameters()
         #NOTE - Maze Anzahl Wechsel
-        self.Maze_number = 0
-        self.New_Maze_number = 5
+        self.Maze_number = INIT_Maze_number
+        self.New_Maze_number = 5 # nach wie vielen Episoden wird die Maze gewechselt
         self.New_Maze_number_counter = 0
         # The random number to generate the init and target position
         self.random_number_Start = 1
         self.random_number_Target = 2
         
         self.PUSHBACK_ACTIVE = pushback_active
+        self.Too_Close_to_Wall_Distance = Too_Close_to_Wall_Distance
         
         
         
@@ -287,13 +290,16 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         #### Reset the simulation ##################################
 
         if  self.New_Maze_number_counter == self.New_Maze_number:
+            # drei Möglichkeiten: 1. random Maze aus allen 20, 2. Random Maze aus konkret definierten Mazes, 3. 1 konkretes Maze festlegen (die anderern beiden auskommentieren )
+            
+            ##1##
             #self.Maze_number = np.random.randint(1, 20)
-            # solang nicht alle csv datei erstellt dann ändern auf 20
-            # Erstellen Sie eine Liste der zulässigen Zahlen
-
-            # Wählen Sie eine Zufallszahl aus der Liste der zulässigen Zahlen
+            
+            ##2##
             #self.Maze_number = np.random.choice((1, 20))
-            self.Maze_number = 0
+            
+            ##3##
+            self.Maze_number = 21
             
             print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
             print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
@@ -302,6 +308,7 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         else:
             self.New_Maze_number_counter += 1
             print(f"--------------------------MAZE_NUMBER: {self.Maze_number}---------------------------------------")
+            print(f"--------------------------StartNUMBER: {self.random_number_Start}---------------------------------------")
             print(f"--------------------------MAZE_NUMBER_Counter: { self.New_Maze_number_counter}---------------------------------------")
 
         p.resetSimulation(physicsClientId=self.CLIENT)
@@ -644,7 +651,7 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         state = self._getDroneStateVector(0) #Einführung neuste 
         
         # Erhöhe den Step-Counter für die Zählung der Momente, die zu nah an der Wand waren (in jeden Control-Freq.)
-        if self.distance_map[int(np.round(self.pos[0][0] / 0.05)), int(np.round(self.pos[0][1] / 0.05))] < 0.25:
+        if self.distance_map[int(np.round(self.pos[0][0] / 0.05)), int(np.round(self.pos[0][1] / 0.05))] < self.Too_Close_to_Wall_Distance:
             self.too_close_to_wall_counter += 1
 
         self.timestamp_actual = self.step_counter * self.PYB_TIMESTEP  # Use simulation time instead of real time
@@ -864,6 +871,7 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
         #### Initialize/reset counters and zero-valued variables ###
         self.RESET_TIME = time.time()
         self.step_counter = 0
+        self.too_close_to_wall_counter = 0
         self.action = np.zeros((self.NUM_DRONES, 4))
         self.first_render_call = True
         self.X_AX = -1*np.ones(self.NUM_DRONES)
@@ -899,16 +907,16 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
                     break
 
             Start_Position_swapped = [0,0,0.5] #NOTE - TARGET POSITION FIX
-            if self.Maze_number == 0:
-                Start_Position =  self.INIT_XYZS[f"map{self.Maze_number+1}"][0][self.random_number_Start][0:2]
+            if self.Maze_number == 0 or self.Maze_number == 21:
+                Start_Position =  self.INIT_XYZS[f"map{1}"][0][self.random_number_Start][0:2]
             else:
                 Start_Position =  self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0:2]
             Start_Position_swapped[1] = Start_Position[0]
             Start_Position_swapped[0] = Start_Position[1]
         else:
             Start_Position_swapped = [0,0,0.5]
-            if self.Maze_number == 0:
-                Start_Position =  self.INIT_XYZS[f"map{self.Maze_number+1}"][0][self.random_number_Start][0:2]
+            if self.Maze_number == 0 or self.Maze_number == 21:
+                Start_Position =  self.INIT_XYZS[f"map{1}"][0][self.random_number_Start][0:2]
             else:
                 Start_Position =  self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0:2]
             Start_Position_swapped[1] = Start_Position[0]
@@ -1455,16 +1463,16 @@ class BaseAviary_MAZE_TRAINING(gym.Env):
                     break
 
             targetPosition_swapped = [0,0,1] #NOTE - TARGET POSITION FIX
-            if self.Maze_number == 0:
-                targetPosition = self.TARGET_POSITION[f"map{self.Maze_number+1}"][0][self.random_number_Target][0:2]
+            if self.Maze_number == 0 or self.Maze_number == 21:
+                targetPosition = self.TARGET_POSITION[f"map{1}"][0][self.random_number_Target][0:2]
             else:
                 targetPosition = self.TARGET_POSITION[f"map{self.Maze_number}"][0][self.random_number_Target][0:2]
             targetPosition_swapped[1] = targetPosition[0]
             targetPosition_swapped[0] = targetPosition[1]
         else:
             targetPosition_swapped = [0,0,1] #NOTE - TARGET POSITION FIX
-            if self.Maze_number == 0:
-                targetPosition = self.TARGET_POSITION[f"map{self.Maze_number+1}"][0][self.random_number_Target][0:2]
+            if self.Maze_number == 0 or self.Maze_number == 21:
+                targetPosition = self.TARGET_POSITION[f"map{1}"][0][self.random_number_Target][0:2]
             else:
                 targetPosition = self.TARGET_POSITION[f"map{self.Maze_number}"][0][self.random_number_Target][0:2]
             targetPosition_swapped[1] = targetPosition[0]

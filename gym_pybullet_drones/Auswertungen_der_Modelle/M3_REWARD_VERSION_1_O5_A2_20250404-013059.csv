@@ -1,0 +1,36 @@
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_REWARD_FOR_NEW_FIELD,DEFAULT_Punishment_for_Step,DEFAULT_EVAL_FREQ,DEFAULT_EVAL_EPISODES,DEFAULT_TRAIN_TIMESTEPS,DEFAULT_TARGET_REWARD,DEFAULF_NUMBER_LAST_ACTIONS,DEFAULT_PYB_FREQ,DEFAULT_CTRL_FREQ,DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_Multiplier_Collision_Penalty,DEFAULT_VelocityScale,DEFAULT_Procent_Step,DEFAULT_explore_Matrix_Size,DEFAULT_BESTRAFUNGSABSTAND_WAND,DEFAULT_SCALE_BESTRAFUNG_WAND,DEFAULT_TOO_CLOSE_TO_WALL_DISTANCE
+5,300,2,-0.5,50000.0,1,90000,99999999999999,20,100,50,5,300,5,1,0.01,5,0.3,0.1,0.15
+
+Runde,Terminated,Truncated,Map-Abgedeckt,Wand berührungen,Summe Reward,Maze_number,Uhrzeit
+0,kein_Terminated,Zu nahe an der Wand,0.03,2,-81.05555555555586,0,20250404-013104
+0,kein_Terminated,Zu nahe an der Wand,0.01,2,99.5,0,20250404-013106
+0,kein_Terminated,Zu nahe an der Wand,0.01,2,99.5,0,20250404-013108
+0,kein_Terminated,Zu nahe an der Wand,0.01,2,99.5,0,20250404-013111
+0,kein_Terminated,Zu nahe an der Wand,0.01,3,67.27777777777779,0,20250404-013113
+0,kein_Terminated,Zu nahe an der Wand,0.01,4,67.27777777777779,0,20250404-013116
+0,kein_Terminated,Zu nahe an der Wand,0.01,5,67.27777777777779,0,20250404-013118
+0,kein_Terminated,Zu nahe an der Wand,0.01,6,67.27777777777779,0,20250404-013121
+0,kein_Terminated,Zu nahe an der Wand,0.01,7,67.27777777777779,0,20250404-013123
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,67.27777777777779,0,20250404-013126
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,67.27777777777779,0,20250404-013128
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,67.27777777777779,0,20250404-013131
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,93.94444444444446,0,20250404-013133
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,93.94444444444446,0,20250404-013136
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,93.94444444444446,0,20250404-013138
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,93.94444444444446,0,20250404-013141
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,67.27777777777779,0,20250404-013144
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,93.94444444444446,0,20250404-013146
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,93.94444444444446,0,20250404-013149
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,93.94444444444446,0,20250404-013151
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,93.94444444444446,0,20250404-013154
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,67.27777777777779,0,20250404-013156
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,99.5,0,20250404-013159
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,99.5,0,20250404-013201
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,99.5,0,20250404-013204
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,99.5,0,20250404-013206
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,99.5,0,20250404-013209
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,99.5,0,20250404-013211
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,98.11111111111111,0,20250404-013214
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,98.11111111111111,0,20250404-013216
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,98.11111111111111,0,20250404-013219
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,98.11111111111111,0,20250404-013221

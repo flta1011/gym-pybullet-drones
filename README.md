@@ -171,3 +171,7 @@ Wir haben von dem Training und dem Stand vom 09.01 das Problem, dass die Drohne 
     - wenn vorwärts an die Wand geflogen wird, wird die Env. nicht sauber zurückgesetzt
     - PPO addiert immer den ganzen Reward auf, dadurch wird der Reward viel größer als wir wollen
     - die Rewards und abstand zu wand werden geplottet: Abstand zur Wand bleibt irgendwie immer gleich...
+
+
+
+DIE MAZE NUMBER kann auf 3 weisen ausgewählt werden!! -> sieh def reset()

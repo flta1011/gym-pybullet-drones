@@ -1,0 +1,25 @@
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_REWARD_FOR_NEW_FIELD,DEFAULT_Punishment_for_Step,DEFAULT_EVAL_FREQ,DEFAULT_EVAL_EPISODES,DEFAULT_TRAIN_TIMESTEPS,DEFAULT_TARGET_REWARD,DEFAULF_NUMBER_LAST_ACTIONS,DEFAULT_PYB_FREQ,DEFAULT_CTRL_FREQ,DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_Multiplier_Collision_Penalty,DEFAULT_VelocityScale,DEFAULT_Procent_Step,DEFAULT_explore_Matrix_Size,DEFAULT_BESTRAFUNGSABSTAND_WAND,DEFAULT_SCALE_BESTRAFUNG_WAND
+5,300,2,-0.5,50000.0,1,90000,99999999999999,20,100,50,5,300,5,1,0.01,5,0.35,0.1
+
+Runde,Terminated,Truncated,Map-Abgedeckt,Wand berührungen,Summe Reward,Maze_number,Uhrzeit
+0,kein_Terminated,Zu nahe an der Wand,0.02,1,112.28344671201828,0,20250404-012551
+0,kein_Terminated,Zu nahe an der Wand,0.01,1,99.38662131519274,0,20250404-012553
+0,kein_Terminated,Zu nahe an der Wand,0.01,1,99.5,0,20250404-012555
+0,kein_Terminated,Zu nahe an der Wand,0.01,1,99.5,0,20250404-012558
+0,kein_Terminated,Zu nahe an der Wand,0.01,1,99.5,0,20250404-012600
+0,kein_Terminated,Zu nahe an der Wand,0.01,1,99.5,0,20250404-012603
+0,kein_Terminated,Zu nahe an der Wand,0.01,1,99.5,0,20250404-012605
+0,kein_Terminated,Zu nahe an der Wand,0.01,1,99.5,0,20250404-012608
+0,kein_Terminated,Zu nahe an der Wand,0.01,1,99.5,0,20250404-012610
+0,kein_Terminated,Zu nahe an der Wand,0.01,1,99.5,0,20250404-012613
+0,kein_Terminated,Zu nahe an der Wand,0.01,2,97.20408163265307,0,20250404-012615
+0,kein_Terminated,Zu nahe an der Wand,0.01,3,97.20408163265307,0,20250404-012618
+0,kein_Terminated,Zu nahe an der Wand,0.01,4,97.20408163265307,0,20250404-012620
+0,kein_Terminated,Zu nahe an der Wand,0.01,5,97.20408163265307,0,20250404-012623
+0,kein_Terminated,Zu nahe an der Wand,0.01,6,92.2437641723356,0,20250404-012625
+0,kein_Terminated,Zu nahe an der Wand,0.01,7,97.20408163265307,0,20250404-012628
+0,kein_Terminated,Zu nahe an der Wand,0.01,8,97.20408163265307,0,20250404-012630
+0,kein_Terminated,Zu nahe an der Wand,0.01,9,97.20408163265307,0,20250404-012633
+0,kein_Terminated,Zu nahe an der Wand,0.01,10,97.20408163265307,0,20250404-012635
+0,kein_Terminated,Zu nahe an der Wand,0.01,11,97.20408163265307,0,20250404-012638
+0,kein_Terminated,Zu nahe an der Wand,0.01,12,92.2437641723356,0,20250404-012640
