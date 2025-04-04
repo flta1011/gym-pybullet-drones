@@ -91,7 +91,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         Danger_Threshold_Wall=0.20,
         EPISODE_LEN_SEC=10 * 60,
         dash_active=False,
-        map_size_slam=8,  # map size 8x8m, damit, egal in welche Richtung die Drohne fliegt, in jeden Quadranten ein komplettes Labyrinth dargestellt werden kann
+        map_size_slam=4,  # map size 8x8m, damit, egal in welche Richtung die Drohne fliegt, in jeden Quadranten ein komplettes Labyrinth dargestellt werden kann
         resolution_slam=0.05,
         REWARD_VERSION="R1",
         ACTION_TYPE="A1",
@@ -105,6 +105,13 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         Reward_for_new_field = 1,
         csv_file_path = "maze_training_results.csv",
         Explore_Matrix_Size = 5,
+        Maze_number = 21, 
+        last_random_number_Start = 1, 
+        last_random_number_Target = 2,
+        New_Maze_number = 10,
+        New_Position_number = 5,
+
+        
     ):
         """Initialization of a generic aviary environment.
 
@@ -150,6 +157,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.Punishment_for_Step = Punishment_for_Step
         self.Reward_for_new_field = Reward_for_new_field
         self.Explore_Matrix_Size = Explore_Matrix_Size
+        self.INIT_XYZS = initial_xyzs
         self.csv_file_path = csv_file_path
         self.G = 9.8
         self.RAD2DEG = 180 / np.pi
@@ -216,10 +224,21 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.Procent_Step = Procent_Step
         self.too_close_to_wall_counter = 0
         self.Terminated_Truncated_Counter = 0
+           # NOTE - Maze Anzahl Wechsel
+        self.Maze_number = Maze_number
+        self.New_Maze_number = New_Maze_number
+        self.New_Maze_number_counter = 0
+        # The random number to generate the init and target position
+        self.random_number_Start = last_random_number_Start
+        self.random_number_Target = last_random_number_Target
+        self.map_size_slam = map_size_slam
+        self.resolution_slam = resolution_slam
+        self.New_Position_number = New_Position_number
 
-        # Initialize SLAM before calling the parent constructor
-        self.slam = SimpleSlam(map_size=map_size_slam, resolution=resolution_slam)  # 10m x 10m map with 10cm resolution
-        self.grid_size = int(map_size_slam / resolution_slam)
+        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6":
+            # Initialize SLAM before calling the parent constructor
+            self.slam = SimpleSlam(map_size=map_size_slam, resolution=resolution_slam, init_position=self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0:2])  # 10m x 10m map with 10cm resolution
+            self.grid_size = int(map_size_slam / resolution_slam)
 
         #### Create integrated controllers #########################
         os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
@@ -248,13 +267,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             self.DW_COEFF_2,
             self.DW_COEFF_3,
         ) = self._parseURDFParameters()
-        # NOTE - Maze Anzahl Wechsel
-        self.Maze_number = 21
-        self.New_Maze_number = 5
-        self.New_Maze_number_counter = 0
-        # The random number to generate the init and target position
-        self.random_number_Start = 1
-        self.random_number_Target = 2
+     
         
         print(
             "[INFO] BaseAviary.__init__() loaded parameters from the drone's .urdf:\n[INFO] m {:f}, L {:f},\n[INFO] ixx {:f}, iyy {:f}, izz {:f},\n[INFO] kf {:f}, km {:f},\n[INFO] t2w {:f}, max_speed_kmh {:f},\n[INFO] gnd_eff_coeff {:f}, prop_radius {:f},\n[INFO] drag_xy_coeff {:f}, drag_z_coeff {:f},\n[INFO] dw_coeff_1 {:f}, dw_coeff_2 {:f}, dw_coeff_3 {:f}".format(
@@ -360,7 +373,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             plt.ion()  # Interaktiver Modus für Live-Update
 
         #### Set initial poses #####################################
-        self.INIT_XYZS = initial_xyzs
+        
         if self.INIT_XYZS is None:
             print("[ERROR] invalid initial_xyzs in BaseAviary.__init__(), try initial_xyzs.reshape(NUM_DRONES,3)")
         if initial_rpys is None:
@@ -532,7 +545,11 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         p.resetSimulation(physicsClientId=self.CLIENT)
 
-        
+        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6" and self.New_Maze_number_counter == 0:
+            # Initialize SLAM before calling the parent constructor
+            self.slam = SimpleSlam(map_size=self.map_size_slam, resolution=self.resolution_slam, init_position=self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0:2])  # 10m x 10m map with 10cm resolution
+            self.grid_size = int(self.map_size_slam / self.resolution_slam)
+
         self.too_close_to_wall_counter = 0
         #self.Terminated_Truncated_Counter = 0
         self.previous_Procent = 0.3
@@ -549,7 +566,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         initial_obs = None
         initial_obs = self._computeObs()
         initial_info = self._computeInfo()
-        self.slam.reset()  # TODO - Reset SLAM evtl. nicht in allen Modellen
+
+        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6":
+            self.slam.reset()  # TODO - Reset SLAM evtl. nicht in allen Modellen
 
         return initial_obs, initial_info
 
@@ -817,19 +836,18 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # SLAM-Update
         pos = state[0:3]
         yaw = state[9]  # Assuming this is the yaw angle
-
-
         
+        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6":
+        
+            # Get raycast results
+            raycast_results = {"front": state[21], "back": state[22], "left": state[23], "right": state[24], "up": state[25]}
 
-        # Get raycast results
-        raycast_results = {"front": state[21], "back": state[22], "left": state[23], "right": state[24], "up": state[25]}
+            self.slam.update(pos, yaw, raycast_results)
+            # Optional: Zum Debuggen kann man die Map visualisieren (aber im Training besser deaktiviert)
 
-        self.slam.update(pos, yaw, raycast_results)
-        # Optional: Zum Debuggen kann man die Map visualisieren (aber im Training besser deaktiviert)
-
-        # NOTE - hier: SLAM Map visualisieren (im Training besser deaktiviert)
-        # Achtung: bei AKtivierung wird ein Bild pro Step gespeichert!
-        self.slam.visualize()
+            # NOTE - hier: SLAM Map visualisieren (im Training besser deaktiviert)
+            # Achtung: bei AKtivierung wird ein Bild pro Step gespeichert!
+            self.slam.visualize()
         #########################################################################################
 
         #### Prepare the return values #############################
@@ -1120,13 +1138,14 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         #### Load ground plane, drone and obstacles models #########
         self.PLANE_ID = p.loadURDF("plane.urdf", physicsClientId=self.CLIENT)
 
-        if self.New_Maze_number_counter == self.New_Maze_number:
+        if self.New_Maze_number_counter == self.New_Position_number:
             # self.Maze_number = np.random.randint(1, 21)
             # solang nicht alle csv datei erstellt dann ändern auf 21
             while True:
                 self.random_number_Start = np.random.randint(0, 10)
                 if self.random_number_Start != self.random_number_Target:
                     break
+                
 
             Start_Position_swapped = [0, 0, 0.5]  # NOTE - TARGET POSITION FIX
             if self.Maze_number == 0:

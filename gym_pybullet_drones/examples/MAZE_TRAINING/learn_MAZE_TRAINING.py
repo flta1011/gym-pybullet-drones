@@ -78,7 +78,7 @@ DEFAULT_PRETRAINED_MODEL_PATH = "/home/moritz_s/Documents/RKIM_1/F_u_E_Drohnenre
 DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
 
-DEFAULT_TRAIN_TIMESTEPS = 4 * 1e5  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
+DEFAULT_TRAIN_TIMESTEPS = 5 * 1e5  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULT_TARGET_REWARD = 99999
 DEFAULF_NUMBER_LAST_ACTIONS = 20
 
@@ -139,6 +139,10 @@ DEFAULT_REWARD_FOR_NEW_FIELD = 2
 DEFAULT_Punishment_for_Step = -1
 # 5 bedeutet eine 5x5 Matrix
 DEFAULT_explore_Matrix_Size = 5 
+DEFAULT_Maze_number = 21
+# nach wie vielen Schritten wird ein neues maze gewählt 
+DEFAULT_New_Maze_number = 10
+DEFAULT_New_Position_number = 1
 
 
 """MODEL_Versionen: 
@@ -170,7 +174,7 @@ REWARD_VERSION = "R4"
 
 """
 
-OBSERVATION_TYPE = "O7"
+OBSERVATION_TYPE = "O7" # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!! 
 
 """ActionType:'
 - A1: Vier Richtungen und zwei Drehungen
@@ -290,7 +294,9 @@ def run(
     Reward_for_new_field=DEFAULT_REWARD_FOR_NEW_FIELD,
     Punishment_for_Step=DEFAULT_Punishment_for_Step,
     Auswertungs_CSV_Datei = Auswertungs_CSV_Datei,
-    Explore_Matrix_Size = DEFAULT_explore_Matrix_Size
+    Explore_Matrix_Size = DEFAULT_explore_Matrix_Size,
+    New_Maze_number = DEFAULT_New_Maze_number,
+    New_Position_number = DEFAULT_New_Position_number,
 ):
     if TRAIN:
         filename = os.path.join(output_folder, "save-" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
@@ -327,6 +333,9 @@ def run(
                     Reward_for_new_field = Reward_for_new_field,
                     csv_file_path = Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
                     Explore_Matrix_Size = Explore_Matrix_Size,
+                    Maze_number = DEFAULT_Maze_number,
+                    New_Maze_number = New_Maze_number,
+                    New_Position_number = New_Position_number,
                 ),
                 n_envs=1,
                 seed=0,
@@ -362,6 +371,9 @@ def run(
                     Reward_for_new_field = Reward_for_new_field,
                     csv_file_path = Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
                     Explore_Matrix_Size = Explore_Matrix_Size,
+                    Maze_number = DEFAULT_Maze_number,
+                    New_Maze_number = New_Maze_number,
+                    New_Position_number = New_Position_number,
                 ),
                 n_envs=1,
                 seed=0,
@@ -608,6 +620,10 @@ def run(
                 Punishment_for_Step = Punishment_for_Step,
                 Reward_for_new_field = Reward_for_new_field,
                 csv_file_path = Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
+                Explore_Matrix_Size = Explore_Matrix_Size,
+                Maze_number = DEFAULT_Maze_number,
+                New_Maze_number = New_Maze_number,
+                New_Position_number = New_Position_number,
             ),
             n_envs=1,
             seed=0,
