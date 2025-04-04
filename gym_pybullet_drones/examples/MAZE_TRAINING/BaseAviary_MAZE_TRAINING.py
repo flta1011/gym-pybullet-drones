@@ -104,7 +104,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         Punishment_for_Step = -1,
         Reward_for_new_field = 1,
         csv_file_path = "maze_training_results.csv",
-        Explore_Matrix_Size = 7,
+        Explore_Matrix_Size = 5,
     ):
         """Initialization of a generic aviary environment.
 
@@ -1818,7 +1818,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
     def _compute_potential_fields(self):
         # Parameter
 
-        k_rep = 0.2  # Repulsion-Skalierung
+        k_rep = 0.1  # Repulsion-Skalierung
         d0 = 0.55  # Einflussradius für Wände
         Scale_Grid = 0.05  # Skalierung des Grids
 

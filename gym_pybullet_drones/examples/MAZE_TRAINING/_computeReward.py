@@ -547,7 +547,7 @@ def _computeReward(
                 # 6 = Wand
                 
                 Explore_Matrix_Size_Init_Punishment = self.Explore_Matrix_Size * self.Explore_Matrix_Size * self.Reward_for_new_field
-                self.reward_components["Start"] = Explore_Matrix_Size_Init_Punishment
+                self.reward_components["Start"] = -Explore_Matrix_Size_Init_Punishment
                 
 
                 # Initializing Reward Map

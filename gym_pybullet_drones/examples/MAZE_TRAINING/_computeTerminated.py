@@ -27,8 +27,8 @@ def _computeTerminated(self):
 
     Grund_Terminated = None
 
-    if self.Ratio_Area >= 0.9:
-        Grund_Terminated = "90 Prozent der Fläche wurde erkundet"
+    if self.Ratio_Area >= 0.8:
+        Grund_Terminated = "80 Prozent der Fläche wurde erkundet"
         self.Terminated_Truncated_Counter += 1
         return True, Grund_Terminated
 

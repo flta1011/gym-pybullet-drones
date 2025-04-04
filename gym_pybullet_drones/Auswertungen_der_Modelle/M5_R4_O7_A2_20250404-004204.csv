@@ -1,0 +1,7 @@
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_REWARD_FOR_NEW_FIELD,DEFAULT_Punishment_for_Step,DEFAULT_EVAL_FREQ,DEFAULT_EVAL_EPISODES,DEFAULT_TRAIN_TIMESTEPS,DEFAULT_TARGET_REWARD,DEFAULF_NUMBER_LAST_ACTIONS,DEFAULT_PYB_FREQ,DEFAULT_CTRL_FREQ,DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_Multiplier_Collision_Penalty,DEFAULT_VelocityScale,DEFAULT_explore_Matrix_Size
+4,300,2,-1,50000.0,1,500000.0,99999,20,100,50,4,300,5,1,5
+
+Runde,Terminated,Truncated,Map-Abgedeckt,Wand berührungen,Summe Reward,Maze_number,Uhrzeit
+1,kein_Terminated,Zeit abgelaufen,0.3,371,-7478.051294748943,21,20250404-004406
+2,kein_Terminated,Zeit abgelaufen,0.27,367,-6562.292072492033,21,20250404-004622
+Multiplier 5 zu hoch, weil er die bestrafung jedes mal bekommt und die Belohnung nicht da er nur die neuen felder bekommt

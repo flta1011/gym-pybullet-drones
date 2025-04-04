@@ -78,7 +78,7 @@ DEFAULT_PRETRAINED_MODEL_PATH = "/home/moritz_s/Documents/RKIM_1/F_u_E_Drohnenre
 DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
 
-DEFAULT_TRAIN_TIMESTEPS = 2 * 1e5  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
+DEFAULT_TRAIN_TIMESTEPS = 4 * 1e5  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULT_TARGET_REWARD = 99999
 DEFAULF_NUMBER_LAST_ACTIONS = 20
 
@@ -129,7 +129,7 @@ DEFAULT_MA = False
 
 DEFAULT_DASH_ACTIVE = False
 
-DEFAULT_Multiplier_Collision_Penalty = 5
+DEFAULT_Multiplier_Collision_Penalty = 2
 
 DEFAULT_VelocityScale = 1
 
@@ -205,7 +205,6 @@ header_params = [
         "DEFAULT_EPISODE_LEN_SEC",
         "DEFAULT_Multiplier_Collision_Penalty",
         "DEFAULT_VelocityScale",
-        "DEFAULT_Procent_Step",
         "DEFAULT_explore_Matrix_Size"
     ]
 
@@ -238,7 +237,6 @@ parameter_daten = [
     DEFAULT_EPISODE_LEN_SEC,
     DEFAULT_Multiplier_Collision_Penalty,
     DEFAULT_VelocityScale,
-    DEFAULT_Procent_Step,
     DEFAULT_explore_Matrix_Size,
 ]
 
@@ -328,6 +326,7 @@ def run(
                     Punishment_for_Step = Punishment_for_Step,
                     Reward_for_new_field = Reward_for_new_field,
                     csv_file_path = Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
+                    Explore_Matrix_Size = Explore_Matrix_Size,
                 ),
                 n_envs=1,
                 seed=0,
@@ -362,6 +361,7 @@ def run(
                     Punishment_for_Step = Punishment_for_Step,
                     Reward_for_new_field = Reward_for_new_field,
                     csv_file_path = Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
+                    Explore_Matrix_Size = Explore_Matrix_Size,
                 ),
                 n_envs=1,
                 seed=0,
@@ -466,8 +466,7 @@ def run(
                     )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
 
         ## Schreiben der CSV für die Auswertung unserer Ergebnisse
-        
-
+    
         
         #### Target cumulative rewards (problem-dependent) ##########
         target_reward = DEFAULT_TARGET_REWARD
@@ -500,20 +499,20 @@ def run(
         # log_interval: The number of timesteps between logging events.
         # In your code, the model will train for a specified number of timesteps, using the eval_callback for periodic evaluation, and log information every 100 timesteps.
 
-        # Definiere den Speicherpfad und die Häufigkeit der Checkpoints (z.B. alle 10.000 Schritte)
-        checkpoint_callback = CheckpointCallback(
-            save_freq=10000,  # Speichert alle 10.000 Schritte
-            save_path=filename + "/",  # Speicherpfad für die Modelle
-            name_prefix=filename + "/",  # Präfix für die Modell-Dateien
-            save_replay_buffer=True,  # Speichert auch den Replay Buffer
-            save_vecnormalize=True,  # Falls VecNormalize genutzt wird, wird es mitgespeichert
-        )
+        # # Definiere den Speicherpfad und die Häufigkeit der Checkpoints (z.B. alle 10.000 Schritte)
+        # checkpoint_callback = CheckpointCallback(
+        #     save_freq=10000,  # Speichert alle 10.000 Schritte
+        #     save_path=filename + "/",  # Speicherpfad für die Modelle
+        #     name_prefix=filename + "/",  # Präfix für die Modell-Dateien
+        #     save_replay_buffer=True,  # Speichert auch den Replay Buffer
+        #     save_vecnormalize=True,  # Falls VecNormalize genutzt wird, wird es mitgespeichert
+        # )
 
-        # Kombiniere beide Callbacks mit CallbackList
-        callback_list = CallbackList([checkpoint_callback, eval_callback])
+        # # Kombiniere beide Callbacks mit CallbackList
+        # callback_list = CallbackList([checkpoint_callback, eval_callback])
 
         start_time = time.time()  # Startzeit erfassen
-        model.learn(total_timesteps=DEFAULT_TRAIN_TIMESTEPS, callback=callback_list, log_interval=1000, progress_bar=True)  # shorter training in GitHub Actions pytest
+        model.learn(total_timesteps=DEFAULT_TRAIN_TIMESTEPS, callback=eval_callback, log_interval=1000, progress_bar=True)  # shorter training in GitHub Actions pytest
         end_time = time.time()  # Endzeit erfassen
         elapsed_time = end_time - start_time  # Dauer berechnen
         print(f"Training abgeschlossen. Dauer: {elapsed_time:.2f} Sekunden")
