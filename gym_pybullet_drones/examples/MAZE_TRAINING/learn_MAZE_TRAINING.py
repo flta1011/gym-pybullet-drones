@@ -148,12 +148,12 @@ DEFAULT_VelocityScale = 0.5
 
 # Bei wie viel Prozent der Fläche einen Print ausgeben
 DEFAULT_Procent_Step = 0.01
-DEFAULT_REWARD_FOR_NEW_FIELD = 2
-DEFAULT_Punishment_for_Step = -0.25  # -0.5 bei 5Hz bzw -1 bei 2Hz
+DEFAULT_REWARD_FOR_NEW_FIELD = 10
+DEFAULT_Punishment_for_Step = -1  # -0.5 bei 5Hz bzw -1 bei 2Hz
 # 5 bedeutet eine 5x5 Matrix
 DEFAULT_explore_Matrix_Size = 5
 DEFAULT_BESTRAFUNGSABSTAND_WAND = 0.40
-DEFAULT_SCALE_BESTRAFUNG_WAND = 0.12
+DEFAULT_SCALE_BESTRAFUNG_WAND = 0.15
 
 DEFAULT_TOO_CLOSE_TO_WALL_DISTANCE = 0.20
 
@@ -550,7 +550,7 @@ def run(
 
         # Definiere den Speicherpfad und die Häufigkeit der Checkpoints (z.B. alle 10.000 Schritte)
         checkpoint_callback = CheckpointCallback(
-            save_freq=10000,  # Speichert alle 10.000 Schritte
+            save_freq=100000,  # Speichert alle 10.000 Schritte
             save_path=filename + "/",  # Speicherpfad für die Modelle
             name_prefix=filename + "/",  # Präfix für die Modell-Dateien
             save_replay_buffer=True,  # Speichert auch den Replay Buffer
