@@ -78,7 +78,7 @@ DEFAULT_PRETRAINED_MODEL_PATH = "/home/moritz_s/Documents/RKIM_1/F_u_E_Drohnenre
 DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
 
-DEFAULT_TRAIN_TIMESTEPS = 8 * 1e5  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
+DEFAULT_TRAIN_TIMESTEPS = 1 * 1e5  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULT_TARGET_REWARD = 99999
 DEFAULF_NUMBER_LAST_ACTIONS = 20
 
@@ -117,7 +117,7 @@ DEFAULT_OUTPUT_FOLDER = "results"
 DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
-DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 4 # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 2 # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
 DEFAULT_EPISODE_LEN_SEC = 5 * 60  # 15 * 60
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 DEFAULT_PUSHBACK_ACTIVE = False
@@ -129,7 +129,7 @@ DEFAULT_MA = False
 
 DEFAULT_DASH_ACTIVE = False
 
-DEFAULT_Multiplier_Collision_Penalty = 6
+DEFAULT_Multiplier_Collision_Penalty = 10
 
 DEFAULT_VelocityScale = 0.5
 
@@ -153,7 +153,7 @@ DEFAULT_New_Position_number = 1
 - M5:   DQN_NN_MultiInputPolicy mit fullyConnectLayer
 - SAC:  
 """
-MODEL_VERSION = "M5"
+MODEL_VERSION = "M2"
 
 """REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
 - R1:   Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
@@ -174,7 +174,7 @@ REWARD_VERSION = "R4"
 
 """
 
-OBSERVATION_TYPE = "O7" # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!! 
+OBSERVATION_TYPE = "O4" # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!! 
 
 """ActionType:'
 - A1: Vier Richtungen und zwei Drehungen
@@ -412,7 +412,7 @@ def run(
                         # learning_rate=0.0004, #nicht verwendet --> erst mal standard fürs Training
                         device="cuda:0",
                         verbose=1,
-                        buffer_size=5000,
+                        buffer_size=50000,
                     )
 
             case "M3":  # M3: DQN_MLPPolicy
@@ -473,7 +473,7 @@ def run(
                         verbose=1,
                         batch_size=32,
                         seed=42,
-                        buffer_size=5000,
+                        buffer_size=500000,
                         gamma=0.8,
                     )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
 

@@ -125,17 +125,35 @@ class SimpleSlam:
 
         self.Prev_DrohnePosition = self.DrohnePosition
         self.DrohnePosition = []
+        # Überschreibe die vorherige aktuelle Position mit besucht_value
+        if hasattr(self, 'i_value_previous') and hasattr(self, 'j_value_previous'):
+            for i_prev, j_prev in zip(self.i_value_previous, self.j_value_previous):
+                self.occupancy_grid[i_prev, j_prev] = self.besucht_value
+
+        # Setze die aktuelle Position
+
+        # Speichere die aktuelle Position als vorherige Position
+        self.i_value_previous = []
+        self.j_value_previous = []
+
+
+
 
         for i in range(max(0, grid_x - 2), min(80, grid_x + 3)):
             for j in range(max(0, grid_y - 2), min(80, grid_y + 3)):
                 self.path.append((i, j))
                 self.DrohnePosition.append((i, j))
-                if self.occupancy_grid[i, j] == self.unbekannt_value or self.occupancy_grid[i,j] == self.frei_value or self.occupancy_grid[i, j] == self.actual_Position_value and self.occupancy_grid[i, j] != self.wand_value:
-                    self.occupancy_grid[i, j] = self.besucht_value
+                if self.occupancy_grid[i, j] == self.besucht_value or self.occupancy_grid[i, j] == self.unbekannt_value or self.occupancy_grid[i,j] == self.frei_value or self.occupancy_grid[i, j] == self.actual_Position_value and self.occupancy_grid[i, j] != self.wand_value:
+                    #self.occupancy_grid[i, j] = self.besucht_value
+                    self.occupancy_grid[i, j] = self.actual_Position_value
+
+                    self.i_value_previous.append(i)
+                    self.j_value_previous.append(j)
+
                 # if self.occupancy_grid[i, j] == self.besucht_value:
                 #     self.occupancy_grid[i, j] = self.actual_Position_value
         
-        self.occupancy_grid[grid_x, grid_y] = self.actual_Position_value
+        
 
 
     def get_line(self, x0, y0, x1, y1):
@@ -170,37 +188,37 @@ class SimpleSlam:
     def visualize(self):
         """Visualisiert die aktuelle SLAM Map (zum Debuggen).(siehe in def step() ganz weit unten)"""
         # Create figure without displaying
-        # plt.ioff()  # Turn off interactive mode
-        # plt.figure(figsize=(6, 6))
-        # plt.imshow(np.squeeze(self.occupancy_grid).T, cmap="gray", origin="lower")
+        plt.ioff()  # Turn off interactive mode
+        plt.figure(figsize=(6, 6))
+        plt.imshow(np.squeeze(self.occupancy_grid).T, cmap="gray", origin="lower")
 
-        # # if self.Prev_DrohnePosition:
-        # #     prev_position = np.array(self.Prev_DrohnePosition)
-        # #     plt.plot(prev_position[:, 0], prev_position[:, 1], "r-", linewidth=2)
-        # #     plt.plot(prev_position[-1, 0], prev_position[-1, 1], "ro", markersize=5)
+        # if self.Prev_DrohnePosition:
+        #     prev_position = np.array(self.Prev_DrohnePosition)
+        #     plt.plot(prev_position[:, 0], prev_position[:, 1], "r-", linewidth=2)
+        #     plt.plot(prev_position[-1, 0], prev_position[-1, 1], "ro", markersize=5)
 
-        # # if self.path:
-        # #     path = np.array(self.path)
-        # #     plt.plot(path[:, 0], path[:, 1], "r-", linewidth=2)
-        # #     plt.plot(path[-1, 0], path[-1, 1], "ro", markersize=5)
+        # if self.path:
+        #     path = np.array(self.path)
+        #     plt.plot(path[:, 0], path[:, 1], "r-", linewidth=2)
+        #     plt.plot(path[-1, 0], path[-1, 1], "ro", markersize=5)
 
-        # # if self.DrohnePosition:
-        # #     position = np.array(self.DrohnePosition)
-        # #     plt.plot(position[:, 0], position[:, 1], "g-", linewidth=2)
-        # #     # plt.plot(position[-1, 0], position[-1, 1], 'go', markersize=5)
+        # if self.DrohnePosition:
+        #     position = np.array(self.DrohnePosition)
+        #     plt.plot(position[:, 0], position[:, 1], "g-", linewidth=2)
+        #     # plt.plot(position[-1, 0], position[-1, 1], 'go', markersize=5)
 
-        # plt.colorbar(label="Occupancy (-1: unbekannt, 0: frei, 1: Wand, 2: besucht)")
-        # plt.title("SLAM Map")
-        # plt.xlabel("X (grid cells)")
-        # plt.ylabel("Y (grid cells)")
-        # self.OUTPUT_FOLDER = os.path.join(os.path.dirname(__file__), "output_SLAM_MAP")
-        # # create output folder if it doesn't exist
-        # if not os.path.exists(self.OUTPUT_FOLDER):
-        #     os.makedirs(self.OUTPUT_FOLDER)
+        plt.colorbar(label="Occupancy (-1: unbekannt, 0: frei, 1: Wand, 2: besucht)")
+        plt.title("SLAM Map")
+        plt.xlabel("X (grid cells)")
+        plt.ylabel("Y (grid cells)")
+        self.OUTPUT_FOLDER = os.path.join(os.path.dirname(__file__), "output_SLAM_MAP")
+        # create output folder if it doesn't exist
+        if not os.path.exists(self.OUTPUT_FOLDER):
+            os.makedirs(self.OUTPUT_FOLDER)
 
-        # # Save plot to file with current date and time
-        # current_time = time.strftime("%Y%m%d-%H%M%S")
-        # self.Latest_slam_map_path = os.path.join(self.OUTPUT_FOLDER, f"slam_map_{current_time}.png")
-        # plt.savefig(self.Latest_slam_map_path)
-        # plt.close()
-        # plt.ion()  # Turn interactive mode back on
+        # Save plot to file with current date and time
+        current_time = time.strftime("%Y%m%d-%H%M%S")
+        self.Latest_slam_map_path = os.path.join(self.OUTPUT_FOLDER, f"slam_map_{current_time}.png")
+        plt.savefig(self.Latest_slam_map_path)
+        plt.close()
+        plt.ion()  # Turn interactive mode back on

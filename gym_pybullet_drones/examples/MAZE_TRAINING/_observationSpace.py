@@ -91,15 +91,15 @@ def _observationSpace(self):
             """
             Returns the observation space for the CNN-DQN model.
             The observation space is a Box with shape (1, grid_size, grid_size) containing:
-            - Channel 1: Normalized SLAM map (values in [0,1])
+            - Channel 1: Grayscale SLAM map (values in [0,255])
             """
             grid_size = self.slam.grid_size
 
             # Create proper shaped arrays for low and high bounds
-            low = np.zeros((1, grid_size, grid_size), dtype=np.float32)
-            high = np.ones((1, grid_size, grid_size), dtype=np.float32)
+            low = np.zeros((grid_size, grid_size, 1), dtype=np.uint8)
+            high = np.full((grid_size, grid_size, 1), 255, dtype=np.uint8)
 
-            return spaces.Box(low=low, high=high, dtype=np.float32)
+            return spaces.Box(low=low, high=high, dtype=np.uint8)
         
         case "O5":  # X, Y, YAW, Raycast readings, last clipped action, second last clipped action, third last clipped action
             """Returns the observation space.
