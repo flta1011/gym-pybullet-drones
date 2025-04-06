@@ -17,14 +17,14 @@ reinforcement learning library `stable-baselines3`.
 """
 
 import argparse
+import csv
 import os
+import shutil
 import time
 from datetime import datetime
 
 import gymnasium as gym
 import numpy as np
-import csv
-import shutil
 
 # Importiere benötigte Module für CNN-DQN
 import torch
@@ -78,12 +78,15 @@ DEFAULT_PRETRAINED_MODEL_PATH = "/home/moritz_s/Documents/RKIM_1/F_u_E_Drohnenre
 DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
 
-DEFAULT_TRAIN_TIMESTEPS = 8 * 1e5  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
+DEFAULT_TRAIN_TIMESTEPS = (
+    8 * 1e5
+)  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULT_TARGET_REWARD = 99999
 DEFAULF_NUMBER_LAST_ACTIONS = 20
 
 # file_path = "gym_pybullet_drones/examples/MAZE_TRAINING/Maze_init_target.yaml"
 file_path = os.path.join(os.path.dirname(__file__), "Maze_init_target.yaml")
+
 
 def loadyaml_(file_path):
     with open(file_path, "r") as file:
@@ -117,7 +120,7 @@ DEFAULT_OUTPUT_FOLDER = "results"
 DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
-DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10 # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
 DEFAULT_EPISODE_LEN_SEC = 5 * 60  # 15 * 60
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 DEFAULT_PUSHBACK_ACTIVE = False
@@ -136,15 +139,19 @@ DEFAULT_VelocityScale = 0.5
 # Bei wie viel Prozent der Fläche einen Print ausgeben
 DEFAULT_Procent_Step = 0.01
 DEFAULT_REWARD_FOR_NEW_FIELD = 2
-DEFAULT_Punishment_for_Step = -0.5
+DEFAULT_Punishment_for_Step = -0.1
 # 5 bedeutet eine 5x5 Matrix
-DEFAULT_explore_Matrix_Size = 5 
+DEFAULT_explore_Matrix_Size = 5
 DEFAULT_Maze_number = 21
-# nach wie vielen Schritten wird ein neues maze gewählt 
+# nach wie vielen Schritten wird ein neues maze gewählt
 DEFAULT_New_Maze_number = 10
 DEFAULT_New_Position_number = 1
 
+DEFAULT_collision_penalty_truncated = -1000
+DEFAULT_Truncated_Version = "TR2"
+DEFAULT_Truncated_Wall_Distance = 0.19  # worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25
 
+#####################################MODEL_VERSION###########################
 """MODEL_Versionen: 
 - M1:   PPO
 - M2:   DQN_CNNPolicy_StandardFeatureExtractor
@@ -155,14 +162,18 @@ DEFAULT_New_Position_number = 1
 """
 MODEL_VERSION = "M5"
 
+#####################################REWARD_VERSION###########################
 """REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
 - R1:   Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
 - R2:   Zusätzlich Bestrafung für zu nah an der Wand
 - R3:   Collision zieht je nach Wert auf Heatmap diesen von der Reward ab (7 etwa Wand, 2 nahe Wand, 0.)
 - R4:   Collision zieht je nach Wert auf Heatmap diesen von der Reward ab (7 etwa Wand, 2 nahe Wand, 0.) und Abzug für jeden Step
+- R5:   R4 mit dem Zusatz, dass diese Variante für TR2 optimiert ist, und für den Abstand der Wand nur eine Bestrafun bekommt, wenn danach auch truncated wird
 """
-REWARD_VERSION = "R4"
 
+REWARD_VERSION = "R5"
+
+#####################################OBSERVATION_TYPE###########################
 """ObservationType:
 - O1: X, Y, Yaw, Raycast readings (nur PPO)
 - O2: 5 Kanäliges Bild CNN
@@ -174,8 +185,9 @@ REWARD_VERSION = "R4"
 
 """
 
-OBSERVATION_TYPE = "O7" # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!! 
+OBSERVATION_TYPE = "O7"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
 
+#####################################ACTION_TYPE###########################
 """ActionType:'
 - A1: Vier Richtungen und zwei Drehungen
 - A2: Vier Richtungen
@@ -183,48 +195,59 @@ OBSERVATION_TYPE = "O7" # Bei neuer Oberservation Type mit SLAM dies in den IF-B
 
 ACTION_TYPE = "A2"
 
+#####################################TRUNCATED_TYPE###########################
+""" Truncated_type:
+- TR1: Zeit abgelaufen
+- TR2: Zeit abgelaufen und Abstandswert geringer als X
+"""
+TRUNCATED_TYPE = "TR2"
+
+
 #######################################CSV ERSTELLEN####################
 
 # Der Dateipfad zur CSV-Datei
 timestamp = time.strftime("%Y%m%d-%H%M%S")
-Auswertungs_CSV_Datei = f"gym_pybullet_drones/Auswertungen_der_Modelle/{MODEL_VERSION}_{REWARD_VERSION}_{OBSERVATION_TYPE}_{ACTION_TYPE}_{timestamp}.csv"
+Auswertungs_CSV_Datei = f"gym_pybullet_drones/Auswertungen_der_Modelle/{MODEL_VERSION}_{REWARD_VERSION}_{OBSERVATION_TYPE}_{ACTION_TYPE}_{TRUNCATED_TYPE}_{timestamp}.csv"
 # Funktion, um eine CSV zu erstellen (beim ersten Aufruf) oder zu erweitern
 
 # Prüfen, ob die Datei existiert
 datei_existiert = os.path.exists(Auswertungs_CSV_Datei)
 
 header_params = [
-        "DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ", 
-        "DEFAULT_EPISODE_LEN_SEC", 
-        "DEFAULT_REWARD_FOR_NEW_FIELD", 
-        "DEFAULT_Punishment_for_Step",
-        "DEFAULT_EVAL_FREQ",
-        "DEFAULT_EVAL_EPISODES",
-        "DEFAULT_TRAIN_TIMESTEPS",
-        "DEFAULT_TARGET_REWARD",
-        "DEFAULF_NUMBER_LAST_ACTIONS",
-        "DEFAULT_PYB_FREQ",
-        "DEFAULT_CTRL_FREQ",
-        "DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ",
-        "DEFAULT_EPISODE_LEN_SEC",
-        "DEFAULT_Multiplier_Collision_Penalty",
-        "DEFAULT_VelocityScale",
-        "DEFAULT_explore_Matrix_Size"
-    ]
+    "DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ",
+    "DEFAULT_EPISODE_LEN_SEC",
+    "DEFAULT_REWARD_FOR_NEW_FIELD",
+    "DEFAULT_Punishment_for_Step",
+    "DEFAULT_EVAL_FREQ",
+    "DEFAULT_EVAL_EPISODES",
+    "DEFAULT_TRAIN_TIMESTEPS",
+    "DEFAULT_TARGET_REWARD",
+    "DEFAULF_NUMBER_LAST_ACTIONS",
+    "DEFAULT_PYB_FREQ",
+    "DEFAULT_CTRL_FREQ",
+    "DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ",
+    "DEFAULT_EPISODE_LEN_SEC",
+    "DEFAULT_Multiplier_Collision_Penalty",
+    "DEFAULT_VelocityScale",
+    "DEFAULT_explore_Matrix_Size",
+    "DEFAULT_collision_penalty_truncated",
+    "DEFAULT_Truncated_Version",
+    "DEFAULT_Truncated_Wall_Distance",
+]
 
 # Header für die dynamischen Daten (Trainingsergebnisse)
 header_training = [
-    "Runde", 
-    "Terminated", 
-    "Truncated", 
-    "Map-Abgedeckt", 
-    "Wand berührungen", 
+    "Runde",
+    "Terminated",
+    "Truncated",
+    "Map-Abgedeckt",
+    "Wand berührungen",
     "Summe Reward",
     "Maze_number",
     "Uhrzeit",
 ]
 
-        # Beispielwerte für die Parameter (statisch)
+# Beispielwerte für die Parameter (statisch)
 parameter_daten = [
     DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,  # DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ
     DEFAULT_EPISODE_LEN_SEC,  # DEFAULT_EPISODE_LEN_SEC
@@ -242,15 +265,18 @@ parameter_daten = [
     DEFAULT_Multiplier_Collision_Penalty,
     DEFAULT_VelocityScale,
     DEFAULT_explore_Matrix_Size,
+    DEFAULT_collision_penalty_truncated,
+    DEFAULT_Truncated_Version,
+    DEFAULT_Truncated_Wall_Distance,
 ]
 
 
 # Öffnen oder Erstellen der CSV-Datei
-with open(Auswertungs_CSV_Datei, mode='a', newline='') as file:
+with open(Auswertungs_CSV_Datei, mode="a", newline="") as file:
     writer = csv.writer(file)
-    
+
 if not datei_existiert:
-    with open(Auswertungs_CSV_Datei, mode='a', newline='') as file:
+    with open(Auswertungs_CSV_Datei, mode="a", newline="") as file:
         writer = csv.writer(file)
         # Wenn die Datei nicht existiert oder wir neue Werte beim ersten Aufruf schreiben, dann Header hinzufügen
         writer.writerow(header_params)  # Die statischen Parameter (Header)
@@ -293,13 +319,18 @@ def run(
     number_last_actions=DEFAULF_NUMBER_LAST_ACTIONS,
     Reward_for_new_field=DEFAULT_REWARD_FOR_NEW_FIELD,
     Punishment_for_Step=DEFAULT_Punishment_for_Step,
-    Auswertungs_CSV_Datei = Auswertungs_CSV_Datei,
-    Explore_Matrix_Size = DEFAULT_explore_Matrix_Size,
-    New_Maze_number = DEFAULT_New_Maze_number,
-    New_Position_number = DEFAULT_New_Position_number,
+    Auswertungs_CSV_Datei=Auswertungs_CSV_Datei,
+    Explore_Matrix_Size=DEFAULT_explore_Matrix_Size,
+    New_Maze_number=DEFAULT_New_Maze_number,
+    New_Position_number=DEFAULT_New_Position_number,
+    collision_penalty_truncated=DEFAULT_collision_penalty_truncated,
+    Truncated_Version=DEFAULT_Truncated_Version,
+    Truncated_Wall_Distance=DEFAULT_Truncated_Wall_Distance,
 ):
     if TRAIN:
-        filename = os.path.join(output_folder, "save-" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
+        filename = os.path.join(
+            output_folder, "save-" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
+        )
         if not os.path.exists(filename):
             os.makedirs(filename + "/")
 
@@ -329,13 +360,16 @@ def run(
                     VelocityScale=DEFAULT_VelocityScale,
                     Procent_Step=Procent_Step,
                     number_last_actions=number_last_actions,
-                    Punishment_for_Step = Punishment_for_Step,
-                    Reward_for_new_field = Reward_for_new_field,
-                    csv_file_path = Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
-                    Explore_Matrix_Size = Explore_Matrix_Size,
-                    Maze_number = DEFAULT_Maze_number,
-                    New_Maze_number = New_Maze_number,
-                    New_Position_number = New_Position_number,
+                    Punishment_for_Step=Punishment_for_Step,
+                    Reward_for_new_field=Reward_for_new_field,
+                    csv_file_path=Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
+                    Explore_Matrix_Size=Explore_Matrix_Size,
+                    Maze_number=DEFAULT_Maze_number,
+                    New_Maze_number=New_Maze_number,
+                    New_Position_number=New_Position_number,
+                    collision_penalty_truncated=collision_penalty_truncated,
+                    Truncated_Version=Truncated_Version,
+                    Truncated_Wall_Distance=Truncated_Wall_Distance,
                 ),
                 n_envs=1,
                 seed=0,
@@ -367,13 +401,16 @@ def run(
                     VelocityScale=DEFAULT_VelocityScale,
                     Procent_Step=Procent_Step,
                     number_last_actions=number_last_actions,
-                    Punishment_for_Step = Punishment_for_Step,
-                    Reward_for_new_field = Reward_for_new_field,
-                    csv_file_path = Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
-                    Explore_Matrix_Size = Explore_Matrix_Size,
-                    Maze_number = DEFAULT_Maze_number,
-                    New_Maze_number = New_Maze_number,
-                    New_Position_number = New_Position_number,
+                    Punishment_for_Step=Punishment_for_Step,
+                    Reward_for_new_field=Reward_for_new_field,
+                    csv_file_path=Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
+                    Explore_Matrix_Size=Explore_Matrix_Size,
+                    Maze_number=DEFAULT_Maze_number,
+                    New_Maze_number=New_Maze_number,
+                    New_Position_number=New_Position_number,
+                    collision_penalty_truncated=collision_penalty_truncated,
+                    Truncated_Version=Truncated_Version,
+                    Truncated_Wall_Distance=Truncated_Wall_Distance,
                 ),
                 n_envs=1,
                 seed=0,
@@ -388,11 +425,17 @@ def run(
         #### Load existing model or create new one ###################
         match MODEL_Version:
             case "M1":  # M1: PPO
-                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
-                    print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_Version} with {REWARD_VERSION}")
+                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(
+                    DEFAULT_PRETRAINED_MODEL_PATH
+                ):
+                    print(
+                        f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_Version} with {REWARD_VERSION}"
+                    )
                     model = PPO.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
                 else:
-                    print(f"[INFO] Creating new model {MODEL_Version} with {REWARD_VERSION}")
+                    print(
+                        f"[INFO] Creating new model {MODEL_Version} with {REWARD_VERSION}"
+                    )
                     model = PPO(
                         "MlpPolicy",
                         train_env,
@@ -401,11 +444,17 @@ def run(
                     )
 
             case "M2":  # M2: DQN_CNNPolicy_StandardFeatureExtractor
-                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
-                    print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_Version} with {REWARD_VERSION}")
+                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(
+                    DEFAULT_PRETRAINED_MODEL_PATH
+                ):
+                    print(
+                        f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_Version} with {REWARD_VERSION}"
+                    )
                     model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
                 else:
-                    print(f"[INFO] Creating new model {MODEL_Version} with {REWARD_VERSION}")
+                    print(
+                        f"[INFO] Creating new model {MODEL_Version} with {REWARD_VERSION}"
+                    )
                     model = DQN(
                         "CnnPolicy",
                         train_env,
@@ -416,11 +465,17 @@ def run(
                     )
 
             case "M3":  # M3: DQN_MLPPolicy
-                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
-                    print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
+                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(
+                    DEFAULT_PRETRAINED_MODEL_PATH
+                ):
+                    print(
+                        f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}"
+                    )
                     model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
                 else:
-                    print("[INFO] Creating new model with CNN-DQN with custom feature extractor")
+                    print(
+                        "[INFO] Creating new model with CNN-DQN with custom feature extractor"
+                    )
                     model = DQN(
                         "MlpPolicy",
                         train_env,
@@ -437,12 +492,21 @@ def run(
             case "M4":  # M4: DQN_CNNPolicy_CustomFeatureExtractor
                 # ANCHOR - CNN-DQN
                 # Setze die policy_kwargs, um deinen Custom Feature Extractor zu nutzen:
-                policy_kwargs = dict(features_extractor_class=CustomCNNFeatureExtractor(), features_extractor_kwargs=dict(features_dim=4))
-                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
-                    print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
+                policy_kwargs = dict(
+                    features_extractor_class=CustomCNNFeatureExtractor(),
+                    features_extractor_kwargs=dict(features_dim=4),
+                )
+                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(
+                    DEFAULT_PRETRAINED_MODEL_PATH
+                ):
+                    print(
+                        f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}"
+                    )
                     model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
                 else:
-                    print("[INFO] Creating new model with CNN-DQN with custom feature extractor")
+                    print(
+                        "[INFO] Creating new model with CNN-DQN with custom feature extractor"
+                    )
                     model = DQN(
                         "CnnPolicy",
                         train_env,
@@ -460,15 +524,19 @@ def run(
                 # ANCHOR - NN-DQN-MI
                 # Setze die policy_kwargs, um deinen Custom Feature Extractor zu nutzen:
                 # policy_kwargs = dict(features_extractor_class=CustomNNFeatureExtractor, features_extractor_kwargs=dict(features_dim=4))
-                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
-                    print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
+                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(
+                    DEFAULT_PRETRAINED_MODEL_PATH
+                ):
+                    print(
+                        f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}"
+                    )
                     model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
                 else:
                     model = DQN(
                         "MultiInputPolicy",
                         train_env,
                         device="cuda:0",
-                        #policy_kwargs=dict(net_arch=[128, 64, 32]),
+                        # policy_kwargs=dict(net_arch=[128, 64, 32]),
                         learning_rate=0.004,
                         verbose=1,
                         batch_size=32,
@@ -478,13 +546,14 @@ def run(
                     )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
 
         ## Schreiben der CSV für die Auswertung unserer Ergebnisse
-    
-        
+
         #### Target cumulative rewards (problem-dependent) ##########
         target_reward = DEFAULT_TARGET_REWARD
         print(target_reward)
         # The StopTrainingOnRewardThreshold callback is used to stop the training once a certain reward threshold is reached.
-        callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=target_reward, verbose=1)
+        callback_on_best = StopTrainingOnRewardThreshold(
+            reward_threshold=target_reward, verbose=1
+        )
         # The EvalCallback is used to evaluate the agent periodically during training.
         # eval_env: The environment used for evaluation.
         # callback_on_new_best: Callback to trigger when a new best model is found.
@@ -524,23 +593,27 @@ def run(
         # callback_list = CallbackList([checkpoint_callback, eval_callback])
 
         start_time = time.time()  # Startzeit erfassen
-        model.learn(total_timesteps=DEFAULT_TRAIN_TIMESTEPS, callback=eval_callback, log_interval=1000, progress_bar=True)  # shorter training in GitHub Actions pytest
+        model.learn(
+            total_timesteps=DEFAULT_TRAIN_TIMESTEPS,
+            callback=eval_callback,
+            log_interval=1000,
+            progress_bar=True,
+        )  # shorter training in GitHub Actions pytest
         end_time = time.time()  # Endzeit erfassen
         elapsed_time = end_time - start_time  # Dauer berechnen
         print(f"Training abgeschlossen. Dauer: {elapsed_time:.2f} Sekunden")
 
         datei_existiert = os.path.exists(Auswertungs_CSV_Datei)
-        
+
         # Öffne die CSV-Datei zum Anhängen oder Erstellen
-        with open(Auswertungs_CSV_Datei, mode='a', newline='') as file:
+        with open(Auswertungs_CSV_Datei, mode="a", newline="") as file:
             writer = csv.writer(file)
 
             if datei_existiert:
                 # Schreibe die Trainingsdaten in die zweite Tabelle
-                writer.writerow([]) 
+                writer.writerow([])
                 writer.writerow("Traingingszeit")
                 writer.writerow(elapsed_time)
-
 
         #### Save the model ########################################
 
@@ -548,7 +621,7 @@ def run(
         if os.path.exists(filename):
             # Extrahiere den letzten Ordnernamen
             last_folder = os.path.basename(filename)
-            
+
             # Erstelle den vollständigen Pfad zum Ordner, dessen Inhalt du löschen möchtest
             target_folder = os.path.join("results", last_folder)
 
@@ -556,10 +629,14 @@ def run(
             if os.path.exists(target_folder):
                 # Alle Dateien und Ordner im Verzeichnis durchgehen
                 for item in os.listdir(target_folder):
-                    item_path = os.path.join(target_folder, item)  # Vollständiger Pfad zu den Dateien/Ordnern
+                    item_path = os.path.join(
+                        target_folder, item
+                    )  # Vollständiger Pfad zu den Dateien/Ordnern
                     try:
                         if os.path.isdir(item_path):
-                            shutil.rmtree(item_path)  # Wenn es ein Verzeichnis ist, entferne es rekursiv
+                            shutil.rmtree(
+                                item_path
+                            )  # Wenn es ein Verzeichnis ist, entferne es rekursiv
                         else:
                             os.remove(item_path)  # Wenn es eine Datei ist, entferne sie
                     except Exception as e:
@@ -617,13 +694,16 @@ def run(
                 DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
                 VelocityScale=DEFAULT_VelocityScale,
                 Procent_Step=Procent_Step,
-                Punishment_for_Step = Punishment_for_Step,
-                Reward_for_new_field = Reward_for_new_field,
-                csv_file_path = Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
-                Explore_Matrix_Size = Explore_Matrix_Size,
-                Maze_number = DEFAULT_Maze_number,
-                New_Maze_number = New_Maze_number,
-                New_Position_number = New_Position_number,
+                Punishment_for_Step=Punishment_for_Step,
+                Reward_for_new_field=Reward_for_new_field,
+                csv_file_path=Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
+                Explore_Matrix_Size=Explore_Matrix_Size,
+                Maze_number=DEFAULT_Maze_number,
+                New_Maze_number=New_Maze_number,
+                New_Position_number=New_Position_number,
+                collision_penalty_truncated=collision_penalty_truncated,
+                Truncated_Version=Truncated_Version,
+                Truncated_Wall_Distance=Truncated_Wall_Distance,
             ),
             n_envs=1,
             seed=0,
@@ -643,7 +723,11 @@ def run(
         # In your code, obs will contain the initial observation, and info will contain additional information provided by the environment after resetting.
 
         obs, info, maze_number = test_env.reset(seed=42, options={})
-        print("PRINT MAZE NUMBER IM LEARN-------------------------------------------", maze_number, "---------------")
+        print(
+            "PRINT MAZE NUMBER IM LEARN-------------------------------------------",
+            maze_number,
+            "---------------",
+        )
         start = time.time()
         # This code runs a loop to simulate the environment using the trained model and logs the results.
         # Loop: Runs for a specified number of steps.
@@ -656,10 +740,23 @@ def run(
         for i in range((test_env.EPISODE_LEN_SEC + 2) * test_env.CTRL_FREQ):
 
             action, _states = model.predict(obs, deterministic=True)
-            obs, reward, terminated, truncated, info = test_env.step(action, maze_number)
+            obs, reward, terminated, truncated, info = test_env.step(
+                action, maze_number
+            )
             obs2 = obs.squeeze()
             act2 = action.squeeze()
-            print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:", truncated)
+            print(
+                "Obs:",
+                obs,
+                "\tAction",
+                action,
+                "\tReward:",
+                reward,
+                "\tTerminated:",
+                terminated,
+                "\tTruncated:",
+                truncated,
+            )
             # if DEFAULT_OBS == ObservationType.KIN:
             #     if not multiagent:
             #         logger.log(drone=0, timestamp=i / test_env.CTRL_FREQ, state=np.hstack([obs2[0:3], np.zeros(4), obs2[3:15], act2]), control=np.zeros(12))
@@ -679,19 +776,85 @@ def run(
 
 if __name__ == "__main__":
     #### Define and parse (optional) arguments for the script ##
-    parser = argparse.ArgumentParser(description="Single agent reinforcement learning example script")
-    parser.add_argument("--multiagent", default=DEFAULT_MA, type=str2bool, help="Whether to use example LeaderFollower instead of Hover (default: False)", metavar="")
-    parser.add_argument("--gui_Train", default=DEFAULT_GUI_TRAIN, type=str2bool, help="Whether to use PyBullet GUI (default: True)", metavar="")
-    parser.add_argument("--gui_Test", default=DEFAULT_GUI_TEST, type=str2bool, help="Whether to use PyBullet GUI (default: True)", metavar="")
-    parser.add_argument("--record_video", default=DEFAULT_RECORD_VIDEO, type=str2bool, help="Whether to record a video (default: False)", metavar="")
-    parser.add_argument("--output_folder", default=DEFAULT_OUTPUT_FOLDER, type=str, help='Folder where to save logs (default: "results")', metavar="")
-    parser.add_argument("--colab", default=DEFAULT_COLAB, type=bool, help='Whether example is being run by a notebook (default: "False")', metavar="")
-    parser.add_argument("--pyb_freq", default=DEFAULT_PYB_FREQ, type=int, help="Physics frequency (default: 240)", metavar="")
-    parser.add_argument("--ctrl_freq", default=DEFAULT_CTRL_FREQ, type=int, help="Control frequency (default: 60)", metavar="")
-    parser.add_argument("--reward_and_action_change_freq", default=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ, type=int, help="Control frequency (default: 60)", metavar="")
-    parser.add_argument("--drone_model", default=DEFAULT_DRONE_MODEL, type=str, help="Control frequency (default: 60)", metavar="")
+    parser = argparse.ArgumentParser(
+        description="Single agent reinforcement learning example script"
+    )
     parser.add_argument(
-        "--user_debug_gui", default=DEFAULT_USER_DEBUG_GUI, type=str2bool, help="set to True if you want to see the debug GUI, only for showing the frame in training!(default: False)", metavar=""
+        "--multiagent",
+        default=DEFAULT_MA,
+        type=str2bool,
+        help="Whether to use example LeaderFollower instead of Hover (default: False)",
+        metavar="",
+    )
+    parser.add_argument(
+        "--gui_Train",
+        default=DEFAULT_GUI_TRAIN,
+        type=str2bool,
+        help="Whether to use PyBullet GUI (default: True)",
+        metavar="",
+    )
+    parser.add_argument(
+        "--gui_Test",
+        default=DEFAULT_GUI_TEST,
+        type=str2bool,
+        help="Whether to use PyBullet GUI (default: True)",
+        metavar="",
+    )
+    parser.add_argument(
+        "--record_video",
+        default=DEFAULT_RECORD_VIDEO,
+        type=str2bool,
+        help="Whether to record a video (default: False)",
+        metavar="",
+    )
+    parser.add_argument(
+        "--output_folder",
+        default=DEFAULT_OUTPUT_FOLDER,
+        type=str,
+        help='Folder where to save logs (default: "results")',
+        metavar="",
+    )
+    parser.add_argument(
+        "--colab",
+        default=DEFAULT_COLAB,
+        type=bool,
+        help='Whether example is being run by a notebook (default: "False")',
+        metavar="",
+    )
+    parser.add_argument(
+        "--pyb_freq",
+        default=DEFAULT_PYB_FREQ,
+        type=int,
+        help="Physics frequency (default: 240)",
+        metavar="",
+    )
+    parser.add_argument(
+        "--ctrl_freq",
+        default=DEFAULT_CTRL_FREQ,
+        type=int,
+        help="Control frequency (default: 60)",
+        metavar="",
+    )
+    parser.add_argument(
+        "--reward_and_action_change_freq",
+        default=DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,
+        type=int,
+        help="Control frequency (default: 60)",
+        metavar="",
+    )
+    parser.add_argument(
+        "--drone_model",
+        default=DEFAULT_DRONE_MODEL,
+        type=str,
+        help="Control frequency (default: 60)",
+        metavar="",
+    )
+    parser.add_argument(
+        "--user_debug_gui",
+        default=DEFAULT_USER_DEBUG_GUI,
+        type=str2bool,
+        help="set to True if you want to see the debug GUI, only for showing the frame in training!(default: False)",
+        metavar="",
     )
     parser.add_argument(
         "--advanced_status_plot",
@@ -715,7 +878,11 @@ if __name__ == "__main__":
         metavar="",
     )
     parser.add_argument(
-        "--dash_active", default=DEFAULT_DASH_ACTIVE, type=str2bool, help="set to True if you want to see the advanced status plot, only for showing the frame in training!(default: False)", metavar=""
+        "--dash_active",
+        default=DEFAULT_DASH_ACTIVE,
+        type=str2bool,
+        help="set to True if you want to see the advanced status plot, only for showing the frame in training!(default: False)",
+        metavar="",
     )
     ARGS = parser.parse_args()
 

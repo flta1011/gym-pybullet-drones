@@ -110,7 +110,13 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         self.INIT_XYZS = initial_xyzs
         self.INIT_RPYS = initial_rpys
         self.port = 8051
-        self.reward_components = {"collision_penalty": 0, "distance_reward": 0, "explore_bonus_new_field": 0, "explore_bonus_visited_field": 0, "Target_Hit_Reward": 0}
+        self.reward_components = {
+            "collision_penalty": 0,
+            "distance_reward": 0,
+            "explore_bonus_new_field": 0,
+            "explore_bonus_visited_field": 0,
+            "Target_Hit_Reward": 0,
+        }
         self.Dash_active = Dash_active
 
         # Historie der Reward-Komponenten für Balkendiagramm
@@ -178,14 +184,25 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
             )
 
             @self.app.callback(
-                [Output("live-map", "figure"), Output("observation-channels", "figure"), Output("reward-bar-chart", "figure"), Output("current-total-reward", "children")],
+                [
+                    Output("live-map", "figure"),
+                    Output("observation-channels", "figure"),
+                    Output("reward-bar-chart", "figure"),
+                    Output("current-total-reward", "children"),
+                ],
                 [Input("interval-component", "n_intervals")],
             )
             def update_graph(n):
                 # Create reward/best way map figure
                 fig = make_subplots(rows=1, cols=2, subplot_titles=("Reward Map", "Best Way Map"))
-                fig.add_trace(go.Heatmap(z=self.reward_map, colorscale="Viridis", showscale=True, name="Reward Map"), row=1, col=1)
-                fig.add_trace(go.Heatmap(z=self.best_way_map, colorscale="Viridis", showscale=True, name="Best Way Map"), row=1, col=2)
+                fig.add_trace(
+                    go.Heatmap(z=self.reward_map, colorscale="Viridis", showscale=True, name="Reward Map"), row=1, col=1
+                )
+                fig.add_trace(
+                    go.Heatmap(z=self.best_way_map, colorscale="Viridis", showscale=True, name="Best Way Map"),
+                    row=1,
+                    col=2,
+                )
                 fig.update_layout(height=600, title_text="Maze Training Visualization", showlegend=True)
 
                 # Get current observation channels
@@ -193,14 +210,23 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
 
                 # Create observation channels figure with SLAM map on left and values on right
                 obs_fig = make_subplots(
-                    rows=1, cols=2, column_widths=[0.5, 0.5], subplot_titles=("Normalized SLAM Map", "Legend & Values"), specs=[[{"type": "heatmap"}, {"type": "table"}]]  # Make columns equal width
+                    rows=1,
+                    cols=2,
+                    column_widths=[0.5, 0.5],
+                    subplot_titles=("Normalized SLAM Map", "Legend & Values"),
+                    specs=[[{"type": "heatmap"}, {"type": "table"}]],  # Make columns equal width
                 )
 
                 # Add SLAM map heatmap
                 obs_fig.add_trace(
                     go.Heatmap(
                         z=obs[0],
-                        colorscale=[[0, "rgb(0,0,0)"], [0.2, "rgb(128,128,128)"], [0.5, "rgb(255,165,0)"], [0.9, "rgb(255,255,255)"]],  # Wall (0.0)  # Unknown (0.2)  # Visited (0.5)  # Free (0.9)
+                        colorscale=[
+                            [0, "rgb(0,0,0)"],
+                            [0.2, "rgb(128,128,128)"],
+                            [0.5, "rgb(255,165,0)"],
+                            [0.9, "rgb(255,255,255)"],
+                        ],  # Wall (0.0)  # Unknown (0.2)  # Visited (0.5)  # Free (0.9)
                         showscale=False,
                         name="SLAM Map",
                     ),
@@ -214,8 +240,28 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
                         header=dict(values=["Type", "Description"]),
                         cells=dict(
                             values=[
-                                ["Wall", "Unknown", "Visited", "Free", "", "Position X", "Position Y", "sin(yaw)", "cos(yaw)"],
-                                ["Black (0.0)", "Gray (0.2)", "Orange (0.5)", "White (0.9)", "", f"{obs[1][0][0]:.3f}", f"{obs[2][0][0]:.3f}", f"{obs[3][0][0]:.3f}", f"{obs[4][0][0]:.3f}"],
+                                [
+                                    "Wall",
+                                    "Unknown",
+                                    "Visited",
+                                    "Free",
+                                    "",
+                                    "Position X",
+                                    "Position Y",
+                                    "sin(yaw)",
+                                    "cos(yaw)",
+                                ],
+                                [
+                                    "Black (0.0)",
+                                    "Gray (0.2)",
+                                    "Orange (0.5)",
+                                    "White (0.9)",
+                                    "",
+                                    f"{obs[1][0][0]:.3f}",
+                                    f"{obs[2][0][0]:.3f}",
+                                    f"{obs[3][0][0]:.3f}",
+                                    f"{obs[4][0][0]:.3f}",
+                                ],
                             ]
                         ),
                     ),
@@ -226,8 +272,16 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
                 obs_fig.update_layout(height=600, title_text="Observation Channels", showlegend=False)  # Make it square
 
                 # Create reward components bar chart
-                bar_chart = go.Figure(go.Bar(x=list(self.reward_components.keys()), y=list(self.reward_components.values()), marker_color="royalblue"))
-                bar_chart.update_layout(title_text="Current Reward Components", xaxis_title="Reward Type", yaxis_title="Reward Value")
+                bar_chart = go.Figure(
+                    go.Bar(
+                        x=list(self.reward_components.keys()),
+                        y=list(self.reward_components.values()),
+                        marker_color="royalblue",
+                    )
+                )
+                bar_chart.update_layout(
+                    title_text="Current Reward Components", xaxis_title="Reward Type", yaxis_title="Reward Value"
+                )
 
                 # Initialize last_total_reward if not set
                 if not hasattr(self, "last_total_reward"):
@@ -319,7 +373,9 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
                 cur_quat=state[3:7],
                 cur_vel=state[10:13],
                 cur_ang_vel=state[13:16],
-                target_pos=np.array([state[0], state[1], 0.5]),  # same as the current position on X, and same on y (not as in fly to wall scenario) and z = 0.5
+                target_pos=np.array(
+                    [state[0], state[1], 0.5]
+                ),  # same as the current position on X, and same on y (not as in fly to wall scenario) and z = 0.5
                 target_rpy=np.array([0, 0, Calculate_new_yaw]),  # neue Yaw-Werte durch Drehung der Drohne
                 target_vel=self.SPEED_LIMIT * np.abs(target_v[3]) * v_unit_vector,  # target the desired velocity vector
             )
@@ -650,7 +706,10 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         #     self.reward_map[current_position[0], current_position[1]] = 3
 
         reward = (
-            self.reward_components["collision_penalty"] + self.reward_components["distance_reward"] + self.reward_components["explore_bonus_new_field"] + self.reward_components["Target_Hit_Reward"]
+            self.reward_components["collision_penalty"]
+            + self.reward_components["distance_reward"]
+            + self.reward_components["explore_bonus_new_field"]
+            + self.reward_components["Target_Hit_Reward"]
         )
 
         # update the buffer
@@ -680,7 +739,9 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         state = self._getDroneStateVector(0)
         # starte einen Timer, wenn die Drohne im sweet spot ist
         if state[25] < 1:  # 0.15 = Radius Scheibe
-            self.still_time += 1 / self.reward_and_action_change_freq  # Increment by simulation timestep (in seconds) # TBD: funktioniert das richtig?
+            self.still_time += (
+                1 / self.reward_and_action_change_freq
+            )  # Increment by simulation timestep (in seconds) # TBD: funktioniert das richtig?
         else:
             self.still_time = 0.0  # Reset timer to 0 seconds
 
@@ -736,7 +797,9 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
         state = self._getDroneStateVector(0)
         # starte einen Timer, wenn die Drohne im sweet spot ist
         if state[25] < 1:  # 0.15 = Radius Scheibe
-            self.still_time += 1 / self.reward_and_action_change_freq  # Increment by simulation timestep (in seconds) # TBD: funktioniert das richtig?
+            self.still_time += (
+                1 / self.reward_and_action_change_freq
+            )  # Increment by simulation timestep (in seconds) # TBD: funktioniert das richtig?
         else:
             self.still_time = 0.0  # Reset timer to 0 seconds
 
@@ -774,7 +837,12 @@ class BaseRLAviary_MAZE_TRAINING(BaseAviary_MAZE_TRAINING):
 
         # Wenn an einer Wand gecrashed wird, beenden!
         Abstand_truncated = self.Danger_Threshold_Wall - 0.05
-        if state[21] <= Abstand_truncated or state[22] <= Abstand_truncated or state[23] <= Abstand_truncated or state[24] <= Abstand_truncated:
+        if (
+            state[21] <= Abstand_truncated
+            or state[22] <= Abstand_truncated
+            or state[23] <= Abstand_truncated
+            or state[24] <= Abstand_truncated
+        ):
             Grund_Truncated = f"Zu nah an der Wand (<{Abstand_truncated} m)"
             return True, Grund_Truncated
 

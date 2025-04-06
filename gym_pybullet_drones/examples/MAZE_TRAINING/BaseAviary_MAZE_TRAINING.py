@@ -86,7 +86,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         advanced_status_plot=False,
         obstacles=True,
         vision_attributes=False,
-        output_folder="results_maze_training" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"),
+        output_folder="results_maze_training"
+        + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"),
         target_position=np.array([0, 0, 0]),
         Danger_Threshold_Wall=0.20,
         EPISODE_LEN_SEC=10 * 60,
@@ -101,17 +102,18 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         VelocityScale=1,
         Procent_Step=0.05,
         number_last_actions=20,
-        Punishment_for_Step = -1,
-        Reward_for_new_field = 1,
-        csv_file_path = "maze_training_results.csv",
-        Explore_Matrix_Size = 5,
-        Maze_number = 21, 
-        last_random_number_Start = 1, 
-        last_random_number_Target = 2,
-        New_Maze_number = 10,
-        New_Position_number = 5,
-
-        
+        Punishment_for_Step=-1,
+        Reward_for_new_field=1,
+        csv_file_path="maze_training_results.csv",
+        Explore_Matrix_Size=5,
+        Maze_number=21,
+        last_random_number_Start=1,
+        last_random_number_Target=2,
+        New_Maze_number=10,
+        New_Position_number=5,
+        collision_penalty_truncated=-1000,
+        Truncated_Version="TR1",
+        Truncated_Wall_Distance=0.3,
     ):
         """Initialization of a generic aviary environment.
 
@@ -166,12 +168,18 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.PYB_FREQ = pyb_freq
         self.REWARD_AND_ACTION_CHANGE_FREQ = reward_and_action_change_freq
         if self.PYB_FREQ % self.CTRL_FREQ != 0:
-            raise ValueError("[ERROR] in BaseAviary.__init__(), pyb_freq is not divisible by env_freq.")
+            raise ValueError(
+                "[ERROR] in BaseAviary.__init__(), pyb_freq is not divisible by env_freq."
+            )
         self.PYB_STEPS_PER_CTRL = int(self.PYB_FREQ / self.CTRL_FREQ)
-        self.PYB_STEPS_PER_REWARD_AND_ACTION_CHANGE = int(self.PYB_FREQ / self.REWARD_AND_ACTION_CHANGE_FREQ)
+        self.PYB_STEPS_PER_REWARD_AND_ACTION_CHANGE = int(
+            self.PYB_FREQ / self.REWARD_AND_ACTION_CHANGE_FREQ
+        )
         self.CTRL_TIMESTEP = 1.0 / self.CTRL_FREQ
         self.PYB_TIMESTEP = 1.0 / self.PYB_FREQ
-        self.REWARD_AND_ACTION_CHANGE_TIMESTEP = 1.0 / self.REWARD_AND_ACTION_CHANGE_FREQ
+        self.REWARD_AND_ACTION_CHANGE_TIMESTEP = (
+            1.0 / self.REWARD_AND_ACTION_CHANGE_FREQ
+        )
         #### Parameters ############################################
         self.NUM_DRONES = num_drones
         self.NEIGHBOURHOOD_RADIUS = neighbourhood_radius
@@ -196,9 +204,17 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.ACT_TYPE = act
         self.still_time = 0
         # NOTE - Episoden länge
-        self.EPISODE_LEN_SEC = EPISODE_LEN_SEC  # increased from 5 auf 20 Minuten um mehr zu sehen (4.3.25)
+        self.EPISODE_LEN_SEC = (
+            EPISODE_LEN_SEC  # increased from 5 auf 20 Minuten um mehr zu sehen (4.3.25)
+        )
         self.port = 8080
-        self.reward_components = {"collision_penalty": 0, "distance_reward": 0, "explore_bonus_new_field": 0, "explore_bonus_visited_field": 0, "Target_Hit_Reward": 0}
+        self.reward_components = {
+            "collision_penalty": 0,
+            "distance_reward": 0,
+            "explore_bonus_new_field": 0,
+            "explore_bonus_visited_field": 0,
+            "Target_Hit_Reward": 0,
+        }
 
         # Historie der Reward-Komponenten für Balkendiagramm
         self.reward_distribution_history = deque(maxlen=50)  # speichere 50 Einträge
@@ -224,7 +240,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.Procent_Step = Procent_Step
         self.too_close_to_wall_counter = 0
         self.Terminated_Truncated_Counter = 0
-           # NOTE - Maze Anzahl Wechsel
+        # NOTE - Maze Anzahl Wechsel
         self.Maze_number = Maze_number
         self.New_Maze_number = New_Maze_number
         self.New_Maze_number_counter = 0
@@ -235,17 +251,35 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.resolution_slam = resolution_slam
         self.New_Position_number = New_Position_number
 
-        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6":
+        self.collision_penalty_truncated = collision_penalty_truncated
+        self.Truncated_Version = Truncated_Version
+        self.Truncated_Wall_Distance = Truncated_Wall_Distance
+
+        if (
+            self.OBSERVATION_TYPE == "O4"
+            or self.OBSERVATION_TYPE == "O7"
+            or self.OBSERVATION_TYPE == "O6"
+        ):
             # Initialize SLAM before calling the parent constructor
-            self.slam = SimpleSlam(map_size=map_size_slam, resolution=resolution_slam, init_position=self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0:2])  # 10m x 10m map with 10cm resolution
+            self.slam = SimpleSlam(
+                map_size=map_size_slam,
+                resolution=resolution_slam,
+                init_position=self.INIT_XYZS[f"map{self.Maze_number}"][0][
+                    self.random_number_Start
+                ][0:2],
+            )  # 10m x 10m map with 10cm resolution
             self.grid_size = int(map_size_slam / resolution_slam)
 
         #### Create integrated controllers #########################
         os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
         if drone_model in [DroneModel.CF2X, DroneModel.CF2P]:
-            self.ctrl = [DSLPIDControl(drone_model=DroneModel.CF2X) for i in range(num_drones)]
+            self.ctrl = [
+                DSLPIDControl(drone_model=DroneModel.CF2X) for i in range(num_drones)
+            ]
         else:
-            print("[ERROR] in BaseRLAviary.__init()__, no controller is available for the specified drone_model")
+            print(
+                "[ERROR] in BaseRLAviary.__init()__, no controller is available for the specified drone_model"
+            )
         self.DASH_ACTIVE = dash_active
         #### Load the drone properties from the .urdf file #########
         (
@@ -267,8 +301,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             self.DW_COEFF_2,
             self.DW_COEFF_3,
         ) = self._parseURDFParameters()
-     
-        
+
         print(
             "[INFO] BaseAviary.__init__() loaded parameters from the drone's .urdf:\n[INFO] m {:f}, L {:f},\n[INFO] ixx {:f}, iyy {:f}, izz {:f},\n[INFO] kf {:f}, km {:f},\n[INFO] t2w {:f}, max_speed_kmh {:f},\n[INFO] gnd_eff_coeff {:f}, prop_radius {:f},\n[INFO] drag_xy_coeff {:f}, drag_z_coeff {:f},\n[INFO] dw_coeff_1 {:f}, dw_coeff_2 {:f}, dw_coeff_3 {:f}".format(
                 self.M,
@@ -292,7 +325,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         #### Compute constants #####################################
         self.GRAVITY = self.G * self.M
         self.HOVER_RPM = np.sqrt(self.GRAVITY / (4 * self.KF))
-        self.MAX_RPM = np.sqrt((self.THRUST2WEIGHT_RATIO * self.GRAVITY) / (4 * self.KF))
+        self.MAX_RPM = np.sqrt(
+            (self.THRUST2WEIGHT_RATIO * self.GRAVITY) / (4 * self.KF)
+        )
         self.MAX_THRUST = 4 * self.KF * self.MAX_RPM**2
         if self.DRONE_MODEL == DroneModel.CF2X:
             self.MAX_XY_TORQUE = (2 * self.L * self.KF * self.MAX_RPM**2) / np.sqrt(2)
@@ -301,32 +336,62 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         elif self.DRONE_MODEL == DroneModel.RACE:
             self.MAX_XY_TORQUE = (2 * self.L * self.KF * self.MAX_RPM**2) / np.sqrt(2)
         self.MAX_Z_TORQUE = 2 * self.KM * self.MAX_RPM**2
-        self.GND_EFF_H_CLIP = 0.25 * self.PROP_RADIUS * np.sqrt((15 * self.MAX_RPM**2 * self.KF * self.GND_EFF_COEFF) / self.MAX_THRUST)
+        self.GND_EFF_H_CLIP = (
+            0.25
+            * self.PROP_RADIUS
+            * np.sqrt(
+                (15 * self.MAX_RPM**2 * self.KF * self.GND_EFF_COEFF) / self.MAX_THRUST
+            )
+        )
         #### Create attributes for vision tasks ####################
         if self.RECORD:
-            self.ONBOARD_IMG_PATH = os.path.join(self.OUTPUT_FOLDER, "recording_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
+            self.ONBOARD_IMG_PATH = os.path.join(
+                self.OUTPUT_FOLDER,
+                "recording_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"),
+            )
             os.makedirs(os.path.dirname(self.ONBOARD_IMG_PATH), exist_ok=True)
         self.VISION_ATTR = vision_attributes
         if self.VISION_ATTR:
             self.IMG_RES = np.array([64, 48])
             self.IMG_FRAME_PER_SEC = 24
             self.IMG_CAPTURE_FREQ = int(self.PYB_FREQ / self.IMG_FRAME_PER_SEC)
-            self.rgb = np.zeros(((self.NUM_DRONES, self.IMG_RES[1], self.IMG_RES[0], 4)))
+            self.rgb = np.zeros(
+                ((self.NUM_DRONES, self.IMG_RES[1], self.IMG_RES[0], 4))
+            )
             self.dep = np.ones(((self.NUM_DRONES, self.IMG_RES[1], self.IMG_RES[0])))
             self.seg = np.zeros(((self.NUM_DRONES, self.IMG_RES[1], self.IMG_RES[0])))
             if self.IMG_CAPTURE_FREQ % self.PYB_STEPS_PER_CTRL != 0:
-                print("[ERROR] in BaseAviary.__init__(), PyBullet and control frequencies incompatible with the desired video capture frame rate ({:f}Hz)".format(self.IMG_FRAME_PER_SEC))
+                print(
+                    "[ERROR] in BaseAviary.__init__(), PyBullet and control frequencies incompatible with the desired video capture frame rate ({:f}Hz)".format(
+                        self.IMG_FRAME_PER_SEC
+                    )
+                )
                 exit()
             if self.RECORD:
                 for i in range(self.NUM_DRONES):
-                    os.makedirs(os.path.dirname(self.ONBOARD_IMG_PATH + "/drone_" + str(i) + "/"), exist_ok=True)
+                    os.makedirs(
+                        os.path.dirname(
+                            self.ONBOARD_IMG_PATH + "/drone_" + str(i) + "/"
+                        ),
+                        exist_ok=True,
+                    )
         #### Connect to PyBullet ###################################
         if self.GUI:
             #### With debug GUI ########################################
             self.CLIENT = p.connect(p.GUI)  # p.connect(p.GUI, options="--opengl2")
-            for i in [p.COV_ENABLE_RGB_BUFFER_PREVIEW, p.COV_ENABLE_DEPTH_BUFFER_PREVIEW, p.COV_ENABLE_SEGMENTATION_MARK_PREVIEW]:
+            for i in [
+                p.COV_ENABLE_RGB_BUFFER_PREVIEW,
+                p.COV_ENABLE_DEPTH_BUFFER_PREVIEW,
+                p.COV_ENABLE_SEGMENTATION_MARK_PREVIEW,
+            ]:
                 p.configureDebugVisualizer(i, 0, physicsClientId=self.CLIENT)
-            p.resetDebugVisualizerCamera(cameraDistance=4, cameraYaw=0, cameraPitch=-89, cameraTargetPosition=[1.5, 1.5, 0], physicsClientId=self.CLIENT)
+            p.resetDebugVisualizerCamera(
+                cameraDistance=4,
+                cameraYaw=0,
+                cameraPitch=-89,
+                cameraTargetPosition=[1.5, 1.5, 0],
+                physicsClientId=self.CLIENT,
+            )
             ret = p.getDebugVisualizerCamera(physicsClientId=self.CLIENT)
             print("viewMatrix", ret[2])
             print("projectionMatrix", ret[3])
@@ -334,8 +399,16 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 #### Add input sliders to the GUI ##########################
                 self.SLIDERS = -1 * np.ones(4)
                 for i in range(4):
-                    self.SLIDERS[i] = p.addUserDebugParameter("Propeller " + str(i) + " RPM", 0, self.MAX_RPM, self.HOVER_RPM, physicsClientId=self.CLIENT)
-                self.INPUT_SWITCH = p.addUserDebugParameter("Use GUI RPM", 9999, -1, 0, physicsClientId=self.CLIENT)
+                    self.SLIDERS[i] = p.addUserDebugParameter(
+                        "Propeller " + str(i) + " RPM",
+                        0,
+                        self.MAX_RPM,
+                        self.HOVER_RPM,
+                        physicsClientId=self.CLIENT,
+                    )
+                self.INPUT_SWITCH = p.addUserDebugParameter(
+                    "Use GUI RPM", 9999, -1, 0, physicsClientId=self.CLIENT
+                )
         else:
             #### Without debug GUI #####################################
             self.CLIENT = p.connect(p.DIRECT)
@@ -348,8 +421,21 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 self.VID_HEIGHT = int(480)
                 self.FRAME_PER_SEC = 24
                 self.CAPTURE_FREQ = int(self.PYB_FREQ / self.FRAME_PER_SEC)
-                self.CAM_VIEW = p.computeViewMatrixFromYawPitchRoll(distance=3, yaw=-30, pitch=-30, roll=0, cameraTargetPosition=[0, 0, 0], upAxisIndex=2, physicsClientId=self.CLIENT)
-                self.CAM_PRO = p.computeProjectionMatrixFOV(fov=60.0, aspect=self.VID_WIDTH / self.VID_HEIGHT, nearVal=0.1, farVal=1000.0)
+                self.CAM_VIEW = p.computeViewMatrixFromYawPitchRoll(
+                    distance=3,
+                    yaw=-30,
+                    pitch=-30,
+                    roll=0,
+                    cameraTargetPosition=[0, 0, 0],
+                    upAxisIndex=2,
+                    physicsClientId=self.CLIENT,
+                )
+                self.CAM_PRO = p.computeProjectionMatrixFOV(
+                    fov=60.0,
+                    aspect=self.VID_WIDTH / self.VID_HEIGHT,
+                    nearVal=0.1,
+                    farVal=1000.0,
+                )
 
         if self.ADVANCED_STATUS_PLOT:
             # Matplotlib Setup für Live-Plot
@@ -360,10 +446,14 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             self.step_reward_vals = []  # Reward des aktuellen Schritts
             self.total_reward_vals = []  # Gesamtreward
 
-            (self.line_wall_distance,) = self.ax.plot([], [], "b-", label="Abstand zur Wand [m]")
+            (self.line_wall_distance,) = self.ax.plot(
+                [], [], "b-", label="Abstand zur Wand [m]"
+            )
             (self.line_action,) = self.ax.plot([], [], "g-", label="Aktion (1, 0, -1)")
             (self.line_step_reward,) = self.ax.plot([], [], "r-", label="Step Reward")
-            (self.line_total_reward,) = self.ax.plot([], [], "orange", label="Gesamtreward")
+            (self.line_total_reward,) = self.ax.plot(
+                [], [], "orange", label="Gesamtreward"
+            )
 
             self.ax.set_xlim(0, 100)  # X-Achse für 100 Zeitschritte
             self.ax.set_ylim(-5, 5)  # Skalierung für die verschiedenen Werte
@@ -373,20 +463,27 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             plt.ion()  # Interaktiver Modus für Live-Update
 
         #### Set initial poses #####################################
-        
+
         if self.INIT_XYZS is None:
-            print("[ERROR] invalid initial_xyzs in BaseAviary.__init__(), try initial_xyzs.reshape(NUM_DRONES,3)")
+            print(
+                "[ERROR] invalid initial_xyzs in BaseAviary.__init__(), try initial_xyzs.reshape(NUM_DRONES,3)"
+            )
         if initial_rpys is None:
             self.INIT_RPYS = np.zeros((self.NUM_DRONES, 3))
         elif np.array(initial_rpys).shape == (self.NUM_DRONES, 3):
             self.INIT_RPYS = initial_rpys
         else:
-            print("[ERROR] invalid initial_rpys in BaseAviary.__init__(), try initial_rpys.reshape(NUM_DRONES,3)")
+            print(
+                "[ERROR] invalid initial_rpys in BaseAviary.__init__(), try initial_rpys.reshape(NUM_DRONES,3)"
+            )
         #### Create action and observation spaces ##################
         self.action_space = self._actionSpace()
         self.observation_space = self._observationSpace()
         #### Housekeeping ##########################################
-        print(self.Maze_number, "-------------------------------INIT MAZE NUMMER-----------------------------")
+        print(
+            self.Maze_number,
+            "-------------------------------INIT MAZE NUMMER-----------------------------",
+        )
         self._housekeeping()
 
         #### Update and store the drones kinematic information #####
@@ -417,22 +514,57 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             )
 
             @self.app.callback(
-                [Output("live-map", "figure"), Output("observation-channels", "figure"), Output("reward-bar-chart", "figure"), Output("current-total-reward", "children")],
+                [
+                    Output("live-map", "figure"),
+                    Output("observation-channels", "figure"),
+                    Output("reward-bar-chart", "figure"),
+                    Output("current-total-reward", "children"),
+                ],
                 [Input("interval-component", "n_intervals")],
             )
             def update_graph(n):
                 # Create reward/best way map figure
-                fig = make_subplots(rows=1, cols=2, subplot_titles=("Reward Map", "Best Way Map"))
-                fig.add_trace(go.Heatmap(z=self.reward_map, colorscale="Viridis", showscale=True, name="Reward Map"), row=1, col=1)
-                fig.add_trace(go.Heatmap(z=self.best_way_map, colorscale="Viridis", showscale=True, name="Best Way Map"), row=1, col=2)
-                fig.update_layout(height=600, title_text="Maze Training Visualization", showlegend=True)
+                fig = make_subplots(
+                    rows=1, cols=2, subplot_titles=("Reward Map", "Best Way Map")
+                )
+                fig.add_trace(
+                    go.Heatmap(
+                        z=self.reward_map,
+                        colorscale="Viridis",
+                        showscale=True,
+                        name="Reward Map",
+                    ),
+                    row=1,
+                    col=1,
+                )
+                fig.add_trace(
+                    go.Heatmap(
+                        z=self.best_way_map,
+                        colorscale="Viridis",
+                        showscale=True,
+                        name="Best Way Map",
+                    ),
+                    row=1,
+                    col=2,
+                )
+                fig.update_layout(
+                    height=600,
+                    title_text="Maze Training Visualization",
+                    showlegend=True,
+                )
 
                 # Get current observation channels
                 obs = self._computeObs()
 
                 # Create observation channels figure with SLAM map on left and values on right
                 obs_fig = make_subplots(
-                    rows=1, cols=2, column_widths=[0.5, 0.5], subplot_titles=("Normalized SLAM Map", "Legend & Values"), specs=[[{"type": "heatmap"}, {"type": "table"}]]  # Make columns equal width
+                    rows=1,
+                    cols=2,
+                    column_widths=[0.5, 0.5],
+                    subplot_titles=("Normalized SLAM Map", "Legend & Values"),
+                    specs=[
+                        [{"type": "heatmap"}, {"type": "table"}]
+                    ],  # Make columns equal width
                 )
 
                 # Add SLAM map heatmap
@@ -445,7 +577,12 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 obs_fig.add_trace(
                     go.Heatmap(
                         z=obs[0].tolist(),
-                        colorscale=[[0, "rgb(0,0,0)"], [0.2, "rgb(128,128,128)"], [0.5, "rgb(255,165,0)"], [0.9, "rgb(255,255,255)"]],  # Wall (0.0)  # Unknown (0.2)  # Visited (0.5)  # Free (0.9)
+                        colorscale=[
+                            [0, "rgb(0,0,0)"],
+                            [0.2, "rgb(128,128,128)"],
+                            [0.5, "rgb(255,165,0)"],
+                            [0.9, "rgb(255,255,255)"],
+                        ],  # Wall (0.0)  # Unknown (0.2)  # Visited (0.5)  # Free (0.9)
                         showscale=False,
                         name="SLAM Map",
                     ),
@@ -459,8 +596,28 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                         header=dict(values=["Type", "Description"]),
                         cells=dict(
                             values=[
-                                ["Wall", "Unknown", "Visited", "Free", "", "Position X", "Position Y", "sin(yaw)", "cos(yaw)"],
-                                ["Black (0.0)", "Gray (0.2)", "Orange (0.5)", "White (0.9)", "", f"{obs[1][0][0]:.3f}", f"{obs[2][0][0]:.3f}", f"{obs[3][0][0]:.3f}", f"{obs[4][0][0]:.3f}"],
+                                [
+                                    "Wall",
+                                    "Unknown",
+                                    "Visited",
+                                    "Free",
+                                    "",
+                                    "Position X",
+                                    "Position Y",
+                                    "sin(yaw)",
+                                    "cos(yaw)",
+                                ],
+                                [
+                                    "Black (0.0)",
+                                    "Gray (0.2)",
+                                    "Orange (0.5)",
+                                    "White (0.9)",
+                                    "",
+                                    f"{obs[1][0][0]:.3f}",
+                                    f"{obs[2][0][0]:.3f}",
+                                    f"{obs[3][0][0]:.3f}",
+                                    f"{obs[4][0][0]:.3f}",
+                                ],
                             ]
                         ),
                     ),
@@ -468,11 +625,23 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                     col=2,
                 )
 
-                obs_fig.update_layout(height=600, title_text="Observation Channels", showlegend=False)  # Make it square
+                obs_fig.update_layout(
+                    height=600, title_text="Observation Channels", showlegend=False
+                )  # Make it square
 
                 # Create reward components bar chart
-                bar_chart = go.Figure(go.Bar(x=list(self.reward_components.keys()), y=list(self.reward_components.values()), marker_color="royalblue"))
-                bar_chart.update_layout(title_text="Current Reward Components", xaxis_title="Reward Type", yaxis_title="Reward Value")
+                bar_chart = go.Figure(
+                    go.Bar(
+                        x=list(self.reward_components.keys()),
+                        y=list(self.reward_components.values()),
+                        marker_color="royalblue",
+                    )
+                )
+                bar_chart.update_layout(
+                    title_text="Current Reward Components",
+                    xaxis_title="Reward Type",
+                    yaxis_title="Reward Value",
+                )
 
                 # Initialize last_total_reward if not set
                 if not hasattr(self, "last_total_reward"):
@@ -483,7 +652,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 return fig, obs_fig, bar_chart, current_reward_text
 
             def is_port_in_use(port):
-                with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+                with contextlib.closing(
+                    socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                ) as s:
                     return s.connect_ex(("localhost", port)) == 0
 
             # Start Dash server in background thread
@@ -535,23 +706,39 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             # self.Maze_number = np.random.choice((1, 20))
             self.Maze_number = 21
 
-            
-            print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
+            print(
+                f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------"
+            )
             self.New_Maze_number_counter = 0
         else:
             self.New_Maze_number_counter += 1
-            print(f"--------------------------MAZE_NUMBER: {self.Maze_number}---------------------------------------")
-            print(f"--------------------------MAZE_NUMBER_Counter: { self.New_Maze_number_counter}---------------------------------------")
+            print(
+                f"--------------------------MAZE_NUMBER: {self.Maze_number}---------------------------------------"
+            )
+            print(
+                f"--------------------------MAZE_NUMBER_Counter: { self.New_Maze_number_counter}---------------------------------------"
+            )
 
         p.resetSimulation(physicsClientId=self.CLIENT)
 
-        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6" and self.New_Maze_number_counter == 0:
+        if (
+            self.OBSERVATION_TYPE == "O4"
+            or self.OBSERVATION_TYPE == "O7"
+            or self.OBSERVATION_TYPE == "O6"
+            and self.New_Maze_number_counter == 0
+        ):
             # Initialize SLAM before calling the parent constructor
-            self.slam = SimpleSlam(map_size=self.map_size_slam, resolution=self.resolution_slam, init_position=self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0:2])  # 10m x 10m map with 10cm resolution
+            self.slam = SimpleSlam(
+                map_size=self.map_size_slam,
+                resolution=self.resolution_slam,
+                init_position=self.INIT_XYZS[f"map{self.Maze_number}"][0][
+                    self.random_number_Start
+                ][0:2],
+            )  # 10m x 10m map with 10cm resolution
             self.grid_size = int(self.map_size_slam / self.resolution_slam)
 
         self.too_close_to_wall_counter = 0
-        #self.Terminated_Truncated_Counter = 0
+        # self.Terminated_Truncated_Counter = 0
         self.previous_Procent = 0.3
 
         #### Housekeeping ##########################################
@@ -567,7 +754,11 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         initial_obs = self._computeObs()
         initial_info = self._computeInfo()
 
-        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6":
+        if (
+            self.OBSERVATION_TYPE == "O4"
+            or self.OBSERVATION_TYPE == "O7"
+            or self.OBSERVATION_TYPE == "O6"
+        ):
             self.slam.reset()  # TODO - Reset SLAM evtl. nicht in allen Modellen
 
         return initial_obs, initial_info
@@ -627,7 +818,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             4: np.array(
                 [[0, 0, 0, self.VelocityScale, 1 / 72 * np.pi]]
             ),  # 45° Left-Turn # NOTE - Tests mit 1/36*np.pi waren nicht so gut, da die Drohne scheinbar nicht verstanden hat, dass bei einer Drehung vorwärtsfliegen bedeutet
-            5: np.array([[0, 0, 0, self.VelocityScale, -1 / 72 * np.pi]]),  # 45° Right-Turn # NOTE - Ausgesetzt für Testzweicke 28.02.25
+            5: np.array(
+                [[0, 0, 0, self.VelocityScale, -1 / 72 * np.pi]]
+            ),  # 45° Right-Turn # NOTE - Ausgesetzt für Testzweicke 28.02.25
         }
 
         if self.step_counter == 0:
@@ -650,18 +843,33 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             self.action_change_because_of_Collision_Danger = False
 
             # Get movement direction based on action
-            input_action_local = action_to_movement_direction_local[actual_action_0_bis_8]
+            input_action_local = action_to_movement_direction_local[
+                actual_action_0_bis_8
+            ]
 
             # Convert quaternion to rotation matrix using NumPy
             rot_matrix = np.array(p.getMatrixFromQuaternion(state[3:7])).reshape(3, 3)
 
             # New Function to check for Collision Danger and change the action if necessary
-            self.action_change_because_of_Collision_Danger, action_with_or_without_Collision_Danger_correction = self._check_for_Collision_Danger(input_action_local)
+            (
+                self.action_change_because_of_Collision_Danger,
+                action_with_or_without_Collision_Danger_correction,
+            ) = self._check_for_Collision_Danger(input_action_local)
 
-            input_action_Velocity_World = rot_matrix.dot(action_with_or_without_Collision_Danger_correction[0][0:3])
+            input_action_Velocity_World = rot_matrix.dot(
+                action_with_or_without_Collision_Danger_correction[0][0:3]
+            )
 
             input_action_complete_world = np.array(
-                [np.concatenate((input_action_Velocity_World[0:2], np.array([0]), input_action_local[0][3:5]))]
+                [
+                    np.concatenate(
+                        (
+                            input_action_Velocity_World[0:2],
+                            np.array([0]),
+                            input_action_local[0][3:5],
+                        )
+                    )
+                ]
             )  # gedrehte x,y-Werte, z-Wert 0, yaw-Wert bleibt gleich
 
             action = input_action_complete_world
@@ -679,7 +887,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 flags=p.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX,
                 physicsClientId=self.CLIENT,
             )
-            (Image.fromarray(np.reshape(rgb, (h, w, 4)), "RGBA")).save(os.path.join(self.IMG_PATH, "frame_" + str(self.FRAME_NUM) + ".png"))
+            (Image.fromarray(np.reshape(rgb, (h, w, 4)), "RGBA")).save(
+                os.path.join(self.IMG_PATH, "frame_" + str(self.FRAME_NUM) + ".png")
+            )
             #### Save the depth or segmentation view instead #######
             # dep = ((dep-np.min(dep)) * 255 / (np.max(dep)-np.min(dep))).astype('uint8')
             # (Image.fromarray(np.reshape(dep, (h, w)))).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
@@ -698,13 +908,17 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                     )
         #### Read the GUI's input parameters #######################
         if self.GUI and self.USER_DEBUG:
-            current_input_switch = p.readUserDebugParameter(self.INPUT_SWITCH, physicsClientId=self.CLIENT)
+            current_input_switch = p.readUserDebugParameter(
+                self.INPUT_SWITCH, physicsClientId=self.CLIENT
+            )
             if current_input_switch > self.last_input_switch:
                 self.last_input_switch = current_input_switch
                 self.USE_GUI_RPM = True if self.USE_GUI_RPM == False else False
         if self.USE_GUI_RPM:
             for i in range(4):
-                self.gui_input[i] = p.readUserDebugParameter(int(self.SLIDERS[i]), physicsClientId=self.CLIENT)
+                self.gui_input[i] = p.readUserDebugParameter(
+                    int(self.SLIDERS[i]), physicsClientId=self.CLIENT
+                )
             clipped_action = np.tile(self.gui_input, (self.NUM_DRONES, 1))
             if self.step_counter % (self.PYB_FREQ / 2) == 0:
                 self.GUI_INPUT_TEXT = [
@@ -725,17 +939,27 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         #### Save, preprocess, and clip the action to the max. RPM #
 
         if self.CTRL_FREQ <= self.REWARD_AND_ACTION_CHANGE_FREQ:
-            print("Ctrl-Frequenz ist kleiner oder gleich als die Reward-/Action-Änderungsfrequenz -> Reward-Frequenz wird auf Ctrl-Frequenz gesetzt")
+            print(
+                "Ctrl-Frequenz ist kleiner oder gleich als die Reward-/Action-Änderungsfrequenz -> Reward-Frequenz wird auf Ctrl-Frequenz gesetzt"
+            )
 
             if not self.USE_GUI_RPM:
-                clipped_action = np.reshape(self._preprocessAction(action), (self.NUM_DRONES, 4))
+                clipped_action = np.reshape(
+                    self._preprocessAction(action), (self.NUM_DRONES, 4)
+                )
 
             #### Repeat for as many as the aggregate physics steps #####
             # loope Nachfolgend so oft, dass genau 1x die Ctrl-Frequenz erreicht wird und 1x der Controll aufgerufen wird
             for _ in range(self.PYB_STEPS_PER_CTRL):
                 #### Update and store the drones kinematic info for certain
                 #### Between aggregate steps for certain types of update ###
-                if self.PYB_STEPS_PER_CTRL > 1 and self.PHYSICS in [Physics.DYN, Physics.PYB_GND, Physics.PYB_DRAG, Physics.PYB_DW, Physics.PYB_GND_DRAG_DW]:
+                if self.PYB_STEPS_PER_CTRL > 1 and self.PHYSICS in [
+                    Physics.DYN,
+                    Physics.PYB_GND,
+                    Physics.PYB_DRAG,
+                    Physics.PYB_DW,
+                    Physics.PYB_GND_DRAG_DW,
+                ]:
                     self._updateAndStoreKinematicInformation()
                 #### Step the simulation using the desired physics update ##
                 for i in range(self.NUM_DRONES):
@@ -765,7 +989,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             #### Update and store the drones kinematic information #####
             self._updateAndStoreKinematicInformation()
 
-
             #### Kamera-Einstellungen, scheint aber nicht zu funktionieren (9.2)####
             # p.resetDebugVisualizerCamera(cameraDistance=3,
             #                              cameraYaw=self.rpy[0][2]-30,
@@ -784,16 +1007,27 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             self.PYB_STEPS_IN_ACTUAL_STEP_CALL = 0
 
             # wiederhole so lange die nachfolgende Loop, wie wir noch nicht an dem Zeitpunkt angekommen sind, dass wir den Reward an das RL zurückgeben
-            while self.PYB_STEPS_IN_ACTUAL_STEP_CALL < self.PYB_STEPS_PER_REWARD_AND_ACTION_CHANGE:  # Get new control action if needed
+            while (
+                self.PYB_STEPS_IN_ACTUAL_STEP_CALL
+                < self.PYB_STEPS_PER_REWARD_AND_ACTION_CHANGE
+            ):  # Get new control action if needed
 
                 if not self.USE_GUI_RPM:
-                    clipped_action = np.reshape(self._preprocessAction(action), (self.NUM_DRONES, 4))
+                    clipped_action = np.reshape(
+                        self._preprocessAction(action), (self.NUM_DRONES, 4)
+                    )
 
                 # Loop for physics frequency so oft, dass wir nach X-Physics-Schritten die Control-Frequenz erreichen und den Controller erneut aufrufen (eins höher in der Loop)
                 for _ in range(self.PYB_STEPS_PER_CTRL):
                     #### Update and store the drones kinematic info for certain
                     #### Between aggregate steps for certain types of update ###
-                    if self.PYB_STEPS_PER_CTRL > 1 and self.PHYSICS in [Physics.DYN, Physics.PYB_GND, Physics.PYB_DRAG, Physics.PYB_DW, Physics.PYB_GND_DRAG_DW]:
+                    if self.PYB_STEPS_PER_CTRL > 1 and self.PHYSICS in [
+                        Physics.DYN,
+                        Physics.PYB_GND,
+                        Physics.PYB_DRAG,
+                        Physics.PYB_DW,
+                        Physics.PYB_GND_DRAG_DW,
+                    ]:
                         self._updateAndStoreKinematicInformation()
                     #### Step the simulation using the desired physics update ##
                     for i in range(self.NUM_DRONES):
@@ -822,25 +1056,35 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                     self.last_clipped_action = clipped_action
 
                     self.PYB_STEPS_IN_ACTUAL_STEP_CALL += 1
-                    if self.PYB_STEPS_IN_ACTUAL_STEP_CALL == self.PYB_STEPS_PER_REWARD_AND_ACTION_CHANGE:
+                    if (
+                        self.PYB_STEPS_IN_ACTUAL_STEP_CALL
+                        == self.PYB_STEPS_PER_REWARD_AND_ACTION_CHANGE
+                    ):
                         #### Update and store the drones kinematic information #####
                         self._updateAndStoreKinematicInformation()
                         break
                 #### Update and store the drones kinematic information #####
                 self._updateAndStoreKinematicInformation()
 
-
-            
-
         #########################################################################################
         # SLAM-Update
         pos = state[0:3]
         yaw = state[9]  # Assuming this is the yaw angle
-        
-        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6":
-        
+
+        if (
+            self.OBSERVATION_TYPE == "O4"
+            or self.OBSERVATION_TYPE == "O7"
+            or self.OBSERVATION_TYPE == "O6"
+        ):
+
             # Get raycast results
-            raycast_results = {"front": state[21], "back": state[22], "left": state[23], "right": state[24], "up": state[25]}
+            raycast_results = {
+                "front": state[21],
+                "back": state[22],
+                "left": state[23],
+                "right": state[24],
+                "up": state[25],
+            }
 
             self.slam.update(pos, yaw, raycast_results)
             # Optional: Zum Debuggen kann man die Map visualisieren (aber im Training besser deaktiviert)
@@ -852,7 +1096,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         #### Prepare the return values #############################
         obs = self._computeObs()
-        reward = self._computeReward(self.Maze_number, self.random_number_Start, self.random_number_Target)
+        reward = self._computeReward(
+            self.Maze_number, self.random_number_Start, self.random_number_Target
+        )
         terminated, Grund_Terminated = self._computeTerminated()
         truncated, Grund_Truncated = self._computeTruncated()
         info = self._computeInfo()
@@ -860,10 +1106,18 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         state = self._getDroneStateVector(0)  # Einführung neuste
 
         # Erhöhe den Step-Counter für die Zählung der Momente, die zu nah an der Wand waren (in jeden Control-Freq.)
-        if self.distance_map[int(np.round(self.pos[0][0] / 0.05)), int(np.round(self.pos[0][1] / 0.05))] < 0.25:
+        if (
+            self.distance_map[
+                int(np.round(self.pos[0][0] / 0.05)),
+                int(np.round(self.pos[0][1] / 0.05)),
+            ]
+            < 0.25
+        ):
             self.too_close_to_wall_counter += 1
 
-        self.timestamp_actual = self.step_counter * self.PYB_TIMESTEP  # Use simulation time instead of real time
+        self.timestamp_actual = (
+            self.step_counter * self.PYB_TIMESTEP
+        )  # Use simulation time instead of real time
         if reward is not None:
             self.RewardCounterActualTrainRun += reward
 
@@ -874,23 +1128,35 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             # 19.3.25: EVENTUELL auskommentieren, da das ganze Ding rießig wird :0
             self.List_Of_Tuples_Of_Reward_And_Action.append((action[0][0], reward))
 
-            print("Trainingszeit aktueller Run(s):", "{:.3f}".format(self.timestamp_actual))
-            print(f" Observationspace (forward,backward, letzte Action (Velocity in X-Richtung!)):\t {state[21]} \t{state[22]} \t{state[26]}")
-            print(f"aktuelle Action (Velocity in X-Richtung!) / Reward für Action: {self.action[0][0]} / {reward}")
+            print(
+                "Trainingszeit aktueller Run(s):",
+                "{:.3f}".format(self.timestamp_actual),
+            )
+            print(
+                f" Observationspace (forward,backward, letzte Action (Velocity in X-Richtung!)):\t {state[21]} \t{state[22]} \t{state[26]}"
+            )
+            print(
+                f"aktuelle Action (Velocity in X-Richtung!) / Reward für Action: {self.action[0][0]} / {reward}"
+            )
             print(f"Reward aktueller Trainingslauf: {self.RewardCounterActualTrainRun}")
-            print(f"current Physics-Step / Reward-Steps: {self.step_counter} / {self.timestamp_actual/(1/self.REWARD_AND_ACTION_CHANGE_FREQ)}")
+            print(
+                f"current Physics-Step / Reward-Steps: {self.step_counter} / {self.timestamp_actual/(1/self.REWARD_AND_ACTION_CHANGE_FREQ)}"
+            )
             if truncated:
                 print(f"Grund für Truncated: {Grund_Truncated}")
-                print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
+                print(
+                    f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n"
+                )
             if terminated:
                 print(f"Grund für Terminated: {Grund_Terminated}")
-                print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
-
+                print(
+                    f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n"
+                )
 
         # Prozentsatz der erkundeten Fläche
         self.Ratio_Area = self.Area_counter / self.Area_counter_Max
         self.Ratio_Area = round(self.Ratio_Area, 2)  # Round to 2 decimal places
-        #Procent = Ratio_Area % self.Procent_Step
+        # Procent = Ratio_Area % self.Procent_Step
         # if Procent == 0:
         # if self.previous_Procent != self.Ratio_Area:
         #     print("Erkundete Fläche in Prozent", self.Ratio_Area * 100, "%")
@@ -898,14 +1164,14 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         # if self.step_counter % 1000 == 0:
         #     print(f"Erkundete Fläche in Prozent {self.Ratio_Area * 100}% ###### Anzahl der Steps, zu Nahe an der Wand: {self.too_close_to_wall_counter}")
-            
+
         # # # Save the reward map to a CSV file
         # if self.step_counter % 15000 == 0:
         #     output_folder = "gym_pybullet_drones/examples/MAZE_TRAINING/Explored_areas"
         #     os.makedirs(output_folder, exist_ok=True)
         #     timestamp = time.strftime("%Y%m%d-%H%M%S")
         #     output_path = os.path.join(output_folder, f"reward_map_{timestamp}.png")
-            
+
         #     plt.ioff()  # Turn off interactive mode
         #     plt.figure(figsize=(10, 10))
         #     plt.imshow(self.reward_map, cmap="viridis", origin="lower")
@@ -919,7 +1185,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # if self.GUI: #deaktiviert, damit der nachfolgende Plot immer kommt, auch wenn keine GUI eingeschaltet ist
         if truncated:
             # Zusammenfassung Trainingslauf
-            print(f"Zusammenfassung Trainingslauf Truncated (Grund: {Grund_Truncated}):")
+            print(
+                f"Zusammenfassung Trainingslauf Truncated (Grund: {Grund_Truncated}):"
+            )
             # Remove the redundant print(obs[0]) line
             print(
                 f"Observations: x,y,yaw: {state[0]:.3f}, {state[1]:.3f}, {state[9]:.3f}, RayFront/Back: {state[21]:.1f}, {state[22]:.1f}, RayLeft/Right: {state[23]:.1f}, {state[24]:.1f}, RayUp: {state[25]:.1f}"
@@ -928,28 +1196,49 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
             timestamp = time.strftime("%Y%m%d-%H%M%S")
             # Header für die dynamischen Daten (Trainingsergebnisse)
-            #header_training = ["Runde", "Terminated", "Truncated", "Map-Abgedeckt", "Wand berührungen", "Summe Reward", Maze_number, Uhrzeit]
-            training_daten = [self.Terminated_Truncated_Counter, "kein_Terminated", Grund_Truncated,  self.Ratio_Area, self.too_close_to_wall_counter, self.RewardCounterActualTrainRun, self.Maze_number, timestamp]
+            # header_training = ["Runde", "Terminated", "Truncated", "Map-Abgedeckt", "Wand berührungen", "Summe Reward", Maze_number, Uhrzeit]
+            training_daten = [
+                self.Terminated_Truncated_Counter,
+                "kein_Terminated",
+                Grund_Truncated,
+                self.Ratio_Area,
+                self.too_close_to_wall_counter,
+                self.RewardCounterActualTrainRun,
+                self.Maze_number,
+                timestamp,
+            ]
 
             # Aufruf zum Hinzufügen von Trainingsdaten
-            self.schreibe_csv(training_daten=training_daten, csv_datei=self.csv_file_path)
-            
-
+            self.schreibe_csv(
+                training_daten=training_daten, csv_datei=self.csv_file_path
+            )
 
         if terminated:
 
-            print(f"Zusammenfassung Trainingslauf Terminated (Grund: {Grund_Terminated}):")
+            print(
+                f"Zusammenfassung Trainingslauf Terminated (Grund: {Grund_Terminated}):"
+            )
             print(
                 f"Observations: x,y,yaw: {state[0]:.3f}, {state[1]:.3f}, {state[9]:.3f}, RayFront/Back: {state[21]:.1f}, {state[22]:.1f}, RayLeft/Right: {state[23]:.1f}, {state[24]:.1f}, RayUp: {state[25]:.1f}"
             )
             print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
 
             # Header für die dynamischen Daten (Trainingsergebnisse)
-            #header_training = ["Runde", "Terminated", "Truncated", "Map-Abgedeckt", "Wand berührungen", "Summe Reward", Maze_number]
-            training_daten = [self.Terminated_Truncated_Counter, Grund_Terminated, "kein_Truncared",  self.Ratio_Area, self.too_close_to_wall_counter, self.RewardCounterActualTrainRun, self.Maze_number]
+            # header_training = ["Runde", "Terminated", "Truncated", "Map-Abgedeckt", "Wand berührungen", "Summe Reward", Maze_number]
+            training_daten = [
+                self.Terminated_Truncated_Counter,
+                Grund_Terminated,
+                "kein_Truncared",
+                self.Ratio_Area,
+                self.too_close_to_wall_counter,
+                self.RewardCounterActualTrainRun,
+                self.Maze_number,
+            ]
 
             # Aufruf zum Hinzufügen von Trainingsdaten
-            self.schreibe_csv(training_daten=training_daten, csv_datei=self.csv_file_path)
+            self.schreibe_csv(
+                training_daten=training_daten, csv_datei=self.csv_file_path
+            )
 
         # nachfolgendes war nur zum Debugging der getDroneStateVector Funktion genutzt worden
         # ray_cast_readings = self.check_distance_sensors(0)
@@ -992,7 +1281,13 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
     def _update_camera(self):
         """Updates the camera to follow the drone."""
         state = self._getDroneStateVector(0)
-        p.resetDebugVisualizerCamera(cameraDistance=3, cameraYaw=0, cameraPitch=-89, cameraTargetPosition=[state[0], state[1], state[2]], physicsClientId=self.CLIENT)
+        p.resetDebugVisualizerCamera(
+            cameraDistance=3,
+            cameraYaw=0,
+            cameraPitch=-89,
+            cameraTargetPosition=[state[0], state[1], state[2]],
+            physicsClientId=self.CLIENT,
+        )
 
     #############################################################################
 
@@ -1047,22 +1342,43 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         drone_state = self._getDroneStateVector(0)
 
         if self.first_render_call and not self.GUI:
-            print("[WARNING] BaseAviary.render() is implemented as text-only, re-initialize the environment using Aviary(gui=True) to use PyBullet's graphical interface")
+            print(
+                "[WARNING] BaseAviary.render() is implemented as text-only, re-initialize the environment using Aviary(gui=True) to use PyBullet's graphical interface"
+            )
             self.first_render_call = False
         print(
             "\n[INFO] BaseAviary.render() ——— it {:04d}".format(self.step_counter),
             "——— wall-clock time {:.1f}s,".format(time.time() - self.RESET_TIME),
-            "simulation time {:.1f}s@{:d}Hz ({:.2f}x)".format(self.step_counter * self.PYB_TIMESTEP, self.PYB_FREQ, (self.step_counter * self.PYB_TIMESTEP) / (time.time() - self.RESET_TIME)),
+            "simulation time {:.1f}s@{:d}Hz ({:.2f}x)".format(
+                self.step_counter * self.PYB_TIMESTEP,
+                self.PYB_FREQ,
+                (self.step_counter * self.PYB_TIMESTEP)
+                / (time.time() - self.RESET_TIME),
+            ),
         )
         for i in range(self.NUM_DRONES):
             print(
                 "[INFO] BaseAviary.render() ——— drone {:d}".format(i),
-                "——— x {:+06.2f}, y {:+06.2f}, z {:+06.2f}".format(self.pos[i, 0], self.pos[i, 1], self.pos[i, 2]),
-                "——— velocity {:+06.2f}, {:+06.2f}, {:+06.2f}".format(self.vel[i, 0], self.vel[i, 1], self.vel[i, 2]),
-                "——— roll {:+06.2f}, pitch {:+06.2f}, yaw {:+06.2f}".format(self.rpy[i, 0] * self.RAD2DEG, self.rpy[i, 1] * self.RAD2DEG, self.rpy[i, 2] * self.RAD2DEG),
-                "——— angular velocity {:+06.4f}, {:+06.4f}, {:+06.4f} ——— ".format(self.ang_v[i, 0], self.ang_v[i, 1], self.ang_v[i, 2]),
+                "——— x {:+06.2f}, y {:+06.2f}, z {:+06.2f}".format(
+                    self.pos[i, 0], self.pos[i, 1], self.pos[i, 2]
+                ),
+                "——— velocity {:+06.2f}, {:+06.2f}, {:+06.2f}".format(
+                    self.vel[i, 0], self.vel[i, 1], self.vel[i, 2]
+                ),
+                "——— roll {:+06.2f}, pitch {:+06.2f}, yaw {:+06.2f}".format(
+                    self.rpy[i, 0] * self.RAD2DEG,
+                    self.rpy[i, 1] * self.RAD2DEG,
+                    self.rpy[i, 2] * self.RAD2DEG,
+                ),
+                "——— angular velocity {:+06.4f}, {:+06.4f}, {:+06.4f} ——— ".format(
+                    self.ang_v[i, 0], self.ang_v[i, 1], self.ang_v[i, 2]
+                ),
                 "——— ray_front {:+06.4f}\t ray_back {:+06.4f}\t ray_left {:+06.4f}\t ray_right {:+06.4f}\t ray_top {:+06.4f} ——— ".format(
-                    drone_state[20], drone_state[21], drone_state[22], drone_state[23], drone_state[24]
+                    drone_state[20],
+                    drone_state[21],
+                    drone_state[22],
+                    drone_state[23],
+                    drone_state[24],
                 ),
             )
 
@@ -1120,7 +1436,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.GUI_INPUT_TEXT = -1 * np.ones(self.NUM_DRONES)
         self.USE_GUI_RPM = False
         self.last_input_switch = 0
-        self.last_clipped_action = np.zeros((self.NUM_DRONES, 4))  # 4 Werte da das die PRMs der 4 Motoren der letzten Aktion sind
+        self.last_clipped_action = np.zeros(
+            (self.NUM_DRONES, 4)
+        )  # 4 Werte da das die PRMs der 4 Motoren der letzten Aktion sind
         self.gui_input = np.zeros(4)
         #### Initialize the drones kinemaatic information ##########
         self.pos = np.zeros((self.NUM_DRONES, 3))
@@ -1134,7 +1452,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         p.setGravity(0, 0, -self.G, physicsClientId=self.CLIENT)
         p.setRealTimeSimulation(0, physicsClientId=self.CLIENT)
         p.setTimeStep(self.PYB_TIMESTEP, physicsClientId=self.CLIENT)
-        p.setAdditionalSearchPath(pybullet_data.getDataPath(), physicsClientId=self.CLIENT)
+        p.setAdditionalSearchPath(
+            pybullet_data.getDataPath(), physicsClientId=self.CLIENT
+        )
         #### Load ground plane, drone and obstacles models #########
         self.PLANE_ID = p.loadURDF("plane.urdf", physicsClientId=self.CLIENT)
 
@@ -1145,21 +1465,28 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 self.random_number_Start = np.random.randint(0, 10)
                 if self.random_number_Start != self.random_number_Target:
                     break
-                
 
             Start_Position_swapped = [0, 0, 0.5]  # NOTE - TARGET POSITION FIX
             if self.Maze_number == 0:
-                Start_Position = self.INIT_XYZS[f"map{self.Maze_number+1}"][0][self.random_number_Start][0:2]
+                Start_Position = self.INIT_XYZS[f"map{self.Maze_number+1}"][0][
+                    self.random_number_Start
+                ][0:2]
             else:
-                Start_Position = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0:2]
+                Start_Position = self.INIT_XYZS[f"map{self.Maze_number}"][0][
+                    self.random_number_Start
+                ][0:2]
             Start_Position_swapped[1] = Start_Position[0]
             Start_Position_swapped[0] = Start_Position[1]
         else:
             Start_Position_swapped = [0, 0, 0.5]
             if self.Maze_number == 0:
-                Start_Position = self.INIT_XYZS[f"map{self.Maze_number+1}"][0][self.random_number_Start][0:2]
+                Start_Position = self.INIT_XYZS[f"map{self.Maze_number+1}"][0][
+                    self.random_number_Start
+                ][0:2]
             else:
-                Start_Position = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0:2]
+                Start_Position = self.INIT_XYZS[f"map{self.Maze_number}"][0][
+                    self.random_number_Start
+                ][0:2]
             Start_Position_swapped[1] = Start_Position[0]
             Start_Position_swapped[0] = Start_Position[1]
 
@@ -1167,7 +1494,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.DRONE_IDS = np.array(
             [
                 p.loadURDF(
-                    pkg_resources.resource_filename("gym_pybullet_drones", "assets/" + self.URDF),
+                    pkg_resources.resource_filename(
+                        "gym_pybullet_drones", "assets/" + self.URDF
+                    ),
                     Start_Position_swapped,
                     p.getQuaternionFromEuler(self.INIT_RPYS[i, :]),
                     flags=p.URDF_USE_INERTIA_FROM_FILE,
@@ -1201,9 +1530,13 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         """
         for i in range(self.NUM_DRONES):
-            self.pos[i], self.quat[i] = p.getBasePositionAndOrientation(self.DRONE_IDS[i], physicsClientId=self.CLIENT)
+            self.pos[i], self.quat[i] = p.getBasePositionAndOrientation(
+                self.DRONE_IDS[i], physicsClientId=self.CLIENT
+            )
             self.rpy[i] = p.getEulerFromQuaternion(self.quat[i])
-            self.vel[i], self.ang_v[i] = p.getBaseVelocity(self.DRONE_IDS[i], physicsClientId=self.CLIENT)
+            self.vel[i], self.ang_v[i] = p.getBaseVelocity(
+                self.DRONE_IDS[i], physicsClientId=self.CLIENT
+            )
 
     ################################################################################
 
@@ -1215,11 +1548,20 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         """
         if self.RECORD and self.GUI:
             self.VIDEO_ID = p.startStateLogging(
-                loggingType=p.STATE_LOGGING_VIDEO_MP4, fileName=os.path.join(self.OUTPUT_FOLDER, "video-" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S") + ".mp4"), physicsClientId=self.CLIENT
+                loggingType=p.STATE_LOGGING_VIDEO_MP4,
+                fileName=os.path.join(
+                    self.OUTPUT_FOLDER,
+                    "video-" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S") + ".mp4",
+                ),
+                physicsClientId=self.CLIENT,
             )
         if self.RECORD and not self.GUI:
             self.FRAME_NUM = 0
-            self.IMG_PATH = os.path.join(self.OUTPUT_FOLDER, "recording_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"), "")
+            self.IMG_PATH = os.path.join(
+                self.OUTPUT_FOLDER,
+                "recording_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"),
+                "",
+            )
             os.makedirs(os.path.dirname(self.IMG_PATH), exist_ok=True)
 
     ################################################################################
@@ -1248,7 +1590,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         """
         # match MODEL_Version:
         # case "M1":  # M1: PPO
-        self.ray_results_actual = self.check_distance_sensors(nth_drone)  # get new actual raycast readings
+        self.ray_results_actual = self.check_distance_sensors(
+            nth_drone
+        )  # get new actual raycast readings
 
         # if hasattr(self, "action"):
         #     last_action_VEL_1 = self.action[0][0]
@@ -1276,7 +1620,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 self.ray_results_actual[2],  # left [23]
                 self.ray_results_actual[3],  # right [24]
                 self.ray_results_actual[4],  # up [25]
-                # last_action_VEL_1, 
+                # last_action_VEL_1,
                 # last_action_VEL_2,
                 # last_action_VEL_3
             ]
@@ -1310,16 +1654,39 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         """
         if self.IMG_RES is None:
-            print("[ERROR] in BaseAviary._getDroneImages(), remember to set self.IMG_RES to np.array([width, height])")
+            print(
+                "[ERROR] in BaseAviary._getDroneImages(), remember to set self.IMG_RES to np.array([width, height])"
+            )
             exit()
-        rot_mat = np.array(p.getMatrixFromQuaternion(self.quat[nth_drone, :])).reshape(3, 3)
+        rot_mat = np.array(p.getMatrixFromQuaternion(self.quat[nth_drone, :])).reshape(
+            3, 3
+        )
         #### Set target point, camera view and projection matrices #
-        target = np.dot(rot_mat, np.array([1000, 0, 0])) + np.array(self.pos[nth_drone, :])
-        DRONE_CAM_VIEW = p.computeViewMatrix(cameraEyePosition=self.pos[nth_drone, :] + np.array([0, 0, self.L]), cameraTargetPosition=target, cameraUpVector=[0, 0, 1], physicsClientId=self.CLIENT)
-        DRONE_CAM_PRO = p.computeProjectionMatrixFOV(fov=60.0, aspect=1.0, nearVal=self.L, farVal=1000.0)
-        SEG_FLAG = p.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX if segmentation else p.ER_NO_SEGMENTATION_MASK
+        target = np.dot(rot_mat, np.array([1000, 0, 0])) + np.array(
+            self.pos[nth_drone, :]
+        )
+        DRONE_CAM_VIEW = p.computeViewMatrix(
+            cameraEyePosition=self.pos[nth_drone, :] + np.array([0, 0, self.L]),
+            cameraTargetPosition=target,
+            cameraUpVector=[0, 0, 1],
+            physicsClientId=self.CLIENT,
+        )
+        DRONE_CAM_PRO = p.computeProjectionMatrixFOV(
+            fov=60.0, aspect=1.0, nearVal=self.L, farVal=1000.0
+        )
+        SEG_FLAG = (
+            p.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX
+            if segmentation
+            else p.ER_NO_SEGMENTATION_MASK
+        )
         [w, h, rgb, dep, seg] = p.getCameraImage(
-            width=self.IMG_RES[0], height=self.IMG_RES[1], shadow=1, viewMatrix=DRONE_CAM_VIEW, projectionMatrix=DRONE_CAM_PRO, flags=SEG_FLAG, physicsClientId=self.CLIENT
+            width=self.IMG_RES[0],
+            height=self.IMG_RES[1],
+            shadow=1,
+            viewMatrix=DRONE_CAM_VIEW,
+            projectionMatrix=DRONE_CAM_PRO,
+            flags=SEG_FLAG,
+            physicsClientId=self.CLIENT,
         )
         rgb = np.reshape(rgb, (h, w, 4))
         dep = np.reshape(dep, (h, w))
@@ -1328,7 +1695,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
     ################################################################################
 
-    def _exportImage(self, img_type: ImageType, img_input, path: str, frame_num: int = 0):
+    def _exportImage(
+        self, img_type: ImageType, img_input, path: str, frame_num: int = 0
+    ):
         """Returns camera captures from the n-th drone POV.
 
         Parameters
@@ -1345,18 +1714,30 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         """
         if img_type == ImageType.RGB:
-            (Image.fromarray(img_input.astype("uint8"), "RGBA")).save(os.path.join(path, "frame_" + str(frame_num) + ".png"))
+            (Image.fromarray(img_input.astype("uint8"), "RGBA")).save(
+                os.path.join(path, "frame_" + str(frame_num) + ".png")
+            )
         elif img_type == ImageType.DEP:
-            temp = ((img_input - np.min(img_input)) * 255 / (np.max(img_input) - np.min(img_input))).astype("uint8")
+            temp = (
+                (img_input - np.min(img_input))
+                * 255
+                / (np.max(img_input) - np.min(img_input))
+            ).astype("uint8")
         elif img_type == ImageType.SEG:
-            temp = ((img_input - np.min(img_input)) * 255 / (np.max(img_input) - np.min(img_input))).astype("uint8")
+            temp = (
+                (img_input - np.min(img_input))
+                * 255
+                / (np.max(img_input) - np.min(img_input))
+            ).astype("uint8")
         elif img_type == ImageType.BW:
             temp = (np.sum(img_input[:, :, 0:2], axis=2) / 3).astype("uint8")
         else:
             print("[ERROR] in BaseAviary._exportImage(), unknown ImageType")
             exit()
         if img_type != ImageType.RGB:
-            (Image.fromarray(temp)).save(os.path.join(path, "frame_" + str(frame_num) + ".png"))
+            (Image.fromarray(temp)).save(
+                os.path.join(path, "frame_" + str(frame_num) + ".png")
+            )
 
     ################################################################################
 
@@ -1375,7 +1756,10 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         adjacency_mat = np.identity(self.NUM_DRONES)
         for i in range(self.NUM_DRONES - 1):
             for j in range(self.NUM_DRONES - i - 1):
-                if np.linalg.norm(self.pos[i, :] - self.pos[j + i + 1, :]) < self.NEIGHBOURHOOD_RADIUS:
+                if (
+                    np.linalg.norm(self.pos[i, :] - self.pos[j + i + 1, :])
+                    < self.NEIGHBOURHOOD_RADIUS
+                ):
                     adjacency_mat[i, j + i + 1] = adjacency_mat[j + i + 1, i] = 1
         return adjacency_mat
 
@@ -1398,8 +1782,21 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             torques = -torques
         z_torque = -torques[0] + torques[1] - torques[2] + torques[3]
         for i in range(4):
-            p.applyExternalForce(self.DRONE_IDS[nth_drone], i, forceObj=[0, 0, forces[i]], posObj=[0, 0, 0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
-        p.applyExternalTorque(self.DRONE_IDS[nth_drone], 4, torqueObj=[0, 0, z_torque], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
+            p.applyExternalForce(
+                self.DRONE_IDS[nth_drone],
+                i,
+                forceObj=[0, 0, forces[i]],
+                posObj=[0, 0, 0],
+                flags=p.LINK_FRAME,
+                physicsClientId=self.CLIENT,
+            )
+        p.applyExternalTorque(
+            self.DRONE_IDS[nth_drone],
+            4,
+            torqueObj=[0, 0, z_torque],
+            flags=p.LINK_FRAME,
+            physicsClientId=self.CLIENT,
+        )
 
     ################################################################################
 
@@ -1417,14 +1814,42 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         """
         #### Kin. info of all links (propellers and center of mass)
-        link_states = p.getLinkStates(self.DRONE_IDS[nth_drone], linkIndices=[0, 1, 2, 3, 4], computeLinkVelocity=1, computeForwardKinematics=1, physicsClientId=self.CLIENT)
+        link_states = p.getLinkStates(
+            self.DRONE_IDS[nth_drone],
+            linkIndices=[0, 1, 2, 3, 4],
+            computeLinkVelocity=1,
+            computeForwardKinematics=1,
+            physicsClientId=self.CLIENT,
+        )
         #### Simple, per-propeller ground effects ##################
-        prop_heights = np.array([link_states[0][0][2], link_states[1][0][2], link_states[2][0][2], link_states[3][0][2]])
+        prop_heights = np.array(
+            [
+                link_states[0][0][2],
+                link_states[1][0][2],
+                link_states[2][0][2],
+                link_states[3][0][2],
+            ]
+        )
         prop_heights = np.clip(prop_heights, self.GND_EFF_H_CLIP, np.inf)
-        gnd_effects = np.array(rpm**2) * self.KF * self.GND_EFF_COEFF * (self.PROP_RADIUS / (4 * prop_heights)) ** 2
-        if np.abs(self.rpy[nth_drone, 0]) < np.pi / 2 and np.abs(self.rpy[nth_drone, 1]) < np.pi / 2:
+        gnd_effects = (
+            np.array(rpm**2)
+            * self.KF
+            * self.GND_EFF_COEFF
+            * (self.PROP_RADIUS / (4 * prop_heights)) ** 2
+        )
+        if (
+            np.abs(self.rpy[nth_drone, 0]) < np.pi / 2
+            and np.abs(self.rpy[nth_drone, 1]) < np.pi / 2
+        ):
             for i in range(4):
-                p.applyExternalForce(self.DRONE_IDS[nth_drone], i, forceObj=[0, 0, gnd_effects[i]], posObj=[0, 0, 0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
+                p.applyExternalForce(
+                    self.DRONE_IDS[nth_drone],
+                    i,
+                    forceObj=[0, 0, gnd_effects[i]],
+                    posObj=[0, 0, 0],
+                    flags=p.LINK_FRAME,
+                    physicsClientId=self.CLIENT,
+                )
 
     ################################################################################
 
@@ -1442,11 +1867,20 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         """
         #### Rotation matrix of the base ###########################
-        base_rot = np.array(p.getMatrixFromQuaternion(self.quat[nth_drone, :])).reshape(3, 3)
+        base_rot = np.array(p.getMatrixFromQuaternion(self.quat[nth_drone, :])).reshape(
+            3, 3
+        )
         #### Simple draft model applied to the base/center of mass #
         drag_factors = -1 * self.DRAG_COEFF * np.sum(np.array(2 * np.pi * rpm / 60))
         drag = np.dot(base_rot.T, drag_factors * np.array(self.vel[nth_drone, :]))
-        p.applyExternalForce(self.DRONE_IDS[nth_drone], 4, forceObj=drag, posObj=[0, 0, 0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
+        p.applyExternalForce(
+            self.DRONE_IDS[nth_drone],
+            4,
+            forceObj=drag,
+            posObj=[0, 0, 0],
+            flags=p.LINK_FRAME,
+            physicsClientId=self.CLIENT,
+        )
 
     ################################################################################
 
@@ -1463,12 +1897,21 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         """
         for i in range(self.NUM_DRONES):
             delta_z = self.pos[i, 2] - self.pos[nth_drone, 2]
-            delta_xy = np.linalg.norm(np.array(self.pos[i, 0:2]) - np.array(self.pos[nth_drone, 0:2]))
+            delta_xy = np.linalg.norm(
+                np.array(self.pos[i, 0:2]) - np.array(self.pos[nth_drone, 0:2])
+            )
             if delta_z > 0 and delta_xy < 10:  # Ignore drones more than 10 meters away
                 alpha = self.DW_COEFF_1 * (self.PROP_RADIUS / (4 * delta_z)) ** 2
                 beta = self.DW_COEFF_2 * delta_z + self.DW_COEFF_3
                 downwash = [0, 0, -alpha * np.exp(-0.5 * (delta_xy / beta) ** 2)]
-                p.applyExternalForce(self.DRONE_IDS[nth_drone], 4, forceObj=downwash, posObj=[0, 0, 0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
+                p.applyExternalForce(
+                    self.DRONE_IDS[nth_drone],
+                    4,
+                    forceObj=downwash,
+                    posObj=[0, 0, 0],
+                    flags=p.LINK_FRAME,
+                    physicsClientId=self.CLIENT,
+                )
 
     ################################################################################
 
@@ -1501,8 +1944,12 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             z_torques = -z_torques
         z_torque = -z_torques[0] + z_torques[1] - z_torques[2] + z_torques[3]
         if self.DRONE_MODEL == DroneModel.CF2X or self.DRONE_MODEL == DroneModel.RACE:
-            x_torque = (forces[0] + forces[1] - forces[2] - forces[3]) * (self.L / np.sqrt(2))
-            y_torque = (-forces[0] + forces[1] + forces[2] - forces[3]) * (self.L / np.sqrt(2))
+            x_torque = (forces[0] + forces[1] - forces[2] - forces[3]) * (
+                self.L / np.sqrt(2)
+            )
+            y_torque = (-forces[0] + forces[1] + forces[2] - forces[3]) * (
+                self.L / np.sqrt(2)
+            )
         elif self.DRONE_MODEL == DroneModel.CF2P:
             x_torque = (forces[1] - forces[3]) * self.L
             y_torque = (-forces[0] + forces[2]) * self.L
@@ -1516,9 +1963,16 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         pos = pos + self.PYB_TIMESTEP * vel
         quat = self._integrateQ(quat, rpy_rates, self.PYB_TIMESTEP)
         #### Set PyBullet's state ##################################
-        p.resetBasePositionAndOrientation(self.DRONE_IDS[nth_drone], pos, quat, physicsClientId=self.CLIENT)
+        p.resetBasePositionAndOrientation(
+            self.DRONE_IDS[nth_drone], pos, quat, physicsClientId=self.CLIENT
+        )
         #### Note: the base's velocity only stored and not used ####
-        p.resetBaseVelocity(self.DRONE_IDS[nth_drone], vel, np.dot(rotation, rpy_rates), physicsClientId=self.CLIENT)
+        p.resetBaseVelocity(
+            self.DRONE_IDS[nth_drone],
+            vel,
+            np.dot(rotation, rpy_rates),
+            physicsClientId=self.CLIENT,
+        )
         #### Store the roll, pitch, yaw rates for the next step ####
         self.rpy_rates[nth_drone, :] = rpy_rates
 
@@ -1527,9 +1981,14 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         p, q, r = omega
         if np.isclose(omega_norm, 0):
             return quat
-        lambda_ = np.array([[0, r, -q, p], [-r, 0, p, q], [q, -p, 0, r], [-p, -q, -r, 0]]) * 0.5
+        lambda_ = (
+            np.array([[0, r, -q, p], [-r, 0, p, q], [q, -p, 0, r], [-p, -q, -r, 0]])
+            * 0.5
+        )
         theta = omega_norm * dt / 2
-        quat = np.dot(np.eye(4) * np.cos(theta) + 2 / omega_norm * lambda_ * np.sin(theta), quat)
+        quat = np.dot(
+            np.eye(4) * np.cos(theta) + 2 / omega_norm * lambda_ * np.sin(theta), quat
+        )
         return quat
 
     ################################################################################
@@ -1549,8 +2008,16 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         """
         if np.any(np.abs(action) > 1):
-            print("\n[ERROR] it", self.step_counter, "in BaseAviary._normalizedActionToRPM(), out-of-bound action")
-        return np.where(action <= 0, (action + 1) * self.HOVER_RPM, self.HOVER_RPM + (self.MAX_RPM - self.HOVER_RPM) * action)  # Non-linear mapping: -1 -> 0, 0 -> HOVER_RPM, 1 -> MAX_RPM`
+            print(
+                "\n[ERROR] it",
+                self.step_counter,
+                "in BaseAviary._normalizedActionToRPM(), out-of-bound action",
+            )
+        return np.where(
+            action <= 0,
+            (action + 1) * self.HOVER_RPM,
+            self.HOVER_RPM + (self.MAX_RPM - self.HOVER_RPM) * action,
+        )  # Non-linear mapping: -1 -> 0, 0 -> HOVER_RPM, 1 -> MAX_RPM`
 
     ################################################################################
 
@@ -1611,24 +2078,38 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
             targetPosition_swapped = [0, 0, 1]  # NOTE - TARGET POSITION FIX
             if self.Maze_number == 0:
-                targetPosition = self.TARGET_POSITION[f"map{self.Maze_number+1}"][0][self.random_number_Target][0:2]
+                targetPosition = self.TARGET_POSITION[f"map{self.Maze_number+1}"][0][
+                    self.random_number_Target
+                ][0:2]
             else:
-                targetPosition = self.TARGET_POSITION[f"map{self.Maze_number}"][0][self.random_number_Target][0:2]
+                targetPosition = self.TARGET_POSITION[f"map{self.Maze_number}"][0][
+                    self.random_number_Target
+                ][0:2]
             targetPosition_swapped[1] = targetPosition[0]
             targetPosition_swapped[0] = targetPosition[1]
         else:
             targetPosition_swapped = [0, 0, 1]  # NOTE - TARGET POSITION FIX
             if self.Maze_number == 0:
-                targetPosition = self.TARGET_POSITION[f"map{self.Maze_number+1}"][0][self.random_number_Target][0:2]
+                targetPosition = self.TARGET_POSITION[f"map{self.Maze_number+1}"][0][
+                    self.random_number_Target
+                ][0:2]
             else:
-                targetPosition = self.TARGET_POSITION[f"map{self.Maze_number}"][0][self.random_number_Target][0:2]
+                targetPosition = self.TARGET_POSITION[f"map{self.Maze_number}"][0][
+                    self.random_number_Target
+                ][0:2]
             targetPosition_swapped[1] = targetPosition[0]
             targetPosition_swapped[0] = targetPosition[1]
 
         # print(f"Target_Position_swapped: {targetPosition_swapped}")
 
         # p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/train_square.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
-        p.loadURDF(pkg_resources.resource_filename("gym_pybullet_drones", f"assets/maze/map_{self.Maze_number}.urdf"), physicsClientId=self.CLIENT, useFixedBase=True)
+        p.loadURDF(
+            pkg_resources.resource_filename(
+                "gym_pybullet_drones", f"assets/maze/map_{self.Maze_number}.urdf"
+            ),
+            physicsClientId=self.CLIENT,
+            useFixedBase=True,
+        )
 
         # NOTE - 19.3.2025: TARGET ENTFERNT
         # p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/target.urdf'),
@@ -1670,7 +2151,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         """
 
         drone_id = nth_drone + 1  # nth_drone is 0-based, but the drone IDs are 1-based
-        pos, ori = p.getBasePositionAndOrientation(drone_id, physicsClientId=self.CLIENT)
+        pos, ori = p.getBasePositionAndOrientation(
+            drone_id, physicsClientId=self.CLIENT
+        )
 
         local_directions = np.array(
             [
@@ -1717,7 +2200,11 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         files in folder `assets/`.
 
         """
-        URDF_TREE = etxml.parse(pkg_resources.resource_filename("gym_pybullet_drones", "assets/" + self.URDF)).getroot()
+        URDF_TREE = etxml.parse(
+            pkg_resources.resource_filename(
+                "gym_pybullet_drones", "assets/" + self.URDF
+            )
+        ).getroot()
         M = float(URDF_TREE[1][0][1].attrib["value"])
         L = float(URDF_TREE[0].attrib["arm"])
         THRUST2WEIGHT_RATIO = float(URDF_TREE[0].attrib["thrust2weight"])
@@ -1730,7 +2217,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         KM = float(URDF_TREE[0].attrib["km"])
         COLLISION_H = float(URDF_TREE[1][2][1][0].attrib["length"])
         COLLISION_R = float(URDF_TREE[1][2][1][0].attrib["radius"])
-        COLLISION_SHAPE_OFFSETS = [float(s) for s in URDF_TREE[1][2][0].attrib["xyz"].split(" ")]
+        COLLISION_SHAPE_OFFSETS = [
+            float(s) for s in URDF_TREE[1][2][0].attrib["xyz"].split(" ")
+        ]
         COLLISION_Z_OFFSET = COLLISION_SHAPE_OFFSETS[2]
         MAX_SPEED_KMH = float(URDF_TREE[0].attrib["max_speed_kmh"])
         GND_EFF_COEFF = float(URDF_TREE[0].attrib["gnd_eff_coeff"])
@@ -1741,7 +2230,25 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         DW_COEFF_1 = float(URDF_TREE[0].attrib["dw_coeff_1"])
         DW_COEFF_2 = float(URDF_TREE[0].attrib["dw_coeff_2"])
         DW_COEFF_3 = float(URDF_TREE[0].attrib["dw_coeff_3"])
-        return M, L, THRUST2WEIGHT_RATIO, J, J_INV, KF, KM, COLLISION_H, COLLISION_R, COLLISION_Z_OFFSET, MAX_SPEED_KMH, GND_EFF_COEFF, PROP_RADIUS, DRAG_COEFF, DW_COEFF_1, DW_COEFF_2, DW_COEFF_3
+        return (
+            M,
+            L,
+            THRUST2WEIGHT_RATIO,
+            J,
+            J_INV,
+            KF,
+            KM,
+            COLLISION_H,
+            COLLISION_R,
+            COLLISION_Z_OFFSET,
+            MAX_SPEED_KMH,
+            GND_EFF_COEFF,
+            PROP_RADIUS,
+            DRAG_COEFF,
+            DW_COEFF_1,
+            DW_COEFF_2,
+            DW_COEFF_3,
+        )
 
     ################################################################################
 
@@ -1766,7 +2273,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
     ################################################################################
 
     def _computeReward(self, Maze_Number, random_number_Start, random_number_Target):
-        return _computeReward_outsource(self, Maze_Number, random_number_Start, random_number_Target)
+        return _computeReward_outsource(
+            self, Maze_Number, random_number_Start, random_number_Target
+        )
 
     ################################################################################
 
@@ -1792,7 +2301,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         """
 
-        return {"answer": 42}  #### Calculated by the Deep Thought supercomputer in 7.5M years
+        return {
+            "answer": 42
+        }  #### Calculated by the Deep Thought supercomputer in 7.5M years
 
     ################################################################################
 
@@ -1821,7 +2332,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         """
         direction = destination - current_position  # Calculate the direction vector
-        distance = np.linalg.norm(direction)  # Calculate the distance to the destination
+        distance = np.linalg.norm(
+            direction
+        )  # Calculate the distance to the destination
 
         if distance <= step_size:
             # If the remaining distance is less than or equal to the step size,
@@ -1829,7 +2342,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             return destination
 
         normalized_direction = direction / distance  # Normalize the direction vector
-        next_step = current_position + normalized_direction * step_size  # Calculate the next step
+        next_step = (
+            current_position + normalized_direction * step_size
+        )  # Calculate the next step
         return next_step
 
     ##############################################################################!SECTION
@@ -1901,13 +2416,12 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
     def schreibe_csv(self, training_daten=None, csv_datei="training_data.csv"):
 
         datei_existiert = os.path.exists(self.csv_file_path)
-        
+
         # Öffne die CSV-Datei zum Anhängen oder Erstellen
-        with open(self.csv_file_path, mode='a', newline='') as file:
+        with open(self.csv_file_path, mode="a", newline="") as file:
             writer = csv.writer(file)
 
             if training_daten and datei_existiert:
                 # Schreibe die Trainingsdaten in die zweite Tabelle
                 writer.writerow(training_daten)
-                #print("Trainingsergebnisse wurden hinzugefügt.")
-
+                # print("Trainingsergebnisse wurden hinzugefügt.")
