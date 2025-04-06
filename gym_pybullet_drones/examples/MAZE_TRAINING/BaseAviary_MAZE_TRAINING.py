@@ -97,6 +97,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         REWARD_VERSION="R1",
         ACTION_TYPE="A1",
         OBSERVATION_TYPE="O1",
+        Truncated_Type="TR1",
+        Terminated_Type="T1",
         Pushback_active=False,
         DEFAULT_Multiplier_Collision_Penalty=2,
         VelocityScale=1,
@@ -111,9 +113,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         last_random_number_Target=2,
         New_Maze_number=10,
         New_Position_number=5,
-        collision_penalty_truncated=-1000,
-        Truncated_Version="TR1",
-        Truncated_Wall_Distance=0.3,
+        collision_penalty_terminated=-1000,
+        Terminated_Wall_Distance=0.3,
         no_collision_reward=1,
     ):
         """Initialization of a generic aviary environment.
@@ -252,9 +253,10 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.resolution_slam = resolution_slam
         self.New_Position_number = New_Position_number
 
-        self.collision_penalty_truncated = collision_penalty_truncated
-        self.Truncated_Version = Truncated_Version
-        self.Truncated_Wall_Distance = Truncated_Wall_Distance
+        self.collision_penalty_terminated = collision_penalty_terminated
+        self.Truncated_Version = Truncated_Type
+        self.Terminated_Version = Terminated_Type
+        self.Terminated_Wall_Distance = Terminated_Wall_Distance
 
         self.no_collision_reward = no_collision_reward
 
@@ -801,30 +803,61 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         #### Preprocess the action and translate it into RPMs
 
         # # Find wheter and what sort of action is taken
-        # print(action)
+        # print(f"action: {action}")
 
-        self.last_actions = np.roll(self.last_actions, 1)
-        self.last_actions[0] = action
+        match self.ACTION_SPACE_VERSION:
+            case "A1" | "A2":  # Discrete actions
+                actual_action_0_bis_8 = int(action.item())
 
-        actual_action_0_bis_8 = int(action.item())
+                self.last_actions = np.roll(self.last_actions, 1)
+                self.last_actions[0] = action
 
-        # print(f"actual_action_0_bis_8: {actual_action_0_bis_8}")
+                # Lokale Koordinaten auf der Drohne
+                # Für die Maze-Trainings-Umgebung 8 Möglichkeiten
+                action_to_movement_direction_local = {
+                    # 0: np.array([[0, 0, 0, 0.5, 0]]), # Fly 0° (Stay)
+                    0: np.array(
+                        [[1, 0, 0, self.VelocityScale, 0]]
+                    ),  # Fly 90° (Forward)
+                    1: np.array(
+                        [[-1, 0, 0, self.VelocityScale, 0]]
+                    ),  # Fly 180° (Backward)
+                    2: np.array([[0, 1, 0, self.VelocityScale, 0]]),  # Fly 90° (Left)
+                    3: np.array(
+                        [[0, -1, 0, self.VelocityScale, 0]]
+                    ),  # Fly 270° (Right)
+                    4: np.array(
+                        [[0, 0, 0, self.VelocityScale, 1 / 72 * np.pi]]
+                    ),  # 45° Left-Turn # NOTE - Tests mit 1/36*np.pi waren nicht so gut, da die Drohne scheinbar nicht verstanden hat, dass bei einer Drehung vorwärtsfliegen bedeutet
+                    5: np.array(
+                        [[0, 0, 0, self.VelocityScale, -1 / 72 * np.pi]]
+                    ),  # 45° Right-Turn # NOTE - Ausgesetzt für Testzweicke 28.02.25
+                }
 
-        # Lokale Koordinaten auf der Drohne
-        # Für die Maze-Trainings-Umgebung 8 Möglichkeiten
-        action_to_movement_direction_local = {
-            # 0: np.array([[0, 0, 0, 0.5, 0]]), # Fly 0° (Stay)
-            0: np.array([[1, 0, 0, self.VelocityScale, 0]]),  # Fly 90° (Forward)
-            1: np.array([[-1, 0, 0, self.VelocityScale, 0]]),  # Fly 180° (Backward)
-            2: np.array([[0, 1, 0, self.VelocityScale, 0]]),  # Fly 90° (Left)
-            3: np.array([[0, -1, 0, self.VelocityScale, 0]]),  # Fly 270° (Right)
-            4: np.array(
-                [[0, 0, 0, self.VelocityScale, 1 / 72 * np.pi]]
-            ),  # 45° Left-Turn # NOTE - Tests mit 1/36*np.pi waren nicht so gut, da die Drohne scheinbar nicht verstanden hat, dass bei einer Drehung vorwärtsfliegen bedeutet
-            5: np.array(
-                [[0, 0, 0, self.VelocityScale, -1 / 72 * np.pi]]
-            ),  # 45° Right-Turn # NOTE - Ausgesetzt für Testzweicke 28.02.25
-        }
+                input_action_local = action_to_movement_direction_local[
+                    actual_action_0_bis_8
+                ]
+
+            case "A3":  # Continuous actions
+
+                self.last_actions = np.roll(
+                    self.last_actions, 2
+                )  # roll 2, da die SAC 2 Werte in einem Array pro Step ausgibt
+                self.last_actions[0] = action[0]  # vx
+                self.last_actions[1] = action[1]  # vy
+
+                # Action is already [vx, vy] array
+                input_action_local = np.array(
+                    [
+                        [
+                            action[0],  # vx
+                            action[1],  # vy
+                            0,  # vz
+                            self.VelocityScale,
+                            0,  # no rotation
+                        ]
+                    ]
+                )
 
         if self.step_counter == 0:
             self.time_start_trainrun = 0
@@ -832,8 +865,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             self.timestamp_actual = 0
             self.RewardCounterActualTrainRun = 0
             self.List_Of_Tuples_Of_Reward_And_Action = []
-
-        input_action_local = action_to_movement_direction_local[actual_action_0_bis_8]
 
         action = input_action_local
         self.action = input_action_local

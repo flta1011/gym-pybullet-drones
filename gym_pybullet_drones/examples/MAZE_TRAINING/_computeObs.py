@@ -27,7 +27,12 @@ def _computeObs(self):
             state = self._getDroneStateVector(0)
 
             # Select specific values from obs and concatenate them directly
-            obs = [state[21], state[22], state[23], state[24]]  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
+            obs = [
+                state[21],
+                state[22],
+                state[23],
+                state[24],
+            ]  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
 
             # NOTE - nachfolgend auf vereinfachte Observation Space umgestellt (28.2.25):
             # Modify observation based on distance thresholds
@@ -48,7 +53,9 @@ def _computeObs(self):
             else:
                 modified_obs.append(9999)
 
-            return np.array(modified_obs, dtype=np.float32)  # vorne (0,1,2), hinten (0,1,2), links (0,1,2), rechts (0,1,2), oben (1,9999)
+            return np.array(
+                modified_obs, dtype=np.float32
+            )  # vorne (0,1,2), hinten (0,1,2), links (0,1,2), rechts (0,1,2), oben (1,9999)
 
         case "O2":  # 4 Kanalig Bild Slam, X, Y, Yaw Position
             """
@@ -81,17 +88,34 @@ def _computeObs(self):
             norm_y = (pos[1] + 4) / 8
 
             # Muss auf die Input Shape des DQN angepasst werden: (grid_size, grid_size)
-            pos_x_channel = np.full((self.grid_size, self.grid_size), norm_x, dtype=np.float32)
-            pos_y_channel = np.full((self.grid_size, self.grid_size), norm_y, dtype=np.float32)
+            pos_x_channel = np.full(
+                (self.grid_size, self.grid_size), norm_x, dtype=np.float32
+            )
+            pos_y_channel = np.full(
+                (self.grid_size, self.grid_size), norm_y, dtype=np.float32
+            )
 
             # Yaw in zwei Kanäle: sin und cos
             yaw = state[9]  # [9]=yaw-Winkel
-            yaw_sin_channel = np.full((self.grid_size, self.grid_size), np.sin(yaw), dtype=np.float32)
-            yaw_cos_channel = np.full((self.grid_size, self.grid_size), np.cos(yaw), dtype=np.float32)
+            yaw_sin_channel = np.full(
+                (self.grid_size, self.grid_size), np.sin(yaw), dtype=np.float32
+            )
+            yaw_cos_channel = np.full(
+                (self.grid_size, self.grid_size), np.cos(yaw), dtype=np.float32
+            )
 
             # Staple die 5 Kanäle zusammen: Shape = (5, grid_size, grid_size)
             # obs = np.stack([slam_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel], axis=0)
-            obs = np.stack([slam_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel], axis=0)
+            obs = np.stack(
+                [
+                    slam_map,
+                    pos_x_channel,
+                    pos_y_channel,
+                    yaw_sin_channel,
+                    yaw_cos_channel,
+                ],
+                axis=0,
+            )
             self.obs = obs  # für Visualisierung in dem Dashboard
 
             # # Save the SLAM map as an image
@@ -109,7 +133,7 @@ def _computeObs(self):
             # plt.close()
 
             return obs
-        
+
         case "O3":  # 4 Kanalig Bild Slam, X, Y, Yaw Position
             """
             Baut einen 8-Kanal-Tensor auf:
@@ -141,26 +165,50 @@ def _computeObs(self):
             norm_y = (pos[1] + 4) / 8
 
             # Muss auf die Input Shape des DQN angepasst werden: (grid_size, grid_size)
-            pos_x_channel = np.full((self.grid_size, self.grid_size), norm_x, dtype=np.float32)
-            pos_y_channel = np.full((self.grid_size, self.grid_size), norm_y, dtype=np.float32)
+            pos_x_channel = np.full(
+                (self.grid_size, self.grid_size), norm_x, dtype=np.float32
+            )
+            pos_y_channel = np.full(
+                (self.grid_size, self.grid_size), norm_y, dtype=np.float32
+            )
 
             # Yaw in zwei Kanäle: sin und cos
             yaw = state[9]  # [9]=yaw-Winkel
-            yaw_sin_channel = np.full((self.grid_size, self.grid_size), np.sin(yaw), dtype=np.float32)
-            yaw_cos_channel = np.full((self.grid_size, self.grid_size), np.cos(yaw), dtype=np.float32)
+            yaw_sin_channel = np.full(
+                (self.grid_size, self.grid_size), np.sin(yaw), dtype=np.float32
+            )
+            yaw_cos_channel = np.full(
+                (self.grid_size, self.grid_size), np.cos(yaw), dtype=np.float32
+            )
 
             last_Action_1 = state[26]  # [25]=last_Action
             last_Action_2 = state[27]  # [26]=last_Action
             last_Action_3 = state[28]  # [27]=last_Action
-            last_Action_channel_1 = np.full((self.grid_size, self.grid_size), last_Action_1, dtype=np.float32)
-            last_Action_channel_2 = np.full((self.grid_size, self.grid_size), last_Action_2, dtype=np.float32)
-            last_Action_channel_3 = np.full((self.grid_size, self.grid_size), last_Action_3, dtype=np.float32)
-
-            
+            last_Action_channel_1 = np.full(
+                (self.grid_size, self.grid_size), last_Action_1, dtype=np.float32
+            )
+            last_Action_channel_2 = np.full(
+                (self.grid_size, self.grid_size), last_Action_2, dtype=np.float32
+            )
+            last_Action_channel_3 = np.full(
+                (self.grid_size, self.grid_size), last_Action_3, dtype=np.float32
+            )
 
             # Staple die 5 Kanäle zusammen: Shape = (5, grid_size, grid_size)
             # obs = np.stack([slam_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel], axis=0)
-            obs = np.stack([slam_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel, last_Action_channel_1, last_Action_channel_2, last_Action_channel_3], axis=0)
+            obs = np.stack(
+                [
+                    slam_map,
+                    pos_x_channel,
+                    pos_y_channel,
+                    yaw_sin_channel,
+                    yaw_cos_channel,
+                    last_Action_channel_1,
+                    last_Action_channel_2,
+                    last_Action_channel_3,
+                ],
+                axis=0,
+            )
             self.obs = obs  # für Visualisierung in dem Dashboard
 
             # # Save the SLAM map as an image
@@ -178,7 +226,7 @@ def _computeObs(self):
             # plt.close()
 
             return obs
-        
+
         case "O4":  # 4 Kanalig Bild Slam, X, Y, Yaw Position
             """
             Baut einen 1-Kanal-Tensor auf:
@@ -187,20 +235,23 @@ def _computeObs(self):
 
             # Get SLAM map and normalize it
             slam_map = self.slam.occupancy_grid
-           
 
             obs = np.stack([slam_map], axis=0)
             self.obs = obs  # für Visualisierung in dem Dashboard
 
-         
             return obs
-        
-        case "O5":  # XYZ Position, Yaw, Raycast readings, 3 last clipped actions
-                    # Get the current state of the drone
+
+        case "O5":  # XYZ Position, Yaw, Raycast readings, last clipped actions
+            # Get the current state of the drone
             state = self._getDroneStateVector(0)
 
             # Select specific values from obs and concatenate them directly
-            obs = [state[21], state[22], state[23], state[24]]  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
+            obs = [
+                state[21],
+                state[22],
+                state[23],
+                state[24],
+            ]  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
 
             # NOTE - nachfolgend auf vereinfachte Observation Space umgestellt (28.2.25):
             # Modify observation based on distance thresholds
@@ -215,25 +266,28 @@ def _computeObs(self):
             modified_obs.append(round(state[1], 3))  # y-Position
             modified_obs.append(round(state[9], 3))  # Yaw-Position
 
-
             # abstände anhängen mit 3 Nachkommastellen
             for distance in obs:
                 modified_obs.append(round(distance, 3))
 
-            # raycast oben noch anhängen
-            if state[25] < 1:
-                modified_obs.append(1)
-            else:
-                modified_obs.append(9999)
+            # NOTE - 7.4.25: wird nicht mehr benötigt
+            # # raycast oben noch anhängen
+            # if state[25] < 1:
+            #     modified_obs.append(1)
+            # else:
+            #     modified_obs.append(9999)
 
             # Ensure last_actions is flattened and appended correctly
             if isinstance(self.last_actions, (list, np.ndarray)):
                 modified_obs.extend(self.last_actions)  # Append elements individually
             else:
-                modified_obs.append(self.last_actions)  # Append directly if it's a single value
-            
+                modified_obs.append(
+                    self.last_actions
+                )  # Append directly if it's a single value
 
-            return np.array(modified_obs, dtype=np.float32)  # vorne (0,1,2), hinten (0,1,2), links (0,1,2), rechts (0,1,2), oben (1,9999)
+            return np.array(
+                modified_obs, dtype=np.float32
+            )  # vorne (0,1,2), hinten (0,1,2), links (0,1,2), rechts (0,1,2), oben (1,9999)
 
         case "O6":  # 4 Kanalig Bild Slam, X, Y, Yaw Position
             """
@@ -257,22 +311,29 @@ def _computeObs(self):
             # norm_map[slam_map == 2] = 0.5    # besucht
 
             # Get drone position from state
-            #pos = state[0:2]  # x,y position
+            # pos = state[0:2]  # x,y position
 
             # Achtung: in der Simulation sind nie negative Werte zu erwarten, da die Mazes so gespant sind, das Sie immer positive Werte aufweisen. In echt kann die Drohne aber später auch negative Werte erhalten.
 
             # Yaw in zwei Kanäle: sin und cos
             yaw = state[9]  # [9]=yaw-Winkel
 
-            
-
             # Staple die 5 Kanäle zusammen: Shape = (5, grid_size, grid_size)
             # obs = np.stack([slam_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel], axis=0)
-            obs = dict({"image":slam_map, "x":state[0], "y":state[1], "sin_yaw":np.sin(yaw), "cos_yaw":np.cos(yaw), "last_action":self.last_actions})
+            obs = dict(
+                {
+                    "image": slam_map,
+                    "x": state[0],
+                    "y": state[1],
+                    "sin_yaw": np.sin(yaw),
+                    "cos_yaw": np.cos(yaw),
+                    "last_action": self.last_actions,
+                }
+            )
             self.obs = obs  # für Visualisierung in dem Dashboard
 
             return obs
-        
+
         case "O7":  # 4 Kanalig Bild Slam, X, Y, Yaw Position
             """
             Baut einen 8-Kanal-Tensor auf:
@@ -288,24 +349,35 @@ def _computeObs(self):
 
             # Get SLAM map and normalize it
             slam_map = self.slam.occupancy_grid
-            
 
-            raycasts = [state[21], state[22], state[23], state[24]]  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
+            raycasts = [
+                state[21],
+                state[22],
+                state[23],
+                state[24],
+            ]  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
 
-            
             # Get drone position from state
-            #pos = state[0:2]  # x,y position
+            # pos = state[0:2]  # x,y position
 
             # Achtung: in der Simulation sind nie negative Werte zu erwarten, da die Mazes so gespant sind, das Sie immer positive Werte aufweisen. In echt kann die Drohne aber später auch negative Werte erhalten.
 
             # Yaw in zwei Kanäle: sin und cos
             yaw = state[9]  # [9]=yaw-Winkel
 
-            
-
             # Staple die 5 Kanäle zusammen: Shape = (5, grid_size, grid_size)
             # obs = np.stack([slam_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel], axis=0)
-            obs = dict({"image":slam_map, "x":state[0], "y":state[1], "sin_yaw":np.sin(yaw), "cos_yaw":np.cos(yaw), "last_action":self.last_actions, "raycast":raycasts})
+            obs = dict(
+                {
+                    "image": slam_map,
+                    "x": state[0],
+                    "y": state[1],
+                    "sin_yaw": np.sin(yaw),
+                    "cos_yaw": np.cos(yaw),
+                    "last_action": self.last_actions,
+                    "raycast": raycasts,
+                }
+            )
             self.obs = obs  # für Visualisierung in dem Dashboard
 
             return obs

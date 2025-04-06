@@ -1,3 +1,4 @@
+import numpy as np
 from gymnasium import spaces
 
 
@@ -28,3 +29,14 @@ def _actionSpace(self):
         case "A2":  # Vier Richtungen
 
             return spaces.Discrete(4)
+
+        case "A3":  # Vier Richtungen, kontinuierlich
+            """For SAC, we use a continuous action space with:
+            - Linear velocity in x (-self.VelocityScale to self.VelocityScale)
+            - Linear velocity in y (-self.VelocityScale to self.VelocityScale)
+            """
+            return spaces.Box(
+                low=np.array([-self.VelocityScale, -self.VelocityScale]),
+                high=np.array([self.VelocityScale, self.VelocityScale]),
+                dtype=np.float32,
+            )

@@ -4,32 +4,54 @@ import time
 def _computeTerminated(self):
     """Computes the current terminated value(s).
 
-    Unused as this subclass is not meant for reinforcement learning.
-
     Returns
     -------
     bool
-        Dummy value.
-
+        Whether the episode should be terminated.
+    str
+        Reason for termination.
     """
-    # state = self._getDroneStateVector(0)
-    # # starte einen Timer, wenn die Drohne im sweet spot ist
-    # if state[25] < 1:  # 0.15 = Radius Scheibe
-    #     self.still_time += 1 / self.REWARD_AND_ACTION_CHANGE_FREQ  # Increment by simulation timestep (in seconds) # TBD: funktioniert das richtig?
-    # else:
-    #     self.still_time = 0.0  # Reset timer to 0 seconds
+    match self.Terminated_Version:
+        case "T1":
+            """nur Terminated, wenn 80% erreicht sind"""
 
-    # # Wenn die Drohne im sweet spot ist (bezogen auf Sensor vorne, Sensor und seit 5 sekunden still ist, beenden!
-    # if self.still_time >= 5:
-    #     current_time = time.localtime()
-    #     Grund_Terminated = f"Drohne ist 5 s lang unter dem Objekt gewesen. Zeitstempel (min:sek) {time.strftime('%M:%S', current_time)}"
-    #     return True, Grund_Terminated
+            Grund_Terminated = None
 
-    Grund_Terminated = None
+            if self.Ratio_Area >= 0.8:
+                Grund_Terminated = "80 Prozent der Fläche wurde erkundet"
+                self.Terminated_Truncated_Counter += 1
+                return True, Grund_Terminated
 
-    if self.Ratio_Area >= 0.8:
-        Grund_Terminated = "80 Prozent der Fläche wurde erkundet"
-        self.Terminated_Truncated_Counter += 1
-        return True, Grund_Terminated
+            return False, Grund_Terminated
 
-    return False, Grund_Terminated
+        case "T2":
+            """
+            Terminated, wenn die Zeit abgelaufen ist oder wenn eine der Abstandswerte geringer als X ist, oder wenn die Drohne abstürzt ist, oder zu tilted ist
+            """
+
+            Grund_Terminated = None
+
+            if self.Ratio_Area >= 0.8:
+                Grund_Terminated = "80 Prozent der Fläche wurde erkundet"
+                self.Terminated_Truncated_Counter += 1
+                return True, Grund_Terminated
+
+            state = self._getDroneStateVector(0)
+
+            if abs(state[7]) > 0.4 or abs(state[8]) > 0.4:
+                Grund_Terminated = "Zu tilted"
+                return True, Grund_Terminated
+
+            if (
+                state[21] < self.Terminated_Wall_Distance
+                or state[22] < self.Terminated_Wall_Distance
+                or state[23] < self.Terminated_Wall_Distance
+                or state[24] < self.Terminated_Wall_Distance
+            ):
+                Grund_Terminated = "Zu nah an der Wand"
+                return True, Grund_Terminated
+
+            return False, Grund_Terminated
+
+        case _:
+            raise ValueError(f"Unknown terminated version: {self.Terminated_Version}")

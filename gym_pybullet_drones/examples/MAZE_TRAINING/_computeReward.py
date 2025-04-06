@@ -970,7 +970,7 @@ def _computeReward(
             #### Rewards initialisieren ####
             reward = 0
             state = self._getDroneStateVector(0)  # erste Drohne
-            self.reward_components["collision_penalty_truncated"] = 0
+            self.reward_components["collision_penalty_terminated"] = 0
             self.reward_components["Step_counter"] = 0
             self.reward_components["explore_bonus_new_field"] = 0
             self.reward_components["Prozentual_Bonus"] = 0
@@ -1012,13 +1012,13 @@ def _computeReward(
             ###### PUNISHMENT FOR COLLISION, wenn Truncated sein sollte, gibt es eine große Bestrafung #####
 
             if (
-                state[21] < self.Truncated_Wall_Distance
-                or state[22] < self.Truncated_Wall_Distance
-                or state[23] < self.Truncated_Wall_Distance
-                or state[24] < self.Truncated_Wall_Distance
+                state[21] < self.Terminated_Wall_Distance
+                or state[22] < self.Terminated_Wall_Distance
+                or state[23] < self.Terminated_Wall_Distance
+                or state[24] < self.Terminated_Wall_Distance
             ):
-                self.reward_components["collision_penalty_truncated"] = (
-                    self.collision_penalty_truncated
+                self.reward_components["collision_penalty_terminated"] = (
+                    self.collision_penalty_terminated
                 )
             else:
                 self.reward_components["no_collision_reward"] = (
@@ -1027,7 +1027,7 @@ def _computeReward(
 
             # COMPUTE TOTAL REWARD
             reward = (
-                self.reward_components["collision_penalty_truncated"]
+                self.reward_components["collision_penalty_terminated"]
                 + self.reward_components["Step_counter"]
                 + self.reward_components["explore_bonus_new_field"]
                 + self.reward_components["Prozentual_Bonus"]

@@ -79,7 +79,7 @@ DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
 
 DEFAULT_TRAIN_TIMESTEPS = (
-    8 * 1e5
+    4 * 1e5
 )  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULT_TARGET_REWARD = 99999
 DEFAULF_NUMBER_LAST_ACTIONS = 20
@@ -139,7 +139,7 @@ DEFAULT_VelocityScale = 0.5
 # Bei wie viel Prozent der Fläche einen Print ausgeben
 DEFAULT_Procent_Step = 0.01
 DEFAULT_REWARD_FOR_NEW_FIELD = 2
-DEFAULT_Punishment_for_Step = 0
+DEFAULT_Punishment_for_Step = -0.5
 # 5 bedeutet eine 5x5 Matrix
 DEFAULT_explore_Matrix_Size = 5
 DEFAULT_Maze_number = 21
@@ -147,9 +147,8 @@ DEFAULT_Maze_number = 21
 DEFAULT_New_Maze_number = 10
 DEFAULT_New_Position_number = 1
 
-DEFAULT_collision_penalty_truncated = -10
-DEFAULT_Truncated_Version = "TR1"
-DEFAULT_Truncated_Wall_Distance = 0.19  # worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25
+DEFAULT_collision_penalty_terminated = -10
+DEFAULT_Terminated_Wall_Distance = 0.15  # worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25
 DEFAULT_no_collision_reward = (
     1  # nur bei R5 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
 )
@@ -161,9 +160,9 @@ DEFAULT_no_collision_reward = (
 - M3:   DQN_MLPPolicy
 - M4:   DQN_CNNPolicy_CustomFeatureExtractor
 - M5:   DQN_NN_MultiInputPolicy mit fullyConnectLayer
-- SAC:  
+- M6:   SAC
 """
-MODEL_VERSION = "M3"
+MODEL_VERSION = "M6"
 
 #####################################REWARD_VERSION###########################
 """REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
@@ -193,25 +192,32 @@ OBSERVATION_TYPE = "O5"  # Bei neuer Oberservation Type mit SLAM dies in den IF-
 
 #####################################ACTION_TYPE###########################
 """ActionType:'
-- A1: Vier Richtungen und zwei Drehungen
-- A2: Vier Richtungen
+- A1: Vier Richtungen und zwei Drehungen, diskret
+- A2: Vier Richtungen, diskret
+- A3: Vier Richtungen, kontinuierlich # für SAC
 """
 
-ACTION_TYPE = "A2"
+ACTION_TYPE = "A3"
 
 #####################################TRUNCATED_TYPE###########################
 """ Truncated_type:
 - TR1: Zeit abgelaufen
-- TR2: Zeit abgelaufen und Abstandswert geringer als X
 """
-TRUNCATED_TYPE = "TR2"
+TRUNCATED_TYPE = "TR1"
+
+#####################################TERMINATED_TYPE###########################
+""" Terminated_type:
+- T1: 80% der Fläche erkundet
+- T2: 80% der Fläche erkundet oder Crash (Abstandswert geringer als X)
+"""
+TERMINATED_TYPE = "T1"
 
 
 #######################################CSV ERSTELLEN####################
 
 # Der Dateipfad zur CSV-Datei
 timestamp = time.strftime("%Y%m%d-%H%M%S")
-Auswertungs_CSV_Datei = f"gym_pybullet_drones/Auswertungen_der_Modelle/{MODEL_VERSION}_{REWARD_VERSION}_{OBSERVATION_TYPE}_{ACTION_TYPE}_{TRUNCATED_TYPE}_{timestamp}.csv"
+Auswertungs_CSV_Datei = f"gym_pybullet_drones/Auswertungen_der_Modelle/{MODEL_VERSION}_{REWARD_VERSION}_{OBSERVATION_TYPE}_{ACTION_TYPE}_{TRUNCATED_TYPE}_{TERMINATED_TYPE}_{timestamp}.csv"
 # Funktion, um eine CSV zu erstellen (beim ersten Aufruf) oder zu erweitern
 
 # Prüfen, ob die Datei existiert
@@ -234,9 +240,8 @@ header_params = [
     "DEFAULT_Multiplier_Collision_Penalty",
     "DEFAULT_VelocityScale",
     "DEFAULT_explore_Matrix_Size",
-    "DEFAULT_collision_penalty_truncated",
-    "DEFAULT_Truncated_Version",
-    "DEFAULT_Truncated_Wall_Distance",
+    "DEFAULT_collision_penalty_terminated",
+    "DEFAULT_Terminated_Wall_Distance",
     "DEFAULT_no_collision_reward",
 ]
 
@@ -270,9 +275,8 @@ parameter_daten = [
     DEFAULT_Multiplier_Collision_Penalty,
     DEFAULT_VelocityScale,
     DEFAULT_explore_Matrix_Size,
-    DEFAULT_collision_penalty_truncated,
-    DEFAULT_Truncated_Version,
-    DEFAULT_Truncated_Wall_Distance,
+    DEFAULT_collision_penalty_terminated,
+    DEFAULT_Terminated_Wall_Distance,
     DEFAULT_no_collision_reward,
 ]
 
@@ -314,6 +318,8 @@ def run(
     MODEL_Version=MODEL_VERSION,
     reward_version=REWARD_VERSION,
     ObservationType=OBSERVATION_TYPE,
+    Truncated_Type=TRUNCATED_TYPE,
+    Terminated_Type=TERMINATED_TYPE,
     Action_Type=ACTION_TYPE,
     Pushback_active=DEFAULT_PUSHBACK_ACTIVE,
     DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
@@ -329,9 +335,8 @@ def run(
     Explore_Matrix_Size=DEFAULT_explore_Matrix_Size,
     New_Maze_number=DEFAULT_New_Maze_number,
     New_Position_number=DEFAULT_New_Position_number,
-    collision_penalty_truncated=DEFAULT_collision_penalty_truncated,
-    Truncated_Version=DEFAULT_Truncated_Version,
-    Truncated_Wall_Distance=DEFAULT_Truncated_Wall_Distance,
+    collision_penalty_terminated=DEFAULT_collision_penalty_terminated,
+    Terminated_Wall_Distance=DEFAULT_Terminated_Wall_Distance,
     no_collision_reward=DEFAULT_no_collision_reward,
 ):
     if TRAIN:
@@ -362,6 +367,8 @@ def run(
                     REWARD_VERSION=reward_version,
                     ACTION_TYPE=Action_Type,
                     OBSERVATION_TYPE=ObservationType,
+                    Truncated_Type=Truncated_Type,
+                    Terminated_Type=Terminated_Type,
                     Pushback_active=Pushback_active,
                     DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
                     VelocityScale=DEFAULT_VelocityScale,
@@ -374,9 +381,8 @@ def run(
                     Maze_number=DEFAULT_Maze_number,
                     New_Maze_number=New_Maze_number,
                     New_Position_number=New_Position_number,
-                    collision_penalty_truncated=collision_penalty_truncated,
-                    Truncated_Version=Truncated_Version,
-                    Truncated_Wall_Distance=Truncated_Wall_Distance,
+                    collision_penalty_terminated=collision_penalty_terminated,
+                    Terminated_Wall_Distance=Terminated_Wall_Distance,
                     no_collision_reward=no_collision_reward,
                 ),
                 n_envs=1,
@@ -404,6 +410,8 @@ def run(
                     REWARD_VERSION=reward_version,
                     ACTION_TYPE=Action_Type,
                     OBSERVATION_TYPE=ObservationType,
+                    Truncated_Type=Truncated_Type,
+                    Terminated_Type=Terminated_Type,
                     Pushback_active=Pushback_active,
                     DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
                     VelocityScale=DEFAULT_VelocityScale,
@@ -416,9 +424,8 @@ def run(
                     Maze_number=DEFAULT_Maze_number,
                     New_Maze_number=New_Maze_number,
                     New_Position_number=New_Position_number,
-                    collision_penalty_truncated=collision_penalty_truncated,
-                    Truncated_Version=Truncated_Version,
-                    Truncated_Wall_Distance=Truncated_Wall_Distance,
+                    collision_penalty_terminated=collision_penalty_terminated,
+                    Terminated_Wall_Distance=Terminated_Wall_Distance,
                     no_collision_reward=no_collision_reward,
                 ),
                 n_envs=1,
@@ -550,9 +557,31 @@ def run(
                         verbose=1,
                         batch_size=32,
                         seed=42,
-                        buffer_size=5000,
+                        buffer_size=500000,
                         gamma=0.8,
                     )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
+            case "M6":  # M6: SAC
+                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(
+                    DEFAULT_PRETRAINED_MODEL_PATH
+                ):
+                    print(
+                        f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}"
+                    )
+                    model = SAC.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
+                else:
+                    print("[INFO] Creating new model with SAC")
+                    model = SAC(
+                        "MlpPolicy",
+                        train_env,
+                        verbose=1,
+                        device="cuda:0",
+                        seed=42,
+                        buffer_size=500000,
+                        batch_size=32,
+                        gamma=0.8,
+                    )
+            case _:
+                raise ValueError(f"Invalid model version: {MODEL_Version}")
 
         ## Schreiben der CSV für die Auswertung unserer Ergebnisse
 
@@ -699,6 +728,8 @@ def run(
                 REWARD_VERSION=reward_version,
                 ACTION_TYPE=Action_Type,
                 OBSERVATION_TYPE=ObservationType,
+                Truncated_Type=Truncated_Type,
+                Terminated_Type=Terminated_Type,
                 Pushback_active=Pushback_active,
                 DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
                 VelocityScale=DEFAULT_VelocityScale,
@@ -710,9 +741,8 @@ def run(
                 Maze_number=DEFAULT_Maze_number,
                 New_Maze_number=New_Maze_number,
                 New_Position_number=New_Position_number,
-                collision_penalty_truncated=collision_penalty_truncated,
-                Truncated_Version=Truncated_Version,
-                Truncated_Wall_Distance=Truncated_Wall_Distance,
+                collision_penalty_terminated=collision_penalty_terminated,
+                Terminated_Wall_Distance=Terminated_Wall_Distance,
                 no_collision_reward=no_collision_reward,
             ),
             n_envs=1,
