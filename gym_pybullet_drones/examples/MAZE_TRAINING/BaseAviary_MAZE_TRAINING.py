@@ -114,6 +114,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         collision_penalty_truncated=-1000,
         Truncated_Version="TR1",
         Truncated_Wall_Distance=0.3,
+        no_collision_reward=1,
     ):
         """Initialization of a generic aviary environment.
 
@@ -254,6 +255,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.collision_penalty_truncated = collision_penalty_truncated
         self.Truncated_Version = Truncated_Version
         self.Truncated_Wall_Distance = Truncated_Wall_Distance
+
+        self.no_collision_reward = no_collision_reward
 
         if (
             self.OBSERVATION_TYPE == "O4"

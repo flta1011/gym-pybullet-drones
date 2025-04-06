@@ -120,7 +120,7 @@ DEFAULT_OUTPUT_FOLDER = "results"
 DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
-DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 10  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 2  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
 DEFAULT_EPISODE_LEN_SEC = 5 * 60  # 15 * 60
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 DEFAULT_PUSHBACK_ACTIVE = False
@@ -139,7 +139,7 @@ DEFAULT_VelocityScale = 0.5
 # Bei wie viel Prozent der Fläche einen Print ausgeben
 DEFAULT_Procent_Step = 0.01
 DEFAULT_REWARD_FOR_NEW_FIELD = 2
-DEFAULT_Punishment_for_Step = -0.1
+DEFAULT_Punishment_for_Step = 0
 # 5 bedeutet eine 5x5 Matrix
 DEFAULT_explore_Matrix_Size = 5
 DEFAULT_Maze_number = 21
@@ -147,9 +147,12 @@ DEFAULT_Maze_number = 21
 DEFAULT_New_Maze_number = 10
 DEFAULT_New_Position_number = 1
 
-DEFAULT_collision_penalty_truncated = -1000
-DEFAULT_Truncated_Version = "TR2"
+DEFAULT_collision_penalty_truncated = -10
+DEFAULT_Truncated_Version = "TR1"
 DEFAULT_Truncated_Wall_Distance = 0.19  # worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25
+DEFAULT_no_collision_reward = (
+    1  # nur bei R5 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
+)
 
 #####################################MODEL_VERSION###########################
 """MODEL_Versionen: 
@@ -160,7 +163,7 @@ DEFAULT_Truncated_Wall_Distance = 0.19  # worst case betrachtung; wenn Drohe im 
 - M5:   DQN_NN_MultiInputPolicy mit fullyConnectLayer
 - SAC:  
 """
-MODEL_VERSION = "M5"
+MODEL_VERSION = "M3"
 
 #####################################REWARD_VERSION###########################
 """REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
@@ -169,9 +172,10 @@ MODEL_VERSION = "M5"
 - R3:   Collision zieht je nach Wert auf Heatmap diesen von der Reward ab (7 etwa Wand, 2 nahe Wand, 0.)
 - R4:   Collision zieht je nach Wert auf Heatmap diesen von der Reward ab (7 etwa Wand, 2 nahe Wand, 0.) und Abzug für jeden Step
 - R5:   R4 mit dem Zusatz, dass diese Variante für TR2 optimiert ist, und für den Abstand der Wand nur eine Bestrafun bekommt, wenn danach auch truncated wird
+- R6:   R5 mit dem Zusatz, dass wenn die Drohne nicht zu nah an der Wand ist, gibt es einen definierten Bonus (Anstatt nur Peitsche jetzt Zuckerbrot und Peitsche)
 """
 
-REWARD_VERSION = "R5"
+REWARD_VERSION = "R6"
 
 #####################################OBSERVATION_TYPE###########################
 """ObservationType:
@@ -185,7 +189,7 @@ REWARD_VERSION = "R5"
 
 """
 
-OBSERVATION_TYPE = "O7"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
+OBSERVATION_TYPE = "O5"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
 
 #####################################ACTION_TYPE###########################
 """ActionType:'
@@ -233,6 +237,7 @@ header_params = [
     "DEFAULT_collision_penalty_truncated",
     "DEFAULT_Truncated_Version",
     "DEFAULT_Truncated_Wall_Distance",
+    "DEFAULT_no_collision_reward",
 ]
 
 # Header für die dynamischen Daten (Trainingsergebnisse)
@@ -268,6 +273,7 @@ parameter_daten = [
     DEFAULT_collision_penalty_truncated,
     DEFAULT_Truncated_Version,
     DEFAULT_Truncated_Wall_Distance,
+    DEFAULT_no_collision_reward,
 ]
 
 
@@ -326,6 +332,7 @@ def run(
     collision_penalty_truncated=DEFAULT_collision_penalty_truncated,
     Truncated_Version=DEFAULT_Truncated_Version,
     Truncated_Wall_Distance=DEFAULT_Truncated_Wall_Distance,
+    no_collision_reward=DEFAULT_no_collision_reward,
 ):
     if TRAIN:
         filename = os.path.join(
@@ -370,6 +377,7 @@ def run(
                     collision_penalty_truncated=collision_penalty_truncated,
                     Truncated_Version=Truncated_Version,
                     Truncated_Wall_Distance=Truncated_Wall_Distance,
+                    no_collision_reward=no_collision_reward,
                 ),
                 n_envs=1,
                 seed=0,
@@ -411,6 +419,7 @@ def run(
                     collision_penalty_truncated=collision_penalty_truncated,
                     Truncated_Version=Truncated_Version,
                     Truncated_Wall_Distance=Truncated_Wall_Distance,
+                    no_collision_reward=no_collision_reward,
                 ),
                 n_envs=1,
                 seed=0,
@@ -704,6 +713,7 @@ def run(
                 collision_penalty_truncated=collision_penalty_truncated,
                 Truncated_Version=Truncated_Version,
                 Truncated_Wall_Distance=Truncated_Wall_Distance,
+                no_collision_reward=no_collision_reward,
             ),
             n_envs=1,
             seed=0,
