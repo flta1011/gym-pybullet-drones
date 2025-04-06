@@ -78,9 +78,7 @@ DEFAULT_PRETRAINED_MODEL_PATH = "/home/moritz_s/Documents/RKIM_1/F_u_E_Drohnenre
 DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
 
-DEFAULT_TRAIN_TIMESTEPS = (
-    8 * 1e5
-)  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
+DEFAULT_TRAIN_TIMESTEPS = 8 * 1e5  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULT_TARGET_REWARD = 99999
 DEFAULF_NUMBER_LAST_ACTIONS = 20
 
@@ -150,9 +148,11 @@ DEFAULT_New_Position_number = 1
 DEFAULT_collision_penalty_truncated = -10
 DEFAULT_Truncated_Version = "TR1"
 DEFAULT_Truncated_Wall_Distance = 0.19  # worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25
-DEFAULT_no_collision_reward = (
-    1  # nur bei R5 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
-)
+DEFAULT_no_collision_reward = 1  # nur bei R5 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
+
+# R7 - Negative Reward Map Settings
+DEFAULT_Punishment_for_Walls = -2
+DEFAULT_Influence_of_Walls = 3
 
 #####################################MODEL_VERSION###########################
 """MODEL_Versionen: 
@@ -163,7 +163,7 @@ DEFAULT_no_collision_reward = (
 - M5:   DQN_NN_MultiInputPolicy mit fullyConnectLayer
 - SAC:  
 """
-MODEL_VERSION = "M3"
+MODEL_VERSION = "M5"
 
 #####################################REWARD_VERSION###########################
 """REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
@@ -173,9 +173,10 @@ MODEL_VERSION = "M3"
 - R4:   Collision zieht je nach Wert auf Heatmap diesen von der Reward ab (7 etwa Wand, 2 nahe Wand, 0.) und Abzug für jeden Step
 - R5:   R4 mit dem Zusatz, dass diese Variante für TR2 optimiert ist, und für den Abstand der Wand nur eine Bestrafun bekommt, wenn danach auch truncated wird
 - R6:   R5 mit dem Zusatz, dass wenn die Drohne nicht zu nah an der Wand ist, gibt es einen definierten Bonus (Anstatt nur Peitsche jetzt Zuckerbrot und Peitsche)
+- R7:   Statt Heatmap nun Bestrafungsmap (lineare Bestrafung - Abstand zur Wand), Truncated bei Wandberührung, Abzug für jeden Step
 """
 
-REWARD_VERSION = "R6"
+REWARD_VERSION = "R7"
 
 #####################################OBSERVATION_TYPE###########################
 """ObservationType:
@@ -189,7 +190,7 @@ REWARD_VERSION = "R6"
 
 """
 
-OBSERVATION_TYPE = "O5"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
+OBSERVATION_TYPE = "O7"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
 
 #####################################ACTION_TYPE###########################
 """ActionType:'
@@ -238,6 +239,8 @@ header_params = [
     "DEFAULT_Truncated_Version",
     "DEFAULT_Truncated_Wall_Distance",
     "DEFAULT_no_collision_reward",
+    "DEFAULT_Punishment_for_Walls",
+    "DEFAULT_Influence_of_Walls",
 ]
 
 # Header für die dynamischen Daten (Trainingsergebnisse)
@@ -274,6 +277,8 @@ parameter_daten = [
     DEFAULT_Truncated_Version,
     DEFAULT_Truncated_Wall_Distance,
     DEFAULT_no_collision_reward,
+    DEFAULT_Punishment_for_Walls,
+    DEFAULT_Influence_of_Walls,
 ]
 
 
@@ -333,11 +338,11 @@ def run(
     Truncated_Version=DEFAULT_Truncated_Version,
     Truncated_Wall_Distance=DEFAULT_Truncated_Wall_Distance,
     no_collision_reward=DEFAULT_no_collision_reward,
+    punishment_for_walls=DEFAULT_Punishment_for_Walls,
+    influence_of_walls=DEFAULT_Influence_of_Walls,
 ):
     if TRAIN:
-        filename = os.path.join(
-            output_folder, "save-" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
-        )
+        filename = os.path.join(output_folder, "save-" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
         if not os.path.exists(filename):
             os.makedirs(filename + "/")
 
@@ -378,6 +383,8 @@ def run(
                     Truncated_Version=Truncated_Version,
                     Truncated_Wall_Distance=Truncated_Wall_Distance,
                     no_collision_reward=no_collision_reward,
+                    punishment_for_walls=punishment_for_walls,
+                    influence_of_walls=influence_of_walls,
                 ),
                 n_envs=1,
                 seed=0,
@@ -420,6 +427,8 @@ def run(
                     Truncated_Version=Truncated_Version,
                     Truncated_Wall_Distance=Truncated_Wall_Distance,
                     no_collision_reward=no_collision_reward,
+                    punishment_for_walls=punishment_for_walls,
+                    influence_of_walls=influence_of_walls,
                 ),
                 n_envs=1,
                 seed=0,
@@ -434,17 +443,11 @@ def run(
         #### Load existing model or create new one ###################
         match MODEL_Version:
             case "M1":  # M1: PPO
-                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(
-                    DEFAULT_PRETRAINED_MODEL_PATH
-                ):
-                    print(
-                        f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_Version} with {REWARD_VERSION}"
-                    )
+                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
+                    print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_Version} with {REWARD_VERSION}")
                     model = PPO.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
                 else:
-                    print(
-                        f"[INFO] Creating new model {MODEL_Version} with {REWARD_VERSION}"
-                    )
+                    print(f"[INFO] Creating new model {MODEL_Version} with {REWARD_VERSION}")
                     model = PPO(
                         "MlpPolicy",
                         train_env,
@@ -453,17 +456,11 @@ def run(
                     )
 
             case "M2":  # M2: DQN_CNNPolicy_StandardFeatureExtractor
-                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(
-                    DEFAULT_PRETRAINED_MODEL_PATH
-                ):
-                    print(
-                        f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_Version} with {REWARD_VERSION}"
-                    )
+                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
+                    print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_Version} with {REWARD_VERSION}")
                     model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
                 else:
-                    print(
-                        f"[INFO] Creating new model {MODEL_Version} with {REWARD_VERSION}"
-                    )
+                    print(f"[INFO] Creating new model {MODEL_Version} with {REWARD_VERSION}")
                     model = DQN(
                         "CnnPolicy",
                         train_env,
@@ -474,17 +471,11 @@ def run(
                     )
 
             case "M3":  # M3: DQN_MLPPolicy
-                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(
-                    DEFAULT_PRETRAINED_MODEL_PATH
-                ):
-                    print(
-                        f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}"
-                    )
+                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
+                    print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
                     model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
                 else:
-                    print(
-                        "[INFO] Creating new model with CNN-DQN with custom feature extractor"
-                    )
+                    print("[INFO] Creating new model with CNN-DQN with custom feature extractor")
                     model = DQN(
                         "MlpPolicy",
                         train_env,
@@ -505,17 +496,11 @@ def run(
                     features_extractor_class=CustomCNNFeatureExtractor(),
                     features_extractor_kwargs=dict(features_dim=4),
                 )
-                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(
-                    DEFAULT_PRETRAINED_MODEL_PATH
-                ):
-                    print(
-                        f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}"
-                    )
+                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
+                    print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
                     model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
                 else:
-                    print(
-                        "[INFO] Creating new model with CNN-DQN with custom feature extractor"
-                    )
+                    print("[INFO] Creating new model with CNN-DQN with custom feature extractor")
                     model = DQN(
                         "CnnPolicy",
                         train_env,
@@ -533,12 +518,8 @@ def run(
                 # ANCHOR - NN-DQN-MI
                 # Setze die policy_kwargs, um deinen Custom Feature Extractor zu nutzen:
                 # policy_kwargs = dict(features_extractor_class=CustomNNFeatureExtractor, features_extractor_kwargs=dict(features_dim=4))
-                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(
-                    DEFAULT_PRETRAINED_MODEL_PATH
-                ):
-                    print(
-                        f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}"
-                    )
+                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
+                    print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
                     model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
                 else:
                     model = DQN(
@@ -560,9 +541,7 @@ def run(
         target_reward = DEFAULT_TARGET_REWARD
         print(target_reward)
         # The StopTrainingOnRewardThreshold callback is used to stop the training once a certain reward threshold is reached.
-        callback_on_best = StopTrainingOnRewardThreshold(
-            reward_threshold=target_reward, verbose=1
-        )
+        callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=target_reward, verbose=1)
         # The EvalCallback is used to evaluate the agent periodically during training.
         # eval_env: The environment used for evaluation.
         # callback_on_new_best: Callback to trigger when a new best model is found.
@@ -638,14 +617,10 @@ def run(
             if os.path.exists(target_folder):
                 # Alle Dateien und Ordner im Verzeichnis durchgehen
                 for item in os.listdir(target_folder):
-                    item_path = os.path.join(
-                        target_folder, item
-                    )  # Vollständiger Pfad zu den Dateien/Ordnern
+                    item_path = os.path.join(target_folder, item)  # Vollständiger Pfad zu den Dateien/Ordnern
                     try:
                         if os.path.isdir(item_path):
-                            shutil.rmtree(
-                                item_path
-                            )  # Wenn es ein Verzeichnis ist, entferne es rekursiv
+                            shutil.rmtree(item_path)  # Wenn es ein Verzeichnis ist, entferne es rekursiv
                         else:
                             os.remove(item_path)  # Wenn es eine Datei ist, entferne sie
                     except Exception as e:
@@ -750,9 +725,7 @@ def run(
         for i in range((test_env.EPISODE_LEN_SEC + 2) * test_env.CTRL_FREQ):
 
             action, _states = model.predict(obs, deterministic=True)
-            obs, reward, terminated, truncated, info = test_env.step(
-                action, maze_number
-            )
+            obs, reward, terminated, truncated, info = test_env.step(action, maze_number)
             obs2 = obs.squeeze()
             act2 = action.squeeze()
             print(
@@ -786,9 +759,7 @@ def run(
 
 if __name__ == "__main__":
     #### Define and parse (optional) arguments for the script ##
-    parser = argparse.ArgumentParser(
-        description="Single agent reinforcement learning example script"
-    )
+    parser = argparse.ArgumentParser(description="Single agent reinforcement learning example script")
     parser.add_argument(
         "--multiagent",
         default=DEFAULT_MA,
