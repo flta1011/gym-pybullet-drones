@@ -2,6 +2,7 @@ import csv
 import heapq
 import time
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -24,9 +25,7 @@ def _computeReward(
     """
 
     match self.REWARD_VERSION:
-        case (
-            "R1"
-        ):  # Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
+        case "R1":  # Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
             # Initialisierung der Reward-Map und a-Star-etc.
             if self.step_counter == 0:
                 # NOTE - Reward Map
@@ -57,19 +56,11 @@ def _computeReward(
                 # self.reward_map = np.rot90(self.reward_map, k=4)
 
                 if Maze_Number == 0:
-                    Start_position = self.INIT_XYZS[f"map{Maze_Number+1}"][0][
-                        random_number_Start
-                    ]
-                    End_Position = self.TARGET_POSITION[f"map{Maze_Number+1}"][0][
-                        random_number_Target
-                    ]
+                    Start_position = self.INIT_XYZS[f"map{Maze_Number+1}"][0][random_number_Start]
+                    End_Position = self.TARGET_POSITION[f"map{Maze_Number+1}"][0][random_number_Target]
                 else:
-                    Start_position = self.INIT_XYZS[f"map{Maze_Number}"][0][
-                        random_number_Start
-                    ]
-                    End_Position = self.TARGET_POSITION[f"map{Maze_Number}"][0][
-                        random_number_Target
-                    ]
+                    Start_position = self.INIT_XYZS[f"map{Maze_Number}"][0][random_number_Start]
+                    End_Position = self.TARGET_POSITION[f"map{Maze_Number}"][0][random_number_Target]
 
                 # print (Start_position, "Start-REward")
                 # print (End_Position, "Target-reward")
@@ -78,26 +69,20 @@ def _computeReward(
                     Start_position[1] / 0.05,
                     Start_position[0] / 0.05,
                 ]  # Startpunkt der Drohne
-                self.reward_map[int(initial_position[0]), int(initial_position[1])] = (
-                    4  # Startpunkt
-                )
+                self.reward_map[int(initial_position[0]), int(initial_position[1])] = 4  # Startpunkt
 
                 # Set the Targetpoint of the Drone
                 target_position = [
                     End_Position[1] / 0.05,
                     End_Position[0] / 0.05,
                 ]  # Zielpunkt der Drohne
-                self.reward_map[int(target_position[0]), int(target_position[1])] = (
-                    5  # Zielpunkt
-                )
+                self.reward_map[int(target_position[0]), int(target_position[1])] = 5  # Zielpunkt
 
                 # Best way to fly via A* Algorithm
                 self.best_way_map = np.zeros((60, 60), dtype=int)
 
                 def heuristic(a, b):
-                    return np.linalg.norm(
-                        np.array(a) - np.array(b)
-                    )  # Euklidische Distanz
+                    return np.linalg.norm(np.array(a) - np.array(b))  # Euklidische Distanz
 
                 def a_star_search(reward_map, start, goal):
                     neighbors = [(0, 1), (0, -1), (1, 0), (-1, 0)]
@@ -124,34 +109,21 @@ def _computeReward(
                         for i, j in neighbors:
                             neighbor = (current[0] + i, current[1] + j)
 
-                            if not (
-                                0 <= neighbor[0] < reward_map.shape[0]
-                                and 0 <= neighbor[1] < reward_map.shape[1]
-                            ):
+                            if not (0 <= neighbor[0] < reward_map.shape[0] and 0 <= neighbor[1] < reward_map.shape[1]):
                                 continue  # Außerhalb des Grids
 
                             if reward_map[neighbor[0], neighbor[1]] == 6:
                                 continue  # Hindernis überspringen
 
-                            tentative_g_score = (
-                                gscore[current] + reward_map[neighbor[0], neighbor[1]]
-                            )  # Kosten berücksichtigen
+                            tentative_g_score = gscore[current] + reward_map[neighbor[0], neighbor[1]]  # Kosten berücksichtigen
 
-                            if (
-                                neighbor in close_set
-                                and tentative_g_score
-                                >= gscore.get(neighbor, float("inf"))
-                            ):
+                            if neighbor in close_set and tentative_g_score >= gscore.get(neighbor, float("inf")):
                                 continue
 
-                            if tentative_g_score < gscore.get(
-                                neighbor, float("inf")
-                            ) or all(n[1] != neighbor for n in oheap):
+                            if tentative_g_score < gscore.get(neighbor, float("inf")) or all(n[1] != neighbor for n in oheap):
                                 came_from[neighbor] = current
                                 gscore[neighbor] = tentative_g_score
-                                fscore[neighbor] = tentative_g_score + heuristic(
-                                    neighbor, goal
-                                )
+                                fscore[neighbor] = tentative_g_score + heuristic(neighbor, goal)
                                 heapq.heappush(oheap, (fscore[neighbor], neighbor))
 
                     return None  # Kein Pfad gefunden
@@ -281,9 +253,7 @@ def _computeReward(
                 + self.reward_components["explore_bonus_visited_field"]
                 + self.reward_components["Target_Hit_Reward"]
             )
-            self.last_total_reward = (
-                reward  # Save the last total reward for the dashboard
-            )
+            self.last_total_reward = reward  # Save the last total reward for the dashboard
 
             return reward
         case "R2":  # Ziel hat keinen Einfluss mehr, soll aufs erkunden belohnt werden
@@ -317,19 +287,11 @@ def _computeReward(
                 # self.reward_map = np.rot90(self.reward_map, k=4)
 
                 if Maze_Number == 0:
-                    Start_position = self.INIT_XYZS[f"map{Maze_Number+1}"][0][
-                        random_number_Start
-                    ]
-                    End_Position = self.TARGET_POSITION[f"map{Maze_Number+1}"][0][
-                        random_number_Target
-                    ]
+                    Start_position = self.INIT_XYZS[f"map{Maze_Number+1}"][0][random_number_Start]
+                    End_Position = self.TARGET_POSITION[f"map{Maze_Number+1}"][0][random_number_Target]
                 else:
-                    Start_position = self.INIT_XYZS[f"map{Maze_Number}"][0][
-                        random_number_Start
-                    ]
-                    End_Position = self.TARGET_POSITION[f"map{Maze_Number}"][0][
-                        random_number_Target
-                    ]
+                    Start_position = self.INIT_XYZS[f"map{Maze_Number}"][0][random_number_Start]
+                    End_Position = self.TARGET_POSITION[f"map{Maze_Number}"][0][random_number_Target]
 
                 # print (Start_position, "Start-REward")
                 # print (End_Position, "Target-reward")
@@ -338,26 +300,20 @@ def _computeReward(
                     Start_position[1] / 0.05,
                     Start_position[0] / 0.05,
                 ]  # Startpunkt der Drohne
-                self.reward_map[int(initial_position[0]), int(initial_position[1])] = (
-                    4  # Startpunkt
-                )
+                self.reward_map[int(initial_position[0]), int(initial_position[1])] = 4  # Startpunkt
 
                 # Set the Targetpoint of the Drone
                 target_position = [
                     End_Position[1] / 0.05,
                     End_Position[0] / 0.05,
                 ]  # Zielpunkt der Drohne
-                self.reward_map[int(target_position[0]), int(target_position[1])] = (
-                    5  # Zielpunkt
-                )
+                self.reward_map[int(target_position[0]), int(target_position[1])] = 5  # Zielpunkt
 
                 # Best way to fly via A* Algorithm
                 self.best_way_map = np.zeros((60, 60), dtype=int)
 
                 def heuristic(a, b):
-                    return np.linalg.norm(
-                        np.array(a) - np.array(b)
-                    )  # Euklidische Distanz
+                    return np.linalg.norm(np.array(a) - np.array(b))  # Euklidische Distanz
 
                 def a_star_search(reward_map, start, goal):
                     neighbors = [(0, 1), (0, -1), (1, 0), (-1, 0)]
@@ -384,34 +340,21 @@ def _computeReward(
                         for i, j in neighbors:
                             neighbor = (current[0] + i, current[1] + j)
 
-                            if not (
-                                0 <= neighbor[0] < reward_map.shape[0]
-                                and 0 <= neighbor[1] < reward_map.shape[1]
-                            ):
+                            if not (0 <= neighbor[0] < reward_map.shape[0] and 0 <= neighbor[1] < reward_map.shape[1]):
                                 continue  # Außerhalb des Grids
 
                             if reward_map[neighbor[0], neighbor[1]] == 6:
                                 continue  # Hindernis überspringen
 
-                            tentative_g_score = (
-                                gscore[current] + reward_map[neighbor[0], neighbor[1]]
-                            )  # Kosten berücksichtigen
+                            tentative_g_score = gscore[current] + reward_map[neighbor[0], neighbor[1]]  # Kosten berücksichtigen
 
-                            if (
-                                neighbor in close_set
-                                and tentative_g_score
-                                >= gscore.get(neighbor, float("inf"))
-                            ):
+                            if neighbor in close_set and tentative_g_score >= gscore.get(neighbor, float("inf")):
                                 continue
 
-                            if tentative_g_score < gscore.get(
-                                neighbor, float("inf")
-                            ) or all(n[1] != neighbor for n in oheap):
+                            if tentative_g_score < gscore.get(neighbor, float("inf")) or all(n[1] != neighbor for n in oheap):
                                 came_from[neighbor] = current
                                 gscore[neighbor] = tentative_g_score
-                                fscore[neighbor] = tentative_g_score + heuristic(
-                                    neighbor, goal
-                                )
+                                fscore[neighbor] = tentative_g_score + heuristic(neighbor, goal)
                                 heapq.heappush(oheap, (fscore[neighbor], neighbor))
 
                     return None  # Kein Pfad gefunden
@@ -510,15 +453,11 @@ def _computeReward(
                 + self.reward_components["explore_bonus_visited_field"]
                 + self.reward_components["Target_Hit_Reward"]
             )
-            self.last_total_reward = (
-                reward  # Save the last total reward for the dashboard
-            )
+            self.last_total_reward = reward  # Save the last total reward for the dashboard
 
             return reward
 
-        case (
-            "R3"
-        ):  # Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
+        case "R3":  # Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
             # Initialisierung der Reward-Map und a-Star-etc.
             if self.step_counter == 0:
                 # NOTE - Reward Map
@@ -549,19 +488,11 @@ def _computeReward(
                 # self.reward_map = np.rot90(self.reward_map, k=4)
 
                 if Maze_Number == 0:
-                    Start_position = self.INIT_XYZS[f"map{Maze_Number+1}"][0][
-                        random_number_Start
-                    ]
-                    End_Position = self.TARGET_POSITION[f"map{Maze_Number+1}"][0][
-                        random_number_Target
-                    ]
+                    Start_position = self.INIT_XYZS[f"map{Maze_Number+1}"][0][random_number_Start]
+                    End_Position = self.TARGET_POSITION[f"map{Maze_Number+1}"][0][random_number_Target]
                 else:
-                    Start_position = self.INIT_XYZS[f"map{Maze_Number}"][0][
-                        random_number_Start
-                    ]
-                    End_Position = self.TARGET_POSITION[f"map{Maze_Number}"][0][
-                        random_number_Target
-                    ]
+                    Start_position = self.INIT_XYZS[f"map{Maze_Number}"][0][random_number_Start]
+                    End_Position = self.TARGET_POSITION[f"map{Maze_Number}"][0][random_number_Target]
 
                 # Save the reward map to a CSV file
                 with open("reward_map.csv", "w", newline="") as file:
@@ -616,9 +547,7 @@ def _computeReward(
 
             Value_on_Heatmap = self.potential_map[x, y]
 
-            self.reward_components["collision_penalty"] = (
-                -Value_on_Heatmap * self.Multiplier_Collision_Penalty
-            )
+            self.reward_components["collision_penalty"] = -Value_on_Heatmap * self.Multiplier_Collision_Penalty
 
             # COMPUTE TOTAL REWARD
             reward = (
@@ -628,15 +557,11 @@ def _computeReward(
                 + self.reward_components["explore_bonus_visited_field"]
                 + self.reward_components["Target_Hit_Reward"]
             )
-            self.last_total_reward = (
-                reward  # Save the last total reward for the dashboard
-            )
+            self.last_total_reward = reward  # Save the last total reward for the dashboard
 
             return reward
 
-        case (
-            "R4"
-        ):  # Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
+        case "R4":  # Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
             # Initialisierung der Reward-Map und a-Star-etc.
             if self.step_counter == 0:
                 # NOTE - Reward Map
@@ -649,11 +574,7 @@ def _computeReward(
                 # 5 = Zielpunkt,
                 # 6 = Wand
 
-                Explore_Matrix_Size_Init_Punishment = (
-                    self.Explore_Matrix_Size
-                    * self.Explore_Matrix_Size
-                    * self.Reward_for_new_field
-                )
+                Explore_Matrix_Size_Init_Punishment = self.Explore_Matrix_Size * self.Explore_Matrix_Size * self.Reward_for_new_field
                 self.reward_components["Start"] = -Explore_Matrix_Size_Init_Punishment
 
                 # Initializing Reward Map
@@ -677,19 +598,11 @@ def _computeReward(
                 self._compute_potential_fields()
 
                 if Maze_Number == 0:
-                    Start_position = self.INIT_XYZS[f"map{Maze_Number+1}"][0][
-                        random_number_Start
-                    ]
-                    End_Position = self.TARGET_POSITION[f"map{Maze_Number+1}"][0][
-                        random_number_Target
-                    ]
+                    Start_position = self.INIT_XYZS[f"map{Maze_Number+1}"][0][random_number_Start]
+                    End_Position = self.TARGET_POSITION[f"map{Maze_Number+1}"][0][random_number_Target]
                 else:
-                    Start_position = self.INIT_XYZS[f"map{Maze_Number}"][0][
-                        random_number_Start
-                    ]
-                    End_Position = self.TARGET_POSITION[f"map{Maze_Number}"][0][
-                        random_number_Target
-                    ]
+                    Start_position = self.INIT_XYZS[f"map{Maze_Number}"][0][random_number_Start]
+                    End_Position = self.TARGET_POSITION[f"map{Maze_Number}"][0][random_number_Target]
 
                 # Save the reward map to a CSV file
                 with open("reward_map.csv", "w", newline="") as file:
@@ -722,17 +635,11 @@ def _computeReward(
             Value2_for_Matrix = int(self.Explore_Matrix_Size / 2 + 0.5)
 
             # Iterate through 5x5 grid centered on current position
-            for i in range(
-                max(0, x - Value1_for_Matrix), min(60, x + Value2_for_Matrix)
-            ):
-                for j in range(
-                    max(0, y - Value1_for_Matrix), min(60, y + Value2_for_Matrix)
-                ):
+            for i in range(max(0, x - Value1_for_Matrix), min(60, x + Value2_for_Matrix)):
+                for j in range(max(0, y - Value1_for_Matrix), min(60, y + Value2_for_Matrix)):
                     if self.reward_map[i, j] == 0:
                         self.reward_map[i, j] = 1
-                        self.reward_components[
-                            "explore_bonus_new_field"
-                        ] += self.Reward_for_new_field
+                        self.reward_components["explore_bonus_new_field"] += self.Reward_for_new_field
                         self.Area_counter += 1
 
                 # if self.Ratio_Area == 0.6:
@@ -747,9 +654,7 @@ def _computeReward(
 
             Value_on_Heatmap = self.potential_map[x, y]
 
-            self.reward_components["collision_penalty"] = (
-                -Value_on_Heatmap * self.Multiplier_Collision_Penalty
-            )
+            self.reward_components["collision_penalty"] = -Value_on_Heatmap * self.Multiplier_Collision_Penalty
 
             # COMPUTE TOTAL REWARD
             reward = (
@@ -762,15 +667,11 @@ def _computeReward(
 
             self.reward_components["Start"] = 0
 
-            self.last_total_reward = (
-                reward  # Save the last total reward for the dashboard
-            )
+            self.last_total_reward = reward  # Save the last total reward for the dashboard
 
             return reward
 
-        case (
-            "R5"
-        ):  # R4 mit dem Zusatz, dass diese Variante für TR2 optimiert ist, und für den Abstand der Wand nur eine Bestrafun bekommt, wenn danach auch truncated wird
+        case "R5":  # R4 mit dem Zusatz, dass diese Variante für TR2 optimiert ist, und für den Abstand der Wand nur eine Bestrafun bekommt, wenn danach auch truncated wird
 
             if self.step_counter == 0:
                 # NOTE - Reward Map
@@ -783,11 +684,7 @@ def _computeReward(
                 # 5 = Zielpunkt,
                 # 6 = Wand
 
-                Explore_Matrix_Size_Init_Punishment = (
-                    self.Explore_Matrix_Size
-                    * self.Explore_Matrix_Size
-                    * self.Reward_for_new_field
-                )
+                Explore_Matrix_Size_Init_Punishment = self.Explore_Matrix_Size * self.Explore_Matrix_Size * self.Reward_for_new_field
                 self.reward_components["Start"] = -Explore_Matrix_Size_Init_Punishment
 
                 # Initializing Reward Map
@@ -811,19 +708,11 @@ def _computeReward(
                 self._compute_potential_fields()
 
                 if Maze_Number == 0:
-                    Start_position = self.INIT_XYZS[f"map{Maze_Number+1}"][0][
-                        random_number_Start
-                    ]
-                    End_Position = self.TARGET_POSITION[f"map{Maze_Number+1}"][0][
-                        random_number_Target
-                    ]
+                    Start_position = self.INIT_XYZS[f"map{Maze_Number+1}"][0][random_number_Start]
+                    End_Position = self.TARGET_POSITION[f"map{Maze_Number+1}"][0][random_number_Target]
                 else:
-                    Start_position = self.INIT_XYZS[f"map{Maze_Number}"][0][
-                        random_number_Start
-                    ]
-                    End_Position = self.TARGET_POSITION[f"map{Maze_Number}"][0][
-                        random_number_Target
-                    ]
+                    Start_position = self.INIT_XYZS[f"map{Maze_Number}"][0][random_number_Start]
+                    End_Position = self.TARGET_POSITION[f"map{Maze_Number}"][0][random_number_Target]
 
                 # Save the reward map to a CSV file
                 with open("reward_map.csv", "w", newline="") as file:
@@ -853,17 +742,11 @@ def _computeReward(
             Value2_for_Matrix = int(self.Explore_Matrix_Size / 2 + 0.5)
 
             # Iterate through 5x5 grid centered on current position
-            for i in range(
-                max(0, x - Value1_for_Matrix), min(60, x + Value2_for_Matrix)
-            ):
-                for j in range(
-                    max(0, y - Value1_for_Matrix), min(60, y + Value2_for_Matrix)
-                ):
+            for i in range(max(0, x - Value1_for_Matrix), min(60, x + Value2_for_Matrix)):
+                for j in range(max(0, y - Value1_for_Matrix), min(60, y + Value2_for_Matrix)):
                     if self.reward_map[i, j] == 0:
                         self.reward_map[i, j] = 1
-                        self.reward_components[
-                            "explore_bonus_new_field"
-                        ] += self.Reward_for_new_field
+                        self.reward_components["explore_bonus_new_field"] += self.Reward_for_new_field
                         self.Area_counter += 1
 
                 # if self.Ratio_Area == 0.6:
@@ -876,15 +759,8 @@ def _computeReward(
 
             ###### PUNISHMENT FOR COLLISION, wenn Truncated sein sollte, gibt es eine große Bestrafung #####
 
-            if (
-                state[21] < self.Truncated_Wall_Distance
-                or state[22] < self.Truncated_Wall_Distance
-                or state[23] < self.Truncated_Wall_Distance
-                or state[24] < self.Truncated_Wall_Distance
-            ):
-                self.reward_components["collision_penalty_truncated"] = (
-                    self.collision_penalty_truncated
-                )
+            if state[21] < self.Truncated_Wall_Distance or state[22] < self.Truncated_Wall_Distance or state[23] < self.Truncated_Wall_Distance or state[24] < self.Truncated_Wall_Distance:
+                self.reward_components["collision_penalty_truncated"] = self.collision_penalty_truncated
 
             # COMPUTE TOTAL REWARD
             reward = (
@@ -897,15 +773,11 @@ def _computeReward(
 
             self.reward_components["Start"] = 0
 
-            self.last_total_reward = (
-                reward  # Save the last total reward for the dashboard
-            )
+            self.last_total_reward = reward  # Save the last total reward for the dashboard
 
             return reward
 
-        case (
-            "R6"
-        ):  # R5 mit dem Zusatz, dass wenn die Drohne nicht zu nah an der Wand ist, gibt es einen definierten Bonus (Anstatt nur Peitsche jetzt Zuckerbrot und Peitsche)
+        case "R6":  # R5 mit dem Zusatz, dass wenn die Drohne nicht zu nah an der Wand ist, gibt es einen definierten Bonus (Anstatt nur Peitsche jetzt Zuckerbrot und Peitsche)
 
             if self.step_counter == 0:
                 # NOTE - Reward Map
@@ -918,11 +790,7 @@ def _computeReward(
                 # 5 = Zielpunkt,
                 # 6 = Wand
 
-                Explore_Matrix_Size_Init_Punishment = (
-                    self.Explore_Matrix_Size
-                    * self.Explore_Matrix_Size
-                    * self.Reward_for_new_field
-                )
+                Explore_Matrix_Size_Init_Punishment = self.Explore_Matrix_Size * self.Explore_Matrix_Size * self.Reward_for_new_field
                 self.reward_components["Start"] = -Explore_Matrix_Size_Init_Punishment
 
                 # Initializing Reward Map
@@ -946,19 +814,11 @@ def _computeReward(
                 self._compute_potential_fields()
 
                 if Maze_Number == 0:
-                    Start_position = self.INIT_XYZS[f"map{Maze_Number+1}"][0][
-                        random_number_Start
-                    ]
-                    End_Position = self.TARGET_POSITION[f"map{Maze_Number+1}"][0][
-                        random_number_Target
-                    ]
+                    Start_position = self.INIT_XYZS[f"map{Maze_Number+1}"][0][random_number_Start]
+                    End_Position = self.TARGET_POSITION[f"map{Maze_Number+1}"][0][random_number_Target]
                 else:
-                    Start_position = self.INIT_XYZS[f"map{Maze_Number}"][0][
-                        random_number_Start
-                    ]
-                    End_Position = self.TARGET_POSITION[f"map{Maze_Number}"][0][
-                        random_number_Target
-                    ]
+                    Start_position = self.INIT_XYZS[f"map{Maze_Number}"][0][random_number_Start]
+                    End_Position = self.TARGET_POSITION[f"map{Maze_Number}"][0][random_number_Target]
 
                 # Save the reward map to a CSV file
                 with open("reward_map.csv", "w", newline="") as file:
@@ -988,17 +848,11 @@ def _computeReward(
             Value2_for_Matrix = int(self.Explore_Matrix_Size / 2 + 0.5)
 
             # Iterate through 5x5 grid centered on current position
-            for i in range(
-                max(0, x - Value1_for_Matrix), min(60, x + Value2_for_Matrix)
-            ):
-                for j in range(
-                    max(0, y - Value1_for_Matrix), min(60, y + Value2_for_Matrix)
-                ):
+            for i in range(max(0, x - Value1_for_Matrix), min(60, x + Value2_for_Matrix)):
+                for j in range(max(0, y - Value1_for_Matrix), min(60, y + Value2_for_Matrix)):
                     if self.reward_map[i, j] == 0:
                         self.reward_map[i, j] = 1
-                        self.reward_components[
-                            "explore_bonus_new_field"
-                        ] += self.Reward_for_new_field
+                        self.reward_components["explore_bonus_new_field"] += self.Reward_for_new_field
                         self.Area_counter += 1
 
                 # if self.Ratio_Area == 0.6:
@@ -1011,19 +865,10 @@ def _computeReward(
 
             ###### PUNISHMENT FOR COLLISION, wenn Truncated sein sollte, gibt es eine große Bestrafung #####
 
-            if (
-                state[21] < self.Terminated_Wall_Distance
-                or state[22] < self.Terminated_Wall_Distance
-                or state[23] < self.Terminated_Wall_Distance
-                or state[24] < self.Terminated_Wall_Distance
-            ):
-                self.reward_components["collision_penalty_terminated"] = (
-                    self.collision_penalty_terminated
-                )
+            if state[21] < self.Terminated_Wall_Distance or state[22] < self.Terminated_Wall_Distance or state[23] < self.Terminated_Wall_Distance or state[24] < self.Terminated_Wall_Distance:
+                self.reward_components["collision_penalty_terminated"] = self.collision_penalty_terminated
             else:
-                self.reward_components["no_collision_reward"] = (
-                    self.no_collision_reward
-                )  # ein Bonuspunkt, wenn nicht zu nah an der Wand
+                self.reward_components["no_collision_reward"] = self.no_collision_reward  # ein Bonuspunkt, wenn nicht zu nah an der Wand
 
             # COMPUTE TOTAL REWARD
             reward = (
@@ -1037,9 +882,129 @@ def _computeReward(
 
             self.reward_components["Start"] = 0
 
-            self.last_total_reward = (
-                reward  # Save the last total reward for the dashboard
+            self.last_total_reward = reward  # Save the last total reward for the dashboard
+
+            return reward
+
+        case "R7":
+
+            # Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
+            # Initialisierung der Reward-Map und a-Star-etc.
+            if self.step_counter == 0:
+                # NOTE - Reward Map
+
+                # 0 = Unbesucht,
+                # 1 = Einmal besucht,
+                # 2 = Zweimal besucht,
+                # 3 = Dreimal besucht,
+                # 4 = Startpunkt,
+                # 5 = Zielpunkt,
+                # 6 = Wand
+
+                Explore_Matrix_Size_Init_Punishment = self.Explore_Matrix_Size * self.Explore_Matrix_Size * self.Reward_for_new_field
+                self.reward_components["Start"] = -Explore_Matrix_Size_Init_Punishment
+
+                # Initializing Reward Map
+                self.reward_map = np.zeros((60, 60), dtype=int)
+                # Loading the Walls of the CSV Maze into the reward map as ones
+                reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_{Maze_Number}.csv"
+                # reward_map_file_path = f"gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps/map_1.csv"
+
+                with open(reward_map_file_path, "r") as file:
+                    reader = csv.reader(file)
+                    for i, row in enumerate(reader):
+                        for j, value in enumerate(row):
+                            if value == "1":
+                                self.reward_map[j, i] = 6  # Wand
+                # Mirror the reward map vertically
+                # self.reward_map = np.flipud(self.reward_map)
+                # Rotate the reward map 90° mathematically negative
+                # self.reward_map = np.rot90(self.reward_map, k=4)
+
+                # Erstellen der Heatmap für die Belohnung des Abstandes zur Wand und die DistanzMap
+                self._compute_punishment_map()
+
+                # # Visualize the negative reward map
+                # plt.figure(figsize=(10, 10))
+                # plt.imshow(self.linear_punishment_map, cmap="hot", interpolation="nearest")
+                # # plt.colorbar(label="Negative Reward Value")
+                # plt.title("Linear Punishment Map Visualization")
+                # plt.xlabel("X-axis")
+                # plt.ylabel("Y-axis")
+                # # plt.savefig("linear_punishment_map_visualization.png")  # Save the visualization as a PNG file
+                # plt.show()
+
+                if Maze_Number == 0:
+                    Start_position = self.INIT_XYZS[f"map{Maze_Number+1}"][0][random_number_Start]
+                    End_Position = self.TARGET_POSITION[f"map{Maze_Number+1}"][0][random_number_Target]
+                else:
+                    Start_position = self.INIT_XYZS[f"map{Maze_Number}"][0][random_number_Start]
+                    End_Position = self.TARGET_POSITION[f"map{Maze_Number}"][0][random_number_Target]
+
+                # Save the reward map to a CSV file
+                with open("reward_map.csv", "w", newline="") as file:
+                    writer = csv.writer(file)
+                    writer.writerows(self.reward_map)
+
+                self.Area_counter = 0
+
+            reward = 0
+            state = self._getDroneStateVector(0)  # erste Drohne
+
+            #### Rewards initialisieren ####
+            self.reward_components["collision_penalty"] = 0
+            self.reward_components["Step_counter"] = 0
+            # self.reward_components["best_way_bonus"] = 0
+            self.reward_components["explore_bonus_new_field"] = 0
+            self.reward_components["Prozentual_Bonus"] = 0
+
+            ###### 4. REWARD FOR EXPLORING NEW AREAS ######
+
+            if self.step_counter % 1 == 0:
+                self.reward_components["Step_counter"] = self.Punishment_for_Step
+
+            # Get current position
+            current_position = [int(state[0] / 0.05), int(state[1] / 0.05)]
+            # Vereinfachung 18.3: 5x5 grid um die Drohne herum
+            x, y = current_position[0], current_position[1]
+
+            Value1_for_Matrix = int(self.Explore_Matrix_Size / 2 - 0.5)
+            Value2_for_Matrix = int(self.Explore_Matrix_Size / 2 + 0.5)
+
+            # Iterate through 5x5 grid centered on current position
+            for i in range(max(0, x - Value1_for_Matrix), min(60, x + Value2_for_Matrix)):
+                for j in range(max(0, y - Value1_for_Matrix), min(60, y + Value2_for_Matrix)):
+                    if self.reward_map[i, j] == 0:
+                        self.reward_map[i, j] = 1
+                        self.reward_components["explore_bonus_new_field"] += self.Reward_for_new_field
+                        self.Area_counter += 1
+
+                # if self.Ratio_Area == 0.6:
+                #     print("80 Prozent Felder erkundet")
+                #     self.reward_components["Prozentual_Bonus"] = 100
+
+                # if self.Ratio_Area == 0.8:
+                #     print("80 Prozent Felder erkundet")
+                #     self.reward_components["Prozentual_Bonus"] = 100
+
+            ###### 1.PUNISHMENT FOR COLLISION #####
+
+            Value_on_Heatmap = self.linear_punishment_map[x, y]
+
+            self.reward_components["collision_penalty"] = -Value_on_Heatmap * self.Multiplier_Collision_Penalty
+
+            # COMPUTE TOTAL REWARD
+            reward = (
+                self.reward_components["collision_penalty"]
+                + self.reward_components["Step_counter"]
+                + self.reward_components["explore_bonus_new_field"]
+                + self.reward_components["Prozentual_Bonus"]
+                + self.reward_components["Start"]
             )
+
+            self.reward_components["Start"] = 0
+
+            self.last_total_reward = reward  # Save the last total reward for the dashboard
 
             return reward
 

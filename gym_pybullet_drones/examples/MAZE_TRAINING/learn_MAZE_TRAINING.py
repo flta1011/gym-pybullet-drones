@@ -81,6 +81,7 @@ DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
 
 DEFAULT_TRAIN_TIMESTEPS = 8 * 1e5  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
+DEFAULT_TRAIN_TIMESTEPS = 8 * 1e5  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULT_TARGET_REWARD = 99999
 DEFAULT_NUMBER_LAST_ACTIONS = 20
 
@@ -151,6 +152,10 @@ DEFAULT_collision_penalty_terminated = -1000  # mit -10 Trainiert SAC gut, bleib
 DEFAULT_Terminated_Wall_Distance = 0.15  # worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25
 DEFAULT_no_collision_reward = 0.25  # nur bei R5 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
 
+# R7 - Negative Reward Map Settings
+DEFAULT_Punishment_for_Walls = 8
+DEFAULT_Influence_of_Walls = 4
+
 #####################################MODEL_VERSION###########################
 """MODEL_Versionen: 
 - M1:   PPO
@@ -160,7 +165,7 @@ DEFAULT_no_collision_reward = 0.25  # nur bei R5 aktiv! Ist das Zuckerbrot für 
 - M5:   DQN_NN_MultiInputPolicy mit fullyConnectLayer
 - M6:   SAC
 """
-MODEL_VERSION = "M3"
+MODEL_VERSION = "M5"
 
 #####################################REWARD_VERSION###########################
 """REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
@@ -170,9 +175,10 @@ MODEL_VERSION = "M3"
 - R4:   Collision zieht je nach Wert auf Heatmap diesen von der Reward ab (7 etwa Wand, 2 nahe Wand, 0.) und Abzug für jeden Step
 - R5:   R4 mit dem Zusatz, dass diese Variante für TR2 optimiert ist, und für den Abstand der Wand nur eine Bestrafun bekommt, wenn danach auch truncated wird
 - R6:   R5 mit dem Zusatz, dass wenn die Drohne nicht zu nah an der Wand ist, gibt es einen definierten Bonus (Anstatt nur Peitsche jetzt Zuckerbrot und Peitsche)
+- R7:   Statt Heatmap nun Bestrafungsmap (lineare Bestrafung - Abstand zur Wand), Truncated bei Wandberührung, Abzug für jeden Step
 """
 
-REWARD_VERSION = "R6"
+REWARD_VERSION = "R7"
 
 #####################################OBSERVATION_TYPE###########################
 """ObservationType:
@@ -186,7 +192,7 @@ REWARD_VERSION = "R6"
 
 """
 
-OBSERVATION_TYPE = "O5"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
+OBSERVATION_TYPE = "O7"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
 
 #####################################ACTION_TYPE###########################
 """ActionType:'
@@ -244,6 +250,8 @@ header_params = [
     "DEFAULT_collision_penalty_terminated",
     "DEFAULT_Terminated_Wall_Distance",
     "DEFAULT_no_collision_reward",
+    "DEFAULT_Punishment_for_Walls",
+    "DEFAULT_Influence_of_Walls",
     "DEFAULT_USE_PRETRAINED_MODEL",
     "DEFAULT_PRETRAINED_MODEL_PATH",
     "DEFAULT_NUMBER_LAST_ACTIONS",
@@ -285,6 +293,8 @@ parameter_daten = [
     DEFAULT_USE_PRETRAINED_MODEL,
     DEFAULT_PRETRAINED_MODEL_PATH,
     DEFAULT_NUMBER_LAST_ACTIONS,
+    DEFAULT_Punishment_for_Walls,
+    DEFAULT_Influence_of_Walls,
 ]
 
 
@@ -345,6 +355,8 @@ def run(
     collision_penalty_terminated=DEFAULT_collision_penalty_terminated,
     Terminated_Wall_Distance=DEFAULT_Terminated_Wall_Distance,
     no_collision_reward=DEFAULT_no_collision_reward,
+    punishment_for_walls=DEFAULT_Punishment_for_Walls,
+    influence_of_walls=DEFAULT_Influence_of_Walls,
 ):
     if TRAIN:
         filename = os.path.join(output_folder, "save-" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
@@ -389,6 +401,8 @@ def run(
                     collision_penalty_terminated=collision_penalty_terminated,
                     Terminated_Wall_Distance=Terminated_Wall_Distance,
                     no_collision_reward=no_collision_reward,
+                    punishment_for_walls=punishment_for_walls,
+                    influence_of_walls=influence_of_walls,
                 ),
                 n_envs=1,
                 seed=0,
@@ -432,6 +446,8 @@ def run(
                     collision_penalty_terminated=collision_penalty_terminated,
                     Terminated_Wall_Distance=Terminated_Wall_Distance,
                     no_collision_reward=no_collision_reward,
+                    punishment_for_walls=punishment_for_walls,
+                    influence_of_walls=influence_of_walls,
                 ),
                 n_envs=1,
                 seed=0,
