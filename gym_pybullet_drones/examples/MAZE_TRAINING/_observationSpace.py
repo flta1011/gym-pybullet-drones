@@ -44,7 +44,8 @@ def _observationSpace(self):
             - Channel 4: sin(yaw) (values in [-1,1])
             - Channel 5: cos(yaw) (values in [-1,1])
             """
-            grid_size = self.slam.grid_size
+            grid_size = int(self.slam.cropped_map_size_grid)
+
 
             # Create proper shaped arrays for low and high bounds
             low = np.zeros((5, grid_size, grid_size), dtype=np.float32)
@@ -69,7 +70,8 @@ def _observationSpace(self):
             - Channel 7: second Last Clipped Action (values in [-1,1])
             - Channel 8: third Last Clipped Action (values in [-1,1])
             """
-            grid_size = self.slam.grid_size
+            grid_size = int(self.slam.cropped_map_size_grid)
+
 
             # Create proper shaped arrays for low and high bounds
             low = np.zeros((8, grid_size, grid_size), dtype=np.float32)
@@ -93,7 +95,7 @@ def _observationSpace(self):
             The observation space is a Box with shape (1, grid_size, grid_size) containing:
             - Channel 1: Grayscale SLAM map (values in [0,255])
             """
-            grid_size = self.slam.grid_size
+            grid_size = int(self.slam.cropped_map_size_grid)
 
             # Create proper shaped arrays for low and high bounds
             low = np.zeros((grid_size, grid_size, 1), dtype=np.uint8)
@@ -144,7 +146,8 @@ def _observationSpace(self):
             - Channel 7: second Last Clipped Action (values in [-1,1])
             - Channel 8: third Last Clipped Action (values in [-1,1])
             """
-            grid_size = self.slam.grid_size
+            grid_size = int(self.slam.cropped_map_size_grid)
+
 
             observationSpace = spaces.Dict({
                 "image": spaces.Box(low=0, high=255, shape=(grid_size, grid_size, 1), dtype=np.uint8), #Grayscale image
@@ -172,7 +175,7 @@ def _observationSpace(self):
             - Channel 7: second Last Clipped Action (values in [-1,1])
             - Channel 8: third Last Clipped Action (values in [-1,1])
             """
-            grid_size = self.slam.grid_size
+            grid_size = int(self.slam.cropped_map_size_grid)
 
             observationSpace = spaces.Dict({
                 "image": spaces.Box(low=0, high=255, shape=(grid_size, grid_size, 1), dtype=np.uint8), #Grayscale image

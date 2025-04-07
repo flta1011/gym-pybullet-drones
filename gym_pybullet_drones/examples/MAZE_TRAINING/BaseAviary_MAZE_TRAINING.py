@@ -92,7 +92,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         Danger_Threshold_Wall=0.20,
         EPISODE_LEN_SEC=10 * 60,
         dash_active=False,
-        map_size_slam=4,  # map size 8x8m, damit, egal in welche Richtung die Drohne fliegt, in jeden Quadranten ein komplettes Labyrinth dargestellt werden kann
+        map_size_slam=9,  # map size 8x8m, damit, egal in welche Richtung die Drohne fliegt, in jeden Quadranten ein komplettes Labyrinth dargestellt werden kann
         resolution_slam=0.05,
         REWARD_VERSION="R1",
         ACTION_TYPE="A1",
