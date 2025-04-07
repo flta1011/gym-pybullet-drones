@@ -53,9 +53,7 @@ def _computeObs(self):
             else:
                 modified_obs.append(9999)
 
-            return np.array(
-                modified_obs, dtype=np.float32
-            )  # vorne (0,1,2), hinten (0,1,2), links (0,1,2), rechts (0,1,2), oben (1,9999)
+            return np.array(modified_obs, dtype=np.float32)  # vorne (0,1,2), hinten (0,1,2), links (0,1,2), rechts (0,1,2), oben (1,9999)
 
         case "O2":  # 4 Kanalig Bild Slam, X, Y, Yaw Position
             """
@@ -88,21 +86,13 @@ def _computeObs(self):
             norm_y = (pos[1] + 4) / 8
 
             # Muss auf die Input Shape des DQN angepasst werden: (grid_size, grid_size)
-            pos_x_channel = np.full(
-                (self.grid_size, self.grid_size), norm_x, dtype=np.float32
-            )
-            pos_y_channel = np.full(
-                (self.grid_size, self.grid_size), norm_y, dtype=np.float32
-            )
+            pos_x_channel = np.full((self.grid_size, self.grid_size), norm_x, dtype=np.float32)
+            pos_y_channel = np.full((self.grid_size, self.grid_size), norm_y, dtype=np.float32)
 
             # Yaw in zwei Kanäle: sin und cos
             yaw = state[9]  # [9]=yaw-Winkel
-            yaw_sin_channel = np.full(
-                (self.grid_size, self.grid_size), np.sin(yaw), dtype=np.float32
-            )
-            yaw_cos_channel = np.full(
-                (self.grid_size, self.grid_size), np.cos(yaw), dtype=np.float32
-            )
+            yaw_sin_channel = np.full((self.grid_size, self.grid_size), np.sin(yaw), dtype=np.float32)
+            yaw_cos_channel = np.full((self.grid_size, self.grid_size), np.cos(yaw), dtype=np.float32)
 
             # Staple die 5 Kanäle zusammen: Shape = (5, grid_size, grid_size)
             # obs = np.stack([slam_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel], axis=0)
@@ -165,34 +155,20 @@ def _computeObs(self):
             norm_y = (pos[1] + 4) / 8
 
             # Muss auf die Input Shape des DQN angepasst werden: (grid_size, grid_size)
-            pos_x_channel = np.full(
-                (self.grid_size, self.grid_size), norm_x, dtype=np.float32
-            )
-            pos_y_channel = np.full(
-                (self.grid_size, self.grid_size), norm_y, dtype=np.float32
-            )
+            pos_x_channel = np.full((self.grid_size, self.grid_size), norm_x, dtype=np.float32)
+            pos_y_channel = np.full((self.grid_size, self.grid_size), norm_y, dtype=np.float32)
 
             # Yaw in zwei Kanäle: sin und cos
             yaw = state[9]  # [9]=yaw-Winkel
-            yaw_sin_channel = np.full(
-                (self.grid_size, self.grid_size), np.sin(yaw), dtype=np.float32
-            )
-            yaw_cos_channel = np.full(
-                (self.grid_size, self.grid_size), np.cos(yaw), dtype=np.float32
-            )
+            yaw_sin_channel = np.full((self.grid_size, self.grid_size), np.sin(yaw), dtype=np.float32)
+            yaw_cos_channel = np.full((self.grid_size, self.grid_size), np.cos(yaw), dtype=np.float32)
 
             last_Action_1 = state[26]  # [25]=last_Action
             last_Action_2 = state[27]  # [26]=last_Action
             last_Action_3 = state[28]  # [27]=last_Action
-            last_Action_channel_1 = np.full(
-                (self.grid_size, self.grid_size), last_Action_1, dtype=np.float32
-            )
-            last_Action_channel_2 = np.full(
-                (self.grid_size, self.grid_size), last_Action_2, dtype=np.float32
-            )
-            last_Action_channel_3 = np.full(
-                (self.grid_size, self.grid_size), last_Action_3, dtype=np.float32
-            )
+            last_Action_channel_1 = np.full((self.grid_size, self.grid_size), last_Action_1, dtype=np.float32)
+            last_Action_channel_2 = np.full((self.grid_size, self.grid_size), last_Action_2, dtype=np.float32)
+            last_Action_channel_3 = np.full((self.grid_size, self.grid_size), last_Action_3, dtype=np.float32)
 
             # Staple die 5 Kanäle zusammen: Shape = (5, grid_size, grid_size)
             # obs = np.stack([slam_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel], axis=0)
@@ -281,13 +257,9 @@ def _computeObs(self):
             if isinstance(self.last_actions, (list, np.ndarray)):
                 modified_obs.extend(self.last_actions)  # Append elements individually
             else:
-                modified_obs.append(
-                    self.last_actions
-                )  # Append directly if it's a single value
+                modified_obs.append(self.last_actions)  # Append directly if it's a single value
 
-            return np.array(
-                modified_obs, dtype=np.float32
-            )  # vorne (0,1,2), hinten (0,1,2), links (0,1,2), rechts (0,1,2), oben (1,9999)
+            return np.array(modified_obs, dtype=np.float32)  # vorne (0,1,2), hinten (0,1,2), links (0,1,2), rechts (0,1,2), oben (1,9999)
 
         case "O6":  # 4 Kanalig Bild Slam, X, Y, Yaw Position
             """
@@ -381,3 +353,89 @@ def _computeObs(self):
             self.obs = obs  # für Visualisierung in dem Dashboard
 
             return obs
+
+        case "O8":  # X-Pos,Y-Pos, 4-raycast readings, 4-Interest Werte (Interest-Front,Back, left, right: Summe freie Flächen, die noch nicht besucht wurden), x mal last clipped actions
+            # Get the current state of the drone
+            state = self._getDroneStateVector(0)
+
+            # Select specific values from obs and concatenate them directly
+            obs = [state[21], state[22], state[23], state[24]]  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
+
+            # Modify observation based on distance thresholds
+            modified_obs = []
+
+            # X- & Y-Position der Drohne
+            modified_obs.append(round(state[0], 3))  # x-Position
+            modified_obs.append(round(state[1], 3))  # y-Position
+
+            # Raycast Readings
+            # abstände anhängen mit 3 Nachkommastellen
+            for distance in obs:
+                modified_obs.append(round(distance, 3))
+
+            # Interest values
+            interest_values = self._compute_interest_values()
+
+            # Append interest values to the observation
+            modified_obs.append(interest_values["up"])
+            modified_obs.append(interest_values["down"])
+            modified_obs.append(interest_values["left"])
+            modified_obs.append(interest_values["right"])
+
+            # Last clipped actions
+            # Ensure last_actions is flattened and appended correctly
+            if isinstance(self.last_actions, (list, np.ndarray)):
+                modified_obs.extend(self.last_actions)  # Append elements individually
+            else:
+                modified_obs.append(self.last_actions)  # Append directly if it's a single value
+
+            return np.array(modified_obs, dtype=np.float32)
+
+        case "O9":  # Slam-image, x-Pos, y-Pos, racast readings,4-Interest Werte (Interest-Front,Back, left, right: Summe freie Flächen, die noch nicht besucht wurden), x mal last clipped actions
+            # Get the current state of the drone
+            state = self._getDroneStateVector(0)
+
+            # Select specific values from obs and concatenate them directly
+            raycasts = [state[21], state[22], state[23], state[24]]  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
+
+            # Interest values
+            interest_values = self._compute_interest_values()
+
+            obs = dict(
+                {
+                    "image": self.slam.occupancy_grid,
+                    "x": round(state[0], 3),
+                    "y": round(state[1], 3),
+                    "raycast": raycasts,
+                    "interest_values": interest_values,
+                    "last_clipped_actions": self.last_actions,
+                }
+            )
+            self.obs = obs  # für Visualisierung in dem Dashboard
+
+            return obs
+
+
+def _compute_interest_values(self):
+    drone_position = np.argwhere(self.slam == 255)  # Get the drone position
+    # drone_position = [int(state[0] / 0.05), int(state[1] / 0.05)]
+    free_areas = np.argwhere(self.slam == 200)  # Get the free areas
+
+    min_x_y = drone_position[0]
+    max_x_y = [min_x_y[0] + 5, min_x_y[1] + 5]
+
+    # Initialize interest values for each direction
+    interest_values = {"up": 0, "down": 0, "left": 0, "right": 0}
+
+    # Iterate through free areas and calculate their relation to the drone
+    for area in free_areas:
+        if area[0] < min_x_y[0]:
+            interest_values["up"] += 1
+        elif area[0] > max_x_y[0]:
+            interest_values["down"] += 1
+        if area[1] < min_x_y[1]:
+            interest_values["left"] += 1
+        elif area[1] > max_x_y[1]:
+            interest_values["right"] += 1
+
+    return interest_values

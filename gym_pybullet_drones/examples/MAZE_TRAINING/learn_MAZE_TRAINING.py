@@ -188,7 +188,7 @@ DEFAULT_Influence_of_Walls = 4
 - M5:   DQN_NN_MultiInputPolicy mit fullyConnectLayer
 - M6:   SAC
 """
-MODEL_VERSION = "M3"
+MODEL_VERSION = "M5"
 
 #####################################REWARD_VERSION###########################
 """REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
@@ -200,7 +200,6 @@ MODEL_VERSION = "M3"
 - R6:   R5 mit dem Zusatz, dass wenn die Drohne nicht zu nah an der Wand ist, gibt es einen definierten Bonus (Anstatt nur Peitsche jetzt Zuckerbrot und Peitsche)
 - R7:   Statt Heatmap nun Bestrafungsmap (lineare Bestrafung - Abstand zur Wand), Truncated bei Wandberührung, Abzug für jeden Step
 """
-
 REWARD_VERSION = "R6"
 
 #####################################OBSERVATION_TYPE###########################
@@ -214,10 +213,8 @@ REWARD_VERSION = "R6"
 - 07: Slam-image, XY Position, Yaw (sin,cos), last actions (n Stück), raycasts
 - 08: X-Pos,Y-Pos, raycast readings 4x,4-Interest Werte (Interest-Front,Back, left, right: Summe freie Flächen, die noch nicht besucht wurden), x mal last clipped actions
 - 09: Slam-image, x-Pos, y-Pos, racast readings,4-Interest Werte (Interest-Front,Back, left, right: Summe freie Flächen, die noch nicht besucht wurden), x mal last clipped actions
-
 """
-
-OBSERVATION_TYPE = "O5"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
+OBSERVATION_TYPE = "O9"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
 
 #####################################ACTION_TYPE###########################
 """ActionType:'
@@ -225,7 +222,6 @@ OBSERVATION_TYPE = "O5"  # Bei neuer Oberservation Type mit SLAM dies in den IF-
 - A2: Vier Richtungen, diskret
 - A3: Vier Richtungen, kontinuierlich # für SAC
 """
-
 ACTION_TYPE = "A2"
 
 #####################################TRUNCATED_TYPE###########################
@@ -240,7 +236,6 @@ TRUNCATED_TYPE = "TR1"
 - T2: 80% der Fläche erkundet oder Crash (Abstandswert geringer als X)
 """
 TERMINATED_TYPE = "T2"
-
 
 ################
 # INIT_RPYS = {}
