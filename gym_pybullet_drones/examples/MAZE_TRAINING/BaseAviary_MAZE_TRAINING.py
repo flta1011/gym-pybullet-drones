@@ -189,7 +189,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.PHYSICS = physics
         self.OBSTACLES = obstacles
         self.USER_DEBUG = user_debug_gui
-        self.ADVANCED_STATUS_PLOT = advanced_status_plot
         self.URDF = self.DRONE_MODEL.value + ".urdf"
         self.OUTPUT_FOLDER = output_folder
 
@@ -669,6 +668,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         else:
             self.New_Maze_number_counter += 1
             print(f"--------------------------MAZE_NUMBER: {self.Maze_number}---------------------------------------")
+            print(f"--------------------------StartNUMBER: {self.random_number_Start}---------------------------------------")
             print(f"--------------------------MAZE_NUMBER_Counter: { self.New_Maze_number_counter}---------------------------------------")
 
         p.resetSimulation(physicsClientId=self.CLIENT)
@@ -1333,6 +1333,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         #### Initialize/reset counters and zero-valued variables ###
         self.RESET_TIME = time.time()
         self.step_counter = 0
+        self.too_close_to_wall_counter = 0
         self.action = np.zeros((self.NUM_DRONES, 4))
         self.first_render_call = True
         self.X_AX = -1 * np.ones(self.NUM_DRONES)
@@ -1910,16 +1911,16 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                     break
 
             targetPosition_swapped = [0, 0, 1]  # NOTE - TARGET POSITION FIX
-            if self.Maze_number == 0:
-                targetPosition = self.TARGET_POSITION[f"map{self.Maze_number+1}"][0][self.random_number_Target][0:2]
+            if self.Maze_number == 0 or self.Maze_number == 21:
+                targetPosition = self.TARGET_POSITION[f"map{1}"][0][self.random_number_Target][0:2]
             else:
                 targetPosition = self.TARGET_POSITION[f"map{self.Maze_number}"][0][self.random_number_Target][0:2]
             targetPosition_swapped[1] = targetPosition[0]
             targetPosition_swapped[0] = targetPosition[1]
         else:
             targetPosition_swapped = [0, 0, 1]  # NOTE - TARGET POSITION FIX
-            if self.Maze_number == 0:
-                targetPosition = self.TARGET_POSITION[f"map{self.Maze_number+1}"][0][self.random_number_Target][0:2]
+            if self.Maze_number == 0 or self.Maze_number == 21:
+                targetPosition = self.TARGET_POSITION[f"map{1}"][0][self.random_number_Target][0:2]
             else:
                 targetPosition = self.TARGET_POSITION[f"map{self.Maze_number}"][0][self.random_number_Target][0:2]
             targetPosition_swapped[1] = targetPosition[0]

@@ -28,8 +28,6 @@ import numpy as np
 
 # Importiere benötigte Module für CNN-DQN
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 import yaml
 from stable_baselines3 import DQN, PPO, SAC
 from stable_baselines3.common.callbacks import (
@@ -61,14 +59,36 @@ from gym_pybullet_drones.utils.enums import (
 from gym_pybullet_drones.utils.utils import str2bool, sync
 
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
-DEFAULT_GUI_TRAIN = True
-Default_Train = True
-Default_Test = False
+
+
+Training_Mode = "Training"  # "Training" oder "Test"
+GUI_Mode = "Train"  # "Train" oder "Test" oder "NoGUI"
+
+
+################################
+if Training_Mode == "Training":
+    Default_Train = True
+    Default_Test = False
+elif Training_Mode == "Test":
+    Default_Train = False
+    Default_Test = True
+
+if GUI_Mode == "Train":
+    DEFAULT_GUI_TRAIN = True
+    DEFAULT_GUI_TEST = False
+elif GUI_Mode == "Test":
+    DEFAULT_GUI_TRAIN = False
+    DEFAULT_GUI_TEST = True
+elif GUI_Mode == "NoGUI":
+    DEFAULT_GUI_TRAIN = False
+    DEFAULT_GUI_TEST = False
+######################################
+
+
 Default_Test_filename_test = "Model_test"
 DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_ADVANCED_STATUS_PLOT = False
 
-DEFAULT_GUI_TEST = False
 
 DEFAULT_USE_PRETRAINED_MODEL = True
 # DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/results/durchgelaufen-DQN/final_model.zip'
@@ -77,6 +97,7 @@ DEFAULT_PRETRAINED_MODEL_PATH = (
     "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M6_R6_O5_A3_TR1_T1_20250407-013856/save-04.07.2025_01.38.56/best_model.zip"
 )
 
+Ziel_Training_TIME_In_Simulation = 24 * 60 * 60  # 5 Stunden
 DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
 
@@ -118,6 +139,7 @@ for map_name, map_values in Target_Start_Values.items():
 
 DEFAULT_RECORD_VIDEO = False
 DEFAULT_OUTPUT_FOLDER = "results"
+DEFAULT_OUTPUT_FOLDER = "results"
 DEFAULT_COLAB = False
 DEFAULT_PYB_FREQ = 100
 DEFAULT_CTRL_FREQ = 50
@@ -125,6 +147,14 @@ DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 2  # mit 5hz fliegt die Drohne noch zu o
 DEFAULT_EPISODE_LEN_SEC = 5 * 60  # 15 * 60
 DEFAULT_DRONE_MODEL = DroneModel("cf2x")
 DEFAULT_PUSHBACK_ACTIVE = False
+
+DEFAULT_EVAL_FREQ = 5 * 1e4
+DEFAULT_EVAL_EPISODES = 1
+
+DEFAULT_TRAIN_TIMESTEPS = Ziel_Training_TIME_In_Simulation * DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
+DEFAULT_TARGET_REWARD = 99999999999999
+
+DEFAULF_NUMBER_LAST_ACTIONS = 80
 
 DEFAULT_OBS = ObservationType("kin")  # 'kin' or 'rgb'
 DEFAULT_ACT = ActionType("vel")  # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'one_d_pid'
