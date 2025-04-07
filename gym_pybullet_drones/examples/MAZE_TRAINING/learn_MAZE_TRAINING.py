@@ -70,7 +70,7 @@ DEFAULT_ADVANCED_STATUS_PLOT = False
 
 DEFAULT_GUI_TEST = False
 
-DEFAULT_USE_PRETRAINED_MODEL = False
+DEFAULT_USE_PRETRAINED_MODEL = True
 # DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/results/durchgelaufen-DQN/final_model.zip'
 # DEFAULT_PRETRAINED_MODEL_PATH = "/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/results/save-03.07.2025_02.23.46/best_model.zip"
 DEFAULT_PRETRAINED_MODEL_PATH = (
@@ -82,7 +82,7 @@ DEFAULT_EVAL_EPISODES = 1
 
 DEFAULT_TRAIN_TIMESTEPS = 8 * 1e5  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULT_TARGET_REWARD = 99999
-DEFAULF_NUMBER_LAST_ACTIONS = 20
+DEFAULT_NUMBER_LAST_ACTIONS = 20
 
 # file_path = "gym_pybullet_drones/examples/MAZE_TRAINING/Maze_init_target.yaml"
 file_path = os.path.join(os.path.dirname(__file__), "Maze_init_target.yaml")
@@ -215,6 +215,9 @@ TERMINATED_TYPE = "T2"
 
 # Der Dateipfad zur CSV-Datei
 timestamp = time.strftime("%Y%m%d-%H%M%S")
+# check if folder gym_pybullet_drones/Auswertungen_der_Modelle/ exists and if not create it
+if not os.path.exists("gym_pybullet_drones/Auswertungen_der_Modelle/"):
+    os.makedirs("gym_pybullet_drones/Auswertungen_der_Modelle/")
 Auswertungs_CSV_Datei = f"gym_pybullet_drones/Auswertungen_der_Modelle/{MODEL_VERSION}_{REWARD_VERSION}_{OBSERVATION_TYPE}_{ACTION_TYPE}_{TRUNCATED_TYPE}_{TERMINATED_TYPE}_{timestamp}.csv"
 # Funktion, um eine CSV zu erstellen (beim ersten Aufruf) oder zu erweitern
 
@@ -230,7 +233,7 @@ header_params = [
     "DEFAULT_EVAL_EPISODES",
     "DEFAULT_TRAIN_TIMESTEPS",
     "DEFAULT_TARGET_REWARD",
-    "DEFAULF_NUMBER_LAST_ACTIONS",
+    "DEFAULT_NUMBER_LAST_ACTIONS",
     "DEFAULT_PYB_FREQ",
     "DEFAULT_CTRL_FREQ",
     "DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ",
@@ -241,6 +244,9 @@ header_params = [
     "DEFAULT_collision_penalty_terminated",
     "DEFAULT_Terminated_Wall_Distance",
     "DEFAULT_no_collision_reward",
+    "DEFAULT_USE_PRETRAINED_MODEL",
+    "DEFAULT_PRETRAINED_MODEL_PATH",
+    "DEFAULT_NUMBER_LAST_ACTIONS",
 ]
 
 # Header für die dynamischen Daten (Trainingsergebnisse)
@@ -265,7 +271,7 @@ parameter_daten = [
     DEFAULT_EVAL_EPISODES,
     DEFAULT_TRAIN_TIMESTEPS,
     DEFAULT_TARGET_REWARD,
-    DEFAULF_NUMBER_LAST_ACTIONS,
+    DEFAULT_NUMBER_LAST_ACTIONS,
     DEFAULT_PYB_FREQ,
     DEFAULT_CTRL_FREQ,
     DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,
@@ -276,6 +282,9 @@ parameter_daten = [
     DEFAULT_collision_penalty_terminated,
     DEFAULT_Terminated_Wall_Distance,
     DEFAULT_no_collision_reward,
+    DEFAULT_USE_PRETRAINED_MODEL,
+    DEFAULT_PRETRAINED_MODEL_PATH,
+    DEFAULT_NUMBER_LAST_ACTIONS,
 ]
 
 
@@ -326,7 +335,7 @@ def run(
     TRAIN=Default_Train,
     TEST=Default_Test,
     filename_test=Default_Test_filename_test,
-    number_last_actions=DEFAULF_NUMBER_LAST_ACTIONS,
+    number_last_actions=DEFAULT_NUMBER_LAST_ACTIONS,
     Reward_for_new_field=DEFAULT_REWARD_FOR_NEW_FIELD,
     Punishment_for_Step=DEFAULT_Punishment_for_Step,
     Auswertungs_CSV_Datei=Auswertungs_CSV_Datei,
@@ -656,14 +665,31 @@ def run(
     #     input("Press Enter to continue...")
 
     if TEST:
+        """MODEL_Versionen:
+        - M1:   PPO
+        - M2:   DQN_CNNPolicy_StandardFeatureExtractor
+        - M3:   DQN_MLPPolicy
+        - M4:   DQN_CNNPolicy_CustomFeatureExtractor
+        - M5:   DQN_NN_MultiInputPolicy mit fullyConnectLayer
+        - M6:   SAC
+        """
 
-        # if os.path.isfile(filename+'/final_model.zip'):
-        #     path = filename+'/final_model.zip'
-        if os.path.isfile(filename_test + "/best_model.zip"):
-            path = filename_test + "/best_model.zip"
-        else:
-            print("[ERROR]: no model under the specified path", filename_test)
-        model = DQN.load(path)
+        # Load the appropriate model type based on MODEL_Version
+        match MODEL_Version:
+            case "M1":
+                model = PPO.load(DEFAULT_PRETRAINED_MODEL_PATH)
+            case "M2":
+                model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH)
+            case "M3":
+                model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH)
+            case "M4":
+                model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH)
+            case "M5":
+                model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH)
+            case "M6":
+                model = SAC.load(DEFAULT_PRETRAINED_MODEL_PATH)
+            case _:
+                print(f"[ERROR]: Unknown model version in TEST-(PREDICTION)-MODE: {MODEL_Version}")
 
         #### Show (and record a video of) the model's performance ##
 
@@ -692,6 +718,7 @@ def run(
                 DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
                 VelocityScale=DEFAULT_VelocityScale,
                 Procent_Step=Procent_Step,
+                number_last_actions=number_last_actions,
                 Punishment_for_Step=Punishment_for_Step,
                 Reward_for_new_field=Reward_for_new_field,
                 csv_file_path=Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
