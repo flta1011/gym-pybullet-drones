@@ -1,0 +1,43 @@
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_REWARD_FOR_NEW_FIELD,DEFAULT_Punishment_for_Step,DEFAULT_EVAL_FREQ,DEFAULT_EVAL_EPISODES,DEFAULT_TRAIN_TIMESTEPS,DEFAULT_TARGET_REWARD,DEFAULF_NUMBER_LAST_ACTIONS,DEFAULT_PYB_FREQ,DEFAULT_CTRL_FREQ,DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_Multiplier_Collision_Penalty,DEFAULT_VelocityScale,DEFAULT_explore_Matrix_Size,DEFAULT_collision_penalty_truncated,DEFAULT_Truncated_Version,DEFAULT_Truncated_Wall_Distance,DEFAULT_no_collision_reward,DEFAULT_Punishment_for_Walls,DEFAULT_Influence_of_Walls
+2,300,2,0,50000.0,1,800000.0,99999,20,100,50,2,300,6,0.5,5,-10,TR1,0.19,1,-2,3
+
+Runde,Terminated,Truncated,Map-Abgedeckt,Wand berührungen,Summe Reward,Maze_number,Uhrzeit
+1,kein_Terminated,Zeit abgelaufen,0.12,211,2904.0,21,20250406-234010
+2,kein_Terminated,Zeit abgelaufen,0.25,135,2918.0,21,20250406-234028
+3,kein_Terminated,Zeit abgelaufen,0.12,366,4182.0,21,20250406-234046
+4,kein_Terminated,Zeit abgelaufen,0.12,274,3508.0,21,20250406-234104
+5,kein_Terminated,Zeit abgelaufen,0.14,363,4746.0,21,20250406-234124
+6,kein_Terminated,Zeit abgelaufen,0.17,258,3592.0,21,20250406-234141
+7,kein_Terminated,Zeit abgelaufen,0.26,214,3816.0,21,20250406-234159
+8,kein_Terminated,Zeit abgelaufen,0.14,324,4090.0,21,20250406-234218
+9,kein_Terminated,Zeit abgelaufen,0.15,305,3922.0,21,20250406-234235
+10,kein_Terminated,Zeit abgelaufen,0.21,272,3646.0,21,20250406-234254
+11,kein_Terminated,Zeit abgelaufen,0.24,195,3176.0,21,20250406-234312
+12,kein_Terminated,Zeit abgelaufen,0.21,187,2628.0,21,20250406-234331
+13,kein_Terminated,Zeit abgelaufen,0.11,371,4524.0,21,20250406-234349
+14,kein_Terminated,Zeit abgelaufen,0.16,388,4716.0,21,20250406-234408
+15,kein_Terminated,Zeit abgelaufen,0.15,461,5940.0,21,20250406-234427
+16,kein_Terminated,Zeit abgelaufen,0.22,326,4390.0,21,20250406-234446
+17,kein_Terminated,Zeit abgelaufen,0.25,159,3076.0,21,20250406-234506
+18,kein_Terminated,Zeit abgelaufen,0.21,367,4808.0,21,20250406-234526
+19,kein_Terminated,Zeit abgelaufen,0.23,265,3722.0,21,20250406-234544
+20,kein_Terminated,Zeit abgelaufen,0.15,367,4508.0,21,20250406-234603
+21,kein_Terminated,Zeit abgelaufen,0.19,338,4862.0,21,20250406-234621
+22,kein_Terminated,Zeit abgelaufen,0.3,156,3160.0,21,20250406-234639
+23,kein_Terminated,Zeit abgelaufen,0.11,432,5324.0,21,20250406-234657
+24,kein_Terminated,Zeit abgelaufen,0.15,409,5192.0,21,20250406-234715
+25,kein_Terminated,Zeit abgelaufen,0.15,498,5194.0,21,20250406-234734
+26,kein_Terminated,Zeit abgelaufen,0.15,435,5344.0,21,20250406-234752
+27,kein_Terminated,Zeit abgelaufen,0.2,350,4632.0,21,20250406-234810
+28,kein_Terminated,Zeit abgelaufen,0.25,361,4918.0,21,20250406-234828
+29,kein_Terminated,Zeit abgelaufen,0.15,457,4896.0,21,20250406-234847
+30,kein_Terminated,Zeit abgelaufen,0.15,436,5244.0,21,20250406-234905
+31,kein_Terminated,Zeit abgelaufen,0.18,442,5680.0,21,20250406-234923
+32,kein_Terminated,Zeit abgelaufen,0.13,415,4350.0,21,20250406-234941
+33,kein_Terminated,Zeit abgelaufen,0.06,545,6242.0,21,20250406-234959
+34,kein_Terminated,Zeit abgelaufen,0.09,506,6152.0,21,20250406-235019
+35,kein_Terminated,Zeit abgelaufen,0.06,523,6268.0,21,20250406-235037
+36,kein_Terminated,Zeit abgelaufen,0.04,559,6546.0,21,20250406-235055
+37,kein_Terminated,Zeit abgelaufen,0.05,577,6770.0,21,20250406-235114
+38,kein_Terminated,Zeit abgelaufen,0.04,548,6110.0,21,20250406-235132
+39,kein_Terminated,Zeit abgelaufen,0.05,568,6770.0,21,20250406-235151

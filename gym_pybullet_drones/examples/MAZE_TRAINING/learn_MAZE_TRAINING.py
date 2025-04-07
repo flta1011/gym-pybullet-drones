@@ -151,8 +151,8 @@ DEFAULT_Truncated_Wall_Distance = 0.19  # worst case betrachtung; wenn Drohe im 
 DEFAULT_no_collision_reward = 1  # nur bei R5 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
 
 # R7 - Negative Reward Map Settings
-DEFAULT_Punishment_for_Walls = -2
-DEFAULT_Influence_of_Walls = 3
+DEFAULT_Punishment_for_Walls = 8
+DEFAULT_Influence_of_Walls = 4
 
 #####################################MODEL_VERSION###########################
 """MODEL_Versionen: 
