@@ -410,27 +410,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                     farVal=1000.0,
                 )
 
-        if self.ADVANCED_STATUS_PLOT:
-            # Matplotlib Setup für Live-Plot
-            self.fig, self.ax = plt.subplots()
-            self.time_vals = []
-            self.wall_distance_vals = []  # Abstand zur Wand
-            self.action_vals = []  # Gewählte Aktion (-1, 0, 1)
-            self.step_reward_vals = []  # Reward des aktuellen Schritts
-            self.total_reward_vals = []  # Gesamtreward
-
-            (self.line_wall_distance,) = self.ax.plot([], [], "b-", label="Abstand zur Wand [m]")
-            (self.line_action,) = self.ax.plot([], [], "g-", label="Aktion (1, 0, -1)")
-            (self.line_step_reward,) = self.ax.plot([], [], "r-", label="Step Reward")
-            (self.line_total_reward,) = self.ax.plot([], [], "orange", label="Gesamtreward")
-
-            self.ax.set_xlim(0, 100)  # X-Achse für 100 Zeitschritte
-            self.ax.set_ylim(-5, 5)  # Skalierung für die verschiedenen Werte
-            self.ax.set_xlabel("Zeitschritt")
-            self.ax.set_ylabel("Werte")
-            self.ax.legend()
-            plt.ion()  # Interaktiver Modus für Live-Update
-
         #### Set initial poses #####################################
 
         if self.INIT_XYZS is None:
@@ -1165,25 +1144,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             self.step_counter = self.step_counter + (
                 1 * self.PYB_STEPS_IN_ACTUAL_STEP_CALL
             )  # umgeändert auf den neuen Zähler, weil wir in einem Step in diesem Fall mehr Physics-Schritte durchlaufen, als PYB_STEPS_PER_CTRL
-
-        if self.ADVANCED_STATUS_PLOT:
-            # Daten für den Plot speichern
-            self.time_vals.append(self.step_counter)
-            self.wall_distance_vals.append(state[21])
-            self.action_vals.append(self.action[0][0])
-            self.step_reward_vals.append(reward)
-            self.total_reward_vals.append(self.RewardCounterActualTrainRun)
-
-            # Graph aktualisieren
-            self.line_wall_distance.set_data(self.time_vals, self.wall_distance_vals)
-            self.line_action.set_data(self.time_vals, self.action_vals)
-            self.line_step_reward.set_data(self.time_vals, self.step_reward_vals)
-            self.line_total_reward.set_data(self.time_vals, self.total_reward_vals)
-
-            self.ax.set_xlim(0, max(100, len(self.time_vals)))  # Dynamische X-Achse
-
-            plt.pause(0.01)  # Kurze Pause für das Update
-            plt.draw()  # Manuelles Neuzeichnen erzwingen
 
         #### Update the camera position to follow the drone ####
         self._update_camera()

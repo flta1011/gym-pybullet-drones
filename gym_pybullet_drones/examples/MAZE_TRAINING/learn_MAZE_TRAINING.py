@@ -85,12 +85,11 @@ elif GUI_Mode == "NoGUI":
 ######################################
 
 
-Default_Test_filename_test = "Model_test"
 DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_ADVANCED_STATUS_PLOT = False
 
 
-DEFAULT_USE_PRETRAINED_MODEL = True
+DEFAULT_USE_PRETRAINED_MODEL = False
 # DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/results/durchgelaufen-DQN/final_model.zip'
 # DEFAULT_PRETRAINED_MODEL_PATH = "/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/results/save-03.07.2025_02.23.46/best_model.zip"
 DEFAULT_PRETRAINED_MODEL_PATH = (
@@ -195,7 +194,7 @@ DEFAULT_Influence_of_Walls = 4
 - M5:   DQN_NN_MultiInputPolicy mit fullyConnectLayer
 - M6:   SAC
 """
-MODEL_VERSION = "M5"
+MODEL_VERSION = "M3"
 
 #####################################REWARD_VERSION###########################
 """REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
@@ -203,12 +202,12 @@ MODEL_VERSION = "M5"
 - R2:   Zusätzlich Bestrafung für zu nah an der Wand
 - R3:   Collision zieht je nach Wert auf Heatmap diesen von der Reward ab (7 etwa Wand, 2 nahe Wand, 0.)
 - R4:   Collision zieht je nach Wert auf Heatmap diesen von der Reward ab (7 etwa Wand, 2 nahe Wand, 0.) und Abzug für jeden Step
-- R5:   R4 mit dem Zusatz, dass diese Variante für TR2 optimiert ist, und für den Abstand der Wand nur eine Bestrafun bekommt, wenn danach auch truncated wird
+- R5:   R4 mit dem Anpassung der Bestrafung für die Wand: ist optimiert für T2 optimiert.  Zu nah an der Wand wird nur einmal Bestraft, nämlich dann, wenn Terminated wird (wegen zu nah an der Wand) (Wert = DEFAULT_collision_penalty_terminated)
 - R6:   R5 mit dem Zusatz, dass wenn die Drohne nicht zu nah an der Wand ist, gibt es einen definierten Bonus (Anstatt nur Peitsche jetzt Zuckerbrot und Peitsche)
 - R7:   Statt Heatmap nun Bestrafungsmap (lineare Bestrafung - Abstand zur Wand), Truncated bei Wandberührung, Abzug für jeden Step
 """
 
-REWARD_VERSION = "R7"
+REWARD_VERSION = "R6"
 
 #####################################OBSERVATION_TYPE###########################
 """ObservationType:
@@ -218,11 +217,13 @@ REWARD_VERSION = "R7"
 - 04: Kanal 1: Normalisierte SLAM Map (Occupancy Map)
 - O5: XY Position, Yaw (sin,cos), Raycast readings, last clipped actions 
 - 06: Slam-image, XY Position, Yaw (sin,cos), last actions (n Stück)
-- 07: Slam-image, XY Position, Yaw (sin,cos), last actions (n Stück), raycasts 
+- 07: Slam-image, XY Position, Yaw (sin,cos), last actions (n Stück), raycasts
+- 08: X-Pos,Y-Pos, raycast readings 4x,4-Interest Werte (Interest-Front,Back, left, right: Summe freie Flächen, die noch nicht besucht wurden), x mal last clipped actions
+- 09: Slam-image, x-Pos, y-Pos, racast readings,4-Interest Werte (Interest-Front,Back, left, right: Summe freie Flächen, die noch nicht besucht wurden), x mal last clipped actions
 
 """
 
-OBSERVATION_TYPE = "O7"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
+OBSERVATION_TYPE = "O5"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
 
 #####################################ACTION_TYPE###########################
 """ActionType:'
@@ -374,7 +375,6 @@ def run(
     Procent_Step=DEFAULT_Procent_Step,
     TRAIN=Default_Train,
     TEST=Default_Test,
-    filename_test=Default_Test_filename_test,
     number_last_actions=DEFAULT_NUMBER_LAST_ACTIONS,
     Reward_for_new_field=DEFAULT_REWARD_FOR_NEW_FIELD,
     Punishment_for_Step=DEFAULT_Punishment_for_Step,
