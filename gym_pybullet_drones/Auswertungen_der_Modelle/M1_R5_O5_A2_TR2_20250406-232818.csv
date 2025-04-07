@@ -1,0 +1,20 @@
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_REWARD_FOR_NEW_FIELD,DEFAULT_Punishment_for_Step,DEFAULT_EVAL_FREQ,DEFAULT_EVAL_EPISODES,DEFAULT_TRAIN_TIMESTEPS,DEFAULT_TARGET_REWARD,DEFAULF_NUMBER_LAST_ACTIONS,DEFAULT_PYB_FREQ,DEFAULT_CTRL_FREQ,DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_Multiplier_Collision_Penalty,DEFAULT_VelocityScale,DEFAULT_explore_Matrix_Size,DEFAULT_collision_penalty_truncated,DEFAULT_Truncated_Version,DEFAULT_Truncated_Wall_Distance
+2,300,2,-0.1,50000.0,1,500000.0,99999,20,100,50,2,300,10,0.5,5,-1000,TR2,0.19
+
+Runde,Terminated,Truncated,Map-Abgedeckt,Wand berührungen,Summe Reward,Maze_number,Uhrzeit
+0,kein_Terminated,Zu nah an der Wand,0.01,3,-970.5,21,20250406-232823
+0,kein_Terminated,Zu nah an der Wand,0.01,1,-1000.1,21,20250406-232826
+0,kein_Terminated,Zu nah an der Wand,0.01,1,-1000.1,21,20250406-232829
+0,kein_Terminated,Zu nah an der Wand,0.03,5,-881.7,21,20250406-232832
+0,kein_Terminated,Zu nah an der Wand,0.03,8,-852.5999999999999,21,20250406-232836
+0,kein_Terminated,Zu nah an der Wand,0.01,2,-990.2,21,20250406-232839
+0,kein_Terminated,Zu nah an der Wand,0.03,6,-848.4,21,20250406-232842
+0,kein_Terminated,Zu nah an der Wand,0.01,4,-980.4,21,20250406-232845
+0,kein_Terminated,Zu nah an der Wand,0.02,8,-922.1,21,20250406-232848
+0,kein_Terminated,Zu nah an der Wand,0.01,2,-990.2,21,20250406-232851
+0,kein_Terminated,Zu nah an der Wand,0.01,1,-1000.1,21,20250406-232854
+0,kein_Terminated,Zu nah an der Wand,0.01,1,-1000.1,21,20250406-232857
+0,kein_Terminated,Zu nah an der Wand,0.01,1,-1000.1,21,20250406-232900
+0,kein_Terminated,Zu nah an der Wand,0.01,1,-980.3000000000001,21,20250406-232903
+0,kein_Terminated,Zu nah an der Wand,0.01,1,-1000.1,21,20250406-232906
+0,kein_Terminated,Zu nah an der Wand,0.01,1,-1000.1,21,20250406-232909

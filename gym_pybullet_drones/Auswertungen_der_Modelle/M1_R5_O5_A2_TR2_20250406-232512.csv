@@ -1,0 +1,24 @@
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_REWARD_FOR_NEW_FIELD,DEFAULT_Punishment_for_Step,DEFAULT_EVAL_FREQ,DEFAULT_EVAL_EPISODES,DEFAULT_TRAIN_TIMESTEPS,DEFAULT_TARGET_REWARD,DEFAULF_NUMBER_LAST_ACTIONS,DEFAULT_PYB_FREQ,DEFAULT_CTRL_FREQ,DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_Multiplier_Collision_Penalty,DEFAULT_VelocityScale,DEFAULT_explore_Matrix_Size,DEFAULT_collision_penalty_truncated,DEFAULT_Truncated_Version,DEFAULT_Truncated_Wall_Distance
+2,300,2,-0.1,50000.0,1,600000.0,99999,20,100,50,2,300,10,0.5,5,-1000,TR2,0.19
+
+Runde,Terminated,Truncated,Map-Abgedeckt,Wand berührungen,Summe Reward,Maze_number,Uhrzeit
+0,kein_Terminated,Zu nah an der Wand,0.02,3,-939.0,21,20250406-232517
+0,kein_Terminated,Zu nah an der Wand,0.07,4,-621.3000000000018,21,20250406-232523
+0,kein_Terminated,Zu nah an der Wand,0.05,29,-735.6999999999997,21,20250406-232528
+0,kein_Terminated,Zu nah an der Wand,0.01,2,-970.4,21,20250406-232531
+0,kein_Terminated,Zu nah an der Wand,0.01,2,-990.2,21,20250406-232534
+0,kein_Terminated,Zu nah an der Wand,0.11,13,-327.8000000000019,21,20250406-232541
+0,kein_Terminated,Zu nah an der Wand,0.01,5,-968.7,21,20250406-232544
+0,kein_Terminated,Zu nah an der Wand,0.04,7,-806.1999999999997,21,20250406-232549
+0,kein_Terminated,Zu nah an der Wand,0.01,2,-990.2,21,20250406-232552
+0,kein_Terminated,Zu nah an der Wand,0.02,2,-915.7,21,20250406-232555
+0,kein_Terminated,Zu nah an der Wand,0.01,5,-970.5,21,20250406-232558
+0,kein_Terminated,Zu nah an der Wand,0.01,1,-1000.1,21,20250406-232601
+0,kein_Terminated,Zu nah an der Wand,0.01,1,-1010.1,21,20250406-232604
+0,kein_Terminated,Zu nah an der Wand,0.01,1,-1000.1,21,20250406-232607
+0,kein_Terminated,Zu nah an der Wand,0.01,1,-1000.1,21,20250406-232610
+0,kein_Terminated,Zu nah an der Wand,0.01,1,-1000.1,21,20250406-232613
+0,kein_Terminated,Zu nah an der Wand,0.01,1,-1000.1,21,20250406-232616
+0,kein_Terminated,Zu nah an der Wand,0.01,1,-1010.1,21,20250406-232619
+0,kein_Terminated,Zu nah an der Wand,0.01,1,-1000.1,21,20250406-232622
+0,kein_Terminated,Zu nah an der Wand,0.01,1,-1010.1,21,20250406-232625
