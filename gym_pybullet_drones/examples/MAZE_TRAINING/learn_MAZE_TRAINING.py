@@ -62,18 +62,18 @@ from gym_pybullet_drones.utils.utils import str2bool, sync
 
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
 DEFAULT_GUI_TRAIN = True
-Default_Train = True
-Default_Test = False
+Default_Train = False
+Default_Test = True
 Default_Test_filename_test = "Model_test"
 DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_ADVANCED_STATUS_PLOT = False
 
 DEFAULT_GUI_TEST = False
 
-DEFAULT_USE_PRETRAINED_MODEL = False
+DEFAULT_USE_PRETRAINED_MODEL = True
 # DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/results/durchgelaufen-DQN/final_model.zip'
 # DEFAULT_PRETRAINED_MODEL_PATH = "/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/results/save-03.07.2025_02.23.46/best_model.zip"
-DEFAULT_PRETRAINED_MODEL_PATH = "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M6_R6_O5_A3_TR1_T1_20250407-013856/save-04.07.2025_01.38.56/best_model.zip"
+DEFAULT_PRETRAINED_MODEL_PATH = "/Users/floriantausch/Documents/Referenzmaterial/Master-Studium/HKA_RKIM/F&E_Projekte/F&E- Projekt 1 - Drohnenrennen/Github-Repo/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/save-04.01.2025_20.42.00/final_model.zip"
 
 DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
@@ -82,7 +82,7 @@ DEFAULT_TRAIN_TIMESTEPS = (
     8 * 1e5
 )  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULT_TARGET_REWARD = 99999
-DEFAULF_NUMBER_LAST_ACTIONS = 20
+DEFAULT_NUMBER_LAST_ACTIONS = 20
 
 # file_path = "gym_pybullet_drones/examples/MAZE_TRAINING/Maze_init_target.yaml"
 file_path = os.path.join(os.path.dirname(__file__), "Maze_init_target.yaml")
@@ -237,7 +237,7 @@ header_params = [
     "DEFAULT_EVAL_EPISODES",
     "DEFAULT_TRAIN_TIMESTEPS",
     "DEFAULT_TARGET_REWARD",
-    "DEFAULF_NUMBER_LAST_ACTIONS",
+    "DEFAULT_NUMBER_LAST_ACTIONS",
     "DEFAULT_PYB_FREQ",
     "DEFAULT_CTRL_FREQ",
     "DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ",
@@ -248,6 +248,9 @@ header_params = [
     "DEFAULT_collision_penalty_terminated",
     "DEFAULT_Terminated_Wall_Distance",
     "DEFAULT_no_collision_reward",
+    "DEFAULT_USE_PRETRAINED_MODEL",
+    "DEFAULT_PRETRAINED_MODEL_PATH",
+    "DEFAULT_NUMBER_LAST_ACTIONS",
 ]
 
 # Header für die dynamischen Daten (Trainingsergebnisse)
@@ -272,7 +275,7 @@ parameter_daten = [
     DEFAULT_EVAL_EPISODES,
     DEFAULT_TRAIN_TIMESTEPS,
     DEFAULT_TARGET_REWARD,
-    DEFAULF_NUMBER_LAST_ACTIONS,
+    DEFAULT_NUMBER_LAST_ACTIONS,
     DEFAULT_PYB_FREQ,
     DEFAULT_CTRL_FREQ,
     DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,
@@ -283,6 +286,9 @@ parameter_daten = [
     DEFAULT_collision_penalty_terminated,
     DEFAULT_Terminated_Wall_Distance,
     DEFAULT_no_collision_reward,
+    DEFAULT_USE_PRETRAINED_MODEL,
+    DEFAULT_PRETRAINED_MODEL_PATH,
+    DEFAULT_NUMBER_LAST_ACTIONS,
 ]
 
 
@@ -333,7 +339,7 @@ def run(
     TRAIN=Default_Train,
     TEST=Default_Test,
     filename_test=Default_Test_filename_test,
-    number_last_actions=DEFAULF_NUMBER_LAST_ACTIONS,
+    number_last_actions=DEFAULT_NUMBER_LAST_ACTIONS,
     Reward_for_new_field=DEFAULT_REWARD_FOR_NEW_FIELD,
     Punishment_for_Step=DEFAULT_Punishment_for_Step,
     Auswertungs_CSV_Datei=Auswertungs_CSV_Datei,
@@ -703,52 +709,70 @@ def run(
     #     input("Press Enter to continue...")
 
     if TEST:
-
-        # if os.path.isfile(filename+'/final_model.zip'):
-        #     path = filename+'/final_model.zip'
-        if os.path.isfile(filename_test + "/best_model.zip"):
-            path = filename_test + "/best_model.zip"
-        else:
-            print("[ERROR]: no model under the specified path", filename_test)
-        model = DQN.load(path)
+        """MODEL_Versionen: 
+        - M1:   PPO
+        - M2:   DQN_CNNPolicy_StandardFeatureExtractor
+        - M3:   DQN_MLPPolicy
+        - M4:   DQN_CNNPolicy_CustomFeatureExtractor
+        - M5:   DQN_NN_MultiInputPolicy mit fullyConnectLayer
+        - M6:   SAC
+        """
+            
+        # Load the appropriate model type based on MODEL_Version
+        match MODEL_Version:
+            case "M1":
+                model = PPO.load(DEFAULT_PRETRAINED_MODEL_PATH)
+            case "M2":
+                model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH)
+            case "M3":
+                model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH)
+            case "M4":
+                model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH)
+            case "M5":
+                model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH)
+            case "M6":
+                model = SAC.load(DEFAULT_PRETRAINED_MODEL_PATH)
+            case _:
+                print(f"[ERROR]: Unknown model version in TEST-(PREDICTION)-MODE: {MODEL_Version}")
 
         #### Show (and record a video of) the model's performance ##
 
         test_env = make_vec_env(
             BaseRLAviary_MAZE_TRAINING,
             env_kwargs=dict(
-                drone_model=drone_model,
-                initial_xyzs=INIT_XYZS,
-                initial_rpys=INIT_RPYS,
-                physics=Physics.PYB,
-                gui=gui_Train,
-                user_debug_gui=user_debug_gui,
-                pyb_freq=pyb_freq,
-                ctrl_freq=ctrl_freq,  # Ansatz: von 60 auf 10 reduzieren, damit die gewählte Action länger wirkt
-                reward_and_action_change_freq=reward_and_action_change_freq,  # Ansatz: neu hinzugefügt, da die Step-Funktion vorher mit der ctrl_freq aufgerufen wurde, Problem war dann, dass bei hoher Frequenz die Raycasts keine Änderung hatten, dafür die Drohne aber sauber geflogen ist (60). Wenn der Wert niedriger war, hat es mit den Geschwindigkeiten und Actions besser gepasst, dafür ist die Drohne nicht sauber geflogen, weil die Ctrl-Frequenz für das erreichen der gewählten Action zu niedrig war (10/20).
-                act=ActionType.VEL,
-                target_position=target_position,
-                dash_active=dash_active,
-                EPISODE_LEN_SEC=EPISODE_LEN_SEC,
-                REWARD_VERSION=reward_version,
-                ACTION_TYPE=Action_Type,
-                OBSERVATION_TYPE=ObservationType,
-                Truncated_Type=Truncated_Type,
-                Terminated_Type=Terminated_Type,
-                Pushback_active=Pushback_active,
-                DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
-                VelocityScale=DEFAULT_VelocityScale,
-                Procent_Step=Procent_Step,
-                Punishment_for_Step=Punishment_for_Step,
-                Reward_for_new_field=Reward_for_new_field,
-                csv_file_path=Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
-                Explore_Matrix_Size=Explore_Matrix_Size,
-                Maze_number=DEFAULT_Maze_number,
-                New_Maze_number=New_Maze_number,
-                New_Position_number=New_Position_number,
-                collision_penalty_terminated=collision_penalty_terminated,
-                Terminated_Wall_Distance=Terminated_Wall_Distance,
-                no_collision_reward=no_collision_reward,
+                    drone_model=drone_model,
+                    initial_xyzs=INIT_XYZS,
+                    initial_rpys=INIT_RPYS,
+                    physics=Physics.PYB,
+                    gui=gui_Train,
+                    user_debug_gui=user_debug_gui,
+                    pyb_freq=pyb_freq,
+                    ctrl_freq=ctrl_freq,  # Ansatz: von 60 auf 10 reduzieren, damit die gewählte Action länger wirkt
+                    reward_and_action_change_freq=reward_and_action_change_freq,  # Ansatz: neu hinzugefügt, da die Step-Funktion vorher mit der ctrl_freq aufgerufen wurde, Problem war dann, dass bei hoher Frequenz die Raycasts keine Änderung hatten, dafür die Drohne aber sauber geflogen ist (60). Wenn der Wert niedriger war, hat es mit den Geschwindigkeiten und Actions besser gepasst, dafür ist die Drohne nicht sauber geflogen, weil die Ctrl-Frequenz für das erreichen der gewählten Action zu niedrig war (10/20).
+                    act=ActionType.VEL,
+                    target_position=target_position,
+                    dash_active=dash_active,
+                    EPISODE_LEN_SEC=EPISODE_LEN_SEC,
+                    REWARD_VERSION=reward_version,
+                    ACTION_TYPE=Action_Type,
+                    OBSERVATION_TYPE=ObservationType,
+                    Truncated_Type=Truncated_Type,
+                    Terminated_Type=Terminated_Type,
+                    Pushback_active=Pushback_active,
+                    DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
+                    VelocityScale=DEFAULT_VelocityScale,
+                    Procent_Step=Procent_Step,
+                    number_last_actions=number_last_actions,
+                    Punishment_for_Step=Punishment_for_Step,
+                    Reward_for_new_field=Reward_for_new_field,
+                    csv_file_path=Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
+                    Explore_Matrix_Size=Explore_Matrix_Size,
+                    Maze_number=DEFAULT_Maze_number,
+                    New_Maze_number=New_Maze_number,
+                    New_Position_number=New_Position_number,
+                    collision_penalty_terminated=collision_penalty_terminated,
+                    Terminated_Wall_Distance=Terminated_Wall_Distance,
+                    no_collision_reward=no_collision_reward,
             ),
             n_envs=1,
             seed=0,
