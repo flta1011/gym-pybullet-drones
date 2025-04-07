@@ -25,10 +25,15 @@ def _preprocessAction(self, action):
         else:
             v_unit_vector = np.zeros(3)
 
-        # NOTE - neu hinzueefügt, dass die Drohne sich auch drehen kann
-        current_yaw = state[9]
-        change_value_yaw = action[k, 4]
-        Calculate_new_yaw = current_yaw + change_value_yaw
+        match self.ACTION_SPACE_VERSION:
+            case "A2" | "A3":
+                Calculate_new_yaw = self.INIT_RPYS[0, 2]  # wenn Drehung nicht in der ActionSpace ist , soll die Drohne nicht verdreht werden!
+
+            case "A1":
+                # NOTE - neu hinzuegefügt, dass die Drohne sich auch drehen kann
+                current_yaw = state[9]
+                change_value_yaw = action[k, 4]
+                Calculate_new_yaw = current_yaw + change_value_yaw
 
         temp, _, _ = self.ctrl[k].computeControl(
             control_timestep=self.CTRL_TIMESTEP,

@@ -1043,7 +1043,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 "Trainingszeit aktueller Run(s):",
                 "{:.3f}".format(self.timestamp_actual),
             )
-            print(f" Observationspace (forward,backward, letzte Action (Velocity in X-Richtung!)):\t {state[21]} \t{state[22]} \t{state[26]}")
+            print(f" Observationspace (forward,backward)):\t {state[21]} \t{state[22]}")
             print(f"aktuelle Action (Velocity in X-Richtung!) / Reward für Action: {self.action[0][0]} / {reward}")
             print(f"Reward aktueller Trainingslauf: {self.RewardCounterActualTrainRun}")
             print(f"current Physics-Step / Reward-Steps: {self.step_counter} / {self.timestamp_actual/(1/self.REWARD_AND_ACTION_CHANGE_FREQ)}")

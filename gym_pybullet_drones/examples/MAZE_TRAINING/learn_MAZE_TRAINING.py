@@ -123,12 +123,6 @@ DEFAULT_TARGET_POSITION = {}
 
 DEFAULT_ALTITUDE = 0.5
 
-# INIT_RPYS = {}
-INIT_RPYS = np.array(
-    [
-        [0, 0, np.random.uniform(0, 2 * np.pi)],
-    ]
-)
 
 # Iterieren Sie über die Maps und speichern Sie die Werte im Dictionary
 for map_name, map_values in Target_Start_Values.items():
@@ -246,6 +240,26 @@ TRUNCATED_TYPE = "TR1"
 - T2: 80% der Fläche erkundet oder Crash (Abstandswert geringer als X)
 """
 TERMINATED_TYPE = "T2"
+
+
+################
+# INIT_RPYS = {}
+if ACTION_TYPE == "A1":
+    INIT_RPYS = np.array(
+        [
+            [0, 0, np.random.uniform(0, 2 * np.pi)],
+        ]
+    )
+else:
+    INIT_RPYS = np.array(
+        [
+            [
+                0,
+                0,
+                np.pi / 2,
+            ],  # nicht 0 Grad bei z, da dann die Achsen wie das Haupt-Koordinatensystem liegt. Vorwärts wäre dann nach rechts im Bild, da die x-Achse von oben gesehen nach Rechts zeigt
+        ]
+    )
 
 
 #######################################CSV ERSTELLEN####################
