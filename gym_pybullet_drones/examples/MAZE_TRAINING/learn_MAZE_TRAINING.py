@@ -62,8 +62,8 @@ from gym_pybullet_drones.utils.utils import str2bool, sync
 
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
 DEFAULT_GUI_TRAIN = True
-Default_Train = True
-Default_Test = False
+Default_Train = False
+Default_Test = True
 Default_Test_filename_test = "Model_test"
 DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_ADVANCED_STATUS_PLOT = False
@@ -73,13 +73,13 @@ DEFAULT_GUI_TEST = False
 DEFAULT_USE_PRETRAINED_MODEL = False
 # DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/results/durchgelaufen-DQN/final_model.zip'
 # DEFAULT_PRETRAINED_MODEL_PATH = "/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/results/save-03.07.2025_02.23.46/best_model.zip"
-DEFAULT_PRETRAINED_MODEL_PATH = "/home/moritz_s/Documents/RKIM_1/F_u_E_Drohnenrennen/GitRepo/gym-pybullet-drones/results/save-03.19.2025_22.33.41/best_model.zip"
+DEFAULT_PRETRAINED_MODEL_PATH = "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M6_R6_O5_A3_TR1_T1_20250407-013856/save-04.07.2025_01.38.56/best_model.zip"
 
 DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
 
 DEFAULT_TRAIN_TIMESTEPS = (
-    4 * 1e5
+    8 * 1e5
 )  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULT_TARGET_REWARD = 99999
 DEFAULF_NUMBER_LAST_ACTIONS = 20
@@ -147,10 +147,12 @@ DEFAULT_Maze_number = 21
 DEFAULT_New_Maze_number = 10
 DEFAULT_New_Position_number = 1
 
-DEFAULT_collision_penalty_terminated = -10
+DEFAULT_collision_penalty_terminated = (
+    -20
+)  # mit -10 Trainiert SAC gut, bleibt aber noch ca. 50 mal an der Wand hängen--
 DEFAULT_Terminated_Wall_Distance = 0.15  # worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25
 DEFAULT_no_collision_reward = (
-    1  # nur bei R5 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
+    0.25  # nur bei R5 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
 )
 
 #####################################MODEL_VERSION###########################
