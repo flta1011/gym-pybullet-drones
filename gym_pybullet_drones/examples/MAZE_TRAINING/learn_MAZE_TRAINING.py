@@ -62,8 +62,8 @@ from gym_pybullet_drones.utils.utils import str2bool, sync
 
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
 DEFAULT_GUI_TRAIN = True
-Default_Train = False
-Default_Test = True
+Default_Train = True
+Default_Test = False
 Default_Test_filename_test = "Model_test"
 DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_ADVANCED_STATUS_PLOT = False
@@ -219,6 +219,9 @@ TERMINATED_TYPE = "T1"
 
 # Der Dateipfad zur CSV-Datei
 timestamp = time.strftime("%Y%m%d-%H%M%S")
+#check if folder gym_pybullet_drones/Auswertungen_der_Modelle/ exists and if not create it
+if not os.path.exists("gym_pybullet_drones/Auswertungen_der_Modelle/"):
+    os.makedirs("gym_pybullet_drones/Auswertungen_der_Modelle/")
 Auswertungs_CSV_Datei = f"gym_pybullet_drones/Auswertungen_der_Modelle/{MODEL_VERSION}_{REWARD_VERSION}_{OBSERVATION_TYPE}_{ACTION_TYPE}_{TRUNCATED_TYPE}_{TERMINATED_TYPE}_{timestamp}.csv"
 # Funktion, um eine CSV zu erstellen (beim ersten Aufruf) oder zu erweitern
 
