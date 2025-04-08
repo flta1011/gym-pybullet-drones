@@ -100,7 +100,7 @@ Ziel_Training_TIME_In_Simulation = 24 * 60 * 60  # 5 Stunden
 DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
 
-DEFAULT_TRAIN_TIMESTEPS = 8 * 1e5  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
+
 DEFAULT_TRAIN_TIMESTEPS = 8 * 1e5  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULT_TARGET_REWARD = 99999
 DEFAULT_NUMBER_LAST_ACTIONS = 20
@@ -156,7 +156,7 @@ DEFAULT_MA = False
 
 DEFAULT_DASH_ACTIVE = False
 
-DEFAULT_Multiplier_Collision_Penalty = 6
+DEFAULT_Multiplier_Collision_Penalty = 10
 
 DEFAULT_VelocityScale = 0.5
 
@@ -525,7 +525,7 @@ def run(
                         # learning_rate=0.0004, #nicht verwendet --> erst mal standard fürs Training
                         device="cuda:0",
                         verbose=1,
-                        buffer_size=5000,
+                        buffer_size=50000,
                     )
 
             case "M3":  # M3: DQN_MLPPolicy
@@ -589,6 +589,7 @@ def run(
                         verbose=1,
                         batch_size=32,
                         seed=42,
+                        buffer_size=500000,
                         buffer_size=500000,
                         gamma=0.8,
                     )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher

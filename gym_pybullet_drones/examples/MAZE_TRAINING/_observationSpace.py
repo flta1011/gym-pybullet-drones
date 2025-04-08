@@ -43,7 +43,7 @@ def _observationSpace(self):
             - Channel 4: sin(yaw) (values in [-1,1])
             - Channel 5: cos(yaw) (values in [-1,1])
             """
-            grid_size = self.slam.grid_size
+            grid_size = int(self.slam.cropped_map_size_grid)
 
             # Create proper shaped arrays for low and high bounds
             low = np.zeros((5, grid_size, grid_size), dtype=np.float32)
@@ -68,7 +68,7 @@ def _observationSpace(self):
             - Channel 7: second Last Clipped Action (values in [-1,1])
             - Channel 8: third Last Clipped Action (values in [-1,1])
             """
-            grid_size = self.slam.grid_size
+            grid_size = int(self.slam.cropped_map_size_grid)
 
             # Create proper shaped arrays for low and high bounds
             low = np.zeros((8, grid_size, grid_size), dtype=np.float32)
@@ -90,15 +90,15 @@ def _observationSpace(self):
             """
             Returns the observation space for the CNN-DQN model.
             The observation space is a Box with shape (1, grid_size, grid_size) containing:
-            - Channel 1: Normalized SLAM map (values in [0,1])
+            - Channel 1: Grayscale SLAM map (values in [0,255])
             """
-            grid_size = self.slam.grid_size
+            grid_size = int(self.slam.cropped_map_size_grid)
 
             # Create proper shaped arrays for low and high bounds
-            low = np.zeros((1, grid_size, grid_size), dtype=np.float32)
-            high = np.ones((1, grid_size, grid_size), dtype=np.float32)
+            low = np.zeros((grid_size, grid_size, 1), dtype=np.uint8)
+            high = np.full((grid_size, grid_size, 1), 255, dtype=np.uint8)
 
-            return spaces.Box(low=low, high=high, dtype=np.float32)
+            return spaces.Box(low=low, high=high, dtype=np.uint8)
 
         case "O5":  # X, Y, YAW, Raycast readings, last clipped action, second last clipped action, third last clipped action
             """Returns the observation space.
@@ -143,7 +143,7 @@ def _observationSpace(self):
             - Channel 7: second Last Clipped Action (values in [-1,1])
             - Channel 8: third Last Clipped Action (values in [-1,1])
             """
-            grid_size = self.slam.grid_size
+            grid_size = int(self.slam.cropped_map_size_grid)
 
             observationSpace = spaces.Dict(
                 {
@@ -176,7 +176,7 @@ def _observationSpace(self):
             - Channel 7: second Last Clipped Action (values in [-1,1])
             - Channel 8: third Last Clipped Action (values in [-1,1])
             """
-            grid_size = self.slam.grid_size
+            grid_size = int(self.slam.cropped_map_size_grid)
 
             observationSpace = spaces.Dict(
                 {
@@ -208,7 +208,7 @@ def _observationSpace(self):
             - Channel 5: Interest Values (values in [0,32400])
             - Channel 6: n last Clipped Actions (values in [0, 3])
             """
-            grid_size = self.slam.grid_size
+            grid_size = int(self.slam.cropped_map_size_grid)
 
             observationSpace = spaces.Dict(
                 {
@@ -236,7 +236,7 @@ def _observationSpace(self):
             - Channel 7: second Last Clipped Action (values in [-1,1])
             - Channel 8: third Last Clipped Action (values in [-1,1])
             """
-            grid_size = self.slam.grid_size
+            grid_size = int(self.slam.cropped_map_size_grid)
 
             observationSpace = spaces.Dict(
                 {

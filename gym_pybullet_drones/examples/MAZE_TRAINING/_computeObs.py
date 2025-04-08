@@ -69,7 +69,7 @@ def _computeObs(self):
             state = self._getDroneStateVector(0)
 
             # Get SLAM map and normalize it
-            slam_map = self.slam.occupancy_grid
+            slam_map = self.slam.cropped_grid
             # norm_map = np.zeros_like(slam_map, dtype=np.float32)
             # norm_map[slam_map == -1] = 0.2   # unbekannt
             # norm_map[slam_map == 0] = 0.9    # frei
@@ -138,7 +138,7 @@ def _computeObs(self):
             state = self._getDroneStateVector(0)
 
             # Get SLAM map and normalize it
-            slam_map = self.slam.occupancy_grid
+            slam_map = self.slam.cropped_grid
             # norm_map = np.zeros_like(slam_map, dtype=np.float32)
             # norm_map[slam_map == -1] = 0.2   # unbekannt
             # norm_map[slam_map == 0] = 0.9    # frei
@@ -275,7 +275,7 @@ def _computeObs(self):
             state = self._getDroneStateVector(0)
 
             # Get SLAM map and normalize it
-            slam_map = self.slam.occupancy_grid
+            slam_map = self.slam.cropped_grid
             # norm_map = np.zeros_like(slam_map, dtype=np.float32)
             # norm_map[slam_map == -1] = 0.2   # unbekannt
             # norm_map[slam_map == 0] = 0.9    # frei
@@ -320,14 +320,9 @@ def _computeObs(self):
             state = self._getDroneStateVector(0)
 
             # Get SLAM map and normalize it
-            slam_map = self.slam.occupancy_grid
+            slam_map = self.slam.cropped_grid
 
-            raycasts = [
-                state[21],
-                state[22],
-                state[23],
-                state[24],
-            ]  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
+            raycasts = [state[21], state[22], state[23], state[24]]  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
 
             # Get drone position from state
             # pos = state[0:2]  # x,y position
