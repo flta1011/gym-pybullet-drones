@@ -305,8 +305,9 @@ header_training = [
     "Map-Abgedeckt",
     "Wand berührungen",
     "Summe Reward",
+    "Flugzeit der Runde",
     "Maze_number",
-    "Uhrzeit",
+    "Uhrzeit Welt",
 ]
 
 # Beispielwerte für die Parameter (statisch)

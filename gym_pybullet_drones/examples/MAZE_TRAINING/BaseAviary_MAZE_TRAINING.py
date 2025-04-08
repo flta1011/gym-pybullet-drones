@@ -1094,6 +1094,10 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
 
             timestamp = time.strftime("%Y%m%d-%H%M%S")
+
+            # Berechne die Flugzeit der Runde
+            Flugzeit_der_Runde = self.step_counter * self.PYB_TIMESTEP
+
             # Header für die dynamischen Daten (Trainingsergebnisse)
             # header_training = ["Runde", "Terminated", "Truncated", "Map-Abgedeckt", "Wand berührungen", "Summe Reward", Maze_number, Uhrzeit]
             training_daten = [
@@ -1103,6 +1107,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 self.Ratio_Area,
                 self.too_close_to_wall_counter,
                 self.RewardCounterActualTrainRun,
+                Flugzeit_der_Runde,
                 self.Maze_number,
                 timestamp,
             ]
@@ -1118,6 +1123,11 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             )
             print(f"Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
 
+            timestamp = time.strftime("%Y%m%d-%H%M%S")
+
+            # Berechne die Flugzeit der Runde
+            Flugzeit_der_Runde = self.step_counter * self.PYB_TIMESTEP
+
             # Header für die dynamischen Daten (Trainingsergebnisse)
             # header_training = ["Runde", "Terminated", "Truncated", "Map-Abgedeckt", "Wand berührungen", "Summe Reward", Maze_number]
             training_daten = [
@@ -1127,7 +1137,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 self.Ratio_Area,
                 self.too_close_to_wall_counter,
                 self.RewardCounterActualTrainRun,
+                Flugzeit_der_Runde,
                 self.Maze_number,
+                timestamp,
             ]
 
             # Aufruf zum Hinzufügen von Trainingsdaten
