@@ -1006,7 +1006,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
             # NOTE - hier: SLAM Map visualisieren (im Training besser deaktiviert)
             # Achtung: bei AKtivierung wird ein Bild pro Step gespeichert!
-            self.slam.visualize()
+            # self.slam.visualize()
         #########################################################################################
 
         #### Prepare the return values #############################
