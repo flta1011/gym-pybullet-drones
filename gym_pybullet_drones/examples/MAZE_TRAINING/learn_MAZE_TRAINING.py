@@ -61,7 +61,7 @@ from gym_pybullet_drones.utils.utils import str2bool, sync
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
 
 
-Training_Mode = "Test"  # "Training" oder "Test"
+Training_Mode = "Training"  # "Training" oder "Test"
 GUI_Mode = "Train"  # "Train" oder "Test" oder "NoGUI"
 
 
@@ -89,14 +89,14 @@ DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_ADVANCED_STATUS_PLOT = False
 
 
-DEFAULT_USE_PRETRAINED_MODEL = True
+DEFAULT_USE_PRETRAINED_MODEL = False
 # DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/results/durchgelaufen-DQN/final_model.zip'
 # DEFAULT_PRETRAINED_MODEL_PATH = "/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/results/save-03.07.2025_02.23.46/best_model.zip"
 DEFAULT_PRETRAINED_MODEL_PATH = (
     "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M6_R6_O5_A3_TR1_T1_20250407-013856/save-04.07.2025_01.38.56/best_model.zip"
 )
 
-Ziel_Training_TIME_In_Simulation = 24 * 60 * 60  # 5 Stunden
+Ziel_Training_TIME_In_Simulation = 5 * 60 * 60  # 5 Stunden
 DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
 
@@ -188,7 +188,7 @@ DEFAULT_Influence_of_Walls = 4
 - M5:   DQN_NN_MultiInputPolicy mit fullyConnectLayer
 - M6:   SAC
 """
-MODEL_VERSION = "M6"
+MODEL_VERSION = "M3"
 
 #####################################REWARD_VERSION###########################
 """REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
@@ -200,7 +200,7 @@ MODEL_VERSION = "M6"
 - R6:   R5 mit dem Zusatz, dass wenn die Drohne nicht zu nah an der Wand ist, gibt es einen definierten Bonus (Anstatt nur Peitsche jetzt Zuckerbrot und Peitsche)
 - R7:   Statt Heatmap nun Bestrafungsmap (lineare Bestrafung - Abstand zur Wand), Truncated bei Wandberührung, Abzug für jeden Step
 """
-REWARD_VERSION = "R6"
+REWARD_VERSION = "R5"
 
 #####################################OBSERVATION_TYPE###########################
 """ObservationType:
@@ -214,7 +214,7 @@ REWARD_VERSION = "R6"
 - 08: X-Pos,Y-Pos, raycast readings 4x,4-Interest Werte (Interest-Front,Back, left, right: Summe freie Flächen, die noch nicht besucht wurden), x mal last clipped actions
 - 09: Slam-image, x-Pos, y-Pos, racast readings,4-Interest Werte (Interest-Front,Back, left, right: Summe freie Flächen, die noch nicht besucht wurden), x mal last clipped actions
 """
-OBSERVATION_TYPE = "O5"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
+OBSERVATION_TYPE = "O8"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
 
 #####################################ACTION_TYPE###########################
 """ActionType:'
@@ -222,7 +222,7 @@ OBSERVATION_TYPE = "O5"  # Bei neuer Oberservation Type mit SLAM dies in den IF-
 - A2: Vier Richtungen, diskret
 - A3: Vier Richtungen, kontinuierlich # für SAC
 """
-ACTION_TYPE = "A3"
+ACTION_TYPE = "A2"
 
 #####################################TRUNCATED_TYPE###########################
 """ Truncated_type:
@@ -235,7 +235,7 @@ TRUNCATED_TYPE = "TR1"
 - T1: 80% der Fläche erkundet
 - T2: 80% der Fläche erkundet oder Crash (Abstandswert geringer als X)
 """
-TERMINATED_TYPE = "T1"
+TERMINATED_TYPE = "T2"
 
 ################
 # INIT_RPYS = {}
@@ -665,7 +665,8 @@ def run(
         )  # shorter training in GitHub Actions pytest
         end_time = time.time()  # Endzeit erfassen
         elapsed_time = end_time - start_time  # Dauer berechnen
-        print(f"Training abgeschlossen. Dauer: {elapsed_time:.2f} Sekunden")
+        elapsed_time_hours = elapsed_time / 3600  # Zeit in Stunden umrechnen
+        print(f"Training abgeschlossen. Dauer: {elapsed_time_hours:.2f} Stunden")
 
         datei_existiert = os.path.exists(Auswertungs_CSV_Datei)
 
@@ -676,8 +677,8 @@ def run(
             if datei_existiert:
                 # Schreibe die Trainingsdaten in die zweite Tabelle
                 writer.writerow([])
-                writer.writerow("Traingingszeit")
-                writer.writerow(elapsed_time)
+                writer.writerow(["Trainingszeit (Stunden)"])
+                writer.writerow([f"{elapsed_time_hours:.2f}"])
 
         #### Save the model ########################################
 

@@ -256,7 +256,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.punishment_for_walls = punishment_for_walls  # Wie viele Zellen von der Wand entfernt beginnt der negative Reward
         self.influence_of_walls = influence_of_walls  # Wie viele Punkte werden je Zelle abgezogen
 
-        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6":
+        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6" or self.OBSERVATION_TYPE == "O9":
             # Initialize SLAM before calling the parent constructor
             self.slam = SimpleSlam(
                 map_size=map_size_slam,
@@ -652,7 +652,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         p.resetSimulation(physicsClientId=self.CLIENT)
 
-        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6" and self.New_Maze_number_counter == 0:
+        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6" or self.OBSERVATION_TYPE == "O9" and self.New_Maze_number_counter == 0:
             # Initialize SLAM before calling the parent constructor
             self.slam = SimpleSlam(
                 map_size=self.map_size_slam,
@@ -678,7 +678,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         initial_obs = self._computeObs()
         initial_info = self._computeInfo()
 
-        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6":
+        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6" or self.OBSERVATION_TYPE == "O9":
             self.slam.reset()  # TODO - Reset SLAM evtl. nicht in allen Modellen
 
         return initial_obs, initial_info
@@ -990,7 +990,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         pos = state[0:3]
         yaw = state[9]  # Assuming this is the yaw angle
 
-        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6":
+        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6" or self.OBSERVATION_TYPE == "O9":
 
             # Get raycast results
             raycast_results = {
