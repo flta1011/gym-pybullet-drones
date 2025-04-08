@@ -420,7 +420,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             self.INIT_RPYS = initial_rpys
         else:
             print("[ERROR] invalid initial_rpys in BaseAviary.__init__(), try initial_rpys.reshape(NUM_DRONES,3)")
-        #### Create action and observation spaces ##################
+        #### Create action and Gibt es in Git eine Möglichkeit alle Branches zu aktualisieren (pull) spaces ##################
         self.action_space = self._actionSpace()
         self.observation_space = self._observationSpace()
         #### Housekeeping ##########################################
@@ -652,7 +652,14 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         p.resetSimulation(physicsClientId=self.CLIENT)
 
-        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6" or self.OBSERVATION_TYPE == "O9" and self.New_Maze_number_counter == 0:
+        if (
+            self.OBSERVATION_TYPE == "O4"
+            or self.OBSERVATION_TYPE == "O7"
+            or self.OBSERVATION_TYPE == "O6"
+            or self.OBSERVATION_TYPE == "08"
+            or self.OBSERVATION_TYPE == "09"
+            and self.New_Maze_number_counter == 0
+        ):
             # Initialize SLAM before calling the parent constructor
             self.slam = SimpleSlam(
                 map_size=self.map_size_slam,
@@ -678,7 +685,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         initial_obs = self._computeObs()
         initial_info = self._computeInfo()
 
-        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6" or self.OBSERVATION_TYPE == "O9":
+        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6" or self.OBSERVATION_TYPE == "O8" or self.OBSERVATION_TYPE == "O9":
             self.slam.reset()  # TODO - Reset SLAM evtl. nicht in allen Modellen
 
         return initial_obs, initial_info
@@ -990,7 +997,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         pos = state[0:3]
         yaw = state[9]  # Assuming this is the yaw angle
 
-        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6" or self.OBSERVATION_TYPE == "O9":
+        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6" or self.OBSERVATION_TYPE == "O8" or self.OBSERVATION_TYPE == "O9":
 
             # Get raycast results
             raycast_results = {
