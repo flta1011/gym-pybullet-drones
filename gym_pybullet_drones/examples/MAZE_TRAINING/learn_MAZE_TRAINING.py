@@ -590,7 +590,6 @@ def run(
                         batch_size=32,
                         seed=42,
                         buffer_size=500000,
-                        buffer_size=500000,
                         gamma=0.8,
                     )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
             case "M6":  # M6: SAC
