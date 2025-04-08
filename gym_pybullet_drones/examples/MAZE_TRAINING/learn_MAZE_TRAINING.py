@@ -188,7 +188,7 @@ DEFAULT_Influence_of_Walls = 4
 - M5:   DQN_NN_MultiInputPolicy mit fullyConnectLayer
 - M6:   SAC
 """
-MODEL_VERSION = "M6"
+MODEL_VERSION = "M3"
 
 #####################################REWARD_VERSION###########################
 """REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
@@ -214,7 +214,7 @@ REWARD_VERSION = "R5"
 - 08: X-Pos,Y-Pos, raycast readings 4x,4-Interest Werte (Interest-Front,Back, left, right: Summe freie Flächen, die noch nicht besucht wurden), x mal last clipped actions
 - 09: Slam-image, x-Pos, y-Pos, racast readings,4-Interest Werte (Interest-Front,Back, left, right: Summe freie Flächen, die noch nicht besucht wurden), x mal last clipped actions
 """
-OBSERVATION_TYPE = "O5"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
+OBSERVATION_TYPE = "O8"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
 
 #####################################ACTION_TYPE###########################
 """ActionType:'
@@ -222,7 +222,7 @@ OBSERVATION_TYPE = "O5"  # Bei neuer Oberservation Type mit SLAM dies in den IF-
 - A2: Vier Richtungen, diskret
 - A3: Vier Richtungen, kontinuierlich # für SAC
 """
-ACTION_TYPE = "A3"
+ACTION_TYPE = "A2"
 
 #####################################TRUNCATED_TYPE###########################
 """ Truncated_type:
@@ -666,7 +666,8 @@ def run(
         )  # shorter training in GitHub Actions pytest
         end_time = time.time()  # Endzeit erfassen
         elapsed_time = end_time - start_time  # Dauer berechnen
-        print(f"Training abgeschlossen. Dauer: {elapsed_time:.2f} Sekunden")
+        elapsed_time_hours = elapsed_time / 3600  # Zeit in Stunden umrechnen
+        print(f"Training abgeschlossen. Dauer: {elapsed_time_hours:.2f} Stunden")
 
         datei_existiert = os.path.exists(Auswertungs_CSV_Datei)
 
@@ -677,8 +678,8 @@ def run(
             if datei_existiert:
                 # Schreibe die Trainingsdaten in die zweite Tabelle
                 writer.writerow([])
-                writer.writerow("Traingingszeit")
-                writer.writerow(elapsed_time)
+                writer.writerow(["Trainingszeit (Stunden)"])
+                writer.writerow([f"{elapsed_time_hours:.2f}"])
 
         #### Save the model ########################################
 
