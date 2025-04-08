@@ -212,7 +212,6 @@ def _observationSpace(self):
 
             observationSpace = spaces.Dict(
                 {
-                    "image": spaces.Box(low=0, high=255, shape=(grid_size, grid_size, 1), dtype=np.uint8),  # Grayscale image
                     "x": spaces.Box(low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32),  # X-Position
                     "y": spaces.Box(low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32),  # Y-Position
                     "raycast": spaces.Box(low=0, high=9999, shape=(4,), dtype=np.float32),  # Raycast readings
