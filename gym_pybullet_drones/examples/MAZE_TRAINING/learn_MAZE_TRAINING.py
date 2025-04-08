@@ -61,7 +61,7 @@ from gym_pybullet_drones.utils.utils import str2bool, sync
 # ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
 
 
-Training_Mode = "Training"  # "Training" oder "Test"
+Training_Mode = "Test"  # "Training" oder "Test"
 GUI_Mode = "Train"  # "Train" oder "Test" oder "NoGUI"
 
 
@@ -89,7 +89,7 @@ DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_ADVANCED_STATUS_PLOT = False
 
 
-DEFAULT_USE_PRETRAINED_MODEL = False
+DEFAULT_USE_PRETRAINED_MODEL = True
 # DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/results/durchgelaufen-DQN/final_model.zip'
 # DEFAULT_PRETRAINED_MODEL_PATH = "/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/results/save-03.07.2025_02.23.46/best_model.zip"
 DEFAULT_PRETRAINED_MODEL_PATH = (
@@ -235,7 +235,7 @@ TRUNCATED_TYPE = "TR1"
 - T1: 80% der Fläche erkundet
 - T2: 80% der Fläche erkundet oder Crash (Abstandswert geringer als X)
 """
-TERMINATED_TYPE = "T2"
+TERMINATED_TYPE = "T1"
 
 ################
 # INIT_RPYS = {}
