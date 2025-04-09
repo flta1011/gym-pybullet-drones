@@ -208,20 +208,31 @@ def _observationSpace(self):
             - Channel 5: Interest Values (values in [0,32400])
             - Channel 6: n last Clipped Actions (values in [0, 3])
             """
-            grid_size = int(self.slam.cropped_map_size_grid)
+            last_actions_size = self.last_actions.shape[0]  # Number of last clipped actions
 
-            observationSpace = spaces.Dict(
-                {
-                    "image": spaces.Box(low=0, high=255, shape=(grid_size, grid_size, 1), dtype=np.uint8),  # Grayscale image
-                    "x": spaces.Box(low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32),  # X-Position
-                    "y": spaces.Box(low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32),  # Y-Position
-                    "raycast": spaces.Box(low=0, high=9999, shape=(4,), dtype=np.float32),  # Raycast readings
-                    "interest_values": spaces.Box(low=0, high=32400, shape=(grid_size, grid_size), dtype=np.float32),  # Interest Values
-                    "last_clipped_actions": spaces.Box(low=0, high=6, shape=(self.last_actions.shape[0],), dtype=np.float32),  # Last Clipped Actions
-                }
+            # Define the low and high bounds for the flattened observation
+            low = np.concatenate(
+                (
+                    np.array([-np.inf], dtype=np.float32),  # X position
+                    np.array([-np.inf], dtype=np.float32),  # Y position
+                    np.zeros(4, dtype=np.float32),  # Raycast readings (values in [0, 9999])
+                    np.zeros(4, dtype=np.float32),  # Interest values
+                    np.zeros(last_actions_size, dtype=np.float32),  # Last clipped actions
+                )
             )
 
-            return observationSpace
+            high = np.concatenate(
+                (
+                    np.array([np.inf], dtype=np.float32),  # X position
+                    np.array([np.inf], dtype=np.float32),  # Y position
+                    np.full(4, 9999, dtype=np.float32),  # Raycast readings (values in [0, 9999])
+                    np.full(4, 32400, dtype=np.float32),  # Interest values
+                    np.full(last_actions_size, 6, dtype=np.float32),  # Last clipped actions
+                )
+            )
+
+            # Return the flattened observation space
+            return spaces.Box(low=low, high=high, dtype=np.float32)
 
         case "O9":  # 7 Kanäle für CNN-DQN
             """
@@ -230,8 +241,6 @@ def _observationSpace(self):
             - Channel 1: Normalized SLAM map (values in [0,1])
             - Channel 2: Normalized x position (values in [0,1])
             - Channel 3: Normalized y position (values in [0,1])
-            - Channel 4: sin(yaw) (values in [-1,1])
-            - Channel 5: cos(yaw) (values in [-1,1])
             - Channel 6: last Clipped Action (values in [-1,1])
             - Channel 7: second Last Clipped Action (values in [-1,1])
             - Channel 8: third Last Clipped Action (values in [-1,1])
@@ -243,15 +252,9 @@ def _observationSpace(self):
                     "image": spaces.Box(low=0, high=255, shape=(grid_size, grid_size, 1), dtype=np.uint8),  # Grayscale image
                     "x": spaces.Box(low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32),
                     "y": spaces.Box(low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32),
-                    "sin_yaw": spaces.Box(low=-1, high=1, shape=(1,), dtype=np.float32),
-                    "cos_yaw": spaces.Box(low=-1, high=1, shape=(1,), dtype=np.float32),
-                    "last_action": spaces.Box(
-                        low=0,
-                        high=6,
-                        shape=(self.last_actions.shape[0],),
-                        dtype=np.float32,
-                    ),
                     "raycast": spaces.Box(low=0, high=9999, shape=(4,), dtype=np.float32),
+                    "interest_values": spaces.Box(low=0, high=32400, shape=(4,), dtype=np.uint8),
+                    "last_clipped_actions": spaces.Box(low=0, high=6, shape=(self.last_actions.shape[0],), dtype=np.float32),
                 }
             )
 

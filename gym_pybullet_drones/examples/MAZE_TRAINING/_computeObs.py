@@ -360,22 +360,15 @@ def _computeObs(self):
             modified_obs = []
 
             # X- & Y-Position der Drohne
-            modified_obs.append(round(state[0], 3))  # x-Position
-            modified_obs.append(round(state[1], 3))  # y-Position
+            modified_obs.append(state[0])  # x-Position
+            modified_obs.append(state[1])  # y-Position
 
             # Raycast Readings
             # abstände anhängen mit 3 Nachkommastellen
-            for distance in obs:
-                modified_obs.append(round(distance, 3))
-
-            # Interest values
-            interest_values = self._compute_interest_values()
+            modified_obs.extend(obs)  # 4x raycast readings
 
             # Append interest values to the observation
-            modified_obs.append(interest_values["up"])
-            modified_obs.append(interest_values["down"])
-            modified_obs.append(interest_values["left"])
-            modified_obs.append(interest_values["right"])
+            modified_obs.extend(self.interest_values)  # 4x interest values
 
             # Last clipped actions
             # Ensure last_actions is flattened and appended correctly
@@ -393,44 +386,16 @@ def _computeObs(self):
             # Select specific values from obs and concatenate them directly
             raycasts = [state[21], state[22], state[23], state[24]]  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
 
-            # Interest values
-            interest_values = self._compute_interest_values()
-
             obs = dict(
                 {
-                    "image": self.slam.occupancy_grid,
+                    "image": self.slam.cropped_grid,
                     "x": round(state[0], 3),
                     "y": round(state[1], 3),
                     "raycast": raycasts,
-                    "interest_values": interest_values,
+                    "interest_values": self.interest_values,
                     "last_clipped_actions": self.last_actions,
                 }
             )
             self.obs = obs  # für Visualisierung in dem Dashboard
 
             return obs
-
-
-def _compute_interest_values(self):
-    drone_position = np.argwhere(self.slam == 255)  # Get the drone position
-    # drone_position = [int(state[0] / 0.05), int(state[1] / 0.05)]
-    free_areas = np.argwhere(self.slam == 200)  # Get the free areas
-
-    min_x_y = drone_position[0]
-    max_x_y = [min_x_y[0] + 5, min_x_y[1] + 5]
-
-    # Initialize interest values for each direction
-    interest_values = {"up": 0, "down": 0, "left": 0, "right": 0}
-
-    # Iterate through free areas and calculate their relation to the drone
-    for area in free_areas:
-        if area[0] < min_x_y[0]:
-            interest_values["up"] += 1
-        elif area[0] > max_x_y[0]:
-            interest_values["down"] += 1
-        if area[1] < min_x_y[1]:
-            interest_values["left"] += 1
-        elif area[1] > max_x_y[1]:
-            interest_values["right"] += 1
-
-    return interest_values

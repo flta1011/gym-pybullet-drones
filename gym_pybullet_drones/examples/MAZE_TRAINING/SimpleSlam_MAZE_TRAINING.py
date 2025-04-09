@@ -1,21 +1,21 @@
 import os
+import time
 
 import matplotlib.pyplot as plt
 import numpy as np
-import time
 
 
 class SimpleSlam:
     def __init__(self, map_size=9, cropped_map_size=6.4, resolution=0.05, init_position=None):
-        """Erstellt eine leere Occupancy-Grid Map. 
-        Args: 
-            map_size (float): Seitengröße der Map in Metern (z. B. 8 m). 
+        """Erstellt eine leere Occupancy-Grid Map.
+        Args:
+            map_size (float): Seitengröße der Map in Metern (z. B. 8 m).
             resolution (float): Seitengröße einer Zelle, sodass grid_size ~60 ergibt.
             init_position (tuple): (x, y)-Startposition der Drohne in Metern.
         """
         self.resolution = resolution
         self.grid_size = int(map_size / resolution)
-        self.cropped_map_size_grid = int((cropped_map_size / resolution)/2)
+        self.cropped_map_size_grid = int((cropped_map_size / resolution) / 2)
 
         # Initialisiere die Map-Werte:
         self.unbekannt_value = 0
@@ -67,9 +67,8 @@ class SimpleSlam:
 
     def update(self, drone_pos, drone_yaw, raycast_results):
 
-        #NOTE - Werte anpassen wie ich welches Szenario darstellen möchte TBD 24.03.2025
-        #NOTE - 0.2: unbekannt, 0.9: frei, 0.0: Wand, 0.5: besucht (Sensor oben frei), 0.7 = aktuelle Position
-      
+        # NOTE - Werte anpassen wie ich welches Szenario darstellen möchte TBD 24.03.2025
+        # NOTE - 0.2: unbekannt, 0.9: frei, 0.0: Wand, 0.5: besucht (Sensor oben frei), 0.7 = aktuelle Position
 
         """
         Aktualisiert die Map anhand der Sensorwerte.
@@ -91,7 +90,6 @@ class SimpleSlam:
         self.grid_y = grid_y
         # self.counter_free_space += 1
 
-        
         # Definiere Richtungswinkel:
         angles = {"front": drone_yaw, "back": drone_yaw + np.pi, "left": drone_yaw + np.pi / 2, "right": drone_yaw - np.pi / 2}
         for direction in ["front", "back", "left", "right"]:
@@ -104,7 +102,13 @@ class SimpleSlam:
                 cells = self.get_line(grid_x, grid_y, end_grid_x, end_grid_y)
                 # Markiere Zellen entlang der Strahlbahn als frei:
                 for cx, cy in cells[:-1]:
-                    if 0 <= cx < self.grid_size and 0 <= cy < self.grid_size and self.occupancy_grid[cx, cy] != self.wand_value and self.occupancy_grid[cx, cy] != self.besucht_value and self.occupancy_grid[cx, cy] != self.actual_Position_value:
+                    if (
+                        0 <= cx < self.grid_size
+                        and 0 <= cy < self.grid_size
+                        and self.occupancy_grid[cx, cy] != self.wand_value
+                        and self.occupancy_grid[cx, cy] != self.besucht_value
+                        and self.occupancy_grid[cx, cy] != self.actual_Position_value
+                    ):
                         self.occupancy_grid[cx, cy] = self.frei_value
                         self.counter_free_space += 1
                 # Markiere den Endpunkt als Wand:
@@ -113,14 +117,13 @@ class SimpleSlam:
 
         self.Prev_DrohnePosition = self.DrohnePosition
 
-        
         self.DrohnePosition = []
         # Überschreibe die vorherige aktuelle Position mit besucht_value
-        if hasattr(self, 'i_value_previous') and hasattr(self, 'j_value_previous'):
+        if hasattr(self, "i_value_previous") and hasattr(self, "j_value_previous"):
             for i_prev, j_prev in zip(self.i_value_previous, self.j_value_previous):
                 self.occupancy_grid[i_prev, j_prev] = self.besucht_value
-        
-       # self.cropped_grid = self.occupancy_grid[]
+
+        # self.cropped_grid = self.occupancy_grid[]
 
         # Speichere die aktuelle Position als vorherige Position
         self.i_value_previous = []
@@ -130,8 +133,14 @@ class SimpleSlam:
             for j in range(max(0, grid_y - 1), min(self.grid_size, grid_y + 2)):
                 self.path.append((i, j))
                 self.DrohnePosition.append((i, j))
-                if self.occupancy_grid[i, j] == self.besucht_value or self.occupancy_grid[i, j] == self.unbekannt_value or self.occupancy_grid[i,j] == self.frei_value or self.occupancy_grid[i, j] == self.actual_Position_value and self.occupancy_grid[i, j] != self.wand_value:
-                    #self.occupancy_grid[i, j] = self.besucht_value
+                if (
+                    self.occupancy_grid[i, j] == self.besucht_value
+                    or self.occupancy_grid[i, j] == self.unbekannt_value
+                    or self.occupancy_grid[i, j] == self.frei_value
+                    or self.occupancy_grid[i, j] == self.actual_Position_value
+                    and self.occupancy_grid[i, j] != self.wand_value
+                ):
+                    # self.occupancy_grid[i, j] = self.besucht_value
                     self.occupancy_grid[i, j] = self.actual_Position_value
 
                     self.i_value_previous.append(i)
@@ -139,7 +148,6 @@ class SimpleSlam:
 
                 # if self.occupancy_grid[i, j] == self.besucht_value:
                 #     self.occupancy_grid[i, j] = self.actual_Position_value
-
 
         # Compare previous and current positions to determine movement direction
         if self.grid_y and self.grid_x and self.previous_grid_x and self.previous_grid_y:
@@ -164,15 +172,10 @@ class SimpleSlam:
             cropped_start_y = int(max(0, self.grid_y - self.center_cropped))
             cropped_end_y = int(min(self.grid_size, self.grid_y + self.center_cropped))
 
-            self.cropped_grid = self.occupancy_grid[
-            cropped_start_x:cropped_end_x, cropped_start_y:cropped_end_y
-            ]
+            self.cropped_grid = self.occupancy_grid[cropped_start_x:cropped_end_x, cropped_start_y:cropped_end_y]
 
         self.previous_grid_x = self.grid_x
         self.previous_grid_y = self.grid_y
-        
-        
-
 
     def get_line(self, x0, y0, x1, y1):
         """Berechnet Zellen entlang einer Linie (Bresenham-Algorithmus)."""

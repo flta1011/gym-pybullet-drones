@@ -216,6 +216,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # Initialize reward and best_way map
         self.reward_map = np.zeros((60, 60), dtype=int)
         self.best_way_map = np.zeros((60, 60), dtype=int)
+        # Initialize interest values for each direction
+        self.interest_values = np.zeros(4, dtype=int)
         # Counter for the amount of wall pixel in map
         self.wall_pixel_counter = 0
         self.amount_of_pixel_in_map = 60 * 60
@@ -256,7 +258,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.punishment_for_walls = punishment_for_walls  # Wie viele Zellen von der Wand entfernt beginnt der negative Reward
         self.influence_of_walls = influence_of_walls  # Wie viele Punkte werden je Zelle abgezogen
 
-        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6" or self.OBSERVATION_TYPE == "O9":
+        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O6" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O9":
             # Initialize SLAM before calling the parent constructor
             self.slam = SimpleSlam(
                 map_size=map_size_slam,
@@ -653,10 +655,10 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         if (
             self.OBSERVATION_TYPE == "O4"
-            or self.OBSERVATION_TYPE == "O7"
             or self.OBSERVATION_TYPE == "O6"
-            or self.OBSERVATION_TYPE == "08"
-            or self.OBSERVATION_TYPE == "09"
+            or self.OBSERVATION_TYPE == "O7"
+            or self.OBSERVATION_TYPE == "O8"
+            or self.OBSERVATION_TYPE == "O9"
             and self.New_Maze_number_counter == 0
         ):
             # Initialize SLAM before calling the parent constructor
@@ -684,7 +686,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         initial_obs = self._computeObs()
         initial_info = self._computeInfo()
 
-        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6" or self.OBSERVATION_TYPE == "O8" or self.OBSERVATION_TYPE == "O9":
+        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O6" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O8" or self.OBSERVATION_TYPE == "O9":
             self.slam.reset()  # TODO - Reset SLAM evtl. nicht in allen Modellen
 
         return initial_obs, initial_info
@@ -996,7 +998,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         pos = state[0:3]
         yaw = state[9]  # Assuming this is the yaw angle
 
-        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O6" or self.OBSERVATION_TYPE == "O8" or self.OBSERVATION_TYPE == "O9":
+        if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O6" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O8" or self.OBSERVATION_TYPE == "O9":
 
             # Get raycast results
             raycast_results = {
@@ -1008,6 +1010,11 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             }
 
             self.slam.update(pos, yaw, raycast_results)
+            # update interest values
+            try:
+                self._compute_interest_values()
+            except:
+                pass
             # Optional: Zum Debuggen kann man die Map visualisieren (aber im Training besser deaktiviert)
 
             # NOTE - hier: SLAM Map visualisieren (im Training besser deaktiviert)
@@ -2078,6 +2085,29 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
     def _computeTruncated(self):
         return _computeTruncated_outsource(self)
+
+    ################################################################################
+
+    def _compute_interest_values(self):
+        drone_position = np.argwhere(self.slam == 255)  # Get the drone position
+        # drone_position = [int(state[0] / 0.05), int(state[1] / 0.05)]
+        free_areas = np.argwhere(self.slam == 200)  # Get the free areas
+
+        min_x_y = drone_position[0]
+        max_x_y = [min_x_y[0] + 5, min_x_y[1] + 5]
+
+        # Iterate through free areas and calculate their relation to the drone
+        for area in free_areas:
+            if area[0] < min_x_y[0]:
+                self.interest_values["up"] += 1
+            elif area[0] > max_x_y[0]:
+                self.interest_values["down"] += 1
+            if area[1] < min_x_y[1]:
+                self.interest_values["left"] += 1
+            elif area[1] > max_x_y[1]:
+                self.interest_values["right"] += 1
+
+        return self.interest_values
 
     ################################################################################
 
