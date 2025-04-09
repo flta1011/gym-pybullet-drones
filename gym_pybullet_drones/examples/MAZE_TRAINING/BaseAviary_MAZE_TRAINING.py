@@ -1350,10 +1350,12 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             Start_Position_swapped = [0, 0, 0.5]  # NOTE - TARGET POSITION FIX
             if self.Maze_number == 0:
                 Start_Position = self.INIT_XYZS[f"map{self.Maze_number+1}"][0][self.random_number_Start][0:2]
+                
             else:
                 Start_Position = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0:2]
             Start_Position_swapped[1] = Start_Position[0]
             Start_Position_swapped[0] = Start_Position[1]
+            #print(f"Start_Position: {Start_Position_swapped}")
         else:
             Start_Position_swapped = [0, 0, 0.5]
             if self.Maze_number == 0:
@@ -1362,6 +1364,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 Start_Position = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0:2]
             Start_Position_swapped[1] = Start_Position[0]
             Start_Position_swapped[0] = Start_Position[1]
+            #print(f"Start_Position: {Start_Position_swapped}")
+
 
         # print(f"Start_Position_swapped: {Start_Position_swapped}")
         self.DRONE_IDS = np.array(

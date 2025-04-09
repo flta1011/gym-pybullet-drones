@@ -1,0 +1,27 @@
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_REWARD_FOR_NEW_FIELD,DEFAULT_Punishment_for_Step,DEFAULT_EVAL_FREQ,DEFAULT_EVAL_EPISODES,DEFAULT_TRAIN_TIMESTEPS,DEFAULT_TARGET_REWARD,DEFAULT_NUMBER_LAST_ACTIONS,DEFAULT_PYB_FREQ,DEFAULT_CTRL_FREQ,DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_Multiplier_Collision_Penalty,DEFAULT_VelocityScale,DEFAULT_explore_Matrix_Size,DEFAULT_collision_penalty_terminated,DEFAULT_Terminated_Wall_Distance,DEFAULT_no_collision_reward,DEFAULT_Punishment_for_Walls,DEFAULT_Influence_of_Walls,DEFAULT_USE_PRETRAINED_MODEL,DEFAULT_PRETRAINED_MODEL_PATH,DEFAULT_NUMBER_LAST_ACTIONS
+2,300,4,-0.5,50000.0,1,172800,99999999999999,20,100,50,2,300,2,0.5,5,-100,0.15,0.5,False,/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M6_R6_O5_A3_TR1_T1_20250407-013856/save-04.07.2025_01.38.56/best_model.zip,20,8,4
+
+Runde,Terminated,Truncated,Map-Abgedeckt,Wand berührungen,Summe Reward,Flugzeit der Runde,Maze_number,Uhrzeit Welt
+1,kein_Terminated,Zeit abgelaufen,0.17,142,-8348.5,300.5,21,20250409-140655
+2,kein_Terminated,Zeit abgelaufen,0.27,107,-3901.0,300.5,21,20250409-140712
+3,kein_Terminated,Zeit abgelaufen,0.19,215,-13406.5,300.5,21,20250409-140730
+4,kein_Terminated,Zeit abgelaufen,0.16,21,1626.0,300.5,21,20250409-140747
+5,kein_Terminated,Zeit abgelaufen,0.25,95,-301.5,300.5,21,20250409-140805
+6,kein_Terminated,Zeit abgelaufen,0.14,84,-3803.5,300.5,21,20250409-140822
+7,kein_Terminated,Zeit abgelaufen,0.3,170,-4892.0,300.5,21,20250409-140839
+8,kein_Terminated,Zeit abgelaufen,0.25,174,-3835.0,300.5,21,20250409-140856
+9,kein_Terminated,Zeit abgelaufen,0.19,136,-4450.5,300.5,21,20250409-140914
+10,kein_Terminated,Zeit abgelaufen,0.29,63,1726.0,300.5,21,20250409-140931
+11,kein_Terminated,Zeit abgelaufen,0.24,190,-12099.5,300.5,21,20250409-140948
+12,kein_Terminated,Zeit abgelaufen,0.23,109,-1711.5,300.5,21,20250409-141006
+13,kein_Terminated,Zeit abgelaufen,0.34,172,-3125.5,300.5,21,20250409-141023
+14,kein_Terminated,Zeit abgelaufen,0.33,263,-4600.5,300.5,21,20250409-141040
+15,kein_Terminated,Zeit abgelaufen,0.16,40,572.5,300.5,21,20250409-141057
+16,kein_Terminated,Zeit abgelaufen,0.22,356,-22426.0,300.5,21,20250409-141114
+17,kein_Terminated,Zeit abgelaufen,0.26,178,-8350.0,300.5,21,20250409-141131
+18,kein_Terminated,Zeit abgelaufen,0.36,99,-1153.0,300.5,21,20250409-141148
+19,kein_Terminated,Zeit abgelaufen,0.4,176,-7784.5,300.5,21,20250409-141205
+20,kein_Terminated,Zeit abgelaufen,0.4,225,-7543.5,300.5,21,20250409-141222
+21,kein_Terminated,Zeit abgelaufen,0.32,192,-6119.5,300.5,21,20250409-141240
+22,kein_Terminated,Zeit abgelaufen,0.46,156,-2261.0,300.5,21,20250409-141259
+23,kein_Terminated,Zeit abgelaufen,0.4,137,-1019.0,300.5,21,20250409-141317

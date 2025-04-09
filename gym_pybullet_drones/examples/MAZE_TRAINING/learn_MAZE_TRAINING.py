@@ -218,7 +218,7 @@ REWARD_VERSION = "R6"
 - 08: X-Pos,Y-Pos, raycast readings 4x,4-Interest Werte (Interest-Front,Back, left, right: Summe freie Flächen, die noch nicht besucht wurden), x mal last clipped actions
 - 09: Slam-image, x-Pos, y-Pos, racast readings,4-Interest Werte (Interest-Front,Back, left, right: Summe freie Flächen, die noch nicht besucht wurden), x mal last clipped actions
 """
-OBSERVATION_TYPE = "O9"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
+OBSERVATION_TYPE = "O7"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
 
 #####################################ACTION_TYPE###########################
 """ActionType:'
@@ -238,6 +238,7 @@ TRUNCATED_TYPE = "TR1"
 """ Terminated_type:
 - T1: 80% der Fläche erkundet
 - T2: 80% der Fläche erkundet oder Crash (Abstandswert geringer als X)
+
 """
 TERMINATED_TYPE = "T1"
 
@@ -602,12 +603,12 @@ def run(
                         train_env,
                         device="cuda:0",
                         # policy_kwargs=dict(net_arch=[128, 64, 32]),
-                        learning_rate=0.004,
+                        #learning_rate=0.004,
                         verbose=1,
                         batch_size=32,
                         seed=42,
                         buffer_size=500000,
-                        gamma=0.8,
+                        #gamma=0.8,
                     )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
             case "M6":  # M6: SAC
                 if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
