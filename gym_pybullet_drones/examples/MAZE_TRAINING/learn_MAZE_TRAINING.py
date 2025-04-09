@@ -143,6 +143,7 @@ DEFAULT_PUSHBACK_ACTIVE = False
 
 DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
+NumberOfInterationsTillNextCheckpoint = 10000  # Anzahl Steps, bis ein Modell als .zip gespeichert wird
 
 DEFAULT_TRAIN_TIMESTEPS = Ziel_Training_TIME_In_Simulation * DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULT_TARGET_REWARD = 99999999999999
@@ -156,20 +157,23 @@ DEFAULT_MA = False
 
 DEFAULT_DASH_ACTIVE = False
 
-DEFAULT_Multiplier_Collision_Penalty = 10
 
 DEFAULT_VelocityScale = 0.5
 
+###########################################################REWARD-SETTINGS###########################################################
 # Bei wie viel Prozent der Fläche einen Print ausgeben
 DEFAULT_Procent_Step = 0.01
 DEFAULT_REWARD_FOR_NEW_FIELD = 2
 DEFAULT_Punishment_for_Step = 0
-# 5 bedeutet eine 5x5 Matrix
-DEFAULT_explore_Matrix_Size = 5
-DEFAULT_Maze_number = 0
-# nach wie vielen Schritten wird ein neues maze gewählt
-DEFAULT_New_Maze_number = 0  # VERÄNDERT NICHTS!!
-DEFAULT_New_Position_number = 1
+DEFAULT_Multiplier_Collision_Penalty = 10
+
+
+###########################################################EXPLORATION/MAZE-SETTINGS###########################################################
+DEFAULT_explore_Matrix_Size = 5  # 5 bedeutet eine 5x5 Matrix um die Drohne herum (in diesem Bereich kann die Drohne die Felder einsammeln und diese als erkundet markieren)
+DEFAULT_List_MazesToUse = (0, 21)  # Mazes 0-21 stehen zur Verfügung
+DEFAULT_List_Start_PositionsToUse = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)  # Startpositionen 0-10  stehen zur Verfügung
+DEFAULT_MaxRoundsOnOneMaze = 0  # nach wie vielen Schritten wird ein neues maze gewählt # NOTE - Verändert nichts
+DEFAULT_MaxRoundsSameStartingPositions = 0
 
 DEFAULT_collision_penalty_terminated = -50  # mit -10 Trainiert SAC gut, bleibt aber noch ca. 50 mal an der Wand hängen--
 DEFAULT_Terminated_Wall_Distance = 0.15  # worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25
@@ -294,7 +298,10 @@ header_params = [
     "DEFAULT_Influence_of_Walls",
     "DEFAULT_USE_PRETRAINED_MODEL",
     "DEFAULT_PRETRAINED_MODEL_PATH",
-    "DEFAULT_NUMBER_LAST_ACTIONS",
+    "DEFAULT_List_MazesToUse",
+    "DEFAULT_List_Start_PositionsToUse",
+    "DEFAULT_MaxRoundsOnOneMaze",
+    "DEFAULT_MaxRoundsSameStartingPositions",
 ]
 
 # Header für die dynamischen Daten (Trainingsergebnisse)
@@ -307,6 +314,7 @@ header_training = [
     "Summe Reward",
     "Flugzeit der Runde",
     "Maze_number",
+    "Start-Position",
     "Uhrzeit Welt",
 ]
 
@@ -336,6 +344,10 @@ parameter_daten = [
     DEFAULT_NUMBER_LAST_ACTIONS,
     DEFAULT_Punishment_for_Walls,
     DEFAULT_Influence_of_Walls,
+    DEFAULT_List_MazesToUse,
+    DEFAULT_List_Start_PositionsToUse,
+    DEFAULT_MaxRoundsOnOneMaze,
+    DEFAULT_MaxRoundsSameStartingPositions,
 ]
 
 
@@ -390,8 +402,10 @@ def run(
     Punishment_for_Step=DEFAULT_Punishment_for_Step,
     Auswertungs_CSV_Datei=Auswertungs_CSV_Datei,
     Explore_Matrix_Size=DEFAULT_explore_Matrix_Size,
-    New_Maze_number=DEFAULT_New_Maze_number,
-    New_Position_number=DEFAULT_New_Position_number,
+    List_MazesToUse=DEFAULT_List_MazesToUse,
+    List_Start_PositionsToUse=DEFAULT_List_Start_PositionsToUse,
+    MaxRoundsOnOneMaze=DEFAULT_MaxRoundsOnOneMaze,
+    MaxRoundsSameStartingPositions=DEFAULT_MaxRoundsSameStartingPositions,
     collision_penalty_terminated=DEFAULT_collision_penalty_terminated,
     Terminated_Wall_Distance=DEFAULT_Terminated_Wall_Distance,
     no_collision_reward=DEFAULT_no_collision_reward,
@@ -435,9 +449,10 @@ def run(
                     Reward_for_new_field=Reward_for_new_field,
                     csv_file_path=Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
                     Explore_Matrix_Size=Explore_Matrix_Size,
-                    Maze_number=DEFAULT_Maze_number,
-                    New_Maze_number=New_Maze_number,
-                    New_Position_number=New_Position_number,
+                    List_MazesToUse=List_MazesToUse,
+                    List_Start_PositionsToUse=List_Start_PositionsToUse,
+                    MaxRoundsOnOneMaze=MaxRoundsOnOneMaze,
+                    MaxRoundsSameStartingPositions=MaxRoundsSameStartingPositions,
                     collision_penalty_terminated=collision_penalty_terminated,
                     Terminated_Wall_Distance=Terminated_Wall_Distance,
                     no_collision_reward=no_collision_reward,
@@ -480,9 +495,10 @@ def run(
                     Reward_for_new_field=Reward_for_new_field,
                     csv_file_path=Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
                     Explore_Matrix_Size=Explore_Matrix_Size,
-                    Maze_number=DEFAULT_Maze_number,
-                    New_Maze_number=New_Maze_number,
-                    New_Position_number=New_Position_number,
+                    List_MazesToUse=List_MazesToUse,
+                    List_Start_PositionsToUse=List_Start_PositionsToUse,
+                    MaxRoundsOnOneMaze=MaxRoundsOnOneMaze,
+                    MaxRoundsSameStartingPositions=MaxRoundsSameStartingPositions,
                     collision_penalty_terminated=collision_penalty_terminated,
                     Terminated_Wall_Distance=Terminated_Wall_Distance,
                     no_collision_reward=no_collision_reward,
@@ -643,21 +659,21 @@ def run(
         # In your code, the model will train for a specified number of timesteps, using the eval_callback for periodic evaluation, and log information every 100 timesteps.
 
         # # Definiere den Speicherpfad und die Häufigkeit der Checkpoints (z.B. alle 10.000 Schritte)
-        # checkpoint_callback = CheckpointCallback(
-        #     save_freq=10000,  # Speichert alle 10.000 Schritte
-        #     save_path=filename + "/",  # Speicherpfad für die Modelle
-        #     name_prefix=filename + "/",  # Präfix für die Modell-Dateien
-        #     save_replay_buffer=True,  # Speichert auch den Replay Buffer
-        #     save_vecnormalize=True,  # Falls VecNormalize genutzt wird, wird es mitgespeichert
-        # )
+        checkpoint_callback = CheckpointCallback(
+            save_freq=NumberOfInterationsTillNextCheckpoint,  # Speichert alle 10.000 Schritte
+            save_path=filename + "/",  # Speicherpfad für die Modelle
+            name_prefix=filename + "/",  # Präfix für die Modell-Dateien
+            save_replay_buffer=True,  # Speichert auch den Replay Buffer
+            save_vecnormalize=True,  # Falls VecNormalize genutzt wird, wird es mitgespeichert
+        )
 
         # # Kombiniere beide Callbacks mit CallbackList
-        # callback_list = CallbackList([checkpoint_callback, eval_callback])
+        callback_list = CallbackList([checkpoint_callback, eval_callback])
 
         start_time = time.time()  # Startzeit erfassen
         model.learn(
             total_timesteps=DEFAULT_TRAIN_TIMESTEPS,
-            callback=eval_callback,
+            callback=callback_list,
             log_interval=1000,
             progress_bar=True,
         )  # shorter training in GitHub Actions pytest
@@ -777,9 +793,10 @@ def run(
                 Reward_for_new_field=Reward_for_new_field,
                 csv_file_path=Auswertungs_CSV_Datei,  # Pfad zur CSV-Datei
                 Explore_Matrix_Size=Explore_Matrix_Size,
-                Maze_number=DEFAULT_Maze_number,
-                New_Maze_number=New_Maze_number,
-                New_Position_number=New_Position_number,
+                List_MazesToUse=List_MazesToUse,
+                List_Start_PositionsToUse=List_Start_PositionsToUse,
+                MaxRoundsOnOneMaze=MaxRoundsOnOneMaze,
+                MaxRoundsSameStartingPositions=MaxRoundsSameStartingPositions,
                 collision_penalty_terminated=collision_penalty_terminated,
                 Terminated_Wall_Distance=Terminated_Wall_Distance,
                 no_collision_reward=no_collision_reward,
