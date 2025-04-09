@@ -95,8 +95,8 @@ class MazeGenerator_self_made_maps:
 
 
 if __name__ == "__main__":
-    csv_directory = "gym-pybullet-drones/gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps"  # Replace with the path to your CSV files
-    urdf_directory = "gym-pybullet-drones/gym_pybullet_drones/assets/maze"  # Directory to save URDF files
+    csv_directory = "/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/gym_pybullet_drones/examples/maze_urdf_test/self_made_maps/maps"  # Replace with the path to your CSV files
+    urdf_directory = "/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/gym_pybullet_drones/assets/maze"  # Directory to save URDF files
 
     if not os.path.exists(urdf_directory):
         os.makedirs(urdf_directory)
