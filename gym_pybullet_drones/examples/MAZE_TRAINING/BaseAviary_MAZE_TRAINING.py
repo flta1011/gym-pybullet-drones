@@ -107,11 +107,10 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         Reward_for_new_field=1,
         csv_file_path="maze_training_results.csv",
         Explore_Matrix_Size=5,
-        Maze_number=21,
-        last_random_number_Start=1,
-        last_random_number_Target=2,
-        New_Maze_number=10,
-        New_Position_number=5,
+        List_MazesToUse=(0, 21),
+        List_Start_PositionsToUse=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+        MaxRoundsOnOneMaze=10,
+        MaxRoundsSameStartingPositions=5,
         collision_penalty_terminated=-1000,
         Terminated_Wall_Distance=0.3,
         no_collision_reward=1,
@@ -234,22 +233,26 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.Procent_Step = Procent_Step
         self.too_close_to_wall_counter = 0
         self.Terminated_Truncated_Counter = 0
+
+        ###########################################################MAZE-SETTINGS###########################################################
         # NOTE - Maze Anzahl Wechsel
-        self.Maze_number = Maze_number
-        self.New_Maze_number = New_Maze_number
+        self.Maze_number = 0  # Init-Wert, wird im Laufe der Zeit überschrieben!
+        self.MaxRoundsOnOneMaze = MaxRoundsOnOneMaze
         self.New_Maze_number_counter = 0
         # The random number to generate the init and target position
-        self.random_number_Start = last_random_number_Start
-        self.random_number_Target = last_random_number_Target
+        self.random_number_Start = 0  # Init-Wert, wird im Laufe der Zeit überschrieben!
+        self.List_Start_PositionsToUse = List_Start_PositionsToUse
+        self.random_number_Target = 1  # Init-Wert, wird im Laufe der Zeit überschrieben!
         self.map_size_slam = map_size_slam
         self.resolution_slam = resolution_slam
-        self.New_Position_number = New_Position_number
+        self.MaxRoundsSameStartingPositions = MaxRoundsSameStartingPositions
+        self.List_MazesToUse = List_MazesToUse
 
+        ###########################################################REWARD-SETTINGS###########################################################
         self.collision_penalty_terminated = collision_penalty_terminated
         self.Truncated_Version = Truncated_Type
         self.Terminated_Version = Terminated_Type
         self.Terminated_Wall_Distance = Terminated_Wall_Distance
-
         self.no_collision_reward = no_collision_reward
 
         # R7 - negative reward map variables
@@ -633,21 +636,18 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         #### Reset the simulation ##################################
 
-        if self.New_Maze_number_counter == self.New_Maze_number:
-            # self.Maze_number = np.random.randint(1, 20)
-            # solang nicht alle csv datei erstellt dann ändern auf 20
-            # Erstellen Sie eine Liste der zulässigen Zahlen
+        if self.New_Maze_number_counter == self.MaxRoundsOnOneMaze:
 
-            # Wählen Sie eine Zufallszahl aus der Liste der zulässigen Zahlen
-            # self.Maze_number = np.random.choice((1, 20))
+            # Wählen Sie eine Zufallszahl aus der Liste der angebenen Mazes aus
+            self.Maze_number = np.random.choice(self.List_MazesToUse)
 
-            print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
+            print(f"--------------------------NEW MAZE: MAZE_NUMBER_NEW: {self.Maze_number}---------------------------------------")
             self.New_Maze_number_counter = 0
         else:
             self.New_Maze_number_counter += 1
             print(f"--------------------------MAZE_NUMBER: {self.Maze_number}---------------------------------------")
             print(f"--------------------------StartNUMBER: {self.random_number_Start}---------------------------------------")
-            print(f"--------------------------MAZE_NUMBER_Counter: { self.New_Maze_number_counter}---------------------------------------")
+            print(f"--------------------------Rounds on this Maze: { self.New_Maze_number_counter}---------------------------------------")
 
         p.resetSimulation(physicsClientId=self.CLIENT)
 
@@ -1115,6 +1115,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 self.RewardCounterActualTrainRun,
                 Flugzeit_der_Runde,
                 self.Maze_number,
+                self.Start_Position,
                 timestamp,
             ]
 
@@ -1145,6 +1146,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 self.RewardCounterActualTrainRun,
                 Flugzeit_der_Runde,
                 self.Maze_number,
+                self.Start_Position,
                 timestamp,
             ]
 
@@ -1338,11 +1340,10 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         #### Load ground plane, drone and obstacles models #########
         self.PLANE_ID = p.loadURDF("plane.urdf", physicsClientId=self.CLIENT)
 
-        if self.New_Maze_number_counter == self.New_Position_number:
-            # self.Maze_number = np.random.randint(1, 21)
-            # solang nicht alle csv datei erstellt dann ändern auf 21
+        if self.New_Maze_number_counter == self.MaxRoundsSameStartingPositions:
+
             while True:
-                self.random_number_Start = np.random.randint(0, 10)
+                self.random_number_Start = np.random.choice(self.List_Start_PositionsToUse)
                 if self.random_number_Start != self.random_number_Target:
                     break
 
@@ -1880,40 +1881,41 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         These obstacles are loaded from standard URDF files included in Bullet.
 
         """
-        if self.New_Maze_number_counter == self.New_Maze_number:
-            # self.Maze_number = np.random.randint(1, 21)
-            # solang nicht alle csv datei erstellt dann ändern auf 21
-            while True:
-                self.random_number_Target = np.random.randint(0, 10)
-                if self.random_number_Target != self.random_number_Start:
-                    break
+        # NOTE ####Target wird seit umstellung auf Belohnung mit exploration nicht mehr verwendet!
+        # if self.New_Maze_number_counter == self.MaxRoundsOnOneMaze:
+        #     while True:
+        #         self.random_number_Target = np.random.randint(0, 10)
+        #         if self.random_number_Target != self.random_number_Start:
+        #             break
 
-            targetPosition_swapped = [0, 0, 1]  # NOTE - TARGET POSITION FIX
-            if self.Maze_number == 0 or self.Maze_number == 21:
-                targetPosition = self.TARGET_POSITION[f"map{1}"][0][self.random_number_Target][0:2]
-            else:
-                targetPosition = self.TARGET_POSITION[f"map{self.Maze_number}"][0][self.random_number_Target][0:2]
-            targetPosition_swapped[1] = targetPosition[0]
-            targetPosition_swapped[0] = targetPosition[1]
-        else:
-            targetPosition_swapped = [0, 0, 1]  # NOTE - TARGET POSITION FIX
-            if self.Maze_number == 0 or self.Maze_number == 21:
-                targetPosition = self.TARGET_POSITION[f"map{1}"][0][self.random_number_Target][0:2]
-            else:
-                targetPosition = self.TARGET_POSITION[f"map{self.Maze_number}"][0][self.random_number_Target][0:2]
-            targetPosition_swapped[1] = targetPosition[0]
-            targetPosition_swapped[0] = targetPosition[1]
+        #     targetPosition_swapped = [0, 0, 1]  # NOTE - TARGET POSITION FIX
+        #     if self.Maze_number == 0 or self.Maze_number == 21:
+        #         targetPosition = self.TARGET_POSITION[f"map{1}"][0][self.random_number_Target][0:2]
+        #     else:
+        #         targetPosition = self.TARGET_POSITION[f"map{self.Maze_number}"][0][self.random_number_Target][0:2]
+        #     targetPosition_swapped[1] = targetPosition[0]
+        #     targetPosition_swapped[0] = targetPosition[1]
+        # else:
+        #     targetPosition_swapped = [0, 0, 1]  # NOTE - TARGET POSITION FIX
+        #     if self.Maze_number == 0 or self.Maze_number == 21:
+        #         targetPosition = self.TARGET_POSITION[f"map{1}"][0][self.random_number_Target][0:2]
+        #     else:
+        #         targetPosition = self.TARGET_POSITION[f"map{self.Maze_number}"][0][self.random_number_Target][0:2]
+        #     targetPosition_swapped[1] = targetPosition[0]
+        #     targetPosition_swapped[0] = targetPosition[1]
 
         # print(f"Target_Position_swapped: {targetPosition_swapped}")
 
+        # NOTE - für ganze Einfache fälle könnte das square.urdf verwendet werden, aber dann gibt es Probleme mit der Reward-Karte, da keine csvs dazu vorhanden sind! --> nicht verwenden!
         # p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/train_square.urdf'), physicsClientId=self.CLIENT, useFixedBase=True)
+
         p.loadURDF(
             pkg_resources.resource_filename("gym_pybullet_drones", f"assets/maze/map_{self.Maze_number}.urdf"),
             physicsClientId=self.CLIENT,
             useFixedBase=True,
         )
 
-        # NOTE - 19.3.2025: TARGET ENTFERNT
+        # NOTE - 19.3.2025: TARGET ENTFERNT --> Fokus Belohnung auf Exploration / Target komplett nicht mehr verwendet!
         # p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/target.urdf'),
         #           targetPosition_swapped, # x,y,z position
         #           p.getQuaternionFromEuler([0, 0, 0]), # rotation
