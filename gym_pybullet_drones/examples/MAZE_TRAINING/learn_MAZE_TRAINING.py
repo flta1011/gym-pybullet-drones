@@ -192,7 +192,7 @@ DEFAULT_Influence_of_Walls = 4
 - M5:   DQN_NN_MultiInputPolicy mit fullyConnectLayer
 - M6:   SAC
 """
-MODEL_VERSION = "M5"
+MODEL_VERSION = "M3"
 
 #####################################REWARD_VERSION###########################
 """REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
@@ -204,21 +204,21 @@ MODEL_VERSION = "M5"
 - R6:   R5 mit dem Zusatz, dass wenn die Drohne nicht zu nah an der Wand ist, gibt es einen definierten Bonus (Anstatt nur Peitsche jetzt Zuckerbrot und Peitsche)
 - R7:   Statt Heatmap nun Bestrafungsmap (lineare Bestrafung - Abstand zur Wand), Truncated bei Wandberührung, Abzug für jeden Step
 """
-REWARD_VERSION = "R6"
+REWARD_VERSION = "R5"
 
 #####################################OBSERVATION_TYPE###########################
 """ObservationType:
 - O1: X, Y, Yaw, Raycast readings (nur PPO)
 - O2: 5 Kanäliges Bild CNN
 - O3: 5 Kanäliges Bild CNN mit zweimal last Clipped Actions
-- 04: Kanal 1: Normalisierte SLAM Map (Occupancy Map)
+- O4: Kanal 1: Normalisierte SLAM Map (Occupancy Map)
 - O5: XY Position, Yaw (sin,cos), Raycast readings, last clipped actions 
-- 06: Slam-image, XY Position, Yaw (sin,cos), last actions (n Stück)
-- 07: Slam-image, XY Position, Yaw (sin,cos), last actions (n Stück), raycasts
-- 08: X-Pos,Y-Pos, raycast readings 4x,4-Interest Werte (Interest-Front,Back, left, right: Summe freie Flächen, die noch nicht besucht wurden), x mal last clipped actions
-- 09: Slam-image, x-Pos, y-Pos, racast readings,4-Interest Werte (Interest-Front,Back, left, right: Summe freie Flächen, die noch nicht besucht wurden), x mal last clipped actions
+- O6: Slam-image, XY Position, Yaw (sin,cos), last actions (n Stück)
+- O7: Slam-image, XY Position, Yaw (sin,cos), last actions (n Stück), raycasts
+- O8: X-Pos,Y-Pos, 4-raycast_readings, 4-interest_values, n-last_clipped_actions
+- O9: Slam-image, x-Pos, y-Pos, 4-racast_readings, 4-interest_values, n-last_clipped_actions
 """
-OBSERVATION_TYPE = "O7"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
+OBSERVATION_TYPE = "O8"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
 
 #####################################ACTION_TYPE###########################
 """ActionType:'
@@ -603,12 +603,12 @@ def run(
                         train_env,
                         device="cuda:0",
                         # policy_kwargs=dict(net_arch=[128, 64, 32]),
-                        #learning_rate=0.004,
+                        # learning_rate=0.004,
                         verbose=1,
                         batch_size=32,
                         seed=42,
                         buffer_size=500000,
-                        #gamma=0.8,
+                        # gamma=0.8,
                     )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
             case "M6":  # M6: SAC
                 if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
