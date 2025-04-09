@@ -26,6 +26,13 @@ def _computeObs(self):
             # Get the current state of the drone
             state = self._getDroneStateVector(0)
 
+            absolute_x = state[0]  # x-Position
+            absolute_y = state[1]  # y-Position
+            initial_x = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0]
+            initial_y = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][1]
+            relative_x = absolute_x - initial_x  # relative x-Position
+            relative_y = absolute_y - initial_y  # relative y-Position
+
             # Select specific values from obs and concatenate them directly
             obs = [
                 state[21],
@@ -39,8 +46,8 @@ def _computeObs(self):
             modified_obs = []
 
             # NOTE - neue Tests mit X,Y, Yaw Position der Drohne (28.2.25) übergeben
-            modified_obs.append(round(state[0], 3))  # x-Position
-            modified_obs.append(round(state[1], 3))  # y-Position
+            modified_obs.append(round(relative_x, 3))  # x-Position
+            modified_obs.append(round(relative_y, 3))  # y-Position
             modified_obs.append(round(state[9], 3))  # Yaw-Position
 
             # abstände anhängen mit 3 Nachkommastellen
@@ -68,6 +75,13 @@ def _computeObs(self):
             # Get current drone state
             state = self._getDroneStateVector(0)
 
+            absolute_x = state[0]  # x-Position
+            absolute_y = state[1]  # y-Position
+            initial_x = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0]
+            initial_y = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][1]
+            relative_x = absolute_x - initial_x  # relative x-Position
+            relative_y = absolute_y - initial_y  # relative y-Position
+
             # Get SLAM map and normalize it
             slam_map = self.slam.cropped_grid
             # norm_map = np.zeros_like(slam_map, dtype=np.float32)
@@ -77,7 +91,7 @@ def _computeObs(self):
             # norm_map[slam_map == 2] = 0.5    # besucht
 
             # Get drone position from state
-            pos = state[0:2]  # x,y position
+            pos = [relative_x, relative_y]  # x,y position
 
             # Achtung: in der Simulation sind nie negative Werte zu erwarten, da die Mazes so gespant sind, das Sie immer positive Werte aufweisen. In echt kann die Drohne aber später auch negative Werte erhalten.
 
@@ -137,6 +151,13 @@ def _computeObs(self):
             # Get current drone state
             state = self._getDroneStateVector(0)
 
+            absolute_x = state[0]  # x-Position
+            absolute_y = state[1]  # y-Position
+            initial_x = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0]
+            initial_y = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][1]
+            relative_x = absolute_x - initial_x  # relative x-Position
+            relative_y = absolute_y - initial_y  # relative y-Position
+
             # Get SLAM map and normalize it
             slam_map = self.slam.cropped_grid
             # norm_map = np.zeros_like(slam_map, dtype=np.float32)
@@ -146,7 +167,7 @@ def _computeObs(self):
             # norm_map[slam_map == 2] = 0.5    # besucht
 
             # Get drone position from state
-            pos = state[0:2]  # x,y position
+            pos = [relative_x, relative_y]  # x,y position
 
             # Achtung: in der Simulation sind nie negative Werte zu erwarten, da die Mazes so gespant sind, das Sie immer positive Werte aufweisen. In echt kann die Drohne aber später auch negative Werte erhalten.
 
@@ -221,6 +242,13 @@ def _computeObs(self):
             # Get the current state of the drone
             state = self._getDroneStateVector(0)
 
+            absolute_x = state[0]  # x-Position
+            absolute_y = state[1]  # y-Position
+            initial_x = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0]
+            initial_y = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][1]
+            relative_x = absolute_x - initial_x  # relative x-Position
+            relative_y = absolute_y - initial_y  # relative y-Position
+
             # Select specific values from obs and concatenate them directly
             obs = [
                 state[21],
@@ -238,8 +266,8 @@ def _computeObs(self):
             # last_Action_3 = state[28]  # [27]=last_Action
 
             # NOTE - neue Tests mit X,Y, Yaw Position der Drohne (28.2.25) übergeben
-            modified_obs.append(round(state[0], 3))  # x-Position
-            modified_obs.append(round(state[1], 3))  # y-Position
+            modified_obs.append(round(relative_x, 3))  # x-Position
+            modified_obs.append(round(relative_y, 3))  # y-Position
             modified_obs.append(round(state[9], 3))  # Yaw-Position
 
             # abstände anhängen mit 3 Nachkommastellen
@@ -274,6 +302,13 @@ def _computeObs(self):
             # Get current drone state
             state = self._getDroneStateVector(0)
 
+            absolute_x = state[0]  # x-Position
+            absolute_y = state[1]  # y-Position
+            initial_x = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0]
+            initial_y = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][1]
+            relative_x = absolute_x - initial_x  # relative x-Position
+            relative_y = absolute_y - initial_y  # relative y-Position
+
             # Get SLAM map and normalize it
             slam_map = self.slam.cropped_grid
             # norm_map = np.zeros_like(slam_map, dtype=np.float32)
@@ -295,8 +330,8 @@ def _computeObs(self):
             obs = dict(
                 {
                     "image": slam_map,
-                    "x": state[0],
-                    "y": state[1],
+                    "x": relative_x,
+                    "y": relative_y,
                     "sin_yaw": np.sin(yaw),
                     "cos_yaw": np.cos(yaw),
                     "last_action": self.last_actions,
@@ -319,6 +354,13 @@ def _computeObs(self):
             # Get current drone state
             state = self._getDroneStateVector(0)
 
+            absolute_x = state[0]  # x-Position
+            absolute_y = state[1]  # y-Position
+            initial_x = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0]
+            initial_y = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][1]
+            relative_x = absolute_x - initial_x  # relative x-Position
+            relative_y = absolute_y - initial_y  # relative y-Position
+
             # Get SLAM map and normalize it
             slam_map = self.slam.cropped_grid
 
@@ -337,8 +379,8 @@ def _computeObs(self):
             obs = dict(
                 {
                     "image": slam_map,
-                    "x": state[0],
-                    "y": state[1],
+                    "x": relative_x,
+                    "y": relative_y,
                     "sin_yaw": np.sin(yaw),
                     "cos_yaw": np.cos(yaw),
                     "last_action": self.last_actions,
@@ -350,20 +392,26 @@ def _computeObs(self):
             return obs
 
         case "O8":  # X-Pos,Y-Pos, 4-raycast readings, 4-Interest Werte (Interest-Front,Back, left, right: Summe freie Flächen, die noch nicht besucht wurden), x mal last clipped actions
-            # Get the current state of the drone
-            state = self._getDroneStateVector(0)
-
-            # Select specific values from obs and concatenate them directly
-            obs = [state[21], state[22], state[23], state[24]]  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
-
             # Modify observation based on distance thresholds
             modified_obs = []
 
+            # Get the current state of the drone
+            state = self._getDroneStateVector(0)
+
+            absolute_x = state[0]  # x-Position
+            absolute_y = state[1]  # y-Position
+            initial_x = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0]
+            initial_y = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][1]
+            relative_x = absolute_x - initial_x  # relative x-Position
+            relative_y = absolute_y - initial_y  # relative y-Position
+
             # X- & Y-Position der Drohne
-            modified_obs.append(state[0])  # x-Position
-            modified_obs.append(state[1])  # y-Position
+            modified_obs.append(relative_x)  # x-Position
+            modified_obs.append(relative_y)  # y-Position
 
             # Raycast Readings
+            # Select specific values from obs and concatenate them directly
+            obs = [state[21], state[22], state[23], state[24]]  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
             # abstände anhängen mit 3 Nachkommastellen
             modified_obs.extend(obs)  # 4x raycast readings
 
@@ -383,14 +431,21 @@ def _computeObs(self):
             # Get the current state of the drone
             state = self._getDroneStateVector(0)
 
+            absolute_x = state[0]  # x-Position
+            absolute_y = state[1]  # y-Position
+            initial_x = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0]
+            initial_y = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][1]
+            relative_x = absolute_x - initial_x  # relative x-Position
+            relative_y = absolute_y - initial_y  # relative y-Position
+
             # Select specific values from obs and concatenate them directly
             raycasts = [state[21], state[22], state[23], state[24]]  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
 
             obs = dict(
                 {
                     "image": self.slam.cropped_grid,
-                    "x": round(state[0], 3),
-                    "y": round(state[1], 3),
+                    "x": round(relative_x, 3),
+                    "y": round(relative_y, 3),
                     "raycast": raycasts,
                     "interest_values": self.interest_values,
                     "last_clipped_actions": self.last_actions,
