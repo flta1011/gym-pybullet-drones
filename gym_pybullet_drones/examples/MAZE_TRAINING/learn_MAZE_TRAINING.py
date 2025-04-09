@@ -163,17 +163,17 @@ DEFAULT_VelocityScale = 0.5
 # Bei wie viel Prozent der Fläche einen Print ausgeben
 DEFAULT_Procent_Step = 0.01
 DEFAULT_REWARD_FOR_NEW_FIELD = 2
-DEFAULT_Punishment_for_Step = -0.5
+DEFAULT_Punishment_for_Step = 0
 # 5 bedeutet eine 5x5 Matrix
 DEFAULT_explore_Matrix_Size = 5
-DEFAULT_Maze_number = 21
+DEFAULT_Maze_number = 0
 # nach wie vielen Schritten wird ein neues maze gewählt
-DEFAULT_New_Maze_number = 10
+DEFAULT_New_Maze_number = 0  # VERÄNDERT NICHTS!!
 DEFAULT_New_Position_number = 1
 
-DEFAULT_collision_penalty_terminated = -1000  # mit -10 Trainiert SAC gut, bleibt aber noch ca. 50 mal an der Wand hängen--
+DEFAULT_collision_penalty_terminated = -50  # mit -10 Trainiert SAC gut, bleibt aber noch ca. 50 mal an der Wand hängen--
 DEFAULT_Terminated_Wall_Distance = 0.15  # worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25
-DEFAULT_no_collision_reward = 0.25  # nur bei R5 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
+DEFAULT_no_collision_reward = 0  # nur bei R5 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
 
 # R7 - Negative Reward Map Settings
 DEFAULT_Punishment_for_Walls = 8
@@ -200,7 +200,7 @@ MODEL_VERSION = "M6"
 - R6:   R5 mit dem Zusatz, dass wenn die Drohne nicht zu nah an der Wand ist, gibt es einen definierten Bonus (Anstatt nur Peitsche jetzt Zuckerbrot und Peitsche)
 - R7:   Statt Heatmap nun Bestrafungsmap (lineare Bestrafung - Abstand zur Wand), Truncated bei Wandberührung, Abzug für jeden Step
 """
-REWARD_VERSION = "R5"
+REWARD_VERSION = "R6"
 
 #####################################OBSERVATION_TYPE###########################
 """ObservationType:
@@ -235,7 +235,7 @@ TRUNCATED_TYPE = "TR1"
 - T1: 80% der Fläche erkundet
 - T2: 80% der Fläche erkundet oder Crash (Abstandswert geringer als X)
 """
-TERMINATED_TYPE = "T2"
+TERMINATED_TYPE = "T1"
 
 ################
 # INIT_RPYS = {}
@@ -605,9 +605,6 @@ def run(
                         verbose=1,
                         device="cuda:0",
                         seed=42,
-                        buffer_size=500000,
-                        batch_size=32,
-                        gamma=0.8,
                     )
             case _:
                 raise ValueError(f"Invalid model version: {MODEL_Version}")

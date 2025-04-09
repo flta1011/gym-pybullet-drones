@@ -640,7 +640,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
             # Wählen Sie eine Zufallszahl aus der Liste der zulässigen Zahlen
             # self.Maze_number = np.random.choice((1, 20))
-            self.Maze_number = 21
 
             print(f"--------------------------MAZE_NUMBER_NEWWWWWWWWW: {self.Maze_number}---------------------------------------")
             self.New_Maze_number_counter = 0
