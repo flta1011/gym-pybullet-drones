@@ -35,13 +35,13 @@ class AnchorData2:
         self.is_valid = is_valid
 
     def set_from_mem_data(self, data):
-        x, y, z, self.is_valid = struct.unpack('<fff?', data)
+        x, y, z, self.is_valid = struct.unpack("<fff?", data)
         self.position = (x, y, z)
 
 
 class LocoMemory2(MemoryElement):
     """Memory interface for accessing data from the Loco Positioning system
-       version 2"""
+    version 2"""
 
     SIZE_OF_FLOAT = 4
 
@@ -58,8 +58,7 @@ class LocoMemory2(MemoryElement):
     PAGE_LEN = (3 * SIZE_OF_FLOAT) + 1
 
     def __init__(self, id, type, size, mem_handler):
-        super(LocoMemory2, self).__init__(id=id, type=type, size=size,
-                                          mem_handler=mem_handler)
+        super(LocoMemory2, self).__init__(id=id, type=type, size=size, mem_handler=mem_handler)
         self._update_ids_finished_cb = None
         self._update_active_ids_finished_cb = None
         self._update_data_finished_cb = None
@@ -81,8 +80,7 @@ class LocoMemory2(MemoryElement):
             elif addr == LocoMemory2.ADR_ACTIVE_ID_LIST:
                 self._handle_active_id_list_data(data)
             else:
-                id = int((addr - LocoMemory2.ADR_ANCHOR_BASE) /
-                         LocoMemory2.ANCHOR_PAGE_SIZE)
+                id = int((addr - LocoMemory2.ADR_ANCHOR_BASE) / LocoMemory2.ANCHOR_PAGE_SIZE)
                 self._handle_anchor_data(id, data)
 
     def update_id_list(self, update_ids_finished_cb):
@@ -97,11 +95,10 @@ class LocoMemory2(MemoryElement):
             self.ids_valid = False
             self.data_valid = False
 
-            logger.debug('Updating ids of memory {}'.format(self.id))
+            logger.debug("Updating ids of memory {}".format(self.id))
 
             # Start reading the header
-            self.mem_handler.read(self, LocoMemory2.ADR_ID_LIST,
-                                  LocoMemory2.ID_LIST_LEN)
+            self.mem_handler.read(self, LocoMemory2.ADR_ID_LIST, LocoMemory2.ID_LIST_LEN)
 
     def update_active_id_list(self, update_active_ids_finished_cb):
         """Request an update of the active id list"""
@@ -111,11 +108,10 @@ class LocoMemory2(MemoryElement):
 
             self.active_ids_valid = False
 
-            logger.debug('Updating active ids of memory {}'.format(self.id))
+            logger.debug("Updating active ids of memory {}".format(self.id))
 
             # Start reading the header
-            self.mem_handler.read(self, LocoMemory2.ADR_ACTIVE_ID_LIST,
-                                  LocoMemory2.ID_LIST_LEN)
+            self.mem_handler.read(self, LocoMemory2.ADR_ACTIVE_ID_LIST, LocoMemory2.ID_LIST_LEN)
 
     def update_data(self, update_data_finished_cb):
         """Request an update of the anchor data"""
@@ -126,7 +122,7 @@ class LocoMemory2(MemoryElement):
             self.data_valid = False
             self._nr_of_anchors_to_fetch = self.nr_of_anchors
 
-            logger.debug('Updating anchor data of memory {}'.format(self.id))
+            logger.debug("Updating anchor data of memory {}".format(self.id))
 
             # Start reading the first anchor
             self._currently_fetching_index = 0
@@ -171,6 +167,5 @@ class LocoMemory2(MemoryElement):
                 self._update_data_finished_cb = None
 
     def _request_page(self, page):
-        addr = LocoMemory2.ADR_ANCHOR_BASE + \
-            LocoMemory2.ANCHOR_PAGE_SIZE * page
+        addr = LocoMemory2.ADR_ANCHOR_BASE + LocoMemory2.ANCHOR_PAGE_SIZE * page
         self.mem_handler.read(self, addr, LocoMemory2.PAGE_LEN)

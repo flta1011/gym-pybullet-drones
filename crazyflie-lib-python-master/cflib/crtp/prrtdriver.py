@@ -14,8 +14,8 @@ try:
 except ImportError:
     prrt_installed = False
 
-__author__ = 'Bitcraze AB'
-__all__ = ['PrrtDriver']
+__author__ = "Bitcraze AB"
+__all__ = ["PrrtDriver"]
 
 logger = logging.getLogger(__name__)
 
@@ -29,26 +29,24 @@ class PrrtDriver(CRTPDriver):
     def __init__(self):
         CRTPDriver.__init__(self)
         self.prrt_socket = None
-        self.uri = ''
+        self.uri = ""
         self.link_error_callback = None
         self.packet_log = None
         self.log_index = 0
-        logger.info('Initialized PRRT driver.')
+        logger.info("Initialized PRRT driver.")
 
     def connect(self, uri, linkQualityCallback, linkErrorCallback):
         # check if the URI is a PRRT URI
-        if not re.search('^prrt://', uri):
-            raise WrongUriType('Not a prrt URI')
+        if not re.search("^prrt://", uri):
+            raise WrongUriType("Not a prrt URI")
 
         # Check if it is a valid PRRT URI
-        uri_match = re.search(r'^prrt://((?:[\d]{1,3})\.(?:[\d]{1,3})\.'
-                              r'(?:[\d]{1,3})\.(?:[\d]{1,3})):([\d]{1,5})'
-                              r'(?:/([\d]{1,6}))?$', uri)
+        uri_match = re.search(r"^prrt://((?:[\d]{1,3})\.(?:[\d]{1,3})\." r"(?:[\d]{1,3})\.(?:[\d]{1,3})):([\d]{1,5})" r"(?:/([\d]{1,6}))?$", uri)
         if not uri_match:
-            raise Exception('Invalid PRRT URI')
+            raise Exception("Invalid PRRT URI")
 
         if not prrt_installed:
-            raise Exception('PRRT is missing')
+            raise Exception("PRRT is missing")
 
         self.uri = uri
 
@@ -60,9 +58,7 @@ class PrrtDriver(CRTPDriver):
         if uri_match.group(3):
             target_delay_s = int(uri_match.group(3)) / 1000
 
-        self.prrt_socket = prrt.PrrtSocket(('0.0.0.0', PRRT_LOCAL_PORT),
-                                           maximum_payload_size=MAX_PAYLOAD,
-                                           target_delay=target_delay_s)
+        self.prrt_socket = prrt.PrrtSocket(("0.0.0.0", PRRT_LOCAL_PORT), maximum_payload_size=MAX_PAYLOAD, target_delay=target_delay_s)
         self.prrt_socket.connect((address, port))
 
     def send_packet(self, pk):
@@ -76,8 +72,7 @@ class PrrtDriver(CRTPDriver):
             elif wait < 0:
                 pk_bytes, _ = self.prrt_socket.receive_asap_wait()
             else:
-                deadline = datetime.datetime.utcnow() + datetime.timedelta(
-                    seconds=wait)
+                deadline = datetime.datetime.utcnow() + datetime.timedelta(seconds=wait)
                 pk_bytes, _ = self.prrt_socket.receive_asap_timedwait(deadline)
         except prrt.TimeoutException:
             return None
@@ -89,15 +84,17 @@ class PrrtDriver(CRTPDriver):
         return pk
 
     def get_status(self):
-        return 'No information available'
+        return "No information available"
 
     def get_name(self):
-        return 'prrt'
+        return "prrt"
 
     def scan_interface(self, address):
-        default_uri = 'prrt://10.8.0.208:5000'
+        default_uri = "prrt://10.8.0.208:5000"
         if prrt_installed:
-            return [[default_uri, ''], ]
+            return [
+                [default_uri, ""],
+            ]
         return []
 
     def close(self):

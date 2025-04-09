@@ -38,18 +38,18 @@ class TestLighthouseGeometrySolver(LighthouseTestBase):
         bs_id0 = 3
         bs_id1 = 1
         matched_samples = [
-            LhCfPoseSample(angles_calibrated={
-                bs_id0: self.fixtures.angles_cf_origin_bs0,
-                bs_id1: self.fixtures.angles_cf_origin_bs1,
-            }),
+            LhCfPoseSample(
+                angles_calibrated={
+                    bs_id0: self.fixtures.angles_cf_origin_bs0,
+                    bs_id1: self.fixtures.angles_cf_origin_bs1,
+                }
+            ),
         ]
 
-        initial_guess, cleaned_matched_samples = LighthouseInitialEstimator.estimate(matched_samples,
-                                                                                     LhDeck4SensorPositions.positions)
+        initial_guess, cleaned_matched_samples = LighthouseInitialEstimator.estimate(matched_samples, LhDeck4SensorPositions.positions)
 
         # Test
-        actual = LighthouseGeometrySolver.solve(
-            initial_guess, cleaned_matched_samples, LhDeck4SensorPositions.positions)
+        actual = LighthouseGeometrySolver.solve(initial_guess, cleaned_matched_samples, LhDeck4SensorPositions.positions)
 
         # Assert
         bs_poses = actual.bs_poses
@@ -64,26 +64,30 @@ class TestLighthouseGeometrySolver(LighthouseTestBase):
         bs_id2 = 9
         bs_id3 = 3
         matched_samples = [
-            LhCfPoseSample(angles_calibrated={
-                bs_id0: self.fixtures.angles_cf_origin_bs0,
-                bs_id1: self.fixtures.angles_cf_origin_bs1,
-            }),
-            LhCfPoseSample(angles_calibrated={
-                bs_id1: self.fixtures.angles_cf1_bs1,
-                bs_id2: self.fixtures.angles_cf1_bs2,
-            }),
-            LhCfPoseSample(angles_calibrated={
-                bs_id2: self.fixtures.angles_cf2_bs2,
-                bs_id3: self.fixtures.angles_cf2_bs3,
-            }),
+            LhCfPoseSample(
+                angles_calibrated={
+                    bs_id0: self.fixtures.angles_cf_origin_bs0,
+                    bs_id1: self.fixtures.angles_cf_origin_bs1,
+                }
+            ),
+            LhCfPoseSample(
+                angles_calibrated={
+                    bs_id1: self.fixtures.angles_cf1_bs1,
+                    bs_id2: self.fixtures.angles_cf1_bs2,
+                }
+            ),
+            LhCfPoseSample(
+                angles_calibrated={
+                    bs_id2: self.fixtures.angles_cf2_bs2,
+                    bs_id3: self.fixtures.angles_cf2_bs3,
+                }
+            ),
         ]
 
-        initial_guess, cleaned_matched_samples = LighthouseInitialEstimator.estimate(matched_samples,
-                                                                                     LhDeck4SensorPositions.positions)
+        initial_guess, cleaned_matched_samples = LighthouseInitialEstimator.estimate(matched_samples, LhDeck4SensorPositions.positions)
 
         # Test
-        actual = LighthouseGeometrySolver.solve(
-            initial_guess, cleaned_matched_samples, LhDeck4SensorPositions.positions)
+        actual = LighthouseGeometrySolver.solve(initial_guess, cleaned_matched_samples, LhDeck4SensorPositions.positions)
 
         # Assert
         bs_poses = actual.bs_poses

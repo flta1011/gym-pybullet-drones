@@ -45,8 +45,8 @@ from cflib.crtp.crtpstack import CRTPPacket
 from cflib.crtp.crtpstack import CRTPPort
 from cflib.utils.callbacks import Caller
 
-__author__ = 'Bitcraze AB'
-__all__ = ['Param', 'ParamTocElement']
+__author__ = "Bitcraze AB"
+__all__ = ["Param", "ParamTocElement"]
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ MISC_PERSISTENT_GET_STATE = 4
 MISC_PERSISTENT_CLEAR = 5
 MISC_GET_DEFAULT_VALUE = 6
 
-PersistentParamState = namedtuple('PersistentParamState', 'is_stored default_value stored_value')
+PersistentParamState = namedtuple("PersistentParamState", "is_stored default_value stored_value")
 
 
 # One element entry in the TOC
@@ -83,29 +83,31 @@ class ParamTocElement:
 
     EXTENDED_PERSISTENT = 1
 
-    types = {0x08: ('uint8_t', '<B'),
-             0x09: ('uint16_t', '<H'),
-             0x0A: ('uint32_t', '<L'),
-             0x0B: ('uint64_t', '<Q'),
-             0x00: ('int8_t', '<b'),
-             0x01: ('int16_t', '<h'),
-             0x02: ('int32_t', '<i'),
-             0x03: ('int64_t', '<q'),
-             0x05: ('FP16', ''),
-             0x06: ('float', '<f'),
-             0x07: ('double', '<d')}
+    types = {
+        0x08: ("uint8_t", "<B"),
+        0x09: ("uint16_t", "<H"),
+        0x0A: ("uint32_t", "<L"),
+        0x0B: ("uint64_t", "<Q"),
+        0x00: ("int8_t", "<b"),
+        0x01: ("int16_t", "<h"),
+        0x02: ("int32_t", "<i"),
+        0x03: ("int64_t", "<q"),
+        0x05: ("FP16", ""),
+        0x06: ("float", "<f"),
+        0x07: ("double", "<d"),
+    }
 
     def __init__(self, ident=0, data=None):
         """TocElement creator. Data is the binary payload of the element."""
         self.ident = ident
         self.persistent = False
         self.extended = False
-        if (data):
-            strs = struct.unpack('s' * len(data[1:]), data[1:])
-            s = ''
+        if data:
+            strs = struct.unpack("s" * len(data[1:]), data[1:])
+            s = ""
             for ch in strs:
-                s += ch.decode('ISO-8859-1')
-            strs = s.split('\x00')
+                s += ch.decode("ISO-8859-1")
+            strs = s.split("\x00")
             self.group = strs[0]
             self.name = strs[1]
 
@@ -115,19 +117,19 @@ class ParamTocElement:
 
             # If the fouth byte (1 << 4) (0x10) is set we have extended
             # type information for this element.
-            self.extended = ((metadata & 0x10) != 0)
+            self.extended = (metadata & 0x10) != 0
 
             self.ctype = self.types[metadata & 0x0F][0]
             self.pytype = self.types[metadata & 0x0F][1]
-            if ((metadata & 0x40) != 0):
+            if (metadata & 0x40) != 0:
                 self.access = ParamTocElement.RO_ACCESS
             else:
                 self.access = ParamTocElement.RW_ACCESS
 
     def get_readable_access(self):
-        if (self.access == ParamTocElement.RO_ACCESS):
-            return 'RO'
-        return 'RW'
+        if self.access == ParamTocElement.RO_ACCESS:
+            return "RO"
+        return "RW"
 
     def is_extended(self):
         return self.extended
@@ -139,7 +141,7 @@ class ParamTocElement:
         return self.persistent
 
 
-class Param():
+class Param:
     """
     Used to read and write parameter values in the Crazyflie.
     """
@@ -170,7 +172,7 @@ class Param():
         """Request an update of all the parameters in the TOC"""
         for group in self.toc.toc:
             for name in self.toc.toc[group]:
-                complete_name = '%s.%s' % (group, name)
+                complete_name = "%s.%s" % (group, name)
                 self.request_param_update(complete_name)
 
     def _check_if_all_updated(self):
@@ -197,24 +199,24 @@ class Param():
             id_index = 0
 
         if self._useV2:
-            var_id = struct.unpack('<H', pk.data[id_index:id_index + 2])[0]
+            var_id = struct.unpack("<H", pk.data[id_index : id_index + 2])[0]
         else:
             var_id = pk.data[0]
         element = self.toc.get_element_by_id(var_id)
         if element:
             if self._useV2:
-                value = struct.unpack(element.pytype, pk.data[id_index + 2:])[0]
+                value = struct.unpack(element.pytype, pk.data[id_index + 2 :])[0]
             else:
                 value = struct.unpack(element.pytype, pk.data[1:])[0]
             value_s = value.__str__()
-            complete_name = '%s.%s' % (element.group, element.name)
+            complete_name = "%s.%s" % (element.group, element.name)
 
             # Save the value for synchronous access
             if element.group not in self.values:
                 self.values[element.group] = {}
             self.values[element.group][element.name] = value_s
 
-            logger.debug('Updated parameter [%s]' % complete_name)
+            logger.debug("Updated parameter [%s]" % complete_name)
             if complete_name in self.param_update_callbacks:
                 self.param_update_callbacks[complete_name].call(complete_name, value_s)
             if element.group in self.group_update_callbacks:
@@ -228,7 +230,7 @@ class Param():
                 self._initialized.set()
                 self.all_updated.call()
         else:
-            logger.debug('Variable id [%d] not found in TOC', var_id)
+            logger.debug("Variable id [%d] not found in TOC", var_id)
 
     def remove_update_callback(self, group, name=None, cb=None):
         """Remove the supplied callback for a group or a group.name"""
@@ -239,7 +241,7 @@ class Param():
             if group in self.group_update_callbacks:
                 self.group_update_callbacks[group].remove_callback(cb)
         else:
-            paramname = '{}.{}'.format(group, name)
+            paramname = "{}.{}".format(group, name)
             if paramname in self.param_update_callbacks:
                 self.param_update_callbacks[paramname].remove_callback(cb)
 
@@ -255,7 +257,7 @@ class Param():
                 self.group_update_callbacks[group] = Caller()
             self.group_update_callbacks[group].add_callback(cb)
         else:
-            paramname = '{}.{}'.format(group, name)
+            paramname = "{}.{}".format(group, name)
             if paramname not in self.param_update_callbacks:
                 self.param_update_callbacks[paramname] = Caller()
             self.param_update_callbacks[paramname].add_callback(cb)
@@ -264,6 +266,7 @@ class Param():
         """
         Initiate a refresh of the parameter TOC.
         """
+
         def refresh_done():
             extended_elements = list()
 
@@ -281,9 +284,7 @@ class Param():
                 refresh_done_callback()
 
         self._useV2 = self.cf.platform.get_protocol_version() >= 4
-        toc_fetcher = TocFetcher(self.cf, ParamTocElement,
-                                 CRTPPort.PARAM, self.toc,
-                                 refresh_done, toc_cache)
+        toc_fetcher = TocFetcher(self.cf, ParamTocElement, CRTPPort.PARAM, self.toc, refresh_done, toc_cache)
         toc_fetcher.start()
 
     def _connection_requested(self, uri):
@@ -307,15 +308,14 @@ class Param():
         """
         Request an update of the value for the supplied parameter.
         """
-        self.param_updater.request_param_update(
-            self.toc.get_element_id(complete_name))
+        self.param_updater.request_param_update(self.toc.get_element_id(complete_name))
 
     def set_value_raw(self, complete_name, type, value):
         """
         Set a parameter value using the complete name and the type. Does not
         need to have received the TOC.
         """
-        char_array = bytes(complete_name.replace('.', '\0') + '\0', 'utf-8')
+        char_array = bytes(complete_name.replace(".", "\0") + "\0", "utf-8")
         len_array = len(char_array)
 
         # This gives us the type for the struct.pack
@@ -323,7 +323,7 @@ class Param():
 
         pk = CRTPPacket()
         pk.set_header(CRTPPort.PARAM, MISC_CHANNEL)
-        pk.data = struct.pack(f'<B{len_array}sB{pytype}', 0, char_array, type, value)
+        pk.data = struct.pack(f"<B{len_array}sB{pytype}", 0, char_array, type, value)
 
         # We will not get an update callback when using raw (MISC_CHANNEL)
         # so just send.
@@ -335,30 +335,28 @@ class Param():
         """
         if not self._initialized.isSet():
             if self.cf.is_called_by_incoming_handler_thread():
-                raise Exception('Can not set parameter from callback until fully connected.')
+                raise Exception("Can not set parameter from callback until fully connected.")
             if not self._initialized.wait(timeout=60):
-                raise Exception('Connection timed out')
+                raise Exception("Connection timed out")
 
         element = self.toc.get_element_by_complete_name(complete_name)
 
         if not element:
-            logger.warning("Cannot set value for [%s], it's not in the TOC!",
-                           complete_name)
-            raise KeyError('{} not in param TOC'.format(complete_name))
+            logger.warning("Cannot set value for [%s], it's not in the TOC!", complete_name)
+            raise KeyError("{} not in param TOC".format(complete_name))
         elif element.access == ParamTocElement.RO_ACCESS:
-            logger.debug('[%s] is read only, no trying to set value',
-                         complete_name)
-            raise AttributeError('{} is read-only!'.format(complete_name))
+            logger.debug("[%s] is read only, no trying to set value", complete_name)
+            raise AttributeError("{} is read-only!".format(complete_name))
         else:
             varid = element.ident
             pk = CRTPPacket()
             pk.set_header(CRTPPort.PARAM, WRITE_CHANNEL)
             if self._useV2:
-                pk.data = struct.pack('<H', varid)
+                pk.data = struct.pack("<H", varid)
             else:
-                pk.data = struct.pack('<B', varid)
+                pk.data = struct.pack("<B", varid)
 
-            if element.pytype == '<f' or element.pytype == '<d':
+            if element.pytype == "<f" or element.pytype == "<d":
                 value_nr = float(value)
             else:
                 value_nr = int(value)
@@ -373,11 +371,11 @@ class Param():
         """
         if not self._initialized.isSet():
             if self.cf.is_called_by_incoming_handler_thread():
-                raise Exception('Can not get parameter from callback until fully connected.')
+                raise Exception("Can not get parameter from callback until fully connected.")
             if not self._initialized.wait(timeout=60):
-                raise Exception('Connection timed out')
+                raise Exception("Connection timed out")
 
-        [group, name] = complete_name.split('.')
+        [group, name] = complete_name.split(".")
         return self.values[group][name]
 
     def get_default_value(self, complete_name, callback):
@@ -398,7 +396,7 @@ class Param():
                     self.cf.remove_port_callback(CRTPPort.PARAM, new_packet_cb)
                     return
 
-                default_value, = struct.unpack(element.pytype, pk.data[3:])
+                (default_value,) = struct.unpack(element.pytype, pk.data[3:])
                 callback(complete_name, default_value)
                 self.cf.remove_port_callback(CRTPPort.PARAM, new_packet_cb)
 
@@ -406,7 +404,7 @@ class Param():
 
         pk = CRTPPacket()
         pk.set_header(CRTPPort.PARAM, MISC_CHANNEL)
-        pk.data = struct.pack('<BH', MISC_GET_DEFAULT_VALUE, element.ident)
+        pk.data = struct.pack("<BH", MISC_GET_DEFAULT_VALUE, element.ident)
         self.param_updater.send_param_misc(pk)
 
     def persistent_clear(self, complete_name, callback=None):
@@ -432,7 +430,7 @@ class Param():
 
         pk = CRTPPacket()
         pk.set_header(CRTPPort.PARAM, MISC_CHANNEL)
-        pk.data = struct.pack('<BH', MISC_PERSISTENT_CLEAR, element.ident)
+        pk.data = struct.pack("<BH", MISC_PERSISTENT_CLEAR, element.ident)
         self.param_updater.send_param_misc(pk)
 
     def persistent_store(self, complete_name, callback=None):
@@ -461,7 +459,7 @@ class Param():
 
         pk = CRTPPacket()
         pk.set_header(CRTPPort.PARAM, MISC_CHANNEL)
-        pk.data = struct.pack('<BH', MISC_PERSISTENT_STORE, element.ident)
+        pk.data = struct.pack("<BH", MISC_PERSISTENT_STORE, element.ident)
         self.param_updater.send_param_misc(pk)
 
     def persistent_get_state(self, complete_name, callback):
@@ -494,25 +492,19 @@ class Param():
 
                 is_stored = pk.data[3] == 1
                 if not is_stored:
-                    default_value, = struct.unpack(element.pytype, pk.data[4:])
+                    (default_value,) = struct.unpack(element.pytype, pk.data[4:])
                 else:
                     # Remove little-endian indicator ('<')
                     just_type = element.pytype[1:]
-                    default_value, stored_value = struct.unpack(f'<{just_type * 2}', pk.data[4:])
+                    default_value, stored_value = struct.unpack(f"<{just_type * 2}", pk.data[4:])
 
-                callback(complete_name,
-                         PersistentParamState(
-                             is_stored,
-                             default_value,
-                             stored_value if is_stored else None
-                         )
-                         )
+                callback(complete_name, PersistentParamState(is_stored, default_value, stored_value if is_stored else None))
                 self.cf.remove_port_callback(CRTPPort.PARAM, new_packet_cb)
 
         self.cf.add_port_callback(CRTPPort.PARAM, new_packet_cb)
         pk = CRTPPacket()
         pk.set_header(CRTPPort.PARAM, MISC_CHANNEL)
-        pk.data = struct.pack('<BH', MISC_PERSISTENT_GET_STATE, element.ident)
+        pk.data = struct.pack("<BH", MISC_PERSISTENT_GET_STATE, element.ident)
         self.param_updater.send_param_misc(pk)
 
 
@@ -536,7 +528,7 @@ class _ExtendedTypeFetcher(Thread):
     def _new_packet_cb(self, pk):
         """Callback for newly arrived packets"""
         if pk.channel == MISC_CHANNEL:
-            var_id = struct.unpack('<H', pk.data[1:3])[0]
+            var_id = struct.unpack("<H", pk.data[1:3])[0]
 
             if self._req_param == var_id:
                 extended_type = pk.data[3]
@@ -563,7 +555,7 @@ class _ExtendedTypeFetcher(Thread):
             pk = CRTPPacket()
             pk.set_header(CRTPPort.PARAM, MISC_CHANNEL)
 
-            pk.data = struct.pack('<BH', MISC_GET_EXTENDED_TYPE, element.ident)
+            pk.data = struct.pack("<BH", MISC_GET_EXTENDED_TYPE, element.ident)
             self.request_queue.put(pk)
 
     def _close(self):
@@ -586,7 +578,7 @@ class _ExtendedTypeFetcher(Thread):
             pk = self.request_queue.get()  # Wait for request update
             self._lock.acquire()
             if self._cf.link:
-                self._req_param = struct.unpack('<H', pk.data[1:3])[0]
+                self._req_param = struct.unpack("<H", pk.data[1:3])[0]
                 self._cf.send_packet(pk, expected_reply=(tuple(pk.data[:3])))
             else:
                 self._lock.release()
@@ -626,12 +618,12 @@ class _ParamUpdater(Thread):
 
     def request_param_setvalue(self, pk):
         """Place a param set value request on the queue. When this is sent to
-        the Crazyflie it will answer with the update param value. """
+        the Crazyflie it will answer with the update param value."""
         self.request_queue.put(pk)
 
     def send_param_misc(self, pk):
         """Place a param misc request on the queue. When this is sent to
-        the Crazyflie it will answer with the same var_id and command. """
+        the Crazyflie it will answer with the same var_id and command."""
         self.request_queue.put(pk)
 
     def _new_packet_cb(self, pk):
@@ -644,8 +636,7 @@ class _ParamUpdater(Thread):
             else:
                 release_pattern = pk.data[:1]
 
-            if (pk.channel != TOC_CHANNEL and self._lock_pattern == release_pattern and
-                    pk is not None):
+            if pk.channel != TOC_CHANNEL and self._lock_pattern == release_pattern and pk is not None:
                 self.updated_callback(pk)
                 self._lock_pattern = None
                 try:
@@ -668,10 +659,10 @@ class _ParamUpdater(Thread):
         pk = CRTPPacket()
         pk.set_header(CRTPPort.PARAM, READ_CHANNEL)
         if self._useV2:
-            pk.data = struct.pack('<H', var_id)
+            pk.data = struct.pack("<H", var_id)
         else:
-            pk.data = struct.pack('<B', var_id)
-        logger.debug('Requesting request to update param [%d]', var_id)
+            pk.data = struct.pack("<B", var_id)
+        logger.debug("Requesting request to update param [%d]", var_id)
         self.request_queue.put(pk)
 
     def run(self):

@@ -53,16 +53,16 @@ from cflib.crazyflie.swarm import Swarm
 
 # Change uris and sequences according to your setup
 # URIs in a swarm using the same radio must also be on the same channel
-URI1 = 'radio://0/70/2M/E7E7E7E701'
-URI2 = 'radio://0/70/2M/E7E7E7E702'
-URI3 = 'radio://0/70/2M/E7E7E7E703'
-URI4 = 'radio://0/70/2M/E7E7E7E704'
-URI5 = 'radio://0/70/2M/E7E7E7E705'
-URI6 = 'radio://0/70/2M/E7E7E7E706'
-URI7 = 'radio://0/70/2M/E7E7E7E707'
-URI8 = 'radio://0/70/2M/E7E7E7E708'
-URI9 = 'radio://0/70/2M/E7E7E7E709'
-URI10 = 'radio://0/70/2M/E7E7E7E70A'
+URI1 = "radio://0/70/2M/E7E7E7E701"
+URI2 = "radio://0/70/2M/E7E7E7E702"
+URI3 = "radio://0/70/2M/E7E7E7E703"
+URI4 = "radio://0/70/2M/E7E7E7E704"
+URI5 = "radio://0/70/2M/E7E7E7E705"
+URI6 = "radio://0/70/2M/E7E7E7E706"
+URI7 = "radio://0/70/2M/E7E7E7E707"
+URI8 = "radio://0/70/2M/E7E7E7E708"
+URI9 = "radio://0/70/2M/E7E7E7E709"
+URI10 = "radio://0/70/2M/E7E7E7E70A"
 
 
 z0 = 0.4
@@ -152,24 +152,13 @@ seq_args = {
 }
 
 # List of URIs, comment the one you do not want to fly
-uris = {
-    URI1,
-    URI2,
-    URI3,
-    URI4,
-    URI5,
-    URI6,
-    URI7,
-    URI8,
-    URI9,
-    URI10
-}
+uris = {URI1, URI2, URI3, URI4, URI5, URI6, URI7, URI8, URI9, URI10}
 
 
 def wait_for_param_download(scf):
     while not scf.cf.param.is_updated:
         time.sleep(1.0)
-    print('Parameters downloaded for', scf.cf.link_uri)
+    print("Parameters downloaded for", scf.cf.link_uri)
 
 
 def arm(scf):
@@ -218,23 +207,21 @@ def run_sequence(scf, sequence):
         arm(cf)
         take_off(cf, sequence[0])
         for position in sequence:
-            print('Setting position {}'.format(position))
+            print("Setting position {}".format(position))
             end_time = time.time() + position[3]
             while time.time() < end_time:
-                cf.commander.send_position_setpoint(position[0],
-                                                    position[1],
-                                                    position[2], 0)
+                cf.commander.send_position_setpoint(position[0], position[1], position[2], 0)
                 time.sleep(0.1)
         land(cf, sequence[-1])
     except Exception as e:
         print(e)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # logging.basicConfig(level=logging.DEBUG)
     cflib.crtp.init_drivers()
 
-    factory = CachedCfFactory(rw_cache='./cache')
+    factory = CachedCfFactory(rw_cache="./cache")
     with Swarm(uris, factory=factory) as swarm:
         # If the copters are started in their correct positions this is
         # probably not needed. The Kalman filter will have time to converge
@@ -246,7 +233,7 @@ if __name__ == '__main__':
         # connections sequence. Since we have 10 copters this is clogging up
         # communication and we have to wait for it to finish before we start
         # flying.
-        print('Waiting for parameters to be downloaded...')
+        print("Waiting for parameters to be downloaded...")
         swarm.parallel(wait_for_param_download)
 
         swarm.parallel(run_sequence, args_dict=seq_args)

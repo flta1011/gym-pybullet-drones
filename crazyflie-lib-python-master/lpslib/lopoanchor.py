@@ -25,7 +25,7 @@ This class represents the connection to one or more Loco Positioning Anchors
 import struct
 
 
-class LoPoAnchor():
+class LoPoAnchor:
     LPP_TYPE_POSITION = 1
     LPP_TYPE_REBOOT = 2
     LPP_TYPE_MODE = 3
@@ -53,12 +53,12 @@ class LoPoAnchor():
         x = position[0]
         y = position[1]
         z = position[2]
-        data = struct.pack('<Bfff', LoPoAnchor.LPP_TYPE_POSITION, x, y, z)
+        data = struct.pack("<Bfff", LoPoAnchor.LPP_TYPE_POSITION, x, y, z)
 
         self.crazyflie.loc.send_short_lpp_packet(anchor_id, data)
 
     def reboot(self, anchor_id, mode):
-        data = struct.pack('<BB', LoPoAnchor.LPP_TYPE_REBOOT, mode)
+        data = struct.pack("<BB", LoPoAnchor.LPP_TYPE_REBOOT, mode)
         self.crazyflie.loc.send_short_lpp_packet(anchor_id, data)
 
     def set_mode(self, anchor_id, mode):
@@ -66,5 +66,5 @@ class LoPoAnchor():
         Send a packet to set the anchor mode. If the anchor receive the packet,
         it will change mode and resets.
         """
-        data = struct.pack('<BB', LoPoAnchor.LPP_TYPE_MODE, mode)
+        data = struct.pack("<BB", LoPoAnchor.LPP_TYPE_MODE, mode)
         self.crazyflie.loc.send_short_lpp_packet(anchor_id, data)

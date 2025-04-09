@@ -29,8 +29,8 @@ from the firmware.
 from cflib.crtp.crtpstack import CRTPPort
 from cflib.utils.callbacks import Caller
 
-__author__ = 'Bitcraze AB'
-__all__ = ['Console']
+__author__ = "Bitcraze AB"
+__all__ = ["Console"]
 
 
 class Console:
@@ -70,6 +70,6 @@ class Console:
         Callback for data received from the copter.
         """
         # This might be done prettier ;-)
-        console_text = packet.data.decode('UTF-8')
+        console_text = packet.data.decode("UTF-8")
 
         self.receivedChar.call(console_text)

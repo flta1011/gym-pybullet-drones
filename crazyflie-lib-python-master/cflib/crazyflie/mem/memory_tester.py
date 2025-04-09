@@ -47,8 +47,7 @@ class MemoryTester(MemoryElement):
 
     def __init__(self, id, type, size, mem_handler):
         """Initialize Memory tester"""
-        super(MemoryTester, self).__init__(id=id, type=type, size=size,
-                                           mem_handler=mem_handler)
+        super(MemoryTester, self).__init__(id=id, type=type, size=size, mem_handler=mem_handler)
 
         self._update_finished_cb = None
         self._write_finished_cb = None
@@ -59,15 +58,13 @@ class MemoryTester(MemoryElement):
         """Callback for when new memory data has been fetched"""
         if mem.id == self.id:
             for i in range(len(data)):
-                actualValue = struct.unpack('<B', data[i:i + 1])[0]
-                expectedValue = (start_address + i) & 0xff
+                actualValue = struct.unpack("<B", data[i : i + 1])[0]
+                expectedValue = (start_address + i) & 0xFF
 
-                if (actualValue != expectedValue):
+                if actualValue != expectedValue:
                     address = start_address + i
                     self.readValidationSucess = False
-                    logger.error(
-                        'Error in data - expected: {}, actual: {}, address:{}',
-                        expectedValue, actualValue, address)
+                    logger.error("Error in data - expected: {}, actual: {}, address:{}", expectedValue, actualValue, address)
 
                 if self._update_finished_cb:
                     self._update_finished_cb(self)
@@ -77,7 +74,7 @@ class MemoryTester(MemoryElement):
         """Request an update of the memory content"""
         if not self._update_finished_cb:
             self._update_finished_cb = update_finished_cb
-            logger.debug('Reading memory {}'.format(self.id))
+            logger.debug("Reading memory {}".format(self.id))
             self.mem_handler.read(self, start_address, size)
 
     def write_data(self, start_address, size, write_finished_cb):
@@ -86,14 +83,14 @@ class MemoryTester(MemoryElement):
         data = bytearray()
 
         for i in range(size):
-            value = (start_address + i) & 0xff
-            data += struct.pack('<B', value)
+            value = (start_address + i) & 0xFF
+            data += struct.pack("<B", value)
 
         self.mem_handler.write(self, start_address, data, flush_queue=True)
 
     def write_done(self, mem, addr):
         if self._write_finished_cb and mem.id == self.id:
-            logger.debug('Write of data finished')
+            logger.debug("Write of data finished")
             self._write_finished_cb(self, addr)
             self._write_finished_cb = None
 

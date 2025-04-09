@@ -34,13 +34,13 @@ import usb
 import usb.core
 
 try:
-    if os.environ['CRTP_PCAP_LOG'] is not None:
+    if os.environ["CRTP_PCAP_LOG"] is not None:
         from cflib.crtp.pcap import PCAPLog
 except KeyError:
     pass
 
-__author__ = 'Bitcraze AB'
-__all__ = ['Crazyradio']
+__author__ = "Bitcraze AB"
+__all__ = ["Crazyradio"]
 
 logger = logging.getLogger(__name__)
 
@@ -69,15 +69,14 @@ def _find_devices(serial=None):
     """
     ret = []
 
-    if os.name == 'nt':
+    if os.name == "nt":
         import usb.backend.libusb0 as libusb0
 
         backend = libusb0.get_backend()
     else:
         backend = libusb_package.get_libusb1_backend()
 
-    devices = usb.core.find(idVendor=0x1915, idProduct=0x7777, find_all=1,
-                            backend=backend)
+    devices = usb.core.find(idVendor=0x1915, idProduct=0x7777, find_all=1, backend=backend)
     if devices:
         for d in devices:
             if serial is not None and serial == d.serial_number:
@@ -99,7 +98,8 @@ class _radio_ack:
 
 
 class Crazyradio:
-    """ Used for communication with the Crazyradio USB dongle """
+    """Used for communication with the Crazyradio USB dongle"""
+
     # configuration constants
     DR_250KPS = 0
     DR_1MPS = 1
@@ -111,7 +111,7 @@ class Crazyradio:
     P_0DBM = 3
 
     def __init__(self, device=None, devid=0, serial=None):
-        """ Create object and scan for USB dongle if no device is supplied """
+        """Create object and scan for USB dongle if no device is supplied"""
 
         self.current_channel = None
         self.current_address = None
@@ -126,24 +126,23 @@ class Crazyradio:
                     device = _find_devices(serial)
             except Exception:
                 if serial is None:
-                    raise Exception('Cannot find a Crazyradio Dongle')
+                    raise Exception("Cannot find a Crazyradio Dongle")
                 else:
-                    raise Exception('Cannot find Crazyradio {}'.format(serial))
+                    raise Exception("Cannot find Crazyradio {}".format(serial))
 
         self.dev = device
 
         self.dev.set_configuration(1)
         self.handle = self.dev
-        self.version = float('{0:x}.{1:x}'.format(
-            self.dev.bcdDevice >> 8, self.dev.bcdDevice & 0x0FF))
+        self.version = float("{0:x}.{1:x}".format(self.dev.bcdDevice >> 8, self.dev.bcdDevice & 0x0FF))
 
         if self.version < 0.3:
-            raise 'This driver requires Crazyradio firmware V0.3+'
+            raise "This driver requires Crazyradio firmware V0.3+"
 
         if self.version < 0.4:
-            logger.warning('You should update to Crazyradio firmware V0.4+')
+            logger.warning("You should update to Crazyradio firmware V0.4+")
 
-        if platform.system() == 'Linux':
+        if platform.system() == "Linux":
             self.handle.reset()
 
         self.set_data_rate(self.DR_2MPS)
@@ -159,7 +158,7 @@ class Crazyradio:
 
     def _log_packet(self, receive, devid, address, channel, packet):
         try:
-            if os.environ['CRTP_PCAP_LOG'] is not None:
+            if os.environ["CRTP_PCAP_LOG"] is not None:
                 if len(packet) > 0:
                     logger = PCAPLog.instance()
                     logger.logCRTP(logger.LinkType.RADIO, receive, devid, address, channel, packet)
@@ -179,37 +178,36 @@ class Crazyradio:
 
     # Dongle configuration
     def set_channel(self, channel):
-        """ Set the radio channel to be used """
+        """Set the radio channel to be used"""
         if channel != self.current_channel:
             _send_vendor_setup(self.handle, SET_RADIO_CHANNEL, channel, 0, ())
             self.current_channel = channel
 
     def set_address(self, address):
-        """ Set the radio address to be used"""
+        """Set the radio address to be used"""
         if len(address) != 5:
-            raise Exception('Crazyradio: the radio address shall be 5'
-                            ' bytes long')
+            raise Exception("Crazyradio: the radio address shall be 5" " bytes long")
         if address != self.current_address:
             _send_vendor_setup(self.handle, SET_RADIO_ADDRESS, 0, 0, address)
             self.current_address = address
 
     def set_data_rate(self, datarate):
-        """ Set the radio datarate to be used """
+        """Set the radio datarate to be used"""
         if datarate != self.current_datarate:
             _send_vendor_setup(self.handle, SET_DATA_RATE, datarate, 0, ())
             self.current_datarate = datarate
 
     def set_power(self, power):
-        """ Set the radio power to be used """
+        """Set the radio power to be used"""
         _send_vendor_setup(self.handle, SET_RADIO_POWER, power, 0, ())
 
     def set_arc(self, arc):
-        """ Set the ACK retry count for radio communication """
+        """Set the ACK retry count for radio communication"""
         _send_vendor_setup(self.handle, SET_RADIO_ARC, arc, 0, ())
         self.arc = arc
 
     def set_ard_time(self, us):
-        """ Set the ACK retry delay for radio communication """
+        """Set the ACK retry delay for radio communication"""
         # Auto Retransmit Delay:
         # 0000 - Wait 250uS
         # 0001 - Wait 500uS
@@ -219,9 +217,9 @@ class Crazyradio:
 
         # Round down, to value representing a multiple of 250uS
         t = int((us / 250) - 1)
-        if (t < 0):
+        if t < 0:
             t = 0
-        if (t > 0xF):
+        if t > 0xF:
             t = 0xF
         _send_vendor_setup(self.handle, SET_RADIO_ARD, t, 0, ())
 
@@ -248,8 +246,8 @@ class Crazyradio:
     def scan_selected(self, selected, packet):
         result = ()
         for s in selected:
-            self.set_channel(s['channel'])
-            self.set_data_rate(s['datarate'])
+            self.set_channel(s["channel"])
+            self.set_data_rate(s["datarate"])
             status = self.send_packet(packet)
             if status and status.ack:
                 result += (s,)
@@ -262,10 +260,8 @@ class Crazyradio:
             self.current_address = None
             self.current_datarate = None
 
-            _send_vendor_setup(self.handle, SCANN_CHANNELS, start, stop,
-                               packet)
-            return tuple(_get_vendor_setup(self.handle, SCANN_CHANNELS,
-                                           0, 0, 64))
+            _send_vendor_setup(self.handle, SCANN_CHANNELS, start, stop, packet)
+            return tuple(_get_vendor_setup(self.handle, SCANN_CHANNELS, 0, 0, 64))
         else:  # Slow PC-driven scan
             result = tuple()
             for i in range(start, stop + 1):
@@ -277,22 +273,16 @@ class Crazyradio:
 
     # Data transfers
     def send_packet(self, dataOut):
-        """ Send a packet and receive the ack from the radio dongle
-            The ack contains information about the packet transmission
-            and a data payload if the ack packet contained any """
+        """Send a packet and receive the ack from the radio dongle
+        The ack contains information about the packet transmission
+        and a data payload if the ack packet contained any"""
         ackIn = None
         data = None
         try:
             self.handle.write(endpoint=1, data=dataOut, timeout=1000)
             data = self.handle.read(0x81, 64, timeout=1000)
 
-            self._log_packet(
-                False,
-                self.devid,
-                self.current_address,
-                self.current_channel,
-                dataOut
-            )
+            self._log_packet(False, self.devid, self.current_address, self.current_channel, dataOut)
         except usb.USBError:
             pass
 
@@ -307,24 +297,15 @@ class Crazyradio:
                 ackIn.retry = self.arc
 
             if ackIn.ack:
-                self._log_packet(
-                    True,
-                    self.devid,
-                    self.current_address,
-                    self.current_channel,
-                    ackIn.data
-                )
+                self._log_packet(True, self.devid, self.current_address, self.current_channel, ackIn.data)
 
         return ackIn
 
 
 # Private utility functions
 def _send_vendor_setup(handle, request, value, index, data):
-    handle.ctrl_transfer(usb.TYPE_VENDOR, request, wValue=value,
-                         wIndex=index, timeout=1000, data_or_wLength=data)
+    handle.ctrl_transfer(usb.TYPE_VENDOR, request, wValue=value, wIndex=index, timeout=1000, data_or_wLength=data)
 
 
 def _get_vendor_setup(handle, request, value, index, length):
-    return handle.ctrl_transfer(usb.TYPE_VENDOR | 0x80, request,
-                                wValue=value, wIndex=index, timeout=1000,
-                                data_or_wLength=length)
+    return handle.ctrl_transfer(usb.TYPE_VENDOR | 0x80, request, wValue=value, wIndex=index, timeout=1000, data_or_wLength=length)

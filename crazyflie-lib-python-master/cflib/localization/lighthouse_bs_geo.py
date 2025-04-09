@@ -26,11 +26,13 @@ import math
 
 import numpy as np
 import pkg_resources
+
 installed = {pkg.key for pkg in pkg_resources.working_set}
-if {'opencv-python-headless'} - installed:
+if {"opencv-python-headless"} - installed:
     OPENCV_INSTALLED = False
 else:
     import cv2 as cv
+
     OPENCV_INSTALLED = True
 
 
@@ -71,16 +73,12 @@ class LighthouseBsGeoEstimator:
                 [-sensor_distance_width / 2, 0, -sensor_distance_length / 2],
                 [sensor_distance_width / 2, 0, -sensor_distance_length / 2],
                 [-sensor_distance_width / 2, 0, sensor_distance_length / 2],
-                [sensor_distance_width / 2, 0, sensor_distance_length / 2]
-            ])
+                [sensor_distance_width / 2, 0, sensor_distance_length / 2],
+            ]
+        )
 
         # Camera matrix
-        self._K = np.float64(
-            [
-                [1.0, 0.0, 0.0],
-                [0.0, 1.0, 0.0],
-                [0.0, 0.0, 1.0]
-            ])
+        self._K = np.float64([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
 
         self._dist_coef = np.zeros(4)
 
@@ -102,9 +100,7 @@ class LighthouseBsGeoEstimator:
         """
 
         if OPENCV_INSTALLED is False:
-            raise Exception('OpenCV is not installed. To use this function,' +
-                            'do "pip3 install opencv-python-headless"' +
-                            ' and restart the cfclient')
+            raise Exception("OpenCV is not installed. To use this function," + 'do "pip3 install opencv-python-headless"' + " and restart the cfclient")
 
         guess_yaw = self._find_initial_yaw_guess(bs_vectors)
         rvec_guess, tvec_guess = self._convert_yaw_to_open_cv(guess_yaw)
@@ -118,7 +114,7 @@ class LighthouseBsGeoEstimator:
         true if it seems reasonable or false if it doesn't
         """
         for coord in pos_bs_in_cf_coord:
-            if (abs(coord) > self._sanity_max_pos):
+            if abs(coord) > self._sanity_max_pos:
                 return False
         return True
 
@@ -127,12 +123,7 @@ class LighthouseBsGeoEstimator:
         # Sort sensors in the order they are hit by the horizontal sweep
         # and use the order to figure out roughly the direction to the
         # base station
-        sweeps_x = {
-            0: bs_vectors[0].lh_v1_horiz_angle,
-            1: bs_vectors[1].lh_v1_horiz_angle,
-            2: bs_vectors[2].lh_v1_horiz_angle,
-            3: bs_vectors[3].lh_v1_horiz_angle
-        }
+        sweeps_x = {0: bs_vectors[0].lh_v1_horiz_angle, 1: bs_vectors[1].lh_v1_horiz_angle, 2: bs_vectors[2].lh_v1_horiz_angle, 3: bs_vectors[3].lh_v1_horiz_angle}
 
         ordered_map = {k: v for k, v in sorted(sweeps_x.items(), key=lambda item: item[1])}
         sensor_order = list(ordered_map.keys())
@@ -143,7 +134,7 @@ class LighthouseBsGeoEstimator:
     def _hash_sensor_order(self, order):
         hash = 0
         for i in range(4):
-            hash += order[i] * 4 ** i
+            hash += order[i] * 4**i
         return hash
 
     def _convert_yaw_to_open_cv(self, yaw):
@@ -152,7 +143,7 @@ class LighthouseBsGeoEstimator:
         # Distance to base station along the floor
         bs_fd = 3.0
         # Distance to base station
-        bs_dist = math.sqrt(bs_h ** 2 + bs_fd ** 2)
+        bs_dist = math.sqrt(bs_h**2 + bs_fd**2)
         elevation = math.atan2(bs_h, bs_fd)
 
         # Initial position of the CF in camera coordinate system, open cv style
@@ -161,19 +152,23 @@ class LighthouseBsGeoEstimator:
         # Calculate rotation matrix
         d_c = math.cos(-yaw + math.pi)
         d_s = math.sin(-yaw + math.pi)
-        R_rot_y = np.array([
-            [d_c, 0.0, d_s],
-            [0.0, 1.0, 0.0],
-            [-d_s, 0.0, d_c],
-        ])
+        R_rot_y = np.array(
+            [
+                [d_c, 0.0, d_s],
+                [0.0, 1.0, 0.0],
+                [-d_s, 0.0, d_c],
+            ]
+        )
 
         e_c = math.cos(elevation)
         e_s = math.sin(elevation)
-        R_rot_x = np.array([
-            [1.0, 0.0, 0.0],
-            [0.0, e_c, -e_s],
-            [0.0, e_s, e_c],
-        ])
+        R_rot_x = np.array(
+            [
+                [1.0, 0.0, 0.0],
+                [0.0, e_c, -e_s],
+                [0.0, e_s, e_c],
+            ]
+        )
 
         R = np.dot(R_rot_x, R_rot_y)
         rvec_start, _ = cv.Rodrigues(R)
@@ -187,21 +182,16 @@ class LighthouseBsGeoEstimator:
                 [-math.tan(bs_vectors[0].lh_v1_horiz_angle), -math.tan(bs_vectors[0].lh_v1_vert_angle)],
                 [-math.tan(bs_vectors[1].lh_v1_horiz_angle), -math.tan(bs_vectors[1].lh_v1_vert_angle)],
                 [-math.tan(bs_vectors[2].lh_v1_horiz_angle), -math.tan(bs_vectors[2].lh_v1_vert_angle)],
-                [-math.tan(bs_vectors[3].lh_v1_horiz_angle), -math.tan(bs_vectors[3].lh_v1_vert_angle)]
-            ])
+                [-math.tan(bs_vectors[3].lh_v1_horiz_angle), -math.tan(bs_vectors[3].lh_v1_vert_angle)],
+            ]
+        )
 
         _ret, rvec_est, tvec_est = cv.solvePnP(
-            self._lighthouse_3d,
-            lighthouse_image_projection,
-            self._K,
-            self._dist_coef,
-            flags=cv.SOLVEPNP_ITERATIVE,
-            rvec=rvec_start,
-            tvec=tvec_start,
-            useExtrinsicGuess=True)
+            self._lighthouse_3d, lighthouse_image_projection, self._K, self._dist_coef, flags=cv.SOLVEPNP_ITERATIVE, rvec=rvec_start, tvec=tvec_start, useExtrinsicGuess=True
+        )
 
         if not _ret:
-            raise Exception('No solution found')
+            raise Exception("No solution found")
 
         Rw_ocv, Tw_ocv = self._cam_to_world(rvec_est, tvec_est)
         return Rw_ocv, Tw_ocv
@@ -213,17 +203,21 @@ class LighthouseBsGeoEstimator:
         return R_w, tvec_w
 
     def _opencv_to_cf(self, R_cv, t_cv):
-        R_opencv_to_cf = np.array([
-            [0.0, 0.0, 1.0],
-            [-1.0, 0.0, 0.0],
-            [0.0, -1.0, 0.0],
-        ])
+        R_opencv_to_cf = np.array(
+            [
+                [0.0, 0.0, 1.0],
+                [-1.0, 0.0, 0.0],
+                [0.0, -1.0, 0.0],
+            ]
+        )
 
-        R_cf_to_opencv = np.array([
-            [0.0, -1.0, 0.0],
-            [0.0, 0.0, -1.0],
-            [1.0, 0.0, 0.0],
-        ])
+        R_cf_to_opencv = np.array(
+            [
+                [0.0, -1.0, 0.0],
+                [0.0, 0.0, -1.0],
+                [1.0, 0.0, 0.0],
+            ]
+        )
 
         t_cf = np.dot(R_opencv_to_cf, t_cv)
         R_cf = np.dot(R_opencv_to_cf, np.dot(R_cv, R_cf_to_opencv))

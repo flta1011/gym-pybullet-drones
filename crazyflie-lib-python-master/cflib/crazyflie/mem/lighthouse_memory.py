@@ -35,10 +35,10 @@ class LighthouseBsGeometry:
     SIZE_VECTOR = 3 * SIZE_FLOAT
     SIZE_GEOMETRY = (1 + 3) * SIZE_VECTOR + SIZE_BOOL
 
-    FILE_ID_ORIGIN = 'origin'
-    FILE_ID_ROTATION = 'rotation'
+    FILE_ID_ORIGIN = "origin"
+    FILE_ID_ROTATION = "rotation"
 
-    yaml_tag = 'LighthouseBsGeometry'
+    yaml_tag = "LighthouseBsGeometry"
 
     def __init__(self):
         self.origin = [0.0, 0.0, 0.0]
@@ -50,34 +50,30 @@ class LighthouseBsGeometry:
         self.valid = False
 
     def set_from_mem_data(self, data):
-        self.origin = self._read_vector(
-            data[0 * self.SIZE_VECTOR:1 * self.SIZE_VECTOR])
+        self.origin = self._read_vector(data[0 * self.SIZE_VECTOR : 1 * self.SIZE_VECTOR])
         self.rotation_matrix = [
-            self._read_vector(data[1 * self.SIZE_VECTOR:2 * self.SIZE_VECTOR]),
-            self._read_vector(data[2 * self.SIZE_VECTOR:3 * self.SIZE_VECTOR]),
-            self._read_vector(data[3 * self.SIZE_VECTOR:4 * self.SIZE_VECTOR]),
+            self._read_vector(data[1 * self.SIZE_VECTOR : 2 * self.SIZE_VECTOR]),
+            self._read_vector(data[2 * self.SIZE_VECTOR : 3 * self.SIZE_VECTOR]),
+            self._read_vector(data[3 * self.SIZE_VECTOR : 4 * self.SIZE_VECTOR]),
         ]
-        self.valid = struct.unpack('<?', data[4 * self.SIZE_VECTOR:])[0]
+        self.valid = struct.unpack("<?", data[4 * self.SIZE_VECTOR :])[0]
 
     def add_mem_data(self, data):
         self._add_vector(data, self.origin)
         self._add_vector(data, self.rotation_matrix[0])
         self._add_vector(data, self.rotation_matrix[1])
         self._add_vector(data, self.rotation_matrix[2])
-        data += struct.pack('<?', self.valid)
+        data += struct.pack("<?", self.valid)
 
     def _add_vector(self, data, vector):
-        data += struct.pack('<fff', vector[0], vector[1], vector[2])
+        data += struct.pack("<fff", vector[0], vector[1], vector[2])
 
     def _read_vector(self, data):
-        x, y, z = struct.unpack('<fff', data)
+        x, y, z = struct.unpack("<fff", data)
         return [x, y, z]
 
     def as_file_object(self):
-        return {
-            self.FILE_ID_ORIGIN: self.origin,
-            self.FILE_ID_ROTATION: self.rotation_matrix
-        }
+        return {self.FILE_ID_ORIGIN: self.origin, self.FILE_ID_ROTATION: self.rotation_matrix}
 
     @classmethod
     def from_file_object(cls, file_object):
@@ -88,19 +84,19 @@ class LighthouseBsGeometry:
         return result
 
     def dump(self):
-        print('origin:', self.origin)
-        print('rotation matrix:', self.rotation_matrix)
-        print('valid:', self.valid)
+        print("origin:", self.origin)
+        print("rotation matrix:", self.rotation_matrix)
+        print("valid:", self.valid)
 
 
 class LighthouseCalibrationSweep:
-    FILE_ID_PHASE = 'phase'
-    FILE_ID_TILT = 'tilt'
-    FILE_ID_CURVE = 'curve'
-    FILE_ID_GIBMAG = 'gibmag'
-    FILE_ID_GIBPHASE = 'gibphase'
-    FILE_ID_OGEEMAG = 'ogeemag'
-    FILE_ID_OGEEPHASE = 'ogeephase'
+    FILE_ID_PHASE = "phase"
+    FILE_ID_TILT = "tilt"
+    FILE_ID_CURVE = "curve"
+    FILE_ID_GIBMAG = "gibmag"
+    FILE_ID_GIBPHASE = "gibphase"
+    FILE_ID_OGEEMAG = "ogeemag"
+    FILE_ID_OGEEPHASE = "ogeephase"
 
     def __init__(self):
         self.phase = 0.0
@@ -137,15 +133,11 @@ class LighthouseCalibrationSweep:
         return result
 
     def dump(self):
-        print(('phase: {}, tilt: {}, curve: {}, gibmag: {}, ' +
-               'gibphase: {}, ogeemag: {}, ogeephase: {}').format(
-            self.phase,
-            self.tilt,
-            self.curve,
-            self.gibmag,
-            self.gibphase,
-            self.ogeemag,
-            self.ogeephase))
+        print(
+            ("phase: {}, tilt: {}, curve: {}, gibmag: {}, " + "gibphase: {}, ogeemag: {}, ogeephase: {}").format(
+                self.phase, self.tilt, self.curve, self.gibmag, self.gibphase, self.ogeemag, self.ogeephase
+            )
+        )
 
 
 class LighthouseBsCalibration:
@@ -157,55 +149,36 @@ class LighthouseBsCalibration:
     SIZE_SWEEP = 7 * SIZE_FLOAT
     SIZE_CALIBRATION = 2 * SIZE_SWEEP + SIZE_UINT_32 + SIZE_BOOL
 
-    FILE_ID_SWEEPS = 'sweeps'
-    FILE_ID_UID = 'uid'
+    FILE_ID_SWEEPS = "sweeps"
+    FILE_ID_UID = "uid"
 
     def __init__(self):
-        self.sweeps = [LighthouseCalibrationSweep(),
-                       LighthouseCalibrationSweep()]
+        self.sweeps = [LighthouseCalibrationSweep(), LighthouseCalibrationSweep()]
         self.uid = 0
         self.valid = False
 
     def set_from_mem_data(self, data):
-        self.sweeps[0] = self._unpack_sweep_calibration(
-            data[0:self.SIZE_SWEEP])
-        self.sweeps[1] = self._unpack_sweep_calibration(
-            data[self.SIZE_SWEEP:self.SIZE_SWEEP * 2])
-        self.uid, self.valid = struct.unpack('<L?', data[self.SIZE_SWEEP * 2:])
+        self.sweeps[0] = self._unpack_sweep_calibration(data[0 : self.SIZE_SWEEP])
+        self.sweeps[1] = self._unpack_sweep_calibration(data[self.SIZE_SWEEP : self.SIZE_SWEEP * 2])
+        self.uid, self.valid = struct.unpack("<L?", data[self.SIZE_SWEEP * 2 :])
 
     def _unpack_sweep_calibration(self, data):
         result = LighthouseCalibrationSweep()
 
-        (result.phase,
-         result.tilt,
-         result.curve,
-         result.gibmag,
-         result.gibphase,
-         result.ogeemag,
-         result.ogeephase) = struct.unpack('<fffffff', data)
+        (result.phase, result.tilt, result.curve, result.gibmag, result.gibphase, result.ogeemag, result.ogeephase) = struct.unpack("<fffffff", data)
 
         return result
 
     def add_mem_data(self, data):
         self._pack_sweep_calib(data, self.sweeps[0])
         self._pack_sweep_calib(data, self.sweeps[1])
-        data += struct.pack('<L?', self.uid, self.valid)
+        data += struct.pack("<L?", self.uid, self.valid)
 
     def _pack_sweep_calib(self, data, sweep_calib):
-        data += struct.pack('<fffffff',
-                            sweep_calib.phase,
-                            sweep_calib.tilt,
-                            sweep_calib.curve,
-                            sweep_calib.gibmag,
-                            sweep_calib.gibphase,
-                            sweep_calib.ogeemag,
-                            sweep_calib.ogeephase)
+        data += struct.pack("<fffffff", sweep_calib.phase, sweep_calib.tilt, sweep_calib.curve, sweep_calib.gibmag, sweep_calib.gibphase, sweep_calib.ogeemag, sweep_calib.ogeephase)
 
     def as_file_object(self):
-        return {
-            self.FILE_ID_SWEEPS: [self.sweeps[0].as_file_object(), self.sweeps[1].as_file_object()],
-            self.FILE_ID_UID: self.uid
-        }
+        return {self.FILE_ID_SWEEPS: [self.sweeps[0].as_file_object(), self.sweeps[1].as_file_object()], self.FILE_ID_UID: self.uid}
 
     @classmethod
     def from_file_object(cls, file_object):
@@ -222,25 +195,24 @@ class LighthouseBsCalibration:
     def dump(self):
         self.sweeps[0].dump()
         self.sweeps[1].dump()
-        print('uid: {:08X}'.format(self.uid))
-        print('valid: {}'.format(self.valid))
+        print("uid: {:08X}".format(self.uid))
+        print("valid: {}".format(self.valid))
 
 
 class LighthouseMemory(MemoryElement):
     """
     Memory interface for lighthouse configuration data
     """
+
     GEO_START_ADDR = 0x00
     CALIB_START_ADDR = 0x1000
     PAGE_SIZE = 0x100
     NUMBER_OF_BASESTATIONS = 2
-    SIZE_GEOMETRY_ALL = NUMBER_OF_BASESTATIONS * \
-        LighthouseBsGeometry.SIZE_GEOMETRY
+    SIZE_GEOMETRY_ALL = NUMBER_OF_BASESTATIONS * LighthouseBsGeometry.SIZE_GEOMETRY
 
     def __init__(self, id, type, size, mem_handler):
         """Initialize Lighthouse memory"""
-        super(LighthouseMemory, self).__init__(id=id, type=type, size=size,
-                                               mem_handler=mem_handler)
+        super(LighthouseMemory, self).__init__(id=id, type=type, size=size, mem_handler=mem_handler)
 
         self._clear_update_cb()
         self._clear_write_cb()
@@ -271,35 +243,29 @@ class LighthouseMemory(MemoryElement):
             self._clear_update_cb()
 
             if tmp_update_failed_cb:
-                logger.debug('Update of data failed')
+                logger.debug("Update of data failed")
                 tmp_update_failed_cb(self)
 
     def read_geo_data(self, bs_id, update_finished_cb, update_failed_cb=None):
         """Request a read of geometry data for one base station"""
         if self._update_finished_cb:
-            raise Exception('Read operation already ongoing')
+            raise Exception("Read operation already ongoing")
         self._update_finished_cb = update_finished_cb
         self._update_failed_cb = update_failed_cb
-        self.mem_handler.read(self, self.GEO_START_ADDR + bs_id *
-                              self.PAGE_SIZE,
-                              LighthouseBsGeometry.SIZE_GEOMETRY)
+        self.mem_handler.read(self, self.GEO_START_ADDR + bs_id * self.PAGE_SIZE, LighthouseBsGeometry.SIZE_GEOMETRY)
 
-    def read_calib_data(self, bs_id, update_finished_cb,
-                        update_failed_cb=None):
+    def read_calib_data(self, bs_id, update_finished_cb, update_failed_cb=None):
         """Request a read of calibration data for one base station"""
         if self._update_finished_cb:
-            raise Exception('Read operation already ongoing')
+            raise Exception("Read operation already ongoing")
         self._update_finished_cb = update_finished_cb
         self._update_failed_cb = update_failed_cb
-        self.mem_handler.read(self, self.CALIB_START_ADDR + bs_id *
-                              self.PAGE_SIZE,
-                              LighthouseBsCalibration.SIZE_CALIBRATION)
+        self.mem_handler.read(self, self.CALIB_START_ADDR + bs_id * self.PAGE_SIZE, LighthouseBsCalibration.SIZE_CALIBRATION)
 
-    def write_geo_data(self, bs_id, geo_data, write_finished_cb,
-                       write_failed_cb=None):
+    def write_geo_data(self, bs_id, geo_data, write_finished_cb, write_failed_cb=None):
         """Write geometry data for one base station to the Crazyflie"""
         if self._write_finished_cb:
-            raise Exception('Write operation already ongoing.')
+            raise Exception("Write operation already ongoing.")
         data = bytearray()
         geo_data.add_mem_data(data)
         self._write_finished_cb = write_finished_cb
@@ -307,11 +273,10 @@ class LighthouseMemory(MemoryElement):
         geo_addr = self.GEO_START_ADDR + bs_id * self.PAGE_SIZE
         self.mem_handler.write(self, geo_addr, data, flush_queue=True)
 
-    def write_calib_data(self, bs_id, calibration_data, write_finished_cb,
-                         write_failed_cb=None):
+    def write_calib_data(self, bs_id, calibration_data, write_finished_cb, write_failed_cb=None):
         """Write calibration data for one basestation to the Crazyflie"""
         if self._write_finished_cb:
-            raise Exception('Write operation already ongoing.')
+            raise Exception("Write operation already ongoing.")
         data = bytearray()
         calibration_data.add_mem_data(data)
         self._write_finished_cb = write_finished_cb
@@ -337,7 +302,7 @@ class LighthouseMemory(MemoryElement):
             tmp_cb = self._write_failed_cb
             self._clear_write_cb()
             if tmp_cb:
-                logger.debug('Write of data failed')
+                logger.debug("Write of data failed")
                 tmp_cb(self, addr)
 
     def disconnect(self):
@@ -360,6 +325,7 @@ class LighthouseMemHelper:
 
     class _ObjectReader:
         """Internal class that reads all geos or calib objects"""
+
         NR_OF_CHANNELS = 16
 
         def __init__(self, read_fcn):
@@ -371,7 +337,7 @@ class LighthouseMemHelper:
 
         def read_all(self, read_done_cb):
             if self._read_done_cb is not None:
-                raise Exception('Read operation not finished')
+                raise Exception("Read operation not finished")
 
             self._result = {}
             self._next_id = 0
@@ -413,7 +379,7 @@ class LighthouseMemHelper:
 
         def write(self, object_dict, write_done_cb):
             if self._objects_to_write is not None:
-                raise Exception('Write operation not finished')
+                raise Exception("Write operation not finished")
 
             self._write_done_cb = write_done_cb
             # Make a copy of the dictionary
@@ -450,7 +416,7 @@ class LighthouseMemHelper:
         mems = cf.mem.get_mems(MemoryElement.TYPE_LH)
         count = len(mems)
         if count != 1:
-            raise Exception('Unexpected nr of memories found:', count)
+            raise Exception("Unexpected nr of memories found:", count)
 
         lh_mem = mems[0]
 

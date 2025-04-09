@@ -30,15 +30,15 @@ from cflib.utils import uri_helper
 class TestSingleCfGrounded(unittest.TestCase):
     def setUp(self):
         cflib.crtp.init_drivers()
-        self.radioUri = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
-        self.usbUri = 'usb://0'
+        self.radioUri = uri_helper.uri_from_env(default="radio://0/80/2M/E7E7E7E7E7")
+        self.usbUri = "usb://0"
 
     def is_stm_connected(self):
         link = cflib.crtp.get_link_driver(self.radioUri)
 
         pk = CRTPPacket()
         pk.set_header(CRTPPort.LINKCTRL, 0)  # Echo channel
-        pk.data = b'test'
+        pk.data = b"test"
         link.send_packet(pk)
         for _ in range(10):
             pk_ack = link.receive_packet(0.1)

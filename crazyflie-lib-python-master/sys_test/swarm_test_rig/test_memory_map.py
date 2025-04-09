@@ -42,7 +42,7 @@ class TestMemoryMapping(unittest.TestCase):
         # Fixture
         uri = self.test_rig_support.all_uris[0]
         self.test_rig_support.restart_devices([uri])
-        cf = Crazyflie(rw_cache='./cache')
+        cf = Crazyflie(rw_cache="./cache")
 
         # Test and Assert
         with SyncCrazyflie(uri, cf=cf) as scf:
@@ -52,7 +52,7 @@ class TestMemoryMapping(unittest.TestCase):
         # Fixture
         uris = self.test_rig_support.all_uris
         self.test_rig_support.restart_devices(uris)
-        factory = CachedCfFactory(rw_cache='./cache')
+        factory = CachedCfFactory(rw_cache="./cache")
 
         # Test and Assert
         with Swarm(uris, factory=factory) as swarm:
@@ -62,7 +62,7 @@ class TestMemoryMapping(unittest.TestCase):
         # Fixture
         uri = self.test_rig_support.all_uris[0]
         self.test_rig_support.restart_devices([uri])
-        cf = Crazyflie(rw_cache='./cache')
+        cf = Crazyflie(rw_cache="./cache")
 
         # Test and Assert
         for connections in range(10):
@@ -75,23 +75,23 @@ class TestMemoryMapping(unittest.TestCase):
     def assert_memory_mapping(self, scf):
         mems = scf.cf.mem.get_mems(MemoryElement.TYPE_MEMORY_TESTER)
         count = len(mems)
-        self.assertEqual(1, count, 'unexpected number of memories found')
+        self.assertEqual(1, count, "unexpected number of memories found")
 
         self.verify_reading_memory_data(mems)
         self.verify_writing_memory_data(mems, scf)
 
     def verify_writing_memory_data(self, mems, scf):
         self.wrote_data = False
-        scf.cf.param.set_value('memTst.resetW', '1')
+        scf.cf.param.set_value("memTst.resetW", "1")
         time.sleep(0.1)
         mems[0].write_data(5, 1000, self._data_written)
         while not self.wrote_data:
             time.sleep(1)
-        log_conf = LogConfig(name='memtester', period_in_ms=100)
-        log_conf.add_variable('memTst.errCntW', 'uint32_t')
+        log_conf = LogConfig(name="memtester", period_in_ms=100)
+        log_conf.add_variable("memTst.errCntW", "uint32_t")
         with SyncLogger(scf, log_conf) as logger:
             for log_entry in logger:
-                errorCount = log_entry[1]['memTst.errCntW']
+                errorCount = log_entry[1]["memTst.errCntW"]
                 self.assertEqual(0, errorCount)
                 break
 

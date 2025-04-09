@@ -26,8 +26,8 @@ from cflib.localization.param_io import ParamFileManager
 
 
 class ParamFileHelper:
-    '''ParamFileHelper is a helper to synchonously write multiple paramteters
-    from a file and store them in persistent memory'''
+    """ParamFileHelper is a helper to synchonously write multiple paramteters
+    from a file and store them in persistent memory"""
 
     def __init__(self, crazyflie):
         if isinstance(crazyflie, Crazyflie):
@@ -35,14 +35,14 @@ class ParamFileHelper:
             self.persistent_sema = None
             self.success = False
         else:
-            raise TypeError('ParamFileHelper only takes a Crazyflie Object')
+            raise TypeError("ParamFileHelper only takes a Crazyflie Object")
 
     def _persistent_stored_callback(self, complete_name, success):
         self.success = success
         if not success:
-            print(f'Persistent params: failed to store {complete_name}!')
+            print(f"Persistent params: failed to store {complete_name}!")
         else:
-            print(f'Persistent params: stored {complete_name}!')
+            print(f"Persistent params: stored {complete_name}!")
         self.persistent_sema.set()
 
     def store_params_from_file(self, filename):

@@ -1,21 +1,3 @@
-"""Script demonstrating the use of `gym_pybullet_drones`'s Gymnasium interface.
-
-Classes HoverAviary and MultiHoverAviary are used as learning envs for the PPO algorithm.
-
-Example
--------
-In a terminal, run as:
-
-    $ python learn.py --multiagent false
-    $ python learn.py --multiagent true
-
-Notes
------
-This is a minimal working example integrating `gym-pybullet-drones` with
-reinforcement learning library `stable-baselines3`.
-
-"""
-
 import argparse
 import csv
 import os
@@ -25,8 +7,6 @@ from datetime import datetime
 
 import gymnasium as gym
 import numpy as np
-
-# Importiere benötigte Module für CNN-DQN
 import torch
 import yaml
 from stable_baselines3 import DQN, PPO, SAC
@@ -39,6 +19,7 @@ from stable_baselines3.common.callbacks import (
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
+from stable_baselines3.common.vec_env import VecTransposeImage
 
 from gym_pybullet_drones.examples.MAZE_TRAINING.BaseAviary_MAZE_TRAINING import (
     BaseRLAviary_MAZE_TRAINING,
@@ -58,14 +39,171 @@ from gym_pybullet_drones.utils.enums import (
 )
 from gym_pybullet_drones.utils.utils import str2bool, sync
 
-# ACHTUNG: es können nicht beide Werte auf TRUE gesetzt werden (nicht GUI_TRAIN und GUI_TEST zusammen)!
+#####################################################################################################
+###########################INITIAL-SETTINGS DES REPOSITORYS##########################################
+#####################################################################################################
 
-
+####### TRAINING-MODE #######
 Training_Mode = "Training"  # "Training" oder "Test"
 GUI_Mode = "Train"  # "Train" oder "Test" oder "NoGUI"
 
+####### GUI-SETTINGS (u.a. Debug-GUI) #######
+DEFAULT_USER_DEBUG_GUI = False
+DEFAULT_ADVANCED_STATUS_PLOT = False
+DEFAULT_DASH_ACTIVE = False
 
-################################
+####### Hyperparameter-Set speichern #######
+DEFAULT_SAVE_HYPERPARAMETER_SET = False  # auf false belassen, wird unten auf true gesetzt, sofern gespeichert werden soll (bei Bedarf unten nachlesen)
+### Hier den Beschreibungstext für das Hyperparameter-Set einfügen ####
+HyperparameterSetDescription = (
+    "FT:Neue Hyperparameter-Sets, weil mit dem Abstand von 0,15 auch bei gutem Flugverhalten sehr viel negativer Reward gesammt wurde --> Mazes sind zu eng--> auf 0,1 verringert"
+)
+
+###### Verwendung von gespeicherten Hyperparameter-Sets #######
+DEFAULT_USE_SAVED_HYPERPARAMETER_SET = True
+HyperparameterSetIDtoLoad = "SET_20250409-233159"  # SET_20250409-233159 = am 9.4.25 besprochenen Hyperparameter-Set, mit dem Alex mit DQN erste gute Ergebnisse erzielt hat
+HYPERPARAMETER_SET_PATH = os.path.join(os.path.dirname(__file__), "hyperparameter_sets.csv")
+
+####### Verwendung von Pretrained-Modellen #######
+DEFAULT_USE_PRETRAINED_MODEL = False
+# DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/results/durchgelaufen-DQN/final_model.zip'
+# DEFAULT_PRETRAINED_MODEL_PATH = "/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/results/save-03.07.2025_02.23.46/best_model.zip"
+DEFAULT_PRETRAINED_MODEL_PATH = (
+    "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M6_R6_O5_A3_TR1_T1_20250407-013856/save-04.07.2025_01.38.56/best_model.zip"
+)
+
+###############################################################################
+######################## TRAINING-SETTINGS (Hyperparameter)#################
+##############################################################################
+
+Ziel_Training_TIME_In_Simulation = 150 * 60 * 60  # 5 Stunden
+DEFAULT_EVAL_FREQ = 5 * 1e4
+DEFAULT_EVAL_EPISODES = 1
+DEFAULT_TRAIN_TIMESTEPS = 8 * 1e5  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
+DEFAULT_TARGET_REWARD = 99999
+DEFAULT_NUMBER_LAST_ACTIONS = 20
+DEFAULT_PYB_FREQ = 100
+DEFAULT_CTRL_FREQ = 50
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 2  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
+DEFAULT_EPISODE_LEN_SEC = 5 * 60  # 15 * 60
+DEFAULT_PUSHBACK_ACTIVE = False
+DEFAULT_EVAL_FREQ = 5 * 1e4
+DEFAULT_EVAL_EPISODES = 1
+NumberOfInterationsTillNextCheckpoint = 250000  # Anzahl Steps, bis ein Modell als .zip gespeichert wird
+DEFAULT_TRAIN_TIMESTEPS = Ziel_Training_TIME_In_Simulation * DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
+DEFAULF_NUMBER_LAST_ACTIONS = 80
+DEFAULT_VelocityScale = 0.5
+
+#########REWARD-SETTINGS##########
+# Bei wie viel Prozent der Fläche einen Print ausgeben
+DEFAULT_Procent_Step = 0.01
+DEFAULT_REWARD_FOR_NEW_FIELD = 4
+DEFAULT_Punishment_for_Step = -0.5
+DEFAULT_Multiplier_Collision_Penalty = 2
+# R7 - Negative Reward Map Settings
+DEFAULT_Punishment_for_Walls = 8
+DEFAULT_Influence_of_Walls = 4
+DEFAULT_no_collision_reward = 1  # nur bei R5 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
+
+##########EXPLORATION/MAZE-SETTINGS######
+DEFAULT_explore_Matrix_Size = 5  # 5 bedeutet eine 5x5 Matrix um die Drohne herum (in diesem Bereich kann die Drohne die Felder einsammeln und diese als erkundet markieren)
+DEFAULT_List_MazesToUse = (22, 23, 24, 25)  # Mazes 0-26 stehen zur Verfügung
+DEFAULT_List_Start_PositionsToUse = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)  # Startpositionen 0-9  stehen zur Verfügung (10 Startpositionen)
+print(f"type of DEFAULT_List_Start_PositionsToUse is {type(DEFAULT_List_Start_PositionsToUse)}")
+DEFAULT_MaxRoundsOnOneMaze = 6  # nach wie vielen Schritten wird ein neues maze gewählt # NOTE - Verändert nichts
+DEFAULT_MaxRoundsSameStartingPositions = 2
+DEFAULT_collision_penalty_terminated = -100  # mit -10 Trainiert SAC gut, bleibt aber noch ca. 50 mal an der Wand hängen--
+DEFAULT_Terminated_Wall_Distance = 0.1  # worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25;; WAR ORIGINAL ALEX BEI =0,15!!
+
+
+###############################################################################################
+########################MODEL-&Umbgebungs-SETTINGS##############################################
+###############################################################################################
+
+#####################################MODEL_VERSION###########################
+MODEL_VERSION = "M2"
+
+"""MODEL_Versionen: 
+- M1:   PPO
+- M2:   DQN_CNNPolicy_StandardFeatureExtractor
+- M3:   DQN_MLPPolicy
+- M4:   DQN_CNNPolicy_CustomFeatureExtractor # NO SUPPORT 
+- M5:   DQN_NN_MultiInputPolicy mit fullyConnectLayer
+- M6:   SAC
+"""
+
+
+#####################################REWARD_VERSION###########################
+REWARD_VERSION = "R6"
+
+"""REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
+- R1:   Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
+- R2:   Zusätzlich Bestrafung für zu nah an der Wand
+- R3:   Collision zieht je nach Wert auf Heatmap diesen von der Reward ab (7 etwa Wand, 2 nahe Wand, 0.)
+- R4:   Collision zieht je nach Wert auf Heatmap diesen von der Reward ab (7 etwa Wand, 2 nahe Wand, 0.) und Abzug für jeden Step
+- R5:   R4 mit dem Anpassung der Bestrafung für die Wand: ist optimiert für T2 optimiert.  Zu nah an der Wand wird nur einmal Bestraft, nämlich dann, wenn Terminated wird (wegen zu nah an der Wand) (Wert = DEFAULT_collision_penalty_terminated)
+- R6:   R5 mit dem Zusatz, dass wenn die Drohne nicht zu nah an der Wand ist, gibt es einen definierten Bonus (Anstatt nur Peitsche jetzt Zuckerbrot und Peitsche)
+- R7:   Statt Heatmap nun Bestrafungsmap (lineare Bestrafung - Abstand zur Wand), Truncated bei Wandberührung, Abzug für jeden Step
+"""
+
+
+#####################################OBSERVATION_TYPE###########################
+OBSERVATION_TYPE = "O4"
+
+"""ObservationType:
+        - O1: X, Y, Yaw, Raycast readings (nur PPO)                             # no longer supported (Februar 2025) 
+        - O2: 5 Kanäliges Bild CNN                                      # no longer supported (April 2025)
+        - O3: 5 Kanäliges Bild CNN mit zweimal last Clipped Actions     # no longer supported (April 2025)
+- O4: 1 Kanal: Normalisierte SLAM Map (Occupancy Map)
+- O5: XY Position, Yaw (sin,cos), Raycast readings, last clipped actions 
+- O6: cropped Slam-image, XY Position, Yaw (sin,cos), last actions (n Stück)
+- O7: cropped Slam-image, XY Position, Yaw (sin,cos), last actions (n Stück), raycasts
+- O8: X-Pos,Y-Pos, 4-raycast_readings, 4-interest_values, n-last_clipped_actions
+- O9: cropped Slam-image, x-Pos, y-Pos, 4-racast_readings, 4-interest_values, n-last_clipped_actions
+ !!!Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen (BaseAviary_MAZE_TRAINING.py) erweitern!!!
+"""
+
+#####################################ACTION_TYPE###########################
+ACTION_TYPE = "A2"
+
+"""ActionType:'
+- A1: Vier Richtungen und zwei Drehungen, diskret
+- A2: Vier Richtungen, diskret
+- A3: Vier Richtungen, kontinuierlich # für SAC
+"""
+
+#####################################TRUNCATED_TYPE###########################
+TRUNCATED_TYPE = "TR1"
+
+""" Truncated_type:
+- TR1: Zeit abgelaufen
+"""
+
+
+#####################################TERMINATED_TYPE###########################
+TERMINATED_TYPE = "T1"
+
+""" Terminated_type:
+- T1: 80% der Fläche erkundet
+- T2: 80% der Fläche erkundet oder Crash (Abstandswert geringer als X)
+"""
+
+
+##############################################################################
+################# Backgrund-Maze-Preparation ###############################
+##############################################################################
+
+DEFAULT_RECORD_VIDEO = False
+DEFAULT_OUTPUT_FOLDER = "results"
+DEFAULT_OUTPUT_FOLDER = "results"
+DEFAULT_COLAB = False
+DEFAULT_OBS = ObservationType("kin")  # 'kin' or 'rgb'
+DEFAULT_ACT = ActionType("vel")  # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'one_d_pid'
+DEFAULT_AGENTS = 1
+DEFAULT_MA = False
+DEFAULT_DRONE_MODEL = DroneModel("cf2x")
+
+
 if Training_Mode == "Training":
     Default_Train = True
     Default_Test = False
@@ -82,28 +220,6 @@ elif GUI_Mode == "Test":
 elif GUI_Mode == "NoGUI":
     DEFAULT_GUI_TRAIN = False
     DEFAULT_GUI_TEST = False
-######################################
-
-
-DEFAULT_USER_DEBUG_GUI = False
-DEFAULT_ADVANCED_STATUS_PLOT = False
-
-
-DEFAULT_USE_PRETRAINED_MODEL = False
-# DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/results/durchgelaufen-DQN/final_model.zip'
-# DEFAULT_PRETRAINED_MODEL_PATH = "/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/results/save-03.07.2025_02.23.46/best_model.zip"
-DEFAULT_PRETRAINED_MODEL_PATH = (
-    "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M6_R6_O5_A3_TR1_T1_20250407-013856/save-04.07.2025_01.38.56/best_model.zip"
-)
-
-Ziel_Training_TIME_In_Simulation = 150 * 60 * 60  # 5 Stunden
-DEFAULT_EVAL_FREQ = 5 * 1e4
-DEFAULT_EVAL_EPISODES = 1
-
-
-DEFAULT_TRAIN_TIMESTEPS = 8 * 1e5  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
-DEFAULT_TARGET_REWARD = 99999
-DEFAULT_NUMBER_LAST_ACTIONS = 20
 
 # file_path = "gym_pybullet_drones/examples/MAZE_TRAINING/Maze_init_target.yaml"
 file_path = os.path.join(os.path.dirname(__file__), "Maze_init_target.yaml")
@@ -116,133 +232,17 @@ def loadyaml_(file_path):
 
 Target_Start_Values = loadyaml_(file_path)
 
-
 # Initialisieren Sie das Dictionary, um die Werte zu speichern
 INIT_XYZS = {}
 DEFAULT_TARGET_POSITION = {}
-
 DEFAULT_ALTITUDE = 0.5
-
-
 # Iterieren Sie über die Maps und speichern Sie die Werte im Dictionary
 for map_name, map_values in Target_Start_Values.items():
     INIT_XYZS[map_name] = (map_values["initial_xyzs"],)
     DEFAULT_TARGET_POSITION[map_name] = (map_values["target_position"],)
     # INIT_RPYS = map_values['initial_rpys']
 
-DEFAULT_RECORD_VIDEO = False
-DEFAULT_OUTPUT_FOLDER = "results"
-DEFAULT_OUTPUT_FOLDER = "results"
-DEFAULT_COLAB = False
-DEFAULT_PYB_FREQ = 100
-DEFAULT_CTRL_FREQ = 50
-DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 2  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
-DEFAULT_EPISODE_LEN_SEC = 5 * 60  # 15 * 60
-DEFAULT_DRONE_MODEL = DroneModel("cf2x")
-DEFAULT_PUSHBACK_ACTIVE = False
 
-DEFAULT_EVAL_FREQ = 5 * 1e4
-DEFAULT_EVAL_EPISODES = 1
-NumberOfInterationsTillNextCheckpoint = 250000  # Anzahl Steps, bis ein Modell als .zip gespeichert wird
-
-DEFAULT_TRAIN_TIMESTEPS = Ziel_Training_TIME_In_Simulation * DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
-DEFAULT_TARGET_REWARD = 99999999999999
-
-DEFAULF_NUMBER_LAST_ACTIONS = 80
-
-DEFAULT_OBS = ObservationType("kin")  # 'kin' or 'rgb'
-DEFAULT_ACT = ActionType("vel")  # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'one_d_pid'
-DEFAULT_AGENTS = 1
-DEFAULT_MA = False
-
-DEFAULT_DASH_ACTIVE = False
-
-
-DEFAULT_VelocityScale = 0.5
-
-###########################################################REWARD-SETTINGS###########################################################
-# Bei wie viel Prozent der Fläche einen Print ausgeben
-DEFAULT_Procent_Step = 0.01
-DEFAULT_REWARD_FOR_NEW_FIELD = 4
-DEFAULT_Punishment_for_Step = -0.5
-DEFAULT_Multiplier_Collision_Penalty = 2
-
-
-###########################################################EXPLORATION/MAZE-SETTINGS###########################################################
-DEFAULT_explore_Matrix_Size = 5  # 5 bedeutet eine 5x5 Matrix um die Drohne herum (in diesem Bereich kann die Drohne die Felder einsammeln und diese als erkundet markieren)
-DEFAULT_List_MazesToUse = (22, 23, 24, 25)  # Mazes 0-26 stehen zur Verfügung
-DEFAULT_List_Start_PositionsToUse = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)  # Startpositionen 0-9  stehen zur Verfügung (10 Startpositionen)
-DEFAULT_MaxRoundsOnOneMaze = 6  # nach wie vielen Schritten wird ein neues maze gewählt # NOTE - Verändert nichts
-DEFAULT_MaxRoundsSameStartingPositions = 2
-
-DEFAULT_collision_penalty_terminated = -100  # mit -10 Trainiert SAC gut, bleibt aber noch ca. 50 mal an der Wand hängen--
-DEFAULT_Terminated_Wall_Distance = 0.15  # worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25
-DEFAULT_no_collision_reward = 1  # nur bei R5 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
-
-# R7 - Negative Reward Map Settings
-DEFAULT_Punishment_for_Walls = 8
-DEFAULT_Influence_of_Walls = 4
-
-#####################################MODEL_VERSION###########################
-"""MODEL_Versionen: 
-- M1:   PPO
-- M2:   DQN_CNNPolicy_StandardFeatureExtractor
-- M3:   DQN_MLPPolicy
-- M4:   DQN_CNNPolicy_CustomFeatureExtractor # NO SUPPORT 
-- M5:   DQN_NN_MultiInputPolicy mit fullyConnectLayer
-- M6:   SAC
-"""
-MODEL_VERSION = "M5"
-
-#####################################REWARD_VERSION###########################
-"""REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
-- R1:   Standard-Reward-Version: nur neue entdeckte Felder werden einmalig belohnt
-- R2:   Zusätzlich Bestrafung für zu nah an der Wand
-- R3:   Collision zieht je nach Wert auf Heatmap diesen von der Reward ab (7 etwa Wand, 2 nahe Wand, 0.)
-- R4:   Collision zieht je nach Wert auf Heatmap diesen von der Reward ab (7 etwa Wand, 2 nahe Wand, 0.) und Abzug für jeden Step
-- R5:   R4 mit dem Anpassung der Bestrafung für die Wand: ist optimiert für T2 optimiert.  Zu nah an der Wand wird nur einmal Bestraft, nämlich dann, wenn Terminated wird (wegen zu nah an der Wand) (Wert = DEFAULT_collision_penalty_terminated)
-- R6:   R5 mit dem Zusatz, dass wenn die Drohne nicht zu nah an der Wand ist, gibt es einen definierten Bonus (Anstatt nur Peitsche jetzt Zuckerbrot und Peitsche)
-- R7:   Statt Heatmap nun Bestrafungsmap (lineare Bestrafung - Abstand zur Wand), Truncated bei Wandberührung, Abzug für jeden Step
-"""
-REWARD_VERSION = "R5"
-
-#####################################OBSERVATION_TYPE###########################
-"""ObservationType:
-- O1: X, Y, Yaw, Raycast readings (nur PPO)
-- O2: 5 Kanäliges Bild CNN
-- O3: 5 Kanäliges Bild CNN mit zweimal last Clipped Actions
-- O4: Kanal 1: Normalisierte SLAM Map (Occupancy Map)
-- O5: XY Position, Yaw (sin,cos), Raycast readings, last clipped actions 
-- O6: Slam-image, XY Position, Yaw (sin,cos), last actions (n Stück)
-- O7: Slam-image, XY Position, Yaw (sin,cos), last actions (n Stück), raycasts
-- O8: X-Pos,Y-Pos, 4-raycast_readings, 4-interest_values, n-last_clipped_actions
-- O9: Slam-image, x-Pos, y-Pos, 4-racast_readings, 4-interest_values, n-last_clipped_actions
-"""
-OBSERVATION_TYPE = "O7"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
-
-#####################################ACTION_TYPE###########################
-"""ActionType:'
-- A1: Vier Richtungen und zwei Drehungen, diskret
-- A2: Vier Richtungen, diskret
-- A3: Vier Richtungen, kontinuierlich # für SAC
-"""
-ACTION_TYPE = "A2"
-
-#####################################TRUNCATED_TYPE###########################
-""" Truncated_type:
-- TR1: Zeit abgelaufen
-"""
-TRUNCATED_TYPE = "TR1"
-
-#####################################TERMINATED_TYPE###########################
-""" Terminated_type:
-- T1: 80% der Fläche erkundet
-- T2: 80% der Fläche erkundet oder Crash (Abstandswert geringer als X)
-
-"""
-TERMINATED_TYPE = "T1"
-
-################
 # INIT_RPYS = {}
 if ACTION_TYPE == "A1":
     INIT_RPYS = np.array(
@@ -261,8 +261,207 @@ else:
         ]
     )
 
+############################ Hyperparameter-Set speichern ###########################
+if DEFAULT_SAVE_HYPERPARAMETER_SET:
+    # Define the headers for the CSV
+    headers = [
+        "set_id",
+        "description",
+        "Ziel_Training_TIME_In_Simulation",
+        "DEFAULT_EVAL_FREQ",
+        "DEFAULT_EVAL_EPISODES",
+        "DEFAULT_TRAIN_TIMESTEPS",
+        "DEFAULT_TARGET_REWARD",
+        "DEFAULT_NUMBER_LAST_ACTIONS",
+        "DEFAULT_PYB_FREQ",
+        "DEFAULT_CTRL_FREQ",
+        "DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ",
+        "DEFAULT_EPISODE_LEN_SEC",
+        "DEFAULT_PUSHBACK_ACTIVE",
+        "NumberOfInterationsTillNextCheckpoint",
+        "DEFAULF_NUMBER_LAST_ACTIONS",
+        "DEFAULT_VelocityScale",
+        "DEFAULT_Procent_Step",
+        "DEFAULT_REWARD_FOR_NEW_FIELD",
+        "DEFAULT_Punishment_for_Step",
+        "DEFAULT_Multiplier_Collision_Penalty",
+        "DEFAULT_Punishment_for_Walls",
+        "DEFAULT_Influence_of_Walls",
+        "DEFAULT_no_collision_reward",
+        "DEFAULT_explore_Matrix_Size",
+        "DEFAULT_List_MazesToUse",
+        "DEFAULT_List_Start_PositionsToUse",
+        "DEFAULT_MaxRoundsOnOneMaze",
+        "DEFAULT_MaxRoundsSameStartingPositions",
+        "DEFAULT_collision_penalty_terminated",
+        "DEFAULT_Terminated_Wall_Distance",
+        "date_created",
+        "comment",
+    ]
 
-#######################################CSV ERSTELLEN####################
+    # Check if the hyperparameter CSV file exists in current folder
+
+    if not os.path.exists(HYPERPARAMETER_SET_PATH):
+        # Create the file if it doesn't exist
+        with open(HYPERPARAMETER_SET_PATH, "w") as f:
+            pass
+
+        # Create the CSV file with headers
+        with open(HYPERPARAMETER_SET_PATH, "w", newline="") as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(headers)
+
+        print(f"Created hyperparameter CSV at {HYPERPARAMETER_SET_PATH}")
+    else:
+        print(f"Hyperparameter CSV already exists at {HYPERPARAMETER_SET_PATH}")
+
+    # Get current timestamp
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
+
+    # Create a unique set ID
+    set_id = f"SET_{timestamp}"
+
+    # Get current parameters
+    current_params = {
+        "set_id": set_id,
+        "description": HyperparameterSetDescription,
+        "Ziel_Training_TIME_In_Simulation": Ziel_Training_TIME_In_Simulation,
+        "DEFAULT_EVAL_FREQ": DEFAULT_EVAL_FREQ,
+        "DEFAULT_EVAL_EPISODES": DEFAULT_EVAL_EPISODES,
+        "DEFAULT_TRAIN_TIMESTEPS": DEFAULT_TRAIN_TIMESTEPS,
+        "DEFAULT_TARGET_REWARD": DEFAULT_TARGET_REWARD,
+        "DEFAULT_NUMBER_LAST_ACTIONS": DEFAULT_NUMBER_LAST_ACTIONS,
+        "DEFAULT_PYB_FREQ": DEFAULT_PYB_FREQ,
+        "DEFAULT_CTRL_FREQ": DEFAULT_CTRL_FREQ,
+        "DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ": DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,
+        "DEFAULT_EPISODE_LEN_SEC": DEFAULT_EPISODE_LEN_SEC,
+        "DEFAULT_PUSHBACK_ACTIVE": DEFAULT_PUSHBACK_ACTIVE,
+        "NumberOfInterationsTillNextCheckpoint": NumberOfInterationsTillNextCheckpoint,
+        "DEFAULF_NUMBER_LAST_ACTIONS": DEFAULF_NUMBER_LAST_ACTIONS,
+        "DEFAULT_VelocityScale": DEFAULT_VelocityScale,
+        "DEFAULT_Procent_Step": DEFAULT_Procent_Step,
+        "DEFAULT_REWARD_FOR_NEW_FIELD": DEFAULT_REWARD_FOR_NEW_FIELD,
+        "DEFAULT_Punishment_for_Step": DEFAULT_Punishment_for_Step,
+        "DEFAULT_Multiplier_Collision_Penalty": DEFAULT_Multiplier_Collision_Penalty,
+        "DEFAULT_Punishment_for_Walls": DEFAULT_Punishment_for_Walls,
+        "DEFAULT_Influence_of_Walls": DEFAULT_Influence_of_Walls,
+        "DEFAULT_no_collision_reward": DEFAULT_no_collision_reward,
+        "DEFAULT_explore_Matrix_Size": DEFAULT_explore_Matrix_Size,
+        "DEFAULT_List_MazesToUse": str(DEFAULT_List_MazesToUse),  # Convert tuple to string
+        "DEFAULT_List_Start_PositionsToUse": str(DEFAULT_List_Start_PositionsToUse),  # Convert tuple to string
+        "DEFAULT_MaxRoundsOnOneMaze": DEFAULT_MaxRoundsOnOneMaze,
+        "DEFAULT_MaxRoundsSameStartingPositions": DEFAULT_MaxRoundsSameStartingPositions,
+        "DEFAULT_collision_penalty_terminated": DEFAULT_collision_penalty_terminated,
+        "DEFAULT_Terminated_Wall_Distance": DEFAULT_Terminated_Wall_Distance,
+        "date_created": timestamp,
+        "comment": "feel free to add any comments here manually",
+    }
+
+    # Read the existing CSV to get the headers and check if all parameters are present
+    try:
+        with open(HYPERPARAMETER_SET_PATH, "r", newline="") as csvfile:
+            reader = csv.reader(csvfile)
+            headers = next(reader)
+
+            # Check if all current parameters exist in headers
+            missing_params = []
+            for param in current_params.keys():
+                if param not in headers:
+                    missing_params.append(param)
+
+            if missing_params:
+                raise ValueError(f"The following parameters are missing in the CSV headers: {missing_params}\nPlease add these parameters to the CSV file before saving.")
+
+    except Exception as e:
+        print(f"Error reading CSV file or checking parameters: {str(e)}")
+        raise
+
+    # Append the new parameter set to the CSV
+    with open(HYPERPARAMETER_SET_PATH, "a", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        # Create a row with values in the same order as headers
+        row = [current_params.get(header, "") for header in headers]
+        writer.writerow(row)
+
+    print(f"\nSaved current parameters as set {set_id} with description: {HyperparameterSetDescription}\n")
+
+
+#######################################HYPERPARAMETER SET LOAD####################
+def load_hyperparameter_set(csv_file_path, set_id):
+    """
+    Load a specific hyperparameter set from the CSV file.
+
+    Args:
+        csv_file_path (str): Path to the CSV file containing hyperparameter sets
+        set_id (str): ID of the hyperparameter set to load (e.g., 'SET_20250409-233159')
+
+    Returns:
+        dict: Dictionary containing the hyperparameters
+    """
+    if not os.path.exists(csv_file_path):
+        print(f"Error: CSV file not found at {csv_file_path} while trying to load hyperparameter set {set_id}")
+        return {}
+
+    try:
+        with open(csv_file_path, "r", newline="") as csvfile:
+            reader = csv.DictReader(csvfile)
+
+            # Find the row with the matching set_id
+            for row in reader:
+                if row["set_id"] == set_id:
+                    # Convert string values to appropriate types
+                    params = {}
+                    for key, value in row.items():
+                        # Skip non-parameter columns
+                        if key in ["set_id", "description", "date_created", "comment"]:
+                            continue
+
+                        # Convert string values to appropriate types
+                        try:
+                            if value == "True":
+                                params[key] = True
+                            elif value == "False":
+                                params[key] = False
+                            elif value.startswith("(") and value.endswith(")"):
+                                # Convert tuple string to tuple of integers
+                                num_str = value.strip("()").strip()
+                                if num_str:
+                                    nums = [int(x.strip()) for x in num_str.split(",")]
+                                    params[key] = tuple(nums)
+                                else:
+                                    params[key] = tuple()
+                            else:
+                                # Try converting to float first
+                                try:
+                                    params[key] = float(value)
+                                    # If it's a whole number, convert to int
+                                    if params[key].is_integer():
+                                        params[key] = int(params[key])
+                                except ValueError:
+                                    params[key] = value
+                        except Exception as e:
+                            print(f"Warning: Could not convert {key}={value}, using as string. Error: {str(e)}")
+                            params[key] = value
+
+                    print(f"Successfully loaded hyperparameter set {set_id}")
+                    return params
+
+            print(f"Error: Hyperparameter set {set_id} not found in CSV file")
+            return {}
+
+    except Exception as e:
+        print(f"Error loading hyperparameter set: {str(e)}")
+        return {}
+
+
+if DEFAULT_USE_SAVED_HYPERPARAMETER_SET:
+    hyperparameter_set = load_hyperparameter_set(HYPERPARAMETER_SET_PATH, HyperparameterSetIDtoLoad)
+    for key, value in hyperparameter_set.items():
+        if key in globals():
+            globals()[key] = value
+
+
+#######################################CSV ERSTELLEN######################################
 
 # Der Dateipfad zur CSV-Datei
 timestamp = time.strftime("%Y%m%d-%H%M%S")
@@ -365,7 +564,10 @@ if not datei_existiert:
         writer.writerow([])  # Leere Zeile zur Trennung der Tabellen
         writer.writerow(header_training)  # Header für die dynamischen Trainingsdaten
 
-################################################################################
+
+#####################################################################################
+##############################RUN-FUNCTION###########################################
+#####################################################################################
 
 
 def run(
@@ -463,8 +665,6 @@ def run(
                 n_envs=1,
                 seed=0,
             )
-            # if 'train_env' in locals():
-            # train_env.close()
 
             eval_env = make_vec_env(
                 BaseRLAviary_MAZE_TRAINING,
@@ -509,8 +709,6 @@ def run(
                 n_envs=1,
                 seed=0,
             )
-            # if 'eval_env' in locals():
-            # eval_env.close()
 
         #### Check the environment's spaces ########################
         print("[INFO] Action space:", train_env.action_space)
@@ -520,10 +718,12 @@ def run(
         match MODEL_Version:
             case "M1":  # M1: PPO
                 if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
-                    print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_Version} with {REWARD_VERSION}")
+                    print(
+                        f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_VERSION} with {REWARD_VERSION}, {OBSERVATION_TYPE}, {TRUNCATED_TYPE}, {TERMINATED_TYPE}, {ACTION_TYPE}"
+                    )
                     model = PPO.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
                 else:
-                    print(f"[INFO] Creating new model {MODEL_Version} with {REWARD_VERSION}")
+                    print(f"[INFO] Creating new {MODEL_VERSION} with {REWARD_VERSION}, {OBSERVATION_TYPE}, {TRUNCATED_TYPE}, {TERMINATED_TYPE}, {ACTION_TYPE}")
                     model = PPO(
                         "MlpPolicy",
                         train_env,
@@ -533,10 +733,12 @@ def run(
 
             case "M2":  # M2: DQN_CNNPolicy_StandardFeatureExtractor
                 if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
-                    print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_Version} with {REWARD_VERSION}")
+                    print(
+                        f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_VERSION} with {REWARD_VERSION}, {OBSERVATION_TYPE}, {TRUNCATED_TYPE}, {TERMINATED_TYPE}, {ACTION_TYPE}"
+                    )
                     model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
                 else:
-                    print(f"[INFO] Creating new model {MODEL_Version} with {REWARD_VERSION}")
+                    print(f"[INFO] Creating new {MODEL_VERSION} with {REWARD_VERSION}, {OBSERVATION_TYPE}, {TRUNCATED_TYPE}, {TERMINATED_TYPE}, {ACTION_TYPE}")
                     model = DQN(
                         "CnnPolicy",
                         train_env,
@@ -548,10 +750,12 @@ def run(
 
             case "M3":  # M3: DQN_MLPPolicy
                 if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
-                    print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
+                    print(
+                        f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_VERSION} with {REWARD_VERSION}, {OBSERVATION_TYPE}, {TRUNCATED_TYPE}, {TERMINATED_TYPE}, {ACTION_TYPE}"
+                    )
                     model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
                 else:
-                    print("[INFO] Creating new model with CNN-DQN with standard feature extractor")
+                    print(f"[INFO] Creating new {MODEL_VERSION} with {REWARD_VERSION}, {OBSERVATION_TYPE}, {TRUNCATED_TYPE}, {TERMINATED_TYPE}, {ACTION_TYPE}")
                     model = DQN(
                         "MlpPolicy",
                         train_env,
@@ -573,10 +777,12 @@ def run(
                     features_extractor_kwargs=dict(features_dim=4),
                 )
                 if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
-                    print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
+                    print(
+                        f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_VERSION} with {REWARD_VERSION}, {OBSERVATION_TYPE}, {TRUNCATED_TYPE}, {TERMINATED_TYPE}, {ACTION_TYPE}"
+                    )
                     model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
                 else:
-                    print("[INFO] Creating new model with CNN-DQN with custom feature extractor")
+                    print(f"[INFO] Creating new {MODEL_VERSION} with {REWARD_VERSION}, {OBSERVATION_TYPE}, {TRUNCATED_TYPE}, {TERMINATED_TYPE}, {ACTION_TYPE}")
                     model = DQN(
                         "CnnPolicy",
                         train_env,
@@ -595,9 +801,12 @@ def run(
                 # Setze die policy_kwargs, um deinen Custom Feature Extractor zu nutzen:
                 # policy_kwargs = dict(features_extractor_class=CustomNNFeatureExtractor, features_extractor_kwargs=dict(features_dim=4))
                 if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
-                    print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
+                    print(
+                        f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_VERSION} with {REWARD_VERSION}, {OBSERVATION_TYPE}, {TRUNCATED_TYPE}, {TERMINATED_TYPE}, {ACTION_TYPE}"
+                    )
                     model = DQN.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
                 else:
+                    print(f"[INFO] Creating new {MODEL_VERSION} with {REWARD_VERSION}, {OBSERVATION_TYPE}, {TRUNCATED_TYPE}, {TERMINATED_TYPE}, {ACTION_TYPE}")
                     model = DQN(
                         "MultiInputPolicy",
                         train_env,
@@ -612,10 +821,12 @@ def run(
                     )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
             case "M6":  # M6: SAC
                 if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
-                    print(f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH}")
+                    print(
+                        f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_VERSION} with {REWARD_VERSION}, {OBSERVATION_TYPE}, {TRUNCATED_TYPE}, {TERMINATED_TYPE}, {ACTION_TYPE}"
+                    )
                     model = SAC.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
                 else:
-                    print("[INFO] Creating new model with SAC")
+                    print(f"[INFO] Creating new {MODEL_VERSION} with {REWARD_VERSION}, {OBSERVATION_TYPE}, {TRUNCATED_TYPE}, {TERMINATED_TYPE}, {ACTION_TYPE}")
                     model = SAC(
                         "MlpPolicy",
                         train_env,
@@ -625,6 +836,15 @@ def run(
                     )
             case _:
                 raise ValueError(f"Invalid model version: {MODEL_Version}")
+
+        # ###### Fix Warnuning on using M5:
+        # /home/florian/anaconda3/envs/drones/lib/python3.10/site-packages/stable_baselines3/common/callbacks.py:414: UserWarning: Training and eval env are not of the same type<stable_baselines3.common.vec_env.vec_transpose.VecTransposeImage object at 0x7cbda05a2a70> != <stable_baselines3.common.vec_env.dummy_vec_env.DummyVecEnv object at 0x7cbda05a3640> warnings.warn("Training and eval env are not of the same type" f"{self.training_env} != {self.eval_env}") ###########
+
+        wrapped_train_env = model.get_env()
+        # print(f"Type of wrapped training environment: {type(wrapped_train_env)}")
+        # Apply the same wrapper to eval_env
+        if isinstance(wrapped_train_env, VecTransposeImage):
+            eval_env = VecTransposeImage(eval_env)
 
         ## Schreiben der CSV für die Auswertung unserer Ergebnisse
 

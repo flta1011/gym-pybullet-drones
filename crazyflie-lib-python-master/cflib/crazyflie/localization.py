@@ -34,18 +34,17 @@ from cflib.crtp.crtpstack import CRTPPort
 from cflib.utils.callbacks import Caller
 from cflib.utils.encoding import fp16_to_float
 
-__author__ = 'Bitcraze AB'
-__all__ = ['Localization', 'LocalizationPacket']
+__author__ = "Bitcraze AB"
+__all__ = ["Localization", "LocalizationPacket"]
 
 logger = logging.getLogger(__name__)
 
 # A generic location packet contains type and data. When received the data
 # may be decoded by the lib.
-LocalizationPacket = collections.namedtuple('localizationPacket',
-                                            ['type', 'raw_data', 'data'])
+LocalizationPacket = collections.namedtuple("localizationPacket", ["type", "raw_data", "data"])
 
 
-class Localization():
+class Localization:
     """
     Handle localization-related data communication with the Crazyflie
     """
@@ -81,11 +80,10 @@ class Localization():
         Callback for data received from the copter.
         """
         if len(packet.data) < 1:
-            logger.warning('Localization packet received with incorrect' +
-                           'length (length is {})'.format(len(packet.data)))
+            logger.warning("Localization packet received with incorrect" + "length (length is {})".format(len(packet.data)))
             return
 
-        pk_type = struct.unpack('<B', packet.data[:1])[0]
+        pk_type = struct.unpack("<B", packet.data[:1])[0]
         data = packet.data[1:]
 
         # Decoding the known packet types
@@ -93,12 +91,12 @@ class Localization():
         decoded_data = None
         if pk_type == self.RANGE_STREAM_REPORT:
             if len(data) % 5 != 0:
-                logger.error('Wrong range stream report data lenght')
+                logger.error("Wrong range stream report data lenght")
                 return
             decoded_data = {}
             raw_data = data
             for i in range(int(len(data) / 5)):
-                anchor_id, distance = struct.unpack('<Bf', raw_data[:5])
+                anchor_id, distance = struct.unpack("<Bf", raw_data[:5])
                 decoded_data[anchor_id] = distance
                 raw_data = raw_data[5:]
         elif pk_type == self.LH_PERSIST_DATA:
@@ -112,19 +110,19 @@ class Localization():
     def _decode_lh_angle(self, data):
         decoded_data = {}
 
-        raw_data = struct.unpack('<Bfhhhfhhh', data)
+        raw_data = struct.unpack("<Bfhhhfhhh", data)
 
-        decoded_data['basestation'] = raw_data[0]
-        decoded_data['x'] = [0, 0, 0, 0]
-        decoded_data['x'][0] = raw_data[1]
-        decoded_data['x'][1] = raw_data[1] - fp16_to_float(raw_data[2])
-        decoded_data['x'][2] = raw_data[1] - fp16_to_float(raw_data[3])
-        decoded_data['x'][3] = raw_data[1] - fp16_to_float(raw_data[4])
-        decoded_data['y'] = [0, 0, 0, 0]
-        decoded_data['y'][0] = raw_data[5]
-        decoded_data['y'][1] = raw_data[5] - fp16_to_float(raw_data[6])
-        decoded_data['y'][2] = raw_data[5] - fp16_to_float(raw_data[7])
-        decoded_data['y'][3] = raw_data[5] - fp16_to_float(raw_data[8])
+        decoded_data["basestation"] = raw_data[0]
+        decoded_data["x"] = [0, 0, 0, 0]
+        decoded_data["x"][0] = raw_data[1]
+        decoded_data["x"][1] = raw_data[1] - fp16_to_float(raw_data[2])
+        decoded_data["x"][2] = raw_data[1] - fp16_to_float(raw_data[3])
+        decoded_data["x"][3] = raw_data[1] - fp16_to_float(raw_data[4])
+        decoded_data["y"] = [0, 0, 0, 0]
+        decoded_data["y"][0] = raw_data[5]
+        decoded_data["y"][1] = raw_data[5] - fp16_to_float(raw_data[6])
+        decoded_data["y"][2] = raw_data[5] - fp16_to_float(raw_data[7])
+        decoded_data["y"][3] = raw_data[5] - fp16_to_float(raw_data[8])
 
         return decoded_data
 
@@ -137,7 +135,7 @@ class Localization():
         pk = CRTPPacket()
         pk.port = CRTPPort.LOCALIZATION
         pk.channel = self.POSITION_CH
-        pk.data = struct.pack('<fff', pos[0], pos[1], pos[2])
+        pk.data = struct.pack("<fff", pos[0], pos[1], pos[2])
         self._cf.send_packet(pk)
 
     def send_extpose(self, pos, quat):
@@ -150,10 +148,7 @@ class Localization():
         pk = CRTPPacket()
         pk.port = CRTPPort.LOCALIZATION
         pk.channel = self.GENERIC_CH
-        pk.data = struct.pack('<Bfffffff',
-                              self.EXT_POSE,
-                              pos[0], pos[1], pos[2],
-                              quat[0], quat[1], quat[2], quat[3])
+        pk.data = struct.pack("<Bfffffff", self.EXT_POSE, pos[0], pos[1], pos[2], quat[0], quat[1], quat[2], quat[3])
         self._cf.send_packet(pk)
 
     def send_short_lpp_packet(self, dest_id, data):
@@ -164,7 +159,7 @@ class Localization():
         pk = CRTPPacket()
         pk.port = CRTPPort.LOCALIZATION
         pk.channel = self.GENERIC_CH
-        pk.data = struct.pack('<BB', self.LPS_SHORT_LPP_PACKET, dest_id) + data
+        pk.data = struct.pack("<BB", self.LPS_SHORT_LPP_PACKET, dest_id) + data
         self._cf.send_packet(pk)
 
     def send_emergency_stop(self):
@@ -175,7 +170,7 @@ class Localization():
         pk = CRTPPacket()
         pk.port = CRTPPort.LOCALIZATION
         pk.channel = self.GENERIC_CH
-        pk.data = struct.pack('<B', self.EMERGENCY_STOP)
+        pk.data = struct.pack("<B", self.EMERGENCY_STOP)
         self._cf.send_packet(pk)
 
     def send_emergency_stop_watchdog(self):
@@ -186,7 +181,7 @@ class Localization():
         pk = CRTPPacket()
         pk.port = CRTPPort.LOCALIZATION
         pk.channel = self.GENERIC_CH
-        pk.data = struct.pack('<B', self.EMERGENCY_STOP_WATCHDOG)
+        pk.data = struct.pack("<B", self.EMERGENCY_STOP_WATCHDOG)
         self._cf.send_packet(pk)
 
     def send_lh_persist_data_packet(self, geo_list, calib_list):
@@ -199,10 +194,10 @@ class Localization():
         max_bs_nr = 15
         if len(geo_list) > 0:
             if geo_list[0] < 0 or geo_list[-1] > max_bs_nr:
-                raise Exception('Geometry BS list is not valid')
+                raise Exception("Geometry BS list is not valid")
         if len(calib_list) > 0:
             if calib_list[0] < 0 or calib_list[-1] > max_bs_nr:
-                raise Exception('Calibration BS list is not valid')
+                raise Exception("Calibration BS list is not valid")
 
         mask_geo = 0
         mask_calib = 0
@@ -214,8 +209,7 @@ class Localization():
         pk = CRTPPacket()
         pk.port = CRTPPort.LOCALIZATION
         pk.channel = self.GENERIC_CH
-        pk.data = struct.pack(
-            '<BHH', self.LH_PERSIST_DATA, mask_geo, mask_calib)
+        pk.data = struct.pack("<BHH", self.LH_PERSIST_DATA, mask_geo, mask_calib)
         self._cf.send_packet(pk)
 
         return pk.data

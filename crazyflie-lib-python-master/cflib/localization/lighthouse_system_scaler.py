@@ -33,9 +33,9 @@ from cflib.localization.lighthouse_types import Pose
 
 class LighthouseSystemScaler:
     """This class is used to re-scale a system based on various measurements."""
+
     @classmethod
-    def scale_fixed_point(cls, bs_poses: dict[int, Pose], cf_poses: list[Pose], expected: npt.ArrayLike,
-                          actual: Pose) -> tuple[dict[int, Pose], list[Pose], float]:
+    def scale_fixed_point(cls, bs_poses: dict[int, Pose], cf_poses: list[Pose], expected: npt.ArrayLike, actual: Pose) -> tuple[dict[int, Pose], list[Pose], float]:
         """
         Scale a system based on a position in the physical world in relation to where it is in the estimated system
         geometry. Assume the system is aligned and simply use the distance to the points for scaling.
@@ -53,8 +53,7 @@ class LighthouseSystemScaler:
         return cls._scale_system(bs_poses, cf_poses, scale_factor)
 
     @classmethod
-    def scale_diagonals(cls, bs_poses: dict[int, Pose], cf_poses: list[Pose], matched_samples: list[LhCfPoseSample],
-                        expected_diagonal: float) -> tuple[dict[int, Pose], list[Pose], float]:
+    def scale_diagonals(cls, bs_poses: dict[int, Pose], cf_poses: list[Pose], matched_samples: list[LhCfPoseSample], expected_diagonal: float) -> tuple[dict[int, Pose], list[Pose], float]:
         """
         Scale a system based on where base station "rays" intersects the lighthouse deck in relation to sensor
         positions. Calculates the intersection points for all samples and scales the system to match the expected
@@ -72,8 +71,7 @@ class LighthouseSystemScaler:
         return cls._scale_system(bs_poses, cf_poses, scale_factor)
 
     @classmethod
-    def _scale_system(cls, bs_poses: dict[int, Pose], cf_poses: list[Pose],
-                      scale_factor: float) -> tuple[dict[int, Pose], list[Pose], float]:
+    def _scale_system(cls, bs_poses: dict[int, Pose], cf_poses: list[Pose], scale_factor: float) -> tuple[dict[int, Pose], list[Pose], float]:
         """
         Scale poses of base stations and crazyflie samples.
         """
@@ -88,8 +86,7 @@ class LighthouseSystemScaler:
         return bs_scaled, cf_scaled, scale_factor
 
     @classmethod
-    def _calculate_mean_diagonal(cls, bs_poses: dict[int, Pose], cf_poses: list[Pose],
-                                 matched_samples: list[LhCfPoseSample]) -> float:
+    def _calculate_mean_diagonal(cls, bs_poses: dict[int, Pose], cf_poses: list[Pose], matched_samples: list[LhCfPoseSample]) -> float:
         """
         Calculate the average diagonal sensor distance based on where the rays intersect the lighthouse deck
         """
@@ -105,8 +102,7 @@ class LighthouseSystemScaler:
         return estimated_diagonal
 
     @classmethod
-    def calc_intersection_distance(cls, vector1: LighthouseBsVector, vector2: LighthouseBsVector,
-                                   bs_pose: Pose, cf_pose: Pose) -> float:
+    def calc_intersection_distance(cls, vector1: LighthouseBsVector, vector2: LighthouseBsVector, bs_pose: Pose, cf_pose: Pose) -> float:
         """Calculate distance between intersection points of rays on the plane defined by the lighthouse deck"""
 
         intersection1 = cls.calc_intersection_point(vector1, bs_pose, cf_pose)

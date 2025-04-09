@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from stable_baselines3 import DQN
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 
+
 # Custom Feature Extractor basierend auf unserer CNN-Architektur
 class CustomCNNFeatureExtractor(BaseFeaturesExtractor):
     def __init__(self, observation_space, features_dim=6):
@@ -21,18 +22,14 @@ class CustomCNNFeatureExtractor(BaseFeaturesExtractor):
             nn.ReLU(),
             nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1),
             nn.ReLU(),
-            nn.Flatten()
+            nn.Flatten(),
         )
         # Bestimme die Größe der flachen Feature Map
         with torch.no_grad():
             sample_input = torch.as_tensor(observation_space.sample()[None]).float()
             n_flatten = self.cnn(sample_input).shape[1]
-        self.linear = nn.Sequential(
-            nn.Linear(n_flatten, features_dim),
-            nn.ReLU()
-        )
-    
+        self.linear = nn.Sequential(nn.Linear(n_flatten, features_dim), nn.ReLU())
+
     def forward(self, observations):
         # observations hat die Form [batch, channels, height, width]
         return self.linear(self.cnn(observations))
-

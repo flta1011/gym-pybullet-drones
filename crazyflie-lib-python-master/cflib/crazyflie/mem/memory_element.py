@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class MemoryElement(object):
-    """A memory """
+    """A memory"""
 
     TYPE_I2C = 0
     TYPE_1W = 1
@@ -52,29 +52,28 @@ class MemoryElement(object):
     def type_to_string(t):
         """Get string representation of memory type"""
         if t == MemoryElement.TYPE_I2C:
-            return 'I2C'
+            return "I2C"
         if t == MemoryElement.TYPE_1W:
-            return '1-wire'
+            return "1-wire"
         if t == MemoryElement.TYPE_DRIVER_LEDTIMING:
-            return 'LED memory driver'
+            return "LED memory driver"
         if t == MemoryElement.TYPE_DRIVER_LED:
-            return 'LED driver'
+            return "LED driver"
         if t == MemoryElement.TYPE_LOCO:
-            return 'Loco Positioning'
+            return "Loco Positioning"
         if t == MemoryElement.TYPE_TRAJ:
-            return 'Trajectory'
+            return "Trajectory"
         if t == MemoryElement.TYPE_LOCO2:
-            return 'Loco Positioning 2'
+            return "Loco Positioning 2"
         if t == MemoryElement.TYPE_LH:
-            return 'Lighthouse positioning'
+            return "Lighthouse positioning"
         if t == MemoryElement.TYPE_MEMORY_TESTER:
-            return 'Memory tester'
-        return 'Unknown'
+            return "Memory tester"
+        return "Unknown"
 
     def new_data(self, mem, addr, data):
-        logger.debug('New data, but not OW mem')
+        logger.debug("New data, but not OW mem")
 
     def __str__(self):
         """Generate debug string for memory"""
-        return ('Memory: id={}, type={}, size={}'.format(
-            self.id, MemoryElement.type_to_string(self.type), self.size))
+        return "Memory: id={}, type={}, size={}".format(self.id, MemoryElement.type_to_string(self.type), self.size)

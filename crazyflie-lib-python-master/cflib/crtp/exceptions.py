@@ -29,15 +29,17 @@ It basically means that an other driver could do the job
 It does NOT means that the URI is good or bad
 """
 
-__author__ = 'Bitcraze AB'
-__all__ = ['WrongUriType', 'CommunicationException']
+__author__ = "Bitcraze AB"
+__all__ = ["WrongUriType", "CommunicationException"]
 
 
 class WrongUriType(Exception):
-    """ Wrong type of URI for this interface """
+    """Wrong type of URI for this interface"""
+
     pass
 
 
 class CommunicationException(Exception):
-    """ Communication problem when communicating with a Crazyflie """
+    """Communication problem when communicating with a Crazyflie"""
+
     pass

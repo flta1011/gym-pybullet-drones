@@ -27,20 +27,20 @@ from cflib.utils.power_switch import PowerSwitch
 class RigSupport:
     def __init__(self):
         self.all_uris = [
-            'radio://0/42/2M/E7E7E74201',
-            'radio://0/42/2M/E7E7E74202',
-            'radio://0/42/2M/E7E7E74203',
-            'radio://0/42/2M/E7E7E74204',
-            'radio://0/42/2M/E7E7E74205',
-            'radio://0/42/2M/E7E7E74206',
-            'radio://0/42/2M/E7E7E74207',
-            'radio://0/42/2M/E7E7E74208',
-            'radio://0/42/2M/E7E7E74209',
-            'radio://0/42/2M/E7E7E7420A',
+            "radio://0/42/2M/E7E7E74201",
+            "radio://0/42/2M/E7E7E74202",
+            "radio://0/42/2M/E7E7E74203",
+            "radio://0/42/2M/E7E7E74204",
+            "radio://0/42/2M/E7E7E74205",
+            "radio://0/42/2M/E7E7E74206",
+            "radio://0/42/2M/E7E7E74207",
+            "radio://0/42/2M/E7E7E74208",
+            "radio://0/42/2M/E7E7E74209",
+            "radio://0/42/2M/E7E7E7420A",
         ]
 
     def restart_devices(self, uris):
-        print('Restarting devices')
+        print("Restarting devices")
 
         for uri in uris:
             PowerSwitch(uri).stm_power_down()

@@ -32,20 +32,20 @@ from cflib.crazyflie.mem import LighthouseMemHelper
 
 
 class LighthouseConfigFileManager:
-    TYPE_ID = 'type'
-    TYPE = 'lighthouse_system_configuration'
-    VERSION_ID = 'version'
-    VERSION = '1'
-    GEOS_ID = 'geos'
-    CALIBS_ID = 'calibs'
-    SYSTEM_TYPE_ID = 'systemType'
+    TYPE_ID = "type"
+    TYPE = "lighthouse_system_configuration"
+    VERSION_ID = "version"
+    VERSION = "1"
+    GEOS_ID = "geos"
+    CALIBS_ID = "calibs"
+    SYSTEM_TYPE_ID = "systemType"
 
     SYSTEM_TYPE_V1 = 1
     SYSTEM_TYPE_V2 = 2
 
     @staticmethod
     def write(file_name, geos={}, calibs={}, system_type=SYSTEM_TYPE_V2):
-        file = open(file_name, 'w')
+        file = open(file_name, "w")
         with file:
             file_geos = {}
             for id, geo in geos.items():
@@ -62,28 +62,28 @@ class LighthouseConfigFileManager:
                 LighthouseConfigFileManager.VERSION_ID: LighthouseConfigFileManager.VERSION,
                 LighthouseConfigFileManager.SYSTEM_TYPE_ID: system_type,
                 LighthouseConfigFileManager.GEOS_ID: file_geos,
-                LighthouseConfigFileManager.CALIBS_ID: file_calibs
+                LighthouseConfigFileManager.CALIBS_ID: file_calibs,
             }
 
             yaml.dump(data, file)
 
     @staticmethod
     def read(file_name):
-        file = open(file_name, 'r')
+        file = open(file_name, "r")
         with file:
             data = yaml.safe_load(file)
 
             if LighthouseConfigFileManager.TYPE_ID not in data:
-                raise Exception('Type field missing')
+                raise Exception("Type field missing")
 
             if data[LighthouseConfigFileManager.TYPE_ID] != LighthouseConfigFileManager.TYPE:
-                raise Exception('Unsupported file type')
+                raise Exception("Unsupported file type")
 
             if LighthouseConfigFileManager.VERSION_ID not in data:
-                raise Exception('Version field missing')
+                raise Exception("Version field missing")
 
             if data[LighthouseConfigFileManager.VERSION_ID] != LighthouseConfigFileManager.VERSION:
-                raise Exception('Unsupported file version')
+                raise Exception("Unsupported file version")
 
             result_system_type = LighthouseConfigFileManager.SYSTEM_TYPE_V2
             if LighthouseConfigFileManager.SYSTEM_TYPE_ID in data:
@@ -127,7 +127,7 @@ class LighthouseConfigWriter:
         transfered to the Crazyflie, data for all other base stations will be invalidated.
         """
         if self._data_stored_cb is not None:
-            raise Exception('Write already in prgress')
+            raise Exception("Write already in prgress")
         self._data_stored_cb = data_stored_cb
 
         self._cf.loc.receivedLocationPacket.add_callback(self._received_location_packet)
@@ -150,7 +150,7 @@ class LighthouseConfigWriter:
             # Changing system type may trigger a lengthy operation (up to 0.5 s) if the persistant memory requires
             # defrag. Setting a param is an asynchronous operataion, and it is not possible to know if the system
             # swich is finished before we continue.
-            self._cf.param.set_value('lighthouse.systemType', system_type)
+            self._cf.param.set_value("lighthouse.systemType", system_type)
 
             # We add a sleep here to make sure the change of system type is finished. It is dirty but will have to
             # do for now. A more propper solution would be to add support for Remote Procedure Calls (RPC) with

@@ -32,12 +32,12 @@ from cflib.utils.multiranger import Multiranger
 
 
 class MultirangerTest(unittest.TestCase):
-    FRONT = 'range.front'
-    BACK = 'range.back'
-    LEFT = 'range.left'
-    RIGHT = 'range.right'
-    UP = 'range.up'
-    DOWN = 'range.zrange'
+    FRONT = "range.front"
+    BACK = "range.back"
+    LEFT = "range.left"
+    RIGHT = "range.right"
+    UP = "range.up"
+    DOWN = "range.zrange"
 
     OUT_OF_RANGE = 8000
 
@@ -67,53 +67,44 @@ class MultirangerTest(unittest.TestCase):
 
     def test_that_log_configuration_is_added_on_connect(self):
         # Fixture
-        with patch('cflib.utils.multiranger.LogConfig',
-                   return_value=self.log_config_mock):
+        with patch("cflib.utils.multiranger.LogConfig", return_value=self.log_config_mock):
             sut = Multiranger(self.cf_mock)
 
             # Test
             sut.start()
 
             # Assert
-            self.log_mock.add_config.assert_called_once_with(
-                self.log_config_mock)
+            self.log_mock.add_config.assert_called_once_with(self.log_config_mock)
 
     def test_that_log_configuration_is_correct(self):
         # Fixture
-        with patch('cflib.utils.multiranger.LogConfig',
-                   return_value=self.log_config_mock):
+        with patch("cflib.utils.multiranger.LogConfig", return_value=self.log_config_mock):
             sut = Multiranger(self.cf_mock)
 
             # Test
             sut.start()
 
             # Assert
-            self.log_config_mock.add_variable.assert_has_calls([
-                call(self.FRONT),
-                call(self.BACK),
-                call(self.LEFT),
-                call(self.RIGHT),
-                call(self.UP),
-            ])
+            self.log_config_mock.add_variable.assert_has_calls(
+                [
+                    call(self.FRONT),
+                    call(self.BACK),
+                    call(self.LEFT),
+                    call(self.RIGHT),
+                    call(self.UP),
+                ]
+            )
 
     def test_that_log_configuration_is_correct_with_zranger(self):
         # Fixture
-        with patch('cflib.utils.multiranger.LogConfig',
-                   return_value=self.log_config_mock):
+        with patch("cflib.utils.multiranger.LogConfig", return_value=self.log_config_mock):
             sut = Multiranger(self.cf_mock, zranger=True)
 
             # Test
             sut.start()
 
             # Assert
-            self.log_config_mock.add_variable.assert_has_calls([
-                call(self.FRONT),
-                call(self.BACK),
-                call(self.LEFT),
-                call(self.RIGHT),
-                call(self.UP),
-                call(self.DOWN)
-            ])
+            self.log_config_mock.add_variable.assert_has_calls([call(self.FRONT), call(self.BACK), call(self.LEFT), call(self.RIGHT), call(self.UP), call(self.DOWN)])
 
     # def test_that_rate_configuration_is_applied(self):
     #     # Fixture
@@ -128,8 +119,7 @@ class MultirangerTest(unittest.TestCase):
 
     def test_that_logging_is_started_on_start(self):
         # Fixture
-        with patch('cflib.utils.multiranger.LogConfig',
-                   return_value=self.log_config_mock):
+        with patch("cflib.utils.multiranger.LogConfig", return_value=self.log_config_mock):
             sut = Multiranger(self.cf_mock)
 
             # Test
@@ -140,8 +130,7 @@ class MultirangerTest(unittest.TestCase):
 
     def test_that_data_callback_is_set(self):
         # Fixture
-        with patch('cflib.utils.multiranger.LogConfig',
-                   return_value=self.log_config_mock):
+        with patch("cflib.utils.multiranger.LogConfig", return_value=self.log_config_mock):
             sut = Multiranger(self.cf_mock)
 
             # Test
@@ -149,13 +138,11 @@ class MultirangerTest(unittest.TestCase):
 
             # Assert
             self.log_config_mock.start.assert_called_once_with()
-            self.assertEqual(1, len(
-                self.log_config_mock.data_received_cb.callbacks))
+            self.assertEqual(1, len(self.log_config_mock.data_received_cb.callbacks))
 
     def test_that_the_log_config_is_deleted_on_stop(self):
         # Fixture
-        with patch('cflib.utils.multiranger.LogConfig',
-                   return_value=self.log_config_mock):
+        with patch("cflib.utils.multiranger.LogConfig", return_value=self.log_config_mock):
             sut = Multiranger(self.cf_mock)
             sut.start()
 
@@ -167,8 +154,7 @@ class MultirangerTest(unittest.TestCase):
 
     def test_that_using_context_manager_calls_start_and_stop(self):
         # Fixture
-        with patch('cflib.utils.multiranger.LogConfig',
-                   return_value=self.log_config_mock):
+        with patch("cflib.utils.multiranger.LogConfig", return_value=self.log_config_mock):
 
             with Multiranger(self.cf_mock):
                 pass
@@ -178,77 +164,69 @@ class MultirangerTest(unittest.TestCase):
             self.log_config_mock.delete.assert_called_once_with()
 
     def test_that_data_received_from_log_is_available_from_up_getter(self):
-        self._validate_distance_from_getter(self.up_data / 1000.0, 'up')
+        self._validate_distance_from_getter(self.up_data / 1000.0, "up")
 
     def test_that_none_is_returned_if_up_ranging_is_off_limit(self):
         # Fixture
         self.log_data[self.UP] = self.OUT_OF_RANGE
-        self._validate_distance_from_getter(None, 'up')
+        self._validate_distance_from_getter(None, "up")
 
     def test_that_data_received_from_log_is_available_from_front_getter(self):
-        self._validate_distance_from_getter(self.front_data / 1000.0,
-                                            'front')
+        self._validate_distance_from_getter(self.front_data / 1000.0, "front")
 
     def test_that_none_is_returned_if_front_ranging_is_off_limit(self):
         # Fixture
         self.log_data[self.FRONT] = self.OUT_OF_RANGE
-        self._validate_distance_from_getter(None, 'front')
+        self._validate_distance_from_getter(None, "front")
 
     def test_that_data_received_from_log_is_available_from_back_getter(self):
-        self._validate_distance_from_getter(self.back_data / 1000.0,
-                                            'back')
+        self._validate_distance_from_getter(self.back_data / 1000.0, "back")
 
     def test_that_none_is_returned_if_back_ranging_is_off_limit(self):
         # Fixture
         self.log_data[self.BACK] = self.OUT_OF_RANGE
-        self._validate_distance_from_getter(None, 'back')
+        self._validate_distance_from_getter(None, "back")
 
     def test_that_data_received_from_log_is_available_from_left_getter(self):
-        self._validate_distance_from_getter(self.left_data / 1000.0,
-                                            'left')
+        self._validate_distance_from_getter(self.left_data / 1000.0, "left")
 
     def test_that_none_is_returned_if_left_ranging_is_off_limit(self):
         # Fixture
         self.log_data[self.LEFT] = self.OUT_OF_RANGE
-        self._validate_distance_from_getter(None, 'left')
+        self._validate_distance_from_getter(None, "left")
 
     def test_that_data_received_from_log_is_available_from_right_getter(self):
-        self._validate_distance_from_getter(self.right_data / 1000.0,
-                                            'right')
+        self._validate_distance_from_getter(self.right_data / 1000.0, "right")
 
     def test_that_none_is_returned_if_right_ranging_is_off_limit(self):
         # Fixture
         self.log_data[self.RIGHT] = self.OUT_OF_RANGE
-        self._validate_distance_from_getter(None, 'right')
+        self._validate_distance_from_getter(None, "right")
 
     def test_that_data_received_from_log_is_available_from_down_getter(self):
-        self._validate_distance_from_getter(self.down_data / 1000.0,
-                                            'down', zranger=True)
+        self._validate_distance_from_getter(self.down_data / 1000.0, "down", zranger=True)
 
     def test_that_none_is_returned_if_down_ranging_is_off_limit(self):
         # Fixture
         self.log_data[self.DOWN] = self.OUT_OF_RANGE
-        self._validate_distance_from_getter(None, 'down', zranger=True)
+        self._validate_distance_from_getter(None, "down", zranger=True)
 
     def test_that_none_is_returned_from_down_if_zranger_is_disabled(self):
         # Fixture
         del self.log_data[self.DOWN]
-        self._validate_distance_from_getter(None, 'down', zranger=False)
+        self._validate_distance_from_getter(None, "down", zranger=False)
 
     # Helpers ################################################################
 
-    def _validate_distance_from_getter(self, expected, getter_name,
-                                       zranger=False):
+    def _validate_distance_from_getter(self, expected, getter_name, zranger=False):
         # Fixture
-        with patch('cflib.utils.multiranger.LogConfig',
-                   return_value=self.log_config_mock):
+        with patch("cflib.utils.multiranger.LogConfig", return_value=self.log_config_mock):
             sut = Multiranger(self.cf_mock, zranger=zranger)
 
             timestmp = 1234
             logconf = None
 
-            self.log_config_mock.data_received_cb.call(timestmp, self.log_data,
-                                                       logconf)
+            self.log_config_mock.data_received_cb.call(timestmp, self.log_data, logconf)
 
             # Test
             actual = getattr(sut, getter_name)

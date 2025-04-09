@@ -38,21 +38,16 @@ from cflib.positioning.position_hl_commander import PositionHlCommander
 from cflib.utils import uri_helper
 
 # URI to the Crazyflie to connect to
-uri = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
+uri = uri_helper.uri_from_env(default="radio://0/80/2M/E7E7E7E7E7")
 
 
 def slightly_more_complex_usage():
-    with SyncCrazyflie(uri, cf=Crazyflie(rw_cache='./cache')) as scf:
+    with SyncCrazyflie(uri, cf=Crazyflie(rw_cache="./cache")) as scf:
         # Arm the Crazyflie
         scf.cf.platform.send_arming_request(True)
         time.sleep(1.0)
 
-        with PositionHlCommander(
-                scf,
-                x=0.0, y=0.0, z=0.0,
-                default_velocity=0.3,
-                default_height=0.5,
-                controller=PositionHlCommander.CONTROLLER_PID) as pc:
+        with PositionHlCommander(scf, x=0.0, y=0.0, z=0.0, default_velocity=0.3, default_height=0.5, controller=PositionHlCommander.CONTROLLER_PID) as pc:
             # Go to a coordinate
             pc.go_to(1.0, 1.0, 1.0)
 
@@ -72,16 +67,12 @@ def slightly_more_complex_usage():
 
 
 def land_on_elevated_surface():
-    with SyncCrazyflie(uri, cf=Crazyflie(rw_cache='./cache')) as scf:
+    with SyncCrazyflie(uri, cf=Crazyflie(rw_cache="./cache")) as scf:
         # Arm the Crazyflie
         scf.cf.platform.send_arming_request(True)
         time.sleep(1.0)
 
-        with PositionHlCommander(scf,
-                                 default_height=0.5,
-                                 default_velocity=0.2,
-                                 default_landing_height=0.35,
-                                 controller=PositionHlCommander.CONTROLLER_PID) as pc:
+        with PositionHlCommander(scf, default_height=0.5, default_velocity=0.2, default_landing_height=0.35, controller=PositionHlCommander.CONTROLLER_PID) as pc:
             # fly onto a landing platform at non-zero height (ex: from floor to desk, etc)
             pc.forward(1.0)
             pc.left(1.0)
@@ -89,7 +80,7 @@ def land_on_elevated_surface():
 
 
 def simple_sequence():
-    with SyncCrazyflie(uri, cf=Crazyflie(rw_cache='./cache')) as scf:
+    with SyncCrazyflie(uri, cf=Crazyflie(rw_cache="./cache")) as scf:
         # Arm the Crazyflie
         scf.cf.platform.send_arming_request(True)
         time.sleep(1.0)
@@ -101,7 +92,7 @@ def simple_sequence():
             pc.go_to(0.0, 0.0, 1.0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cflib.crtp.init_drivers()
 
     simple_sequence()

@@ -65,7 +65,7 @@ def process_csv_file(csv_path):
 
     # Plot für jede Spalte außer "Runde"
     plot_idx = 0
-        # Plot für jede Spalte außer "Runde" und die letzten zwei Spalten
+    # Plot für jede Spalte außer "Runde" und die letzten zwei Spalten
     columns_to_plot = columns_of_interest[1:-2]  # skip "Runde" and last two
     for col in columns_to_plot:
         if col == "Runde" or col not in df.columns:

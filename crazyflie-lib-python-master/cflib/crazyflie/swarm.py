@@ -28,7 +28,7 @@ from cflib.crazyflie.log import LogConfig
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 from cflib.crazyflie.syncLogger import SyncLogger
 
-SwarmPosition = namedtuple('SwarmPosition', 'x y z')
+SwarmPosition = namedtuple("SwarmPosition", "x y z")
 
 
 class _Factory:
@@ -87,7 +87,7 @@ class Swarm:
         Open links to all individuals in the swarm
         """
         if self._is_open:
-            raise Exception('Already opened')
+            raise Exception("Already opened")
 
         try:
             self.parallel_safe(lambda scf: scf.open_link())
@@ -113,16 +113,16 @@ class Swarm:
         self.close_links()
 
     def __get_estimated_position(self, scf):
-        log_config = LogConfig(name='stateEstimate', period_in_ms=10)
-        log_config.add_variable('stateEstimate.x', 'float')
-        log_config.add_variable('stateEstimate.y', 'float')
-        log_config.add_variable('stateEstimate.z', 'float')
+        log_config = LogConfig(name="stateEstimate", period_in_ms=10)
+        log_config.add_variable("stateEstimate.x", "float")
+        log_config.add_variable("stateEstimate.y", "float")
+        log_config.add_variable("stateEstimate.z", "float")
 
         with SyncLogger(scf, log_config) as logger:
             for entry in logger:
-                x = entry[1]['stateEstimate.x']
-                y = entry[1]['stateEstimate.y']
-                z = entry[1]['stateEstimate.z']
+                x = entry[1]["stateEstimate.x"]
+                y = entry[1]["stateEstimate.y"]
+                z = entry[1]["stateEstimate.z"]
                 self._positions[scf.cf.link_uri] = SwarmPosition(x, y, z)
                 break
 
@@ -135,10 +135,10 @@ class Swarm:
         return self._positions
 
     def __wait_for_position_estimator(self, scf):
-        log_config = LogConfig(name='Kalman Variance', period_in_ms=500)
-        log_config.add_variable('kalman.varPX', 'float')
-        log_config.add_variable('kalman.varPY', 'float')
-        log_config.add_variable('kalman.varPZ', 'float')
+        log_config = LogConfig(name="Kalman Variance", period_in_ms=500)
+        log_config.add_variable("kalman.varPX", "float")
+        log_config.add_variable("kalman.varPY", "float")
+        log_config.add_variable("kalman.varPZ", "float")
 
         var_y_history = [1000] * 10
         var_x_history = [1000] * 10
@@ -150,11 +150,11 @@ class Swarm:
             for log_entry in logger:
                 data = log_entry[1]
 
-                var_x_history.append(data['kalman.varPX'])
+                var_x_history.append(data["kalman.varPX"])
                 var_x_history.pop(0)
-                var_y_history.append(data['kalman.varPY'])
+                var_y_history.append(data["kalman.varPY"])
                 var_y_history.pop(0)
-                var_z_history.append(data['kalman.varPZ'])
+                var_z_history.append(data["kalman.varPZ"])
                 var_z_history.pop(0)
 
                 min_x = min(var_x_history)
@@ -164,16 +164,14 @@ class Swarm:
                 min_z = min(var_z_history)
                 max_z = max(var_z_history)
 
-                if (max_x - min_x) < threshold and (
-                        max_y - min_y) < threshold and (
-                        max_z - min_z) < threshold:
+                if (max_x - min_x) < threshold and (max_y - min_y) < threshold and (max_z - min_z) < threshold:
                     break
 
     def __reset_estimator(self, scf):
         cf = scf.cf
-        cf.param.set_value('kalman.resetEstimation', '1')
+        cf.param.set_value("kalman.resetEstimation", "1")
         time.sleep(0.1)
-        cf.param.set_value('kalman.resetEstimation', '0')
+        cf.param.set_value("kalman.resetEstimation", "0")
         self.__wait_for_position_estimator(scf)
 
     def reset_estimators(self):
@@ -248,8 +246,7 @@ class Swarm:
         reporter = self.Reporter()
 
         for uri, scf in self._cfs.items():
-            args = [func, reporter] + \
-                self._process_args_dict(scf, uri, args_dict)
+            args = [func, reporter] + self._process_args_dict(scf, uri, args_dict)
 
             thread = Thread(target=self._thread_function_wrapper, args=args)
             threads.append(thread)
@@ -260,8 +257,7 @@ class Swarm:
 
         if reporter.is_error_reported():
             first_error = reporter.errors[0]
-            raise Exception('One or more threads raised an exception when '
-                            'executing parallel task') from first_error
+            raise Exception("One or more threads raised an exception when " "executing parallel task") from first_error
 
     def _thread_function_wrapper(self, *args):
         reporter = None

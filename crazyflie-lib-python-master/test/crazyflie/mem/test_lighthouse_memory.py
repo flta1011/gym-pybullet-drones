@@ -45,15 +45,15 @@ class TestLighthouseMemory(unittest.TestCase):
         actual = calib.as_file_object()
 
         # Assert
-        self.assertEqual(1234, actual['uid'])
-        self.assertEqual(1.0, actual['sweeps'][0]['curve'])
-        self.assertEqual(2.0, actual['sweeps'][0]['phase'])
-        self.assertEqual(3.0, actual['sweeps'][0]['tilt'])
-        self.assertEqual(4.0, actual['sweeps'][0]['gibmag'])
-        self.assertEqual(5.0, actual['sweeps'][0]['gibphase'])
-        self.assertEqual(6.0, actual['sweeps'][0]['ogeemag'])
-        self.assertEqual(7.0, actual['sweeps'][0]['ogeephase'])
-        self.assertEqual(8.0, actual['sweeps'][1]['curve'])
+        self.assertEqual(1234, actual["uid"])
+        self.assertEqual(1.0, actual["sweeps"][0]["curve"])
+        self.assertEqual(2.0, actual["sweeps"][0]["phase"])
+        self.assertEqual(3.0, actual["sweeps"][0]["tilt"])
+        self.assertEqual(4.0, actual["sweeps"][0]["gibmag"])
+        self.assertEqual(5.0, actual["sweeps"][0]["gibphase"])
+        self.assertEqual(6.0, actual["sweeps"][0]["ogeemag"])
+        self.assertEqual(7.0, actual["sweeps"][0]["ogeephase"])
+        self.assertEqual(8.0, actual["sweeps"][1]["curve"])
 
     def test_bs_calibration_file_write_read(self):
         # Fixture
@@ -90,8 +90,8 @@ class TestLighthouseMemory(unittest.TestCase):
         actual = geo.as_file_object()
 
         # Assert
-        self.assertEqual([1.0, 2.0, 3.0], actual['origin'])
-        self.assertEqual([[1.0, 2.0, 3.0], [1.1, 2.1, 3.1], [1.2, 2.2, 3.2]], actual['rotation'])
+        self.assertEqual([1.0, 2.0, 3.0], actual["origin"])
+        self.assertEqual([[1.0, 2.0, 3.0], [1.1, 2.1, 3.1], [1.2, 2.2, 3.2]], actual["rotation"])
 
     def test_bs_geometry_file_write_read(self):
         # Fixture

@@ -26,8 +26,8 @@
 Bootloading utilities for the Crazyflie.
 """
 
-__author__ = 'Bitcraze AB'
-__all__ = ['BootVersion', 'TargetTypes', 'Target']
+__author__ = "Bitcraze AB"
+__all__ = ["BootVersion", "TargetTypes", "Target"]
 
 
 class BootVersion:
@@ -37,12 +37,11 @@ class BootVersion:
 
     @staticmethod
     def to_ver_string(ver):
-        if (ver == BootVersion.CF1_PROTO_VER_0 or ver == BootVersion.
-                CF1_PROTO_VER_1):
-            return 'Crazyflie Nano Quadcopter (1.0)'
+        if ver == BootVersion.CF1_PROTO_VER_0 or ver == BootVersion.CF1_PROTO_VER_1:
+            return "Crazyflie Nano Quadcopter (1.0)"
         if ver == BootVersion.CF2_PROTO_VER:
-            return 'Crazyflie 2.0'
-        return 'Unknown'
+            return "Crazyflie 2.0"
+        return "Unknown"
 
     @staticmethod
     def is_cf2(ver):
@@ -56,16 +55,16 @@ class TargetTypes:
     @staticmethod
     def to_string(target):
         if target == TargetTypes.STM32:
-            return 'stm32'
+            return "stm32"
         if target == TargetTypes.NRF51:
-            return 'nrf51'
-        return 'Unknown'
+            return "nrf51"
+        return "Unknown"
 
     @staticmethod
     def from_string(name):
-        if name == 'stm32':
+        if name == "stm32":
             return TargetTypes.STM32
-        if name == 'nrf51':
+        if name == "nrf51":
             return TargetTypes.NRF51
         return 0
 
@@ -80,16 +79,12 @@ class Target:
         self.flash_pages = 0
         self.start_page = 0
         self.version = None
-        self.cpuid = ''
+        self.cpuid = ""
         self.data = None
 
     def __str__(self):
-        ret = ''
-        ret += 'Target info: {} (0x{:X})\n'.format(
-            TargetTypes.to_string(self.id), self.id)
-        ret += 'Flash pages: {} | Page size: {} | Buffer pages: {} |' \
-               ' Start page: {} | Version: {} \n'.format(self.flash_pages, self.page_size,
-                                                         self.buffer_pages, self.start_page, self.version)
-        ret += '%d KBytes of flash available for firmware image.' % (
-            (self.flash_pages - self.start_page) * self.page_size / 1024)
+        ret = ""
+        ret += "Target info: {} (0x{:X})\n".format(TargetTypes.to_string(self.id), self.id)
+        ret += "Flash pages: {} | Page size: {} | Buffer pages: {} |" " Start page: {} | Version: {} \n".format(self.flash_pages, self.page_size, self.buffer_pages, self.start_page, self.version)
+        ret += "%d KBytes of flash available for firmware image." % ((self.flash_pages - self.start_page) * self.page_size / 1024)
         return ret

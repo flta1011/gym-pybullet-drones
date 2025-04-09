@@ -44,16 +44,14 @@ class LocalizationTest(unittest.TestCase):
         calib_bs_list = [1, 3, 5, 7, 9, 11, 13, 15]
 
         # test
-        actual = self.sut.send_lh_persist_data_packet(
-            geo_bs_list, calib_bs_list)
+        actual = self.sut.send_lh_persist_data_packet(geo_bs_list, calib_bs_list)
 
         # assert
         data_check = 2863289685
         expected = CRTPPacket()
         expected.port = CRTPPort.LOCALIZATION
         expected.channel = self.sut.GENERIC_CH
-        expected.data = struct.pack(
-            '<BI', Localization.LH_PERSIST_DATA, data_check)
+        expected.data = struct.pack("<BI", Localization.LH_PERSIST_DATA, data_check)
 
         actual_object = self.cf_mock.send_packet.call_args
         actual = actual_object[0][0]
@@ -83,10 +81,10 @@ class LocalizationTest(unittest.TestCase):
             self.sut.send_lh_persist_data_packet(invalid_list, [])
         except Exception as e:
             actual = e.args[0]
-            expected = 'Geometry BS list is not valid'
+            expected = "Geometry BS list is not valid"
             self.assertEqual(expected, actual)
         else:
-            self.fail('Expect exception')
+            self.fail("Expect exception")
 
     def test_that_lighthouse_persist_raises_for_calib_list_bs_too_high(self):
         # fixture
@@ -99,10 +97,10 @@ class LocalizationTest(unittest.TestCase):
             self.sut.send_lh_persist_data_packet([], invalid_list)
         except Exception as e:
             actual = e.args[0]
-            expected = 'Calibration BS list is not valid'
+            expected = "Calibration BS list is not valid"
             self.assertEqual(expected, actual)
         else:
-            self.fail('Expect exception')
+            self.fail("Expect exception")
 
     def test_that_lighthouse_persist_raises_for_geo_list_bs_negative(self):
         # fixture
@@ -114,10 +112,10 @@ class LocalizationTest(unittest.TestCase):
             self.sut.send_lh_persist_data_packet(invalid_list, [])
         except Exception as e:
             actual = e.args[0]
-            expected = 'Geometry BS list is not valid'
+            expected = "Geometry BS list is not valid"
             self.assertEqual(expected, actual)
         else:
-            self.fail('Expect exception')
+            self.fail("Expect exception")
 
     def test_that_lighthouse_persist_raises_for_calib_list_bs_negative(self):
         # fixture
@@ -129,7 +127,7 @@ class LocalizationTest(unittest.TestCase):
             self.sut.send_lh_persist_data_packet([], invalid_list)
         except Exception as e:
             actual = e.args[0]
-            expected = 'Calibration BS list is not valid'
+            expected = "Calibration BS list is not valid"
             self.assertEqual(expected, actual)
         else:
-            self.fail('Expect exception')
+            self.fail("Expect exception")

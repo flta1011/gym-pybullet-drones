@@ -50,6 +50,7 @@ from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 
 class MotionCommander:
     """The motion commander"""
+
     VELOCITY = 0.2
     RATE = 360.0 / 5
 
@@ -84,10 +85,10 @@ class MotionCommander:
         :return:
         """
         if self._is_flying:
-            raise Exception('Already flying')
+            raise Exception("Already flying")
 
         if not self._cf.is_connected():
-            raise Exception('Crazyflie is not connected')
+            raise Exception("Crazyflie is not connected")
 
         self._is_flying = True
         self._reset_position_estimator()
@@ -249,8 +250,7 @@ class MotionCommander:
         time.sleep(flight_time)
         self.stop()
 
-    def move_distance(self, distance_x_m, distance_y_m, distance_z_m,
-                      velocity=VELOCITY):
+    def move_distance(self, distance_x_m, distance_y_m, distance_z_m, velocity=VELOCITY):
         """
         Move in a straight line.
         positive X is forward
@@ -263,9 +263,7 @@ class MotionCommander:
         :param velocity: The velocity of the motion (meters/second)
         :return:
         """
-        distance = math.sqrt(distance_x_m * distance_x_m +
-                             distance_y_m * distance_y_m +
-                             distance_z_m * distance_z_m)
+        distance = math.sqrt(distance_x_m * distance_x_m + distance_y_m * distance_y_m + distance_z_m * distance_z_m)
         flight_time = distance / velocity
 
         velocity_x = velocity * distance_x_m / distance
@@ -398,24 +396,22 @@ class MotionCommander:
         :param rate: The angular rate (degrees/second)
         :return:
         """
-        self._set_vel_setpoint(
-            velocity_x_m, velocity_y_m, velocity_z_m, rate_yaw)
+        self._set_vel_setpoint(velocity_x_m, velocity_y_m, velocity_z_m, rate_yaw)
 
     def _set_vel_setpoint(self, velocity_x, velocity_y, velocity_z, rate_yaw):
         if not self._is_flying:
-            raise Exception('Can not move on the ground. Take off first!')
-        self._thread.set_vel_setpoint(
-            velocity_x, velocity_y, velocity_z, rate_yaw)
+            raise Exception("Can not move on the ground. Take off first!")
+        self._thread.set_vel_setpoint(velocity_x, velocity_y, velocity_z, rate_yaw)
 
     def _reset_position_estimator(self):
-        self._cf.param.set_value('kalman.resetEstimation', '1')
+        self._cf.param.set_value("kalman.resetEstimation", "1")
         time.sleep(0.1)
-        self._cf.param.set_value('kalman.resetEstimation', '0')
+        self._cf.param.set_value("kalman.resetEstimation", "0")
         time.sleep(2)
 
 
 class _SetPointThread(Thread):
-    TERMINATE_EVENT = 'terminate'
+    TERMINATE_EVENT = "terminate"
     UPDATE_PERIOD = 0.2
     ABS_Z_INDEX = 3
 

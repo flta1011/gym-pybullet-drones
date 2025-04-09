@@ -29,7 +29,7 @@ import numpy as np
 # @article{ year={2014}, issn={0920-5691}, journal={International Journal of Computer Vision}, volume={109}, number={3}, doi={10.1007/s11263-014-0725-5}, title={Infinitesimal Plane-Based Pose Estimation}, url={http://dx.doi.org/10.1007/s11263-014-0725-5}, publisher={Springer US}, keywords={Plane; Pose; SfM; PnP; Homography}, author={Collins, Toby and Bartoli, Adrien}, pages={252-286}, language={English} }  # noqa
 
 
-def mat_run(U, Q, hEstMethod='DLT'):
+def mat_run(U, Q, hEstMethod="DLT"):
     """
     The solution to Perspective IPPE with point correspondences computed
     between points in world coordinates on the plane z=0, and normalised points in the
@@ -54,13 +54,13 @@ def mat_run(U, Q, hEstMethod='DLT'):
     IPPEPoses: A Python dictionary that contains 2 sets of pose solution from IPPE including rotation matrix
         translation matrix, and reprojection error
     """
-    if hEstMethod not in ['Harker', 'DLT']:
-        print('hEstMethod Error')
+    if hEstMethod not in ["Harker", "DLT"]:
+        print("hEstMethod Error")
 
     # Inputs shape checking
-    assert (U.shape[0] == 2 or U.shape[0] == 3)
-    assert (U.shape[1] == Q.shape[1])
-    assert (Q.shape[0] == 2)
+    assert U.shape[0] == 2 or U.shape[0] == 3
+    assert U.shape[1] == Q.shape[1]
+    assert Q.shape[0] == 2
 
     n = U.shape[1]
     modelDims = U.shape[0]
@@ -71,8 +71,8 @@ def mat_run(U, Q, hEstMethod='DLT'):
         # Zero center the model points
         # Zero center the model points
         Pbar = np.vstack((np.mean(U, axis=1, keepdims=True), 0))
-        U[0, :] = U[0, :]-Pbar[0]
-        U[1, :] = U[1, :]-Pbar[1]
+        U[0, :] = U[0, :] - Pbar[0]
+        U[1, :] = U[1, :] - Pbar[1]
     else:
         # Rotate the model points onto the plane z=0 and zero center them
         Pbar = np.mean(U[:1])
@@ -88,19 +88,19 @@ def mat_run(U, Q, hEstMethod='DLT'):
 
     # : Add support for Harker function
     # Compute the model to image homography
-    if hEstMethod == 'DLT':
+    if hEstMethod == "DLT":
         _U = np.vstack((U, np.ones((1, n))))
         _Q = np.vstack((Q, np.ones((1, n))))
         H = homography2d(_U, _Q)
 
-    H = H/H[2, 2]
+    H = H / H[2, 2]
 
     # Compute the Jacobian J of the homography at (0,0)
     J = np.zeros((2, 2))
-    J[0, 0] = H[0, 0]-H[2, 0]*H[0, 2]
-    J[0, 1] = H[0, 1]-H[2, 1]*H[0, 2]
-    J[1, 0] = H[1, 0]-H[2, 0]*H[1, 2]
-    J[1, 1] = H[1, 1]-H[2, 1]*H[1, 2]
+    J[0, 0] = H[0, 0] - H[2, 0] * H[0, 2]
+    J[0, 1] = H[0, 1] - H[2, 1] * H[0, 2]
+    J[1, 0] = H[1, 0] - H[2, 0] * H[1, 2]
+    J[1, 1] = H[1, 1] - H[2, 1] * H[1, 2]
 
     # Compute rotate solution
     v = np.vstack((H[0, 2], H[1, 2]))
@@ -131,12 +131,12 @@ def mat_run(U, Q, hEstMethod='DLT'):
         [R1, R2, t1, t2, reprojErr1, reprojErr2] = swapSolutions(R1, R2, t1, t2, reprojErr1, reprojErr2)
 
     IPPEPoses = {}
-    IPPEPoses['R1'] = R1
-    IPPEPoses['t1'] = t1
-    IPPEPoses['R2'] = R2
-    IPPEPoses['t2'] = t2
-    IPPEPoses['reprojError1'] = reprojErr1
-    IPPEPoses['reprojError2'] = reprojErr2
+    IPPEPoses["R1"] = R1
+    IPPEPoses["t1"] = t1
+    IPPEPoses["R2"] = R2
+    IPPEPoses["t2"] = t2
+    IPPEPoses["reprojError1"] = reprojErr1
+    IPPEPoses["reprojError2"] = reprojErr2
 
     return IPPEPoses
 
@@ -162,12 +162,12 @@ def computeReprojErrs(R1, R2, t1, t2, U, Q):
     PCam2[1, :] = PCam2[1, :] + t2[1]
     PCam2[2, :] = PCam2[2, :] + t2[2]
 
-    Qest_1 = PCam1/np.vstack((PCam1[2, :], PCam1[2, :], PCam1[2, :]))
-    Qest_2 = PCam2/np.vstack((PCam2[2, :], PCam2[2, :], PCam2[2, :]))
+    Qest_1 = PCam1 / np.vstack((PCam1[2, :], PCam1[2, :], PCam1[2, :]))
+    Qest_2 = PCam2 / np.vstack((PCam2[2, :], PCam2[2, :], PCam2[2, :]))
 
     # Compute reprojection errors:
-    reprojErr1 = np.linalg.norm(Qest_1[0:2, :]-Q)
-    reprojErr2 = np.linalg.norm(Qest_2[0:2, :]-Q)
+    reprojErr1 = np.linalg.norm(Qest_1[0:2, :] - Q)
+    reprojErr2 = np.linalg.norm(Qest_2[0:2, :] - Q)
 
     return [reprojErr1, reprojErr2]
 
@@ -190,11 +190,11 @@ def estT(R, psPlane, Q):
 
     Ax[:, 0] = 1
     Ax[:, 2] = -Q[0, :]
-    bx[:] = (Q[0, :]*Ps[2, :] - Ps[0, :]).reshape(4, 1)
+    bx[:] = (Q[0, :] * Ps[2, :] - Ps[0, :]).reshape(4, 1)
 
     Ay[:, 1] = 1
     Ay[:, 2] = -Q[1, :]
-    by[:] = (Q[1, :]*Ps[2, :] - Ps[1, :]).reshape(4, 1)
+    by[:] = (Q[1, :] * Ps[2, :] - Ps[1, :]).reshape(4, 1)
 
     A = np.vstack((Ax, Ay))
     b = np.vstack((bx, by))
@@ -239,10 +239,14 @@ def IPPE_inv33(A):
     a32 = A[2, 1]
     a33 = A[2, 2]
 
-    Ainv = np.vstack((np.array([a22*a33 - a23*a32, a13*a32 - a12*a33, a12*a23 - a13*a22]),
-                      np.array([a23*a31 - a21*a33, a11*a33 - a13*a31, a13*a21 - a11*a23]),
-                      np.array([a21*a32 - a22*a31, a12*a31 - a11*a32, a11*a22 - a12*a21])))
-    Ainv = Ainv/(a11*a22*a33 - a11*a23*a32 - a12*a21*a33 + a12*a23*a31 + a13*a21*a32 - a13*a22*a31)
+    Ainv = np.vstack(
+        (
+            np.array([a22 * a33 - a23 * a32, a13 * a32 - a12 * a33, a12 * a23 - a13 * a22]),
+            np.array([a23 * a31 - a21 * a33, a11 * a33 - a13 * a31, a13 * a21 - a11 * a23]),
+            np.array([a21 * a32 - a22 * a31, a12 * a31 - a11 * a32, a11 * a22 - a12 * a21]),
+        )
+    )
+    Ainv = Ainv / (a11 * a22 * a33 - a11 * a23 * a32 - a12 * a21 * a33 + a12 * a23 * a31 + a13 * a21 * a32 - a13 * a22 * a31)
     return Ainv
 
 
@@ -273,25 +277,25 @@ def IPPE_dec(v, J):
     else:
         # the plane is not fronto-parallel to the camera, so set the corrective rotation Rv
         s = np.linalg.norm(np.vstack((v, 1)))
-        costh = 1./s
-        sinth = np.sqrt(1-1./s**2)
-        Kcrs = 1./t*(np.vstack([np.hstack([np.zeros((2, 2)), v]), np.hstack([-v.T, np.zeros((1, 1))])]))
-        Rv = np.eye(3) + sinth*Kcrs + (1.-costh)*Kcrs.dot(Kcrs)
+        costh = 1.0 / s
+        sinth = np.sqrt(1 - 1.0 / s**2)
+        Kcrs = 1.0 / t * (np.vstack([np.hstack([np.zeros((2, 2)), v]), np.hstack([-v.T, np.zeros((1, 1))])]))
+        Rv = np.eye(3) + sinth * Kcrs + (1.0 - costh) * Kcrs.dot(Kcrs)
 
     # Set up 2x2 SVD decomposition
     B = np.hstack((np.eye(2), -v)).dot(Rv[:, 0:2])
-    dt = B[0, 0]*B[1, 1] - B[0, 1]*B[1, 0]
-    Binv = np.vstack([np.hstack([B[1, 1]/dt, -B[0, 1]/dt]), np.hstack([-B[1, 0]/dt, B[0, 0]/dt])])
+    dt = B[0, 0] * B[1, 1] - B[0, 1] * B[1, 0]
+    Binv = np.vstack([np.hstack([B[1, 1] / dt, -B[0, 1] / dt]), np.hstack([-B[1, 0] / dt, B[0, 0] / dt])])
     A = Binv.dot(J)
 
     # Compute the largest singular value of A
     AAT = A.dot(A.T)
-    gamma = np.sqrt(1./2*(AAT[0, 0] + AAT[1, 1] + np.sqrt((AAT[0, 0]-AAT[1, 1])**2 + 4*AAT[0, 1]**2)))
+    gamma = np.sqrt(1.0 / 2 * (AAT[0, 0] + AAT[1, 1] + np.sqrt((AAT[0, 0] - AAT[1, 1]) ** 2 + 4 * AAT[0, 1] ** 2)))
 
     # Reconstruct the full rotation matrices
-    R22_tild = A/gamma
+    R22_tild = A / gamma
 
-    h = np.eye(2)-R22_tild.T.dot(R22_tild)
+    h = np.eye(2) - R22_tild.T.dot(R22_tild)
     b = np.vstack((np.sqrt(h[0, 0]), np.sqrt(h[1, 1])))
     if h[0, 1] < 0:
         b[1] = -b[1]
@@ -311,9 +315,9 @@ def IPPE_crs(v1, v2):
     3D cross product for vectors v1 and v2
     """
     v3 = np.zeros((3, 1))
-    v3[0] = v1[1]*v2[2]-v1[2]*v2[1]
-    v3[1] = v1[2]*v2[0]-v1[0]*v2[2]
-    v3[2] = v1[0]*v2[1]-v1[1]*v2[0]
+    v3[0] = v1[1] * v2[2] - v1[2] * v2[1]
+    v3[1] = v1[2] * v2[0] - v1[0] * v2[2]
+    v3[2] = v1[0] * v2[1] - v1[1] * v2[0]
 
     return v3
 
@@ -334,7 +338,7 @@ def homography2d(x1, x2):
 
     Npts = x1.shape[1]
 
-    A = np.zeros((3*Npts, 9))
+    A = np.zeros((3 * Npts, 9))
 
     O = np.zeros(3)  # noqa
 
@@ -343,9 +347,9 @@ def homography2d(x1, x2):
         x = x2[0, i]
         y = x2[1, i]
         w = x2[2, i]
-        A[3*i, :] = np.array([O, -w*X, y*X]).reshape(1, 9)
-        A[3*i+1, :] = np.array([w*X, O, -x*X]).reshape(1, 9)
-        A[3*i+2, :] = np.array([-y*X, x*X, O]).reshape(1, 9)
+        A[3 * i, :] = np.array([O, -w * X, y * X]).reshape(1, 9)
+        A[3 * i + 1, :] = np.array([w * X, O, -x * X]).reshape(1, 9)
+        A[3 * i + 2, :] = np.array([-y * X, x * X, O]).reshape(1, 9)
 
     [U, D, Vh] = np.linalg.svd(A)
     V = Vh.T
@@ -377,7 +381,7 @@ def normalise2dpts(pts):
     T: The 3x3 transformation matrix, newpts = T*pts
     """
     if pts.shape[0] != 3:
-        print('Input shoud be 3')
+        print("Input shoud be 3")
 
     finiteind = np.nonzero(abs(pts[2, :]) > np.spacing(1))
 
@@ -386,22 +390,22 @@ def normalise2dpts(pts):
 
     dist = []
     for i in finiteind:
-        pts[0, i] = pts[0, i]/pts[2, i]
-        pts[1, i] = pts[1, i]/pts[2, i]
+        pts[0, i] = pts[0, i] / pts[2, i]
+        pts[1, i] = pts[1, i] / pts[2, i]
         pts[2, i] = 1
 
         c = np.mean(pts[0:2, i].T, axis=0).T
 
-        newp1 = pts[0, i]-c[0]
-        newp2 = pts[1, i]-c[1]
+        newp1 = pts[0, i] - c[0]
+        newp2 = pts[1, i] - c[1]
 
         dist.append(np.sqrt(newp1**2 + newp2**2))
 
     meandist = np.mean(dist[:])
 
-    scale = np.sqrt(2)/meandist
+    scale = np.sqrt(2) / meandist
 
-    T = np.array([[scale, 0, -scale*c[0]], [0, scale, -scale*c[1]], [0, 0, 1]])
+    T = np.array([[scale, 0, -scale * c[0]], [0, scale, -scale * c[1]], [0, 0, 1]])
 
     newpts = T.dot(pts)
 

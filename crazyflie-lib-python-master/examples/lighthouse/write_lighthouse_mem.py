@@ -42,7 +42,7 @@ class WriteMem:
     def __init__(self, uri, geo_dict, calib_dict):
         self._event = Event()
 
-        with SyncCrazyflie(uri, cf=Crazyflie(rw_cache='./cache')) as scf:
+        with SyncCrazyflie(uri, cf=Crazyflie(rw_cache="./cache")) as scf:
             helper = LighthouseMemHelper(scf.cf)
 
             helper.write_geos(geo_dict, self._data_written)
@@ -55,16 +55,16 @@ class WriteMem:
 
     def _data_written(self, success):
         if success:
-            print('Data written')
+            print("Data written")
         else:
-            print('Write failed')
+            print("Write failed")
 
         self._event.set()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # URI to the Crazyflie to connect to
-    uri = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
+    uri = uri_helper.uri_from_env(default="radio://0/80/2M/E7E7E7E7E7")
 
     # Initialize the low-level drivers
     cflib.crtp.init_drivers()

@@ -35,7 +35,7 @@ class AnchorData:
         self.is_valid = is_valid
 
     def set_from_mem_data(self, data):
-        x, y, z, self.is_valid = struct.unpack('<fff?', data)
+        x, y, z, self.is_valid = struct.unpack("<fff?", data)
         self.position = (x, y, z)
 
 
@@ -50,8 +50,7 @@ class LocoMemory(MemoryElement):
     MEM_LOCO_PAGE_LEN = (3 * SIZE_OF_FLOAT) + 1
 
     def __init__(self, id, type, size, mem_handler):
-        super(LocoMemory, self).__init__(id=id, type=type, size=size,
-                                         mem_handler=mem_handler)
+        super(LocoMemory, self).__init__(id=id, type=type, size=size, mem_handler=mem_handler)
         self._update_finished_cb = None
 
         self.anchor_data = []
@@ -67,12 +66,10 @@ class LocoMemory(MemoryElement):
                 if self.nr_of_anchors == 0:
                     done = True
                 else:
-                    self.anchor_data = \
-                        [AnchorData() for _ in range(self.nr_of_anchors)]
+                    self.anchor_data = [AnchorData() for _ in range(self.nr_of_anchors)]
                     self._request_page(0)
             else:
-                page = int((addr - LocoMemory.MEM_LOCO_ANCHOR_BASE) /
-                           LocoMemory.MEM_LOCO_ANCHOR_PAGE_SIZE)
+                page = int((addr - LocoMemory.MEM_LOCO_ANCHOR_BASE) / LocoMemory.MEM_LOCO_ANCHOR_PAGE_SIZE)
 
                 self.anchor_data[page].set_from_mem_data(data)
 
@@ -95,16 +92,14 @@ class LocoMemory(MemoryElement):
             self.anchor_data = []
             self.nr_of_anchors = 0
             self.valid = False
-            logger.debug('Updating content of memory {}'.format(self.id))
+            logger.debug("Updating content of memory {}".format(self.id))
 
             # Start reading the header
-            self.mem_handler.read(self, LocoMemory.MEM_LOCO_INFO,
-                                  LocoMemory.MEM_LOCO_INFO_LEN)
+            self.mem_handler.read(self, LocoMemory.MEM_LOCO_INFO, LocoMemory.MEM_LOCO_INFO_LEN)
 
     def disconnect(self):
         self._update_finished_cb = None
 
     def _request_page(self, page):
-        addr = LocoMemory.MEM_LOCO_ANCHOR_BASE + \
-            LocoMemory.MEM_LOCO_ANCHOR_PAGE_SIZE * page
+        addr = LocoMemory.MEM_LOCO_ANCHOR_BASE + LocoMemory.MEM_LOCO_ANCHOR_PAGE_SIZE * page
         self.mem_handler.read(self, addr, LocoMemory.MEM_LOCO_PAGE_LEN)
