@@ -96,7 +96,7 @@ DEFAULT_PRETRAINED_MODEL_PATH = (
     "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M6_R6_O5_A3_TR1_T1_20250407-013856/save-04.07.2025_01.38.56/best_model.zip"
 )
 
-Ziel_Training_TIME_In_Simulation = 24 * 60 * 60  # 5 Stunden
+Ziel_Training_TIME_In_Simulation = 150 * 60 * 60  # 5 Stunden
 DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
 
@@ -143,7 +143,7 @@ DEFAULT_PUSHBACK_ACTIVE = False
 
 DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
-NumberOfInterationsTillNextCheckpoint = 10000  # Anzahl Steps, bis ein Modell als .zip gespeichert wird
+NumberOfInterationsTillNextCheckpoint = 250000  # Anzahl Steps, bis ein Modell als .zip gespeichert wird
 
 DEFAULT_TRAIN_TIMESTEPS = Ziel_Training_TIME_In_Simulation * DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULT_TARGET_REWARD = 99999999999999
@@ -163,21 +163,21 @@ DEFAULT_VelocityScale = 0.5
 ###########################################################REWARD-SETTINGS###########################################################
 # Bei wie viel Prozent der Fläche einen Print ausgeben
 DEFAULT_Procent_Step = 0.01
-DEFAULT_REWARD_FOR_NEW_FIELD = 2
-DEFAULT_Punishment_for_Step = 0
-DEFAULT_Multiplier_Collision_Penalty = 10
+DEFAULT_REWARD_FOR_NEW_FIELD = 4
+DEFAULT_Punishment_for_Step = -0.5
+DEFAULT_Multiplier_Collision_Penalty = 2
 
 
 ###########################################################EXPLORATION/MAZE-SETTINGS###########################################################
 DEFAULT_explore_Matrix_Size = 5  # 5 bedeutet eine 5x5 Matrix um die Drohne herum (in diesem Bereich kann die Drohne die Felder einsammeln und diese als erkundet markieren)
-DEFAULT_List_MazesToUse = (0, 21)  # Mazes 0-21 stehen zur Verfügung
-DEFAULT_List_Start_PositionsToUse = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)  # Startpositionen 0-10  stehen zur Verfügung
-DEFAULT_MaxRoundsOnOneMaze = 0  # nach wie vielen Schritten wird ein neues maze gewählt # NOTE - Verändert nichts
-DEFAULT_MaxRoundsSameStartingPositions = 0
+DEFAULT_List_MazesToUse = (22,23,24,25)  # Mazes 0-26 stehen zur Verfügung
+DEFAULT_List_Start_PositionsToUse = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)  # Startpositionen 0-9  stehen zur Verfügung (10 Startpositionen)
+DEFAULT_MaxRoundsOnOneMaze = 6  # nach wie vielen Schritten wird ein neues maze gewählt # NOTE - Verändert nichts
+DEFAULT_MaxRoundsSameStartingPositions = 2
 
-DEFAULT_collision_penalty_terminated = -50  # mit -10 Trainiert SAC gut, bleibt aber noch ca. 50 mal an der Wand hängen--
+DEFAULT_collision_penalty_terminated = -100  # mit -10 Trainiert SAC gut, bleibt aber noch ca. 50 mal an der Wand hängen--
 DEFAULT_Terminated_Wall_Distance = 0.15  # worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25
-DEFAULT_no_collision_reward = 0  # nur bei R5 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
+DEFAULT_no_collision_reward = 1  # nur bei R5 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
 
 # R7 - Negative Reward Map Settings
 DEFAULT_Punishment_for_Walls = 8
@@ -188,7 +188,7 @@ DEFAULT_Influence_of_Walls = 4
 - M1:   PPO
 - M2:   DQN_CNNPolicy_StandardFeatureExtractor
 - M3:   DQN_MLPPolicy
-- M4:   DQN_CNNPolicy_CustomFeatureExtractor
+- M4:   DQN_CNNPolicy_CustomFeatureExtractor # NO SUPPORT 
 - M5:   DQN_NN_MultiInputPolicy mit fullyConnectLayer
 - M6:   SAC
 """
@@ -218,7 +218,7 @@ REWARD_VERSION = "R5"
 - O8: X-Pos,Y-Pos, 4-raycast_readings, 4-interest_values, n-last_clipped_actions
 - O9: Slam-image, x-Pos, y-Pos, 4-racast_readings, 4-interest_values, n-last_clipped_actions
 """
-OBSERVATION_TYPE = "O8"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
+OBSERVATION_TYPE = "O7"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
 
 #####################################ACTION_TYPE###########################
 """ActionType:'
@@ -543,7 +543,7 @@ def run(
                         # learning_rate=0.0004, #nicht verwendet --> erst mal standard fürs Training
                         device="cuda:0",
                         verbose=1,
-                        buffer_size=50000,
+                        #buffer_size=500000,
                     )
 
             case "M3":  # M3: DQN_MLPPolicy
@@ -583,10 +583,10 @@ def run(
                         policy_kwargs=policy_kwargs,
                         device="cuda:0",
                         # learning_rate=0.0004,
-                        learning_rate=0.001,
+                        #learning_rate=0.001,
                         verbose=1,
                         seed=42,
-                        buffer_size=5000,
+                        #buffer_size=5000,
                     )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
             # NOTE - OHNE ZUFALLSWERTE AM ANFANG
 
@@ -605,7 +605,7 @@ def run(
                         # policy_kwargs=dict(net_arch=[128, 64, 32]),
                         # learning_rate=0.004,
                         verbose=1,
-                        batch_size=32,
+                        #batch_size=32,
                         seed=42,
                         buffer_size=500000,
                         # gamma=0.8,

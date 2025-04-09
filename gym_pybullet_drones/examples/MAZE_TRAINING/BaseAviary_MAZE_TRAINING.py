@@ -238,11 +238,11 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         ###########################################################MAZE-SETTINGS###########################################################
         # NOTE - Maze Anzahl Wechsel
-        self.Maze_number = 0  # Init-Wert, wird im Laufe der Zeit überschrieben!
+        self.Maze_number = List_MazesToUse[0]  # Init-Wert, wird im Laufe der Zeit überschrieben!
         self.MaxRoundsOnOneMaze = MaxRoundsOnOneMaze
         self.New_Maze_number_counter = 0
         # The random number to generate the init and target position
-        self.random_number_Start = 0  # Init-Wert, wird im Laufe der Zeit überschrieben!
+        self.random_number_Start = List_Start_PositionsToUse[0]  # Init-Wert, wird im Laufe der Zeit überschrieben!
         self.List_Start_PositionsToUse = List_Start_PositionsToUse
         self.random_number_Target = 1  # Init-Wert, wird im Laufe der Zeit überschrieben!
         self.map_size_slam = map_size_slam
@@ -1122,7 +1122,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 self.RewardCounterActualTrainRun,
                 Flugzeit_der_Runde,
                 self.Maze_number,
-                self.Start_Position,
+                self.random_number_Start,
                 timestamp,
             ]
 
@@ -1153,7 +1153,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 self.RewardCounterActualTrainRun,
                 Flugzeit_der_Runde,
                 self.Maze_number,
-                self.Start_Position,
+                self.random_number_Start,
                 timestamp,
             ]
 
@@ -1355,20 +1355,15 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                     break
 
             Start_Position_swapped = [0, 0, 0.5]  # NOTE - TARGET POSITION FIX
-            if self.Maze_number == 0:
-                Start_Position = self.INIT_XYZS[f"map{self.Maze_number+1}"][0][self.random_number_Start][0:2]
-                
-            else:
-                Start_Position = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0:2]
+            
+            Start_Position = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0:2]
             Start_Position_swapped[1] = Start_Position[0]
             Start_Position_swapped[0] = Start_Position[1]
             #print(f"Start_Position: {Start_Position_swapped}")
         else:
             Start_Position_swapped = [0, 0, 0.5]
-            if self.Maze_number == 0:
-                Start_Position = self.INIT_XYZS[f"map{self.Maze_number+1}"][0][self.random_number_Start][0:2]
-            else:
-                Start_Position = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0:2]
+            
+            Start_Position = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0:2]
             Start_Position_swapped[1] = Start_Position[0]
             Start_Position_swapped[0] = Start_Position[1]
             #print(f"Start_Position: {Start_Position_swapped}")

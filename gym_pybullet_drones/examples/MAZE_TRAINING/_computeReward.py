@@ -604,10 +604,10 @@ def _computeReward(
                     Start_position = self.INIT_XYZS[f"map{Maze_Number}"][0][random_number_Start]
                     End_Position = self.TARGET_POSITION[f"map{Maze_Number}"][0][random_number_Target]
 
-                # Save the reward map to a CSV file
-                with open("reward_map.csv", "w", newline="") as file:
-                    writer = csv.writer(file)
-                    writer.writerows(self.reward_map)
+                # # Save the reward map to a CSV file
+                # with open("reward_map.csv", "w", newline="") as file:
+                #     writer = csv.writer(file)
+                #     writer.writerows(self.reward_map)
 
                 self.Area_counter = 0
 
@@ -714,10 +714,10 @@ def _computeReward(
                     Start_position = self.INIT_XYZS[f"map{Maze_Number}"][0][random_number_Start]
                     End_Position = self.TARGET_POSITION[f"map{Maze_Number}"][0][random_number_Target]
 
-                # Save the reward map to a CSV file
-                with open("reward_map.csv", "w", newline="") as file:
-                    writer = csv.writer(file)
-                    writer.writerows(self.reward_map)
+                # # Save the reward map to a CSV file
+                # with open("reward_map.csv", "w", newline="") as file:
+                #     writer = csv.writer(file)
+                #     writer.writerows(self.reward_map)
 
                 self.Area_counter = 0
 
@@ -820,10 +820,10 @@ def _computeReward(
                     Start_position = self.INIT_XYZS[f"map{Maze_Number}"][0][random_number_Start]
                     End_Position = self.TARGET_POSITION[f"map{Maze_Number}"][0][random_number_Target]
 
-                # Save the reward map to a CSV file
-                with open("reward_map.csv", "w", newline="") as file:
-                    writer = csv.writer(file)
-                    writer.writerows(self.reward_map)
+                # # Save the reward map to a CSV file
+                # with open("reward_map.csv", "w", newline="") as file:
+                #     writer = csv.writer(file)
+                #     writer.writerows(self.reward_map)
 
                 self.Area_counter = 0
 
