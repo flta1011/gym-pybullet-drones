@@ -36,20 +36,20 @@ from .crtpstack import CRTPPacket
 from cflib.crtp.crtpdriver import CRTPDriver
 from cflib.crtp.radio_link_statistics import RadioLinkStatistics
 
-__author__ = 'Bitcraze AB'
-__all__ = ['CfLinkCppDriver']
+__author__ = "Bitcraze AB"
+__all__ = ["CfLinkCppDriver"]
 
 logger = logging.getLogger(__name__)
 
 
 class CfLinkCppDriver(CRTPDriver):
-    """ cflinkcpp driver """
+    """cflinkcpp driver"""
 
     def __init__(self):
         """Driver constructor. Throw an exception if the driver is unable to
         open the URI
         """
-        self.uri = ''
+        self.uri = ""
 
         # cflinkcpp resends packets internally
         self.needs_resending = False
@@ -71,7 +71,7 @@ class CfLinkCppDriver(CRTPDriver):
         self._radio_link_statistics_callback = radio_link_statistics_callback
         self._link_error_callback = link_error_callback
 
-        if uri.startswith('radio://') and radio_link_statistics_callback is not None:
+        if uri.startswith("radio://") and radio_link_statistics_callback is not None:
             self._last_connection_stats = self._connection.statistics
             self._recompute_link_quality_timer()
 
@@ -86,9 +86,8 @@ class CfLinkCppDriver(CRTPDriver):
         except Exception as e:
             if self._link_error_callback is not None:
                 import traceback
-                self._link_error_callback(
-                    'Error communicating! Perhaps your device has been unplugged?\n'
-                    'Exception:{}\n\n{}'.format(e, traceback.format_exc()))
+
+                self._link_error_callback("Error communicating! Perhaps your device has been unplugged?\n" "Exception:{}\n\n{}".format(e, traceback.format_exc()))
 
     def receive_packet(self, wait=0):
         """Receive a CRTP packet.
@@ -104,7 +103,7 @@ class CfLinkCppDriver(CRTPDriver):
         elif wait == 0:
             timeout = 1
         else:
-            timeout = int(wait*1000)
+            timeout = int(wait * 1000)
 
         try:
             while True:
@@ -123,21 +122,20 @@ class CfLinkCppDriver(CRTPDriver):
         except Exception as e:
             if self._link_error_callback is not None:
                 import traceback
-                self._link_error_callback(
-                    'Error communicating! Perhaps your device has been unplugged?\n'
-                    'Exception:{}\n\n{}'.format(e, traceback.format_exc()))
+
+                self._link_error_callback("Error communicating! Perhaps your device has been unplugged?\n" "Exception:{}\n\n{}".format(e, traceback.format_exc()))
 
     def get_status(self):
         """
         Return a status string from the interface.
         """
-        'okay'
+        "okay"
 
     def get_name(self):
         """
         Return a human readable name of the interface.
         """
-        'cflinkcpp'
+        "cflinkcpp"
 
     def scan_interface(self, address=None):
         """
@@ -149,7 +147,7 @@ class CfLinkCppDriver(CRTPDriver):
         else:
             uris = cflinkcpp.Connection.scan()
         # convert to list of tuples, where the second part is a comment
-        result = [(uri, '') for uri in uris]
+        result = [(uri, "") for uri in uris]
         return result
 
     def scan_selected(self, uris):
@@ -169,7 +167,7 @@ class CfLinkCppDriver(CRTPDriver):
         """return the help message on how to form the URI for this driver
         None means no help
         """
-        ''
+        ""
 
     def close(self):
         """Close the link"""
@@ -192,6 +190,6 @@ class CfLinkCppDriver(CRTPDriver):
             self._radio_link_statistics_callback(self._radio_link_statistics)
 
         if sent_count > 10 and ack_count == 0 and self._link_error_callback is not None:
-            self._link_error_callback('Too many packets lost')
+            self._link_error_callback("Too many packets lost")
 
         threading.Timer(1.0, self._recompute_link_quality_timer).start()

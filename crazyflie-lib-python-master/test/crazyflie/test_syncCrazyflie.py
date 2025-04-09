@@ -34,7 +34,7 @@ from cflib.utils.callbacks import Caller
 class SyncCrazyflieTest(unittest.TestCase):
 
     def setUp(self):
-        self.uri = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
+        self.uri = uri_helper.uri_from_env(default="radio://0/80/2M/E7E7E7E7E7")
 
         self.cf_mock = MagicMock(spec=Crazyflie)
         self.cf_mock.connected = Caller()
@@ -42,17 +42,9 @@ class SyncCrazyflieTest(unittest.TestCase):
         self.cf_mock.disconnected = Caller()
         self.cf_mock.fully_connected = Caller()
 
-        self.cf_mock.open_link = AsyncCallbackCaller(
-            cb=self.cf_mock.connected,
-            args=[self.uri],
-            delay=0.2
-        ).trigger
+        self.cf_mock.open_link = AsyncCallbackCaller(cb=self.cf_mock.connected, args=[self.uri], delay=0.2).trigger
 
-        self.close_link_mock = AsyncCallbackCaller(
-            cb=self.cf_mock.disconnected,
-            args=[self.uri],
-            delay=0.2
-        )
+        self.close_link_mock = AsyncCallbackCaller(cb=self.cf_mock.disconnected, args=[self.uri], delay=0.2)
         self.cf_mock.close_link = self.close_link_mock.trigger
 
         # Register a callback to be called when connected. Use it to trigger a callback
@@ -65,8 +57,8 @@ class SyncCrazyflieTest(unittest.TestCase):
         # Fixture
 
         # Test
-        scf1 = SyncCrazyflie('uri 1')
-        scf2 = SyncCrazyflie('uri 2')
+        scf1 = SyncCrazyflie("uri 1")
+        scf2 = SyncCrazyflie("uri 2")
 
         # Assert
         actual1 = scf1.cf
@@ -84,10 +76,8 @@ class SyncCrazyflieTest(unittest.TestCase):
 
     def test_failed_open_link_raises_exception(self):
         # Fixture
-        expected = 'Some error message'
-        self.cf_mock.open_link = AsyncCallbackCaller(
-            cb=self.cf_mock.connection_failed,
-            args=[self.uri, expected]).trigger
+        expected = "Some error message"
+        self.cf_mock.open_link = AsyncCallbackCaller(cb=self.cf_mock.connection_failed, args=[self.uri, expected]).trigger
 
         # Test
         try:
@@ -95,7 +85,7 @@ class SyncCrazyflieTest(unittest.TestCase):
         except Exception as e:
             actual = e.args[0]
         else:
-            self.fail('Expect exception')
+            self.fail("Expect exception")
 
         # Assert
         self.assertEqual(expected, actual)
@@ -156,9 +146,7 @@ class SyncCrazyflieTest(unittest.TestCase):
         self.sut.open_link()
 
         # Test
-        AsyncCallbackCaller(
-            cb=self.cf_mock.disconnected,
-            args=[self.uri]).call_and_wait()
+        AsyncCallbackCaller(cb=self.cf_mock.disconnected, args=[self.uri]).call_and_wait()
 
         # Assert
         self.assertFalse(self.sut.is_link_open())
@@ -231,8 +219,4 @@ class SyncCrazyflieTest(unittest.TestCase):
         self.assertEqual(0, len(self.cf_mock.fully_connected.callbacks))
 
     def _connected_callback(self, uri):
-        AsyncCallbackCaller(
-            cb=self.cf_mock.fully_connected,
-            args=[self.uri],
-            delay=0.2
-        ).trigger()
+        AsyncCallbackCaller(cb=self.cf_mock.fully_connected, args=[self.uri], delay=0.2).trigger()

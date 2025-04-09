@@ -41,7 +41,7 @@ from cflib.positioning.position_hl_commander import PositionHlCommander
 from cflib.utils import uri_helper
 
 # URI to the Crazyflie to connect to
-uri = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
+uri = uri_helper.uri_from_env(default="radio://0/80/2M/E7E7E7E7E7")
 
 
 class ImageDef:
@@ -70,11 +70,11 @@ BLACK = [0, 0, 0]
 
 
 def set_led_ring_solid(cf, rgb):
-    cf.param.set_value('ring.effect', 7)
+    cf.param.set_value("ring.effect", 7)
     print(rgb[0], rgb[1], rgb[2])
-    cf.param.set_value('ring.solidRed', rgb[0])
-    cf.param.set_value('ring.solidGreen', rgb[1])
-    cf.param.set_value('ring.solidBlue', rgb[2])
+    cf.param.set_value("ring.solidRed", rgb[0])
+    cf.param.set_value("ring.solidGreen", rgb[1])
+    cf.param.set_value("ring.solidBlue", rgb[2])
 
 
 def matrix_print(cf, pc, image_def):
@@ -101,15 +101,15 @@ def matrix_print(cf, pc, image_def):
 
         set_led_ring_solid(cf, BLACK)
 
-        print('---')
+        print("---")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cflib.crtp.init_drivers()
 
-    image_def = ImageDef('monalisa.png')
+    image_def = ImageDef("monalisa.png")
 
-    with SyncCrazyflie(uri, cf=Crazyflie(rw_cache='./cache')) as scf:
+    with SyncCrazyflie(uri, cf=Crazyflie(rw_cache="./cache")) as scf:
         # Arm the Crazyflie
         scf.cf.platform.send_arming_request(True)
         time.sleep(1.0)

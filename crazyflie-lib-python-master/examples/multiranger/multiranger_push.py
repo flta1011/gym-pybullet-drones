@@ -50,7 +50,7 @@ from cflib.positioning.motion_commander import MotionCommander
 from cflib.utils import uri_helper
 from cflib.utils.multiranger import Multiranger
 
-URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
+URI = uri_helper.uri_from_env(default="radio://0/80/2M/E7E7E7E7E7")
 
 if len(sys.argv) > 1:
     URI = sys.argv[1]
@@ -68,11 +68,11 @@ def is_close(range):
         return range < MIN_DISTANCE
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Initialize the low-level drivers
     cflib.crtp.init_drivers()
 
-    cf = Crazyflie(rw_cache='./cache')
+    cf = Crazyflie(rw_cache="./cache")
     with SyncCrazyflie(URI, cf=cf) as scf:
         # Arm the Crazyflie
         scf.cf.platform.send_arming_request(True)
@@ -100,9 +100,8 @@ if __name__ == '__main__':
                     if is_close(multiranger.up):
                         keep_flying = False
 
-                    motion_commander.start_linear_motion(
-                        velocity_x, velocity_y, 0)
+                    motion_commander.start_linear_motion(velocity_x, velocity_y, 0)
 
                     time.sleep(0.1)
 
-            print('Demo terminated!')
+            print("Demo terminated!")

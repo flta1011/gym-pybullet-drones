@@ -1,0 +1,39 @@
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_REWARD_FOR_NEW_FIELD,DEFAULT_Punishment_for_Step,DEFAULT_EVAL_FREQ,DEFAULT_EVAL_EPISODES,DEFAULT_TRAIN_TIMESTEPS,DEFAULT_TARGET_REWARD,DEFAULT_NUMBER_LAST_ACTIONS,DEFAULT_PYB_FREQ,DEFAULT_CTRL_FREQ,DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_Multiplier_Collision_Penalty,DEFAULT_VelocityScale,DEFAULT_explore_Matrix_Size,DEFAULT_collision_penalty_terminated,DEFAULT_Terminated_Wall_Distance,DEFAULT_no_collision_reward,DEFAULT_Punishment_for_Walls,DEFAULT_Influence_of_Walls,DEFAULT_USE_PRETRAINED_MODEL,DEFAULT_PRETRAINED_MODEL_PATH,DEFAULT_List_MazesToUse,DEFAULT_List_Start_PositionsToUse,DEFAULT_MaxRoundsOnOneMaze,DEFAULT_MaxRoundsSameStartingPositions
+2,300,4,-0.5,50000,1,1080000,99999999999999,20,100,50,2,300,2,0.5,5,-100,0.1,1,False,/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M6_R6_O5_A3_TR1_T1_20250407-013856/save-04.07.2025_01.38.56/best_model.zip,20,8,4,"(22, 23, 24, 25)","(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)",6,2
+
+Runde,Terminated,Truncated,Map-Abgedeckt,Wand berührungen,Summe Reward,Flugzeit der Runde,Maze_number,Start-Position,Uhrzeit Welt
+1,kein_Terminated,Zeit abgelaufen,0.14,188,-5848.0,300.5,22,0,20250409-235526
+2,kein_Terminated,Zeit abgelaufen,0.17,226,-7444.0,300.5,22,5,20250409-235538
+3,kein_Terminated,Zeit abgelaufen,0.13,268,-4244.0,300.5,22,5,20250409-235549
+4,kein_Terminated,Zeit abgelaufen,0.2,48,2510.0,300.5,22,5,20250409-235600
+5,kein_Terminated,Zeit abgelaufen,0.24,290,-9053.0,300.5,22,5,20250409-235611
+6,kein_Terminated,Zeit abgelaufen,0.21,112,-965.0,300.5,22,5,20250409-235622
+7,kein_Terminated,Zeit abgelaufen,0.15,292,-11768.0,300.5,25,5,20250409-235636
+8,kein_Terminated,Zeit abgelaufen,0.14,464,-15318.0,300.5,25,5,20250409-235650
+9,kein_Terminated,Zeit abgelaufen,0.17,321,-1969.0,300.5,25,8,20250409-235703
+10,kein_Terminated,Zeit abgelaufen,0.12,192,-3777.0,300.5,25,8,20250409-235717
+11,kein_Terminated,Zeit abgelaufen,0.14,257,-7892.0,300.5,25,8,20250409-235731
+12,kein_Terminated,Zeit abgelaufen,0.12,180,-2282.0,300.5,25,8,20250409-235744
+13,kein_Terminated,Zeit abgelaufen,0.17,272,988.0,300.5,25,8,20250409-235758
+14,kein_Terminated,Zeit abgelaufen,0.11,347,-8608.0,300.5,25,8,20250409-235812
+15,kein_Terminated,Zeit abgelaufen,0.15,286,-5299.0,300.5,25,8,20250409-235826
+16,kein_Terminated,Zeit abgelaufen,0.15,309,-4778.0,300.5,25,7,20250409-235840
+17,kein_Terminated,Zeit abgelaufen,0.24,263,-5311.0,300.5,25,7,20250409-235854
+18,kein_Terminated,Zeit abgelaufen,0.15,278,-6104.0,300.5,25,7,20250409-235908
+19,kein_Terminated,Zeit abgelaufen,0.28,176,-290.0,300.5,25,7,20250409-235922
+20,kein_Terminated,Zeit abgelaufen,0.15,321,-8322.0,300.5,25,7,20250409-235935
+21,kein_Terminated,Zeit abgelaufen,0.17,315,-12134.0,300.5,23,7,20250409-235947
+22,kein_Terminated,Zeit abgelaufen,0.21,213,-4048.0,300.5,23,7,20250409-235959
+23,kein_Terminated,Zeit abgelaufen,0.29,206,1134.0,300.5,23,8,20250410-000010
+24,kein_Terminated,Zeit abgelaufen,0.09,261,-37.0,300.5,23,8,20250410-000022
+25,kein_Terminated,Zeit abgelaufen,0.13,305,-3088.0,300.5,23,8,20250410-000034
+26,kein_Terminated,Zeit abgelaufen,0.24,307,-7550.0,300.5,23,8,20250410-000045
+27,kein_Terminated,Zeit abgelaufen,0.28,220,1983.0,300.5,23,8,20250410-000056
+28,kein_Terminated,Zeit abgelaufen,0.24,319,-2423.0,300.5,22,8,20250410-000108
+29,kein_Terminated,Zeit abgelaufen,0.32,164,794.0,300.5,22,8,20250410-000119
+30,kein_Terminated,Zeit abgelaufen,0.17,321,-6058.0,300.5,22,2,20250410-000131
+31,kein_Terminated,Zeit abgelaufen,0.27,183,-148.0,300.5,22,2,20250410-000142
+32,kein_Terminated,Zeit abgelaufen,0.31,221,978.0,300.5,22,2,20250410-000153
+33,kein_Terminated,Zeit abgelaufen,0.21,200,-2710.0,300.5,22,2,20250410-000204
+34,kein_Terminated,Zeit abgelaufen,0.22,278,-4307.0,300.5,22,2,20250410-000215
+35,kein_Terminated,Zeit abgelaufen,0.23,198,-996.0,300.5,24,2,20250410-000227

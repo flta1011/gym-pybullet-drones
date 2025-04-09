@@ -118,8 +118,8 @@ class Logger(object):
         self.timestamps[drone, current_counter] = timestamp
         #### Re-order the kinematic obs (of most Aviaries) #########
         self.states[drone, :, current_counter] = np.hstack(
-            [state[0:3], state[7:10], state[10:13], state[13:16], state[21:23], state[26]]  # Position  # RPY  # Velocity  # Ang Vel  # Raycast actual, front, back
-        )  # Last action
+            [state[0:3], state[7:10], state[10:13], state[13:16], state[21:23], state[26]]
+        )  # Position  # RPY  # Velocity  # Ang Vel  # Raycast actual, front, back  # Last action
         self.controls[drone, :, current_counter] = control
         self.counters[drone] = current_counter + 1
 

@@ -1,8 +1,6 @@
 def _computeTruncated(self):
     match self.Truncated_Version:
-        case (
-            "TR1"
-        ):  # Stamdard Truncated, wenn die Drohne zu stark geneigt ist oder abstürzt
+        case "TR1":  # Stamdard Truncated, wenn die Drohne zu stark geneigt ist oder abstürzt
             """Computes the current truncated value.
 
             Returns

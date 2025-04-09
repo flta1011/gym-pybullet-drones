@@ -26,12 +26,12 @@
 CRTP Driver main class.
 """
 
-__author__ = 'Bitcraze AB'
-__all__ = ['CRTPDriver']
+__author__ = "Bitcraze AB"
+__all__ = ["CRTPDriver"]
 
 
 class CRTPDriver:
-    """ CTRP Driver main class
+    """CTRP Driver main class
 
     This class in inherited by all the CRTP link drivers.
     """

@@ -39,10 +39,10 @@ class PowerSwitch:
 
     def __init__(self, uri):
         self.uri = uri
-        uri_augmented = uri+'?safelink=0&autoping=0&ackfilter=0'
+        uri_augmented = uri + "?safelink=0&autoping=0&ackfilter=0"
         self.link = cflib.crtp.get_link_driver(uri_augmented)
         # Switch to legacy mode, if uri options are not available or old Python backend is used
-        if not self.link or self.link.get_name() == 'radio':
+        if not self.link or self.link.get_name() == "radio":
             uri_parts = cflib.crtp.RadioDriver.parse_uri(uri)
             self.devid = uri_parts[0]
             self.channel = uri_parts[1]
@@ -53,23 +53,23 @@ class PowerSwitch:
                 self.link = None
 
     def platform_power_down(self):
-        """ Power down the platform, both NRF and STM MCUs.
-            Same as turning off the platform with the power button."""
+        """Power down the platform, both NRF and STM MCUs.
+        Same as turning off the platform with the power button."""
         self._send(self.BOOTLOADER_CMD_ALLOFF)
 
     def stm_power_down(self):
-        """ Power down the STM MCU, the NRF will still be powered and handle
-            basic radio communication. The STM can be restarted again remotely.
-            Note: the power to expansion decks is also turned off. """
+        """Power down the STM MCU, the NRF will still be powered and handle
+        basic radio communication. The STM can be restarted again remotely.
+        Note: the power to expansion decks is also turned off."""
         self._send(self.BOOTLOADER_CMD_SYSOFF)
 
     def stm_power_up(self):
-        """ Power up (boot) the STM MCU and decks."""
+        """Power up (boot) the STM MCU and decks."""
         self._send(self.BOOTLOADER_CMD_SYSON)
 
     def stm_power_cycle(self):
-        """ Restart the STM MCU by powering it off and on.
-            Expansion decks will also be rebooted."""
+        """Restart the STM MCU by powering it off and on.
+        Expansion decks will also be rebooted."""
         self.stm_power_down()
         time.sleep(1)
         self.stm_power_up()
@@ -90,7 +90,7 @@ class PowerSwitch:
 
     def _send(self, cmd, data=[]):
         if not self.link:
-            packet = [0xf3, 0xfe, cmd] + data
+            packet = [0xF3, 0xFE, cmd] + data
 
             cr = RadioManager.open(devid=self.devid)
             cr.set_channel(self.channel)
@@ -110,15 +110,13 @@ class PowerSwitch:
             cr.close()
 
             if not success:
-                raise Exception(
-                    'Failed to connect to Crazyflie at {}'.format(self.uri))
+                raise Exception("Failed to connect to Crazyflie at {}".format(self.uri))
         else:
 
             # send command (will be repeated until acked)
-            pk = CRTPPacket(0xFF, [0xfe, cmd] + data)
+            pk = CRTPPacket(0xFF, [0xFE, cmd] + data)
             self.link.send_packet(pk)
             # wait up to 1s
             pk = self.link.receive_packet(0.1)
             if pk is None:
-                raise Exception(
-                    'Failed to connect to Crazyflie at {}'.format(self.uri))
+                raise Exception("Failed to connect to Crazyflie at {}".format(self.uri))

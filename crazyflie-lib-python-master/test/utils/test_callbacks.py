@@ -80,10 +80,10 @@ class CallerTest(unittest.TestCase):
         self.sut.add_callback(self._callback_with_args)
 
         # Test
-        self.sut.call('The token')
+        self.sut.call("The token")
 
         # Assert
-        self.assertEqual('The token', self.callback_token)
+        self.assertEqual("The token", self.callback_token)
 
     def _callback(self):
         self.callback_count += 1

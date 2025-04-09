@@ -47,8 +47,8 @@ try:
 except ImportError:
     found_serial = False
 
-__author__ = 'Bitcraze AB'
-__all__ = ['SerialDriver']
+__author__ = "Bitcraze AB"
+__all__ = ["SerialDriver"]
 
 logger = logging.getLogger(__name__)
 
@@ -58,30 +58,30 @@ class SerialDriver(CRTPDriver):
     def __init__(self):
         CRTPDriver.__init__(self)
         self.ser = None
-        self.uri = ''
+        self.uri = ""
         self.link_error_callback = None
         self.in_queue = None
         self.out_queue = None
         self._receive_thread = None
         self._send_thread = None
         self.needs_resending = False
-        logger.info('Initialized serial driver.')
+        logger.info("Initialized serial driver.")
 
     def connect(self, uri, linkQualityCallback, linkErrorCallback):
         # check if the URI is a serial URI
-        if not re.search('^serial://', uri):
-            raise WrongUriType('Not a serial URI')
+        if not re.search("^serial://", uri):
+            raise WrongUriType("Not a serial URI")
 
         # Check if it is a valid serial URI
-        uri_data = re.search('^serial://([-a-zA-Z0-9/.]+)$', uri)
+        uri_data = re.search("^serial://([-a-zA-Z0-9/.]+)$", uri)
         if not uri_data:
-            raise Exception('Invalid serial URI')
+            raise Exception("Invalid serial URI")
 
         # Move to Serial transport?
         device_name = uri_data.group(1)
         devices = self.get_devices()
         if device_name not in devices:
-            raise Exception('Could not identify device')
+            raise Exception("Could not identify device")
         device = devices[device_name]
 
         self.uri = uri
@@ -93,24 +93,17 @@ class SerialDriver(CRTPDriver):
 
         self.cpx = CPX(UARTTransport(device, 576000))
 
-        self._thread = _CPXReceiveThread(self.cpx, self.in_queue,
-                                         linkErrorCallback)
+        self._thread = _CPXReceiveThread(self.cpx, self.in_queue, linkErrorCallback)
         self._thread.start()
 
         # Switch the link bridge to CPX in the Crazyflie
-        self.cpx.sendPacket(CPXPacket(destination=CPXTarget.STM32,
-                                      function=CPXFunction.SYSTEM,
-                                      data=[0x21, 0x01]))
+        self.cpx.sendPacket(CPXPacket(destination=CPXTarget.STM32, function=CPXFunction.SYSTEM, data=[0x21, 0x01]))
         # Force client connect to true
-        self.cpx.sendPacket(CPXPacket(destination=CPXTarget.STM32,
-                                      function=CPXFunction.SYSTEM,
-                                      data=[0x20, 0x01]))
+        self.cpx.sendPacket(CPXPacket(destination=CPXTarget.STM32, function=CPXFunction.SYSTEM, data=[0x20, 0x01]))
 
     def send_packet(self, pk):
-        raw = (pk.header,) + struct.unpack('B' * len(pk.data), pk.data)
-        self.cpx.sendPacket(CPXPacket(destination=CPXTarget.STM32,
-                                      function=CPXFunction.CRTP,
-                                      data=raw))
+        raw = (pk.header,) + struct.unpack("B" * len(pk.data), pk.data)
+        self.cpx.sendPacket(CPXPacket(destination=CPXTarget.STM32, function=CPXFunction.CRTP, data=raw))
 
     def receive_packet(self, wait=0):
         try:
@@ -125,23 +118,23 @@ class SerialDriver(CRTPDriver):
         return pk
 
     def get_status(self):
-        return 'No information available'
+        return "No information available"
 
     def get_name(self):
-        return 'serial'
+        return "serial"
 
     def scan_interface(self, address):
-        print('Scanning serial')
+        print("Scanning serial")
         if found_serial:
-            print('Found serial')
+            print("Found serial")
             devices_names = self.get_devices().keys()
             print(devices_names)
-            return [('serial://' + x, '') for x in devices_names]
+            return [("serial://" + x, "") for x in devices_names]
         else:
             return []
 
     def close(self):
-        """ Close the link. """
+        """Close the link."""
         # Stop the comm thread
         self._thread.stop()
 
@@ -152,9 +145,9 @@ class SerialDriver(CRTPDriver):
 
         except Exception as e:
             print(e)
-            logger.error('Could not close {}'.format(e))
+            logger.error("Could not close {}".format(e))
             pass
-        print('Driver closed')
+        print("Driver closed")
 
     def get_devices(self):
         result = {}
@@ -172,10 +165,10 @@ class SerialDriver(CRTPDriver):
 class _CPXReceiveThread(threading.Thread):
     """
     Radio link receiver thread used to read data from the
-    Socket. """
+    Socket."""
 
     def __init__(self, cpx, inQueue, link_error_callback):
-        """ Create the object """
+        """Create the object"""
         threading.Thread.__init__(self)
         self._cpx = cpx
         self.in_queue = inQueue
@@ -183,7 +176,7 @@ class _CPXReceiveThread(threading.Thread):
         self.link_error_callback = link_error_callback
 
     def stop(self):
-        """ Stop the thread """
+        """Stop the thread"""
         self.sp = True
         try:
             self.join()
@@ -191,26 +184,22 @@ class _CPXReceiveThread(threading.Thread):
             pass
 
     def run(self):
-        """ Run the receiver thread """
+        """Run the receiver thread"""
 
-        while (True):
-            if (self.sp):
+        while True:
+            if self.sp:
                 break
             try:
                 # Block until a packet is available though the socket
                 # CPX receive will only return full packets
                 cpxPacket = self._cpx.receivePacket(CPXFunction.CRTP, timeout=1)
-                data = struct.unpack('B' * cpxPacket.length, cpxPacket.data)
+                data = struct.unpack("B" * cpxPacket.length, cpxPacket.data)
                 if len(data) > 0:
-                    pk = CRTPPacket(data[0],
-                                    list(data[1:]))
+                    pk = CRTPPacket(data[0], list(data[1:]))
                     self.in_queue.put(pk)
             except queue.Empty:
                 pass  # This is ok
             except Exception as e:
                 import traceback
 
-                self.link_error_callback(
-                    'Error communicating with the Crazyflie\n'
-                    'Exception:%s\n\n%s' % (e,
-                                            traceback.format_exc()))
+                self.link_error_callback("Error communicating with the Crazyflie\n" "Exception:%s\n\n%s" % (e, traceback.format_exc()))

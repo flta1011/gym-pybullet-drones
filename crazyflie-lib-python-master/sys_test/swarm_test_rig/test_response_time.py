@@ -76,8 +76,7 @@ class TestResponseTime(unittest.TestCase):
         for link in self.links:
             self.request_echo_with_seq_nr(link, seq_nr)
 
-        response_timestamps = self.assert_wait_for_all_seq_nrs(
-            self.links, seq_nr)
+        response_timestamps = self.assert_wait_for_all_seq_nrs(self.links, seq_nr)
 
         # Assert
         response_times = {}
@@ -115,12 +114,11 @@ class TestResponseTime(unittest.TestCase):
 
             time.sleep(0.001)
 
-        self.fail('Time out while waiting for seq nrs.')
+        self.fail("Time out while waiting for seq nrs.")
 
     def _is_response_correct_seq_nr(self, response, seq_nr):
         if response is not None:
-            if response._get_channel() == self.ECHO and \
-                    response._get_port() == CRTPPort.LINKCTRL:
+            if response._get_channel() == self.ECHO and response._get_port() == CRTPPort.LINKCTRL:
                 received_seq = response._get_data_t()[0]
                 if received_seq == seq_nr:
                     return True
@@ -128,8 +126,7 @@ class TestResponseTime(unittest.TestCase):
         return False
 
     def connect_link(self, uri):
-        link = cflib.crtp.get_link_driver(uri, self._radio_link_statistics_cb,
-                                          self._link_error_cb)
+        link = cflib.crtp.get_link_driver(uri, self._radio_link_statistics_cb, self._link_error_cb)
         self.assertIsNotNone(link)
         self.links.append(link)
 

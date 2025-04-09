@@ -17,7 +17,7 @@ def _observationSpace(self):
 
                 Information of the self._getDroneStateVector:
                     ndarray
-                    1x Raycast reading (forward) [21]          -> 0 bis 9999
+                    1x Raycast reading (forward) [21]          -> 0 bis 4
 
             """
 
@@ -27,9 +27,7 @@ def _observationSpace(self):
                 [-99, -99, -2 * np.pi, 0, 0, 0, 0, 0]
             )  # x,y,yaw, Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
 
-            obs_upper_bound = np.array(
-                [99, 99, 2 * np.pi, 9999, 9999, 9999, 9999, 9999]
-            )  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
+            obs_upper_bound = np.array([99, 99, 2 * np.pi, 4, 4, 4, 4, 4])  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
 
             return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
 
@@ -113,7 +111,7 @@ def _observationSpace(self):
 
                 Information of the self._getDroneStateVector:
                     ndarray
-                    1x Raycast reading (forward) [21]          -> 0 bis 9999
+                    1x Raycast reading (forward) [21]          -> 0 bis 4
                     Last Action (values in [-1,1])
             self.number_last_actions
             """
@@ -125,7 +123,7 @@ def _observationSpace(self):
             )  # x,y,yaw, Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up, last actions
 
             obs_upper_bound = np.array(
-                [99, 99, 2 * np.pi, 9999, 9999, 9999, 9999] + [6] * self.number_last_actions
+                [99, 99, 2 * np.pi, 4, 4, 4, 4] + [6] * self.number_last_actions
             )  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up, last actions
 
             return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
@@ -191,7 +189,7 @@ def _observationSpace(self):
                         shape=(self.last_actions.shape[0],),
                         dtype=np.float32,
                     ),
-                    "raycast": spaces.Box(low=0, high=9999, shape=(4,), dtype=np.float32),
+                    "raycast": spaces.Box(low=0, high=4, shape=(4,), dtype=np.float32),
                 }
             )
 
@@ -204,7 +202,7 @@ def _observationSpace(self):
             - Channel 1: SLAM map (values in [0,255])
             - Channel 2: X-Position (values in [-inf,inf])
             - Channel 3: Y-Position (values in [-ing,inf])
-            - Channel 4: Raycast readings (values in [0,9999])
+            - Channel 4: Raycast readings (values in [0,4])
             - Channel 5: Interest Values (values in [0,32400])
             - Channel 6: n last Clipped Actions (values in [0, 3])
             """
@@ -215,7 +213,7 @@ def _observationSpace(self):
                 (
                     np.array([-np.inf], dtype=np.float32),  # X position
                     np.array([-np.inf], dtype=np.float32),  # Y position
-                    np.zeros(4, dtype=np.float32),  # Raycast readings (values in [0, 9999])
+                    np.zeros(4, dtype=np.float32),  # Raycast readings (values in [0, 4])
                     np.zeros(4, dtype=np.float32),  # Interest values
                     np.zeros(last_actions_size, dtype=np.float32),  # Last clipped actions
                 )
@@ -225,7 +223,7 @@ def _observationSpace(self):
                 (
                     np.array([np.inf], dtype=np.float32),  # X position
                     np.array([np.inf], dtype=np.float32),  # Y position
-                    np.full(4, 9999, dtype=np.float32),  # Raycast readings (values in [0, 9999])
+                    np.full(4, 4, dtype=np.float32),  # Raycast readings (values in [0, 4])
                     np.full(4, 32400, dtype=np.float32),  # Interest values
                     np.full(last_actions_size, 6, dtype=np.float32),  # Last clipped actions
                 )
@@ -252,7 +250,7 @@ def _observationSpace(self):
                     "image": spaces.Box(low=0, high=255, shape=(grid_size, grid_size, 1), dtype=np.uint8),  # Grayscale image
                     "x": spaces.Box(low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32),
                     "y": spaces.Box(low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32),
-                    "raycast": spaces.Box(low=0, high=9999, shape=(4,), dtype=np.float32),
+                    "raycast": spaces.Box(low=0, high=4, shape=(4,), dtype=np.float32),
                     "interest_values": spaces.Box(low=0, high=32400, shape=(4,), dtype=np.uint8),
                     "last_clipped_actions": spaces.Box(low=0, high=6, shape=(self.last_actions.shape[0],), dtype=np.float32),
                 }

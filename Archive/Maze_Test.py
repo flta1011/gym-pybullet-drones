@@ -4,6 +4,7 @@ import random
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 
+
 class MazeGenerator:
     def __init__(self, width=3, height=3, discretization=0.05, min_corridor_size=0.3, seed=30):
         self.width = int(width / discretization)  # Maze width in grid units
@@ -95,7 +96,7 @@ class MazeGenerator:
             if self.grid[ny, nx] == 1:
                 return True
         return False
-    
+
     def _has_min_distance(self, x, y):
         """Check if there is a minimum diagonal distance to other walls in all directions."""
         directions = [(1, 1), (-1, -1), (1, -1), (-1, 1), (1, 0), (-1, 0), (0, 1), (0, -1)]
@@ -118,28 +119,28 @@ class MazeGenerator:
         """Visualize the maze using matplotlib."""
         if ax is None:
             fig, ax = plt.subplots()
-            ax.imshow(self.grid, cmap='binary')
-            ax.set_title(f'Maze with seed {self.seed}')
-            ax.axis('off')
+            ax.imshow(self.grid, cmap="binary")
+            ax.set_title(f"Maze with seed {self.seed}")
+            ax.axis("off")
             plt.show()
         else:
-            ax.imshow(self.grid, cmap='binary')
-            ax.set_title(f'Maze with seed {self.seed}')
-            ax.axis('off')
-    
+            ax.imshow(self.grid, cmap="binary")
+            ax.set_title(f"Maze with seed {self.seed}")
+            ax.axis("off")
+
     def visualize_range_of_mazes(self, start_seed=1, stop_seed=9):
         """Visualize a range of mazes with different seeds."""
-        n = (stop_seed - start_seed) + 1 # Number of mazes to generate; +1 because range is inclusive
+        n = (stop_seed - start_seed) + 1  # Number of mazes to generate; +1 because range is inclusive
         max_per_row = 8
-        rows = (n + max_per_row -1) // max_per_row
+        rows = (n + max_per_row - 1) // max_per_row
         cols = min(n, max_per_row)
-        fig, axes = plt.subplots(rows, cols, figsize=(10 * cols, 10 * rows)) # Create n subplots
+        fig, axes = plt.subplots(rows, cols, figsize=(10 * cols, 10 * rows))  # Create n subplots
 
         # Flatten axes array if it is 2D
         if rows > 1:
             axes = axes.flatten()
 
-        for i, seed in enumerate(range(start_seed, stop_seed+1)):
+        for i, seed in enumerate(range(start_seed, stop_seed + 1)):
             self.seed = seed
             self.generate()
             ax = axes[i]
@@ -189,13 +190,13 @@ class MazeGenerator:
                 if self.grid[y, x] == 1:
                     wall_size = f"{self.discretization} {self.discretization} {maze_height}"
                     wall_xyz = f"{x * self.discretization + self.discretization / 2} {y * self.discretization + self.discretization / 2} {maze_height / 2}"
-                    
+
                     # Add visual geometry
                     visual = ET.SubElement(wall_link, "visual")
                     geometry = ET.SubElement(visual, "geometry")
                     box = ET.SubElement(geometry, "box", size=wall_size)
                     origin = ET.SubElement(visual, "origin", xyz=wall_xyz, rpy="0 0 0")
-                    
+
                     # Add collision geometry
                     collision = ET.SubElement(wall_link, "collision")
                     collision_geometry = ET.SubElement(collision, "geometry")
@@ -214,18 +215,17 @@ class MazeGenerator:
 
 
 if __name__ == "__main__":
-    rs = 42 # Random seed
+    rs = 42  # Random seed
     maze = MazeGenerator(seed=rs)
     maze.generate()
-    #maze.visualize()
+    # maze.visualize()
     maze.visualize_range_of_mazes(start_seed=1, stop_seed=104)
 
     Maze_Name = f"gym_pybullet_drones/assets/maze/maze_rs_{rs}.urdf"
-    #maze.generate_urdf_from_maze(maze_height=1, filename=Maze_Name)
-
+    # maze.generate_urdf_from_maze(maze_height=1, filename=Maze_Name)
 
     # Version ohne diagonale Wände
-    # best usable mazes -> 1, 6, 7, 8, 12, 42, 
+    # best usable mazes -> 1, 6, 7, 8, 12, 42,
 
     # Version mit diagonale Wänden
     # best usable mazes ->

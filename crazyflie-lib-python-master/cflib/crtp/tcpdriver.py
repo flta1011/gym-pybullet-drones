@@ -38,10 +38,11 @@ from cflib.cpx import CPXFunction
 from cflib.cpx import CPXPacket
 from cflib.cpx import CPXTarget
 from cflib.cpx.transports import SocketTransport
+
 logger = logging.getLogger(__name__)
 
-__author__ = 'Bitcraze AB'
-__all__ = ['TcpDriver']
+__author__ = "Bitcraze AB"
+__all__ = ["TcpDriver"]
 
 
 class TcpDriver(CRTPDriver):
@@ -50,22 +51,19 @@ class TcpDriver(CRTPDriver):
         self.needs_resending = False
 
     def connect(self, uri, linkQualityCallback, linkErrorCallback):
-        if not re.search('^tcp://', uri):
-            raise WrongUriType('Not an UDP URI')
+        if not re.search("^tcp://", uri):
+            raise WrongUriType("Not an UDP URI")
 
-        parse = urlparse(uri.split(' ')[0])
+        parse = urlparse(uri.split(" ")[0])
 
         self.in_queue = queue.Queue()
 
         self.cpx = CPX(SocketTransport(parse.hostname, parse.port))
 
-        self._thread = _CPXReceiveThread(self.cpx, self.in_queue,
-                                         linkErrorCallback)
+        self._thread = _CPXReceiveThread(self.cpx, self.in_queue, linkErrorCallback)
         self._thread.start()
 
-        self.cpx.sendPacket(CPXPacket(destination=CPXTarget.STM32,
-                                      function=CPXFunction.SYSTEM,
-                                      data=[0x21, 0x01]))
+        self.cpx.sendPacket(CPXPacket(destination=CPXTarget.STM32, function=CPXFunction.SYSTEM, data=[0x21, 0x01]))
 
     def receive_packet(self, time=0):
         if time == 0:
@@ -85,13 +83,11 @@ class TcpDriver(CRTPDriver):
                 return None
 
     def send_packet(self, pk):
-        raw = (pk.header,) + struct.unpack('B' * len(pk.data), pk.data)
-        self.cpx.sendPacket(CPXPacket(destination=CPXTarget.STM32,
-                                      function=CPXFunction.CRTP,
-                                      data=raw))
+        raw = (pk.header,) + struct.unpack("B" * len(pk.data), pk.data)
+        self.cpx.sendPacket(CPXPacket(destination=CPXTarget.STM32, function=CPXFunction.CRTP, data=raw))
 
     def close(self):
-        """ Close the link. """
+        """Close the link."""
         # Stop the comm thread
         self._thread.stop()
 
@@ -102,16 +98,17 @@ class TcpDriver(CRTPDriver):
 
         except Exception as e:
             print(e)
-            logger.error('Could not close {}'.format(e))
+            logger.error("Could not close {}".format(e))
             pass
-        print('Driver closed')
+        print("Driver closed")
         self.cpx = None
 
     def get_name(self):
-        return 'cpx'
+        return "cpx"
 
     def scan_interface(self, address):
         return []
+
 
 # Transmit/receive thread
 
@@ -119,10 +116,10 @@ class TcpDriver(CRTPDriver):
 class _CPXReceiveThread(threading.Thread):
     """
     Radio link receiver thread used to read data from the
-    Socket. """
+    Socket."""
 
     def __init__(self, cpx, inQueue, link_error_callback):
-        """ Create the object """
+        """Create the object"""
         threading.Thread.__init__(self)
         self._cpx = cpx
         self.in_queue = inQueue
@@ -130,7 +127,7 @@ class _CPXReceiveThread(threading.Thread):
         self.link_error_callback = link_error_callback
 
     def stop(self):
-        """ Stop the thread """
+        """Stop the thread"""
         self.sp = True
         try:
             self.join()
@@ -138,26 +135,22 @@ class _CPXReceiveThread(threading.Thread):
             pass
 
     def run(self):
-        """ Run the receiver thread """
+        """Run the receiver thread"""
 
-        while (True):
-            if (self.sp):
+        while True:
+            if self.sp:
                 break
             try:
                 # Block until a packet is available though the socket
                 # CPX receive will only return full packets
                 cpxPacket = self._cpx.receivePacket(CPXFunction.CRTP, timeout=0.1)
-                data = struct.unpack('B' * len(cpxPacket.data), cpxPacket.data)
+                data = struct.unpack("B" * len(cpxPacket.data), cpxPacket.data)
                 if len(data) > 0:
-                    pk = CRTPPacket(data[0],
-                                    list(data[1:]))
+                    pk = CRTPPacket(data[0], list(data[1:]))
                     self.in_queue.put(pk)
             except queue.Empty:
                 pass  # This is ok
             except Exception as e:
                 import traceback
 
-                self.link_error_callback(
-                    'Error communicating with the Crazyflie\n'
-                    'Exception:%s\n\n%s' % (e,
-                                            traceback.format_exc()))
+                self.link_error_callback("Error communicating with the Crazyflie\n" "Exception:%s\n\n%s" % (e, traceback.format_exc()))

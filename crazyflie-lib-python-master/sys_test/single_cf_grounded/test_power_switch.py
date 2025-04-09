@@ -42,5 +42,5 @@ class TestPowerSwitch(TestSingleCfGrounded):
         self.assertTrue(self.is_stm_connected())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

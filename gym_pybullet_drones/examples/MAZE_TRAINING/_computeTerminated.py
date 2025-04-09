@@ -42,12 +42,7 @@ def _computeTerminated(self):
                 Grund_Terminated = "Zu tilted"
                 return True, Grund_Terminated
 
-            if (
-                state[21] < self.Terminated_Wall_Distance
-                or state[22] < self.Terminated_Wall_Distance
-                or state[23] < self.Terminated_Wall_Distance
-                or state[24] < self.Terminated_Wall_Distance
-            ):
+            if state[21] < self.Terminated_Wall_Distance or state[22] < self.Terminated_Wall_Distance or state[23] < self.Terminated_Wall_Distance or state[24] < self.Terminated_Wall_Distance:
                 Grund_Terminated = "Zu nah an der Wand"
                 return True, Grund_Terminated
 

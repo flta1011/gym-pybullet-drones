@@ -21,6 +21,7 @@ import time
 import cflib.crtp
 from cflib.crazyflie import Crazyflie
 from cflib.crtp.crtpstack import CRTPPacket
+
 # from cflib.crtp.crtpstack import CRTPPort
 
 CRTP_PORT_MAVLINK = 8
@@ -32,11 +33,11 @@ logging.basicConfig(level=logging.DEBUG)
 
 class RadioBridge:
     def __init__(self, link_uri):
-        """ Initialize and run the example with the specified link_uri """
+        """Initialize and run the example with the specified link_uri"""
 
         # UDP socket for interfacing with GCS
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self._sock.bind(('127.0.0.1', 14551))
+        self._sock.bind(("127.0.0.1", 14551))
 
         # Create a Crazyflie object without specifying any cache dirs
         self._cf = Crazyflie()
@@ -47,7 +48,7 @@ class RadioBridge:
         self._cf.connection_failed.add_callback(self._connection_failed)
         self._cf.connection_lost.add_callback(self._connection_lost)
 
-        print('Connecting to %s' % link_uri)
+        print("Connecting to %s" % link_uri)
 
         # Try to connect to the Crazyflie
         self._cf.open_link(link_uri)
@@ -58,15 +59,15 @@ class RadioBridge:
         threading.Thread(target=self._server).start()
 
     def _connected(self, link_uri):
-        """ This callback is called form the Crazyflie API when a Crazyflie
+        """This callback is called form the Crazyflie API when a Crazyflie
         has been connected and the TOCs have been downloaded."""
-        print('Connected to %s' % link_uri)
+        print("Connected to %s" % link_uri)
 
         self._cf.packet_received.add_callback(self._got_packet)
 
     def _got_packet(self, pk):
         if pk.port == CRTP_PORT_MAVLINK:
-            self._sock.sendto(pk.data, ('127.0.0.1', 14550))
+            self._sock.sendto(pk.data, ("127.0.0.1", 14550))
 
     def _forward(self, data):
         pk = CRTPPacket()
@@ -76,42 +77,42 @@ class RadioBridge:
 
     def _server(self):
         while True:
-            print('\nwaiting to receive message')
+            print("\nwaiting to receive message")
 
             # Only receive what can be sent in one message
             data, address = self._sock.recvfrom(256)
 
-            print('received %s bytes from %s' % (len(data), address))
+            print("received %s bytes from %s" % (len(data), address))
 
             for i in range(0, len(data), 30):
-                self._forward(data[i:(i+30)])
+                self._forward(data[i : (i + 30)])
 
     def _stab_log_error(self, logconf, msg):
         """Callback from the log API when an error occurs"""
-        print('Error when logging %s: %s' % (logconf.name, msg))
+        print("Error when logging %s: %s" % (logconf.name, msg))
 
     def _stab_log_data(self, timestamp, data, logconf):
         """Callback from a the log API when data arrives"""
-        print('[%d][%s]: %s' % (timestamp, logconf.name, data))
+        print("[%d][%s]: %s" % (timestamp, logconf.name, data))
 
     def _connection_failed(self, link_uri, msg):
         """Callback when connection initial connection fails (i.e no Crazyflie
         at the specified address)"""
-        print('Connection to %s failed: %s' % (link_uri, msg))
+        print("Connection to %s failed: %s" % (link_uri, msg))
         self.is_connected = False
 
     def _connection_lost(self, link_uri, msg):
         """Callback when disconnected after a connection has been made (i.e
         Crazyflie moves out of range)"""
-        print('Connection to %s lost: %s' % (link_uri, msg))
+        print("Connection to %s lost: %s" % (link_uri, msg))
 
     def _disconnected(self, link_uri):
         """Callback when the Crazyflie is disconnected (called in all cases)"""
-        print('Disconnected from %s' % link_uri)
+        print("Disconnected from %s" % link_uri)
         self.is_connected = False
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Initialize the low-level drivers
     cflib.crtp.radiodriver.set_retries_before_disconnect(1500)
     cflib.crtp.radiodriver.set_retries(3)
@@ -122,7 +123,7 @@ if __name__ == '__main__':
     else:
         channel = 80
 
-    link_uri = 'radio://0/' + str(channel) + '/2M'
+    link_uri = "radio://0/" + str(channel) + "/2M"
     le = RadioBridge(link_uri)
 
     # The Crazyflie lib doesn't contain anything to keep the application alive,

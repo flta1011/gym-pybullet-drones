@@ -26,7 +26,7 @@ from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.mem import MemoryElement
 from cflib.utils import uri_helper
 
-uri = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
+uri = uri_helper.uri_from_env(default="radio://0/80/2M/E7E7E7E7E7")
 
 
 class NotConnected(RuntimeError):
@@ -57,11 +57,11 @@ class Flasher(object):
         """
         Connect to the crazyflie.
         """
-        print('Connecting to %s' % self._link_uri)
+        print("Connecting to %s" % self._link_uri)
         self._cf.open_link(self._link_uri)
 
     def disconnect(self):
-        print('Disconnecting from %s' % self._link_uri)
+        print("Disconnecting from %s" % self._link_uri)
         self._cf.close_link()
 
     def wait_for_connection(self, timeout=10):
@@ -92,19 +92,19 @@ class Flasher(object):
     # Callbacks
 
     def _connected(self, link_uri):
-        print('Connected to %s' % link_uri)
+        print("Connected to %s" % link_uri)
         self.connected = True
 
     def _disconnected(self, link_uri):
-        print('Disconnected from %s' % link_uri)
+        print("Disconnected from %s" % link_uri)
         self.connected = False
 
     def _connection_failed(self, link_uri, msg):
-        print('Connection to %s failed: %s' % (link_uri, msg))
+        print("Connection to %s failed: %s" % (link_uri, msg))
         self.connected = False
 
     def _connection_lost(self, link_uri, msg):
-        print('Connection to %s lost: %s' % (link_uri, msg))
+        print("Connection to %s lost: %s" % (link_uri, msg))
         self.connected = False
 
 
@@ -115,8 +115,8 @@ def choose(items, title_text, question_text):
     print(title_text)
 
     for i, item in enumerate(items, start=1):
-        print('%d) %s' % (i, item))
-    print('%d) Abort' % (i + 1))
+        print("%d) %s" % (i, item))
+    print("%d) Abort" % (i + 1))
 
     selected = input(question_text)
     try:
@@ -124,13 +124,13 @@ def choose(items, title_text, question_text):
     except ValueError:
         index = -1
     if not (index - 1) in range(len(items)):
-        print('Aborting.')
+        print("Aborting.")
         return None
 
     return items[index - 1]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Initialize the low-level drivers
     cflib.crtp.init_drivers()
 
@@ -145,62 +145,59 @@ if __name__ == '__main__':
     flasher.connect()
     connected = flasher.wait_for_connection()
     if not connected:
-        print('Connection failed.')
+        print("Connection failed.")
         abort()
 
     # Search for memories
     mems = flasher.search_memories()
     if not mems:
-        print('No memories found.')
+        print("No memories found.")
         abort()
-    mem = choose(mems, 'Available memories:', 'Select memory: ')
+    mem = choose(mems, "Available memories:", "Select memory: ")
     if mem is None:
-        print('Aborting.')
+        print("Aborting.")
         abort()
 
     # Print information about memory
-    print('You selected the following memory:')
-    print('  Name: %s' % mem.name)
-    print('  Vendor ID: 0x%X' % mem.vid)
-    print('  Memory ID: 0x%X' % mem.pid)
-    print('  Pins: 0x%X' % mem.pins)
-    print('  Elements: %s' % mem.elements)
+    print("You selected the following memory:")
+    print("  Name: %s" % mem.name)
+    print("  Vendor ID: 0x%X" % mem.vid)
+    print("  Memory ID: 0x%X" % mem.pid)
+    print("  Pins: 0x%X" % mem.pins)
+    print("  Elements: %s" % mem.elements)
 
     # Ask for new information
-    print('Please specify what information to write. If you just press enter, '
-          'the value will not be changed.')
+    print("Please specify what information to write. If you just press enter, " "the value will not be changed.")
 
     # Vendor ID
-    vid_input = input('New vendor ID: ')
-    if vid_input != '':
+    vid_input = input("New vendor ID: ")
+    if vid_input != "":
         try:
             vid = int(vid_input, 0)
-            if not 0 <= vid <= 0xff:
+            if not 0 <= vid <= 0xFF:
                 raise ValueError()
         except ValueError:
-            print('Invalid vendor ID. Please specify a number between 0x00 '
-                  'and 0xff.')
+            print("Invalid vendor ID. Please specify a number between 0x00 " "and 0xff.")
             abort()
         else:
             mem.vid = vid
 
     # Memory ID
-    pid_input = input('New memory ID: ')
-    if pid_input != '':
+    pid_input = input("New memory ID: ")
+    if pid_input != "":
         try:
             pid = int(pid_input, 0)
-            if not 0 <= pid <= 0xff:
+            if not 0 <= pid <= 0xFF:
                 raise ValueError()
         except ValueError:
-            print('Invalid memory ID. Please specify a number between 0x00 '
-                  'and 0xff.')
+            print("Invalid memory ID. Please specify a number between 0x00 " "and 0xff.")
             abort()
         else:
             mem.pid = pid
 
     # Callback function when data has been written
     def data_written(mem, addr):
-        print('Data has been written to memory!')
+        print("Data has been written to memory!")
         flasher.disconnect()
 
         # We need to use os.kill because this is a callback
@@ -208,15 +205,15 @@ if __name__ == '__main__':
         os.kill(os.getpid(), SIGTERM)
 
     # Write data
-    sure = input('Are you sure? [y/n] ')
-    if sure != 'y':
-        print('Better safe than sorry!')
+    sure = input("Are you sure? [y/n] ")
+    if sure != "y":
+        print("Better safe than sorry!")
         abort()
     mem.write_data(data_written)
 
     # Timeout 10 seconds
     for _ in range(10 * 2):
         time.sleep(0.5)
-    print('Apparently data could not be written to memory... :(')
+    print("Apparently data could not be written to memory... :(")
 
     flasher.disconnect()

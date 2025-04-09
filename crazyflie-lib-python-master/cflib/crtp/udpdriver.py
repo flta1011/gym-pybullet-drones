@@ -34,8 +34,8 @@ from .crtpdriver import CRTPDriver
 from .crtpstack import CRTPPacket
 from .exceptions import WrongUriType
 
-__author__ = 'Bitcraze AB'
-__all__ = ['UdpDriver']
+__author__ = "Bitcraze AB"
+__all__ = ["UdpDriver"]
 
 
 class UdpDriver(CRTPDriver):
@@ -44,8 +44,8 @@ class UdpDriver(CRTPDriver):
         None
 
     def connect(self, uri, linkQualityCallback, linkErrorCallback):
-        if not re.search('^udp://', uri):
-            raise WrongUriType('Not an UDP URI')
+        if not re.search("^udp://", uri):
+            raise WrongUriType("Not an UDP URI")
 
         parse = urlparse(uri)
 
@@ -54,13 +54,13 @@ class UdpDriver(CRTPDriver):
         self.addr = (parse.hostname, parse.port)
         self.socket.connect(self.addr)
 
-        self.socket.sendto('\xFF\x01\x01\x01'.encode(), self.addr)
+        self.socket.sendto("\xFF\x01\x01\x01".encode(), self.addr)
 
     def receive_packet(self, time=0):
         data, addr = self.socket.recvfrom(1024)
 
         if data:
-            data = struct.unpack('B' * (len(data) - 1), data[0:len(data) - 1])
+            data = struct.unpack("B" * (len(data) - 1), data[0 : len(data) - 1])
             pk = CRTPPacket()
             pk.port = data[0]
             pk.data = data[1:]
@@ -78,7 +78,7 @@ class UdpDriver(CRTPDriver):
             return None
 
     def send_packet(self, pk):
-        raw = (pk.port,) + struct.unpack('B' * len(pk.data), pk.data)
+        raw = (pk.port,) + struct.unpack("B" * len(pk.data), pk.data)
 
         cksum = 0
         for i in raw:
@@ -86,17 +86,17 @@ class UdpDriver(CRTPDriver):
 
         cksum %= 256
 
-        data = ''.join(chr(v) for v in (raw + (cksum,)))
+        data = "".join(chr(v) for v in (raw + (cksum,)))
 
         # print tuple(data)
         self.socket.sendto(data.encode(), self.addr)
 
     def close(self):
         # Remove this from the server clients list
-        self.socket.sendto('\xFF\x01\x02\x02'.encode(), self.addr)
+        self.socket.sendto("\xFF\x01\x02\x02".encode(), self.addr)
 
     def get_name(self):
-        return 'udp'
+        return "udp"
 
     def scan_interface(self, address):
         return []

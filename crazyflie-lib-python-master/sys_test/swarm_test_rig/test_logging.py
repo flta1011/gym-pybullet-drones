@@ -40,7 +40,7 @@ class TestLogging(unittest.TestCase):
         # Fixture
         uri = self.test_rig_support.all_uris[0]
         self.test_rig_support.restart_devices([uri])
-        cf = Crazyflie(rw_cache='./cache')
+        cf = Crazyflie(rw_cache="./cache")
 
         # Test and Assert
         with SyncCrazyflie(uri, cf=cf) as scf:
@@ -50,18 +50,18 @@ class TestLogging(unittest.TestCase):
         # Fixture
         uris = self.test_rig_support.all_uris
         self.test_rig_support.restart_devices(uris)
-        factory = CachedCfFactory(rw_cache='./cache')
+        factory = CachedCfFactory(rw_cache="./cache")
 
         # Test and Assert
         with Swarm(uris, factory=factory) as swarm:
             swarm.parallel_safe(self.assert_add_logging_and_get_non_zero_value)
 
     def assert_add_logging_and_get_non_zero_value(self, scf):
-        log_name = 'stabilizer.roll'
+        log_name = "stabilizer.roll"
         expected = 0.0
 
-        lg_conf = LogConfig(name='SysTest', period_in_ms=10)
-        lg_conf.add_variable(log_name, 'float')
+        lg_conf = LogConfig(name="SysTest", period_in_ms=10)
+        lg_conf.add_variable(log_name, "float")
 
         with SyncLogger(scf, lg_conf) as logger:
             for log_entry in logger:

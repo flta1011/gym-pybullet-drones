@@ -44,39 +44,39 @@ class Poly4D:
     def pack(self):
         data = bytearray()
 
-        data += struct.pack('<ffffffff', *self.x.values)
-        data += struct.pack('<ffffffff', *self.y.values)
-        data += struct.pack('<ffffffff', *self.z.values)
-        data += struct.pack('<ffffffff', *self.yaw.values)
-        data += struct.pack('<f', self.duration)
+        data += struct.pack("<ffffffff", *self.x.values)
+        data += struct.pack("<ffffffff", *self.y.values)
+        data += struct.pack("<ffffffff", *self.z.values)
+        data += struct.pack("<ffffffff", *self.yaw.values)
+        data += struct.pack("<f", self.duration)
 
         return data
 
 
 class _CompressedBase:
     def _encode_spatial(self, coordinate):
-        '''
+        """
         Spatial coordinates (X, Y and Z) are represented as millimeters and are stored as signed 2-byte integers,
         meaning that the maximum spatial volume that this representation can cover is roughly 64m x 64m x 64m,
         assuming that the origin is at the center.
-        '''
+        """
         return int(coordinate * 1000)
 
     def _encode_spatial_element(self, element):
         return map(self._encode_spatial, element)
 
     def _encode_yaw(self, angle_rad):
-        '''
+        """
         Angles (for the yaw coordinate) are represented as 1/10th of degrees and are stored as signed 2-byte
         integers.
-        '''
+        """
         return int(math.degrees(angle_rad) * 10)
 
     def _encode_yaw_element(self, element):
-        '''
+        """
         Angles (for the yaw coordinate) are represented as 1/10th of degrees and are stored as signed 2-byte
         integers.
-        '''
+        """
         return map(self._encode_yaw, element)
 
 
@@ -90,12 +90,7 @@ class CompressedStart(_CompressedBase):
     def pack(self):
         data = bytearray()
 
-        data += struct.pack(
-            '<hhhh',
-            self._encode_spatial(self.x),
-            self._encode_spatial(self.y),
-            self._encode_spatial(self.z),
-            self._encode_yaw(self.yaw))
+        data += struct.pack("<hhhh", self._encode_spatial(self.x), self._encode_spatial(self.y), self._encode_spatial(self.z), self._encode_yaw(self.yaw))
 
         return data
 
@@ -114,13 +109,12 @@ class CompressedSegment(_CompressedBase):
         self.yaw = element_yaw
 
     def pack(self):
-        element_types = (self._encode_type(self.x) << 0) | (self._encode_type(self.y) << 2) | (
-            self._encode_type(self.z) << 4) | (self._encode_type(self.yaw) << 6)
+        element_types = (self._encode_type(self.x) << 0) | (self._encode_type(self.y) << 2) | (self._encode_type(self.z) << 4) | (self._encode_type(self.yaw) << 6)
         duration_ms = int(self.duration * 1000.0)
 
         data = bytearray()
 
-        data += struct.pack('<BH', element_types, duration_ms)
+        data += struct.pack("<BH", element_types, duration_ms)
         data += self._pack_element(self._encode_spatial_element(self.x))
         data += self._pack_element(self._encode_spatial_element(self.y))
         data += self._pack_element(self._encode_spatial_element(self.z))
@@ -131,7 +125,7 @@ class CompressedSegment(_CompressedBase):
     def _validate(self, element):
         length = len(element)
         if length != 0 and length != 1 and length != 3 and length != 7:
-            raise Exception('length of element must be 0, 1, 3, or 7')
+            raise Exception("length of element must be 0, 1, 3, or 7")
 
     def _encode_type(self, element):
         if len(element) == 0:
@@ -147,7 +141,7 @@ class CompressedSegment(_CompressedBase):
         data = bytearray()
 
         for part in encoded_element:
-            data += struct.pack('<h', part)
+            data += struct.pack("<h", part)
 
         return data
 
@@ -217,7 +211,7 @@ class TrajectoryMemory(MemoryElement):
 
     def write_done(self, mem, addr):
         if self._write_finished_cb and mem.id == self.id:
-            logger.debug('Write trajectory data done')
+            logger.debug("Write trajectory data done")
             self._write_finished_cb(self, addr)
             self._write_finished_cb = None
             self._write_failed_cb = None
@@ -225,7 +219,7 @@ class TrajectoryMemory(MemoryElement):
     def write_failed(self, mem, addr):
         if mem.id == self.id:
             if self._write_failed_cb:
-                logger.debug('Write of trajectory data failed')
+                logger.debug("Write of trajectory data failed")
                 self._write_failed_cb(self, addr)
             self._write_finished_cb = None
             self._write_failed_cb = None

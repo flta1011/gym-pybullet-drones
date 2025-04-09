@@ -41,7 +41,7 @@ def activate_mellinger_controller(scf, use_mellinger):
     controller = 1
     if use_mellinger:
         controller = 2
-    scf.cf.param.set_value('stabilizer.controller', controller)
+    scf.cf.param.set_value("stabilizer.controller", controller)
 
 
 def arm(scf):
@@ -79,15 +79,15 @@ def run_shared_sequence(scf):
 
 
 uris = {
-    'radio://0/30/2M/E7E7E7E711',
-    'radio://0/30/2M/E7E7E7E712',
+    "radio://0/30/2M/E7E7E7E711",
+    "radio://0/30/2M/E7E7E7E712",
     # Add more URIs if you want more copters in the swarm
     # URIs in a swarm using the same radio must also be on the same channel
 }
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cflib.crtp.init_drivers()
-    factory = CachedCfFactory(rw_cache='./cache')
+    factory = CachedCfFactory(rw_cache="./cache")
     with Swarm(uris, factory=factory) as swarm:
         swarm.reset_estimators()
         swarm.parallel_safe(arm)

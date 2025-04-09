@@ -9,16 +9,16 @@ def _computeObs(self):
     - 0: zu nahe an der Wand,
     - 1: Wand kommt näher,
     - 2: safe Distance,
-    - 9999: Sensor oben frei
+    - 4: Sensor oben frei
 
     Returns (28.2.25):
     -------
     ndarray
-        A Box() of shape (NUM_DRONES,5) -> vorne, hinten, links, rechts, oben (1,9999)
+        A Box() of shape (NUM_DRONES,5) -> vorne, hinten, links, rechts, oben (1,4)
         -> 0: zu nahe an der Wand,
         -> 1: Wand kommt näher,
         -> 2: safe Distance,
-        -> 9999: Sensor oben frei
+        -> 4: Sensor oben frei
     """
 
     match self.OBSERVATION_TYPE:
@@ -51,9 +51,9 @@ def _computeObs(self):
             if state[25] < 1:
                 modified_obs.append(1)
             else:
-                modified_obs.append(9999)
+                modified_obs.append(4)
 
-            return np.array(modified_obs, dtype=np.float32)  # vorne (0,1,2), hinten (0,1,2), links (0,1,2), rechts (0,1,2), oben (1,9999)
+            return np.array(modified_obs, dtype=np.float32)  # vorne (0,1,2), hinten (0,1,2), links (0,1,2), rechts (0,1,2), oben (1,4)
 
         case "O2":  # 4 Kanalig Bild Slam, X, Y, Yaw Position
             """
@@ -203,14 +203,14 @@ def _computeObs(self):
 
             return obs
 
-        case "O4":  # 4 Kanalig Bild Slam, X, Y, Yaw Position
+        case "O4":  # 1 Kanalig Bild Slam, X, Y, Yaw Position
             """
             Baut einen 1-Kanal-Tensor auf:
             - Kanal 1: Normalisierte SLAM Map (Occupancy Map)
             """
 
             # Get SLAM map and normalize it
-            slam_map = self.slam.occupancy_grid
+            slam_map = self.slam.cropped_grid
 
             obs = np.stack([slam_map], axis=0)
             self.obs = obs  # für Visualisierung in dem Dashboard
@@ -251,7 +251,7 @@ def _computeObs(self):
             # if state[25] < 1:
             #     modified_obs.append(1)
             # else:
-            #     modified_obs.append(9999)
+            #     modified_obs.append(4)
 
             # Ensure last_actions is flattened and appended correctly
             if isinstance(self.last_actions, (list, np.ndarray)):
@@ -259,7 +259,7 @@ def _computeObs(self):
             else:
                 modified_obs.append(self.last_actions)  # Append directly if it's a single value
 
-            return np.array(modified_obs, dtype=np.float32)  # vorne (0,1,2), hinten (0,1,2), links (0,1,2), rechts (0,1,2), oben (1,9999)
+            return np.array(modified_obs, dtype=np.float32)  # vorne (0,1,2), hinten (0,1,2), links (0,1,2), rechts (0,1,2), oben (1,4)
 
         case "O6":  # 4 Kanalig Bild Slam, X, Y, Yaw Position
             """
@@ -294,7 +294,7 @@ def _computeObs(self):
             # obs = np.stack([slam_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel], axis=0)
             obs = dict(
                 {
-                    "image": slam_map,
+                    "image": self.slam.cropped_grid,
                     "x": state[0],
                     "y": state[1],
                     "sin_yaw": np.sin(yaw),
@@ -306,7 +306,7 @@ def _computeObs(self):
 
             return obs
 
-        case "O7":  # 4 Kanalig Bild Slam, X, Y, Yaw Position
+        case "O7":  # 4 Kanalig Cropped Bild Slam, X, Y, Yaw Position
             """
             Baut einen 8-Kanal-Tensor auf:
             - Kanal 1: Normalisierte SLAM Map (Occupancy Map)
@@ -336,7 +336,7 @@ def _computeObs(self):
             # obs = np.stack([slam_map, pos_x_channel, pos_y_channel, yaw_sin_channel, yaw_cos_channel], axis=0)
             obs = dict(
                 {
-                    "image": slam_map,
+                    "image": self.slam.cropped_grid,
                     "x": state[0],
                     "y": state[1],
                     "sin_yaw": np.sin(yaw),

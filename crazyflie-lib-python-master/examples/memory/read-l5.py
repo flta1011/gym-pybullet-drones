@@ -41,19 +41,19 @@ logging.basicConfig(level=logging.ERROR)
 class ReadMem:
     def __init__(self, uri):
         self._event = Event()
-        self._cf = Crazyflie(rw_cache='./cache')
+        self._cf = Crazyflie(rw_cache="./cache")
 
         with SyncCrazyflie(uri, cf=self._cf) as scf:
             mems = scf.cf.mem.get_mems(MemoryElement.TYPE_DECK_MULTIRANGER)
 
             count = len(mems)
             if count != 1:
-                raise Exception('Unexpected nr of memories found:', count)
+                raise Exception("Unexpected nr of memories found:", count)
 
             mem = mems[0]
 
             data = [[0 for x in range(8)] for y in range(8)]
-            im = plt.imshow(data, cmap='gray', vmin=0, vmax=400)
+            im = plt.imshow(data, cmap="gray", vmin=0, vmax=400)
 
             start_time = time.time()
             for frames in range(100):
@@ -62,12 +62,12 @@ class ReadMem:
                 plt.pause(0.01)
 
             end_time = time.time()
-            print('FPS: {}'.format(100/(end_time - start_time)))
+            print("FPS: {}".format(100 / (end_time - start_time)))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # URI to the Crazyflie to connect to
-    uri = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
+    uri = uri_helper.uri_from_env(default="radio://0/80/2M/E7E7E7E7E7")
 
     # Initialize the low-level drivers
     cflib.crtp.init_drivers()

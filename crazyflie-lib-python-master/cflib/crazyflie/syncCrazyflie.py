@@ -76,12 +76,12 @@ class SyncCrazyflie:
         Note: Parameter values have not been updated when this function returns. See the wait_for_params()
         method.
         """
-        if (self.is_link_open()):
-            raise Exception('Link already open')
+        if self.is_link_open():
+            raise Exception("Link already open")
 
         self._add_callbacks()
 
-        logger.debug('Connecting to %s' % self._link_uri)
+        logger.debug("Connecting to %s" % self._link_uri)
 
         self._connect_event = Event()
         self._params_updated_event.clear()
@@ -120,7 +120,7 @@ class SyncCrazyflie:
         return self
 
     def close_link(self):
-        if (self.is_link_open()):
+        if self.is_link_open():
             self._disconnect_event = Event()
             self.cf.close_link()
             self._disconnect_event.wait()
@@ -137,9 +137,9 @@ class SyncCrazyflie:
         return self._params_updated_event.is_set()
 
     def _connected(self, link_uri):
-        """ This callback is called form the Crazyflie API when a Crazyflie
+        """This callback is called form the Crazyflie API when a Crazyflie
         has been connected and the TOCs have been downloaded."""
-        logger.debug('Connected to %s' % link_uri)
+        logger.debug("Connected to %s" % link_uri)
         self._is_link_open = True
         if self._connect_event:
             self._connect_event.set()
@@ -147,7 +147,7 @@ class SyncCrazyflie:
     def _connection_failed(self, link_uri, msg):
         """Callback when initial connection fails (i.e no Crazyflie
         at the specified address)"""
-        logger.debug('Connection to %s failed: %s' % (link_uri, msg))
+        logger.debug("Connection to %s failed: %s" % (link_uri, msg))
         self._is_link_open = False
         self._error_message = msg
         if self._connect_event:

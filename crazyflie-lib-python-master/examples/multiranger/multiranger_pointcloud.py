@@ -64,8 +64,9 @@ from cflib.utils import uri_helper
 
 try:
     from sip import setapi
-    setapi('QVariant', 2)
-    setapi('QString', 2)
+
+    setapi("QVariant", 2)
+    setapi("QString", 2)
 except ImportError:
     pass
 
@@ -73,7 +74,7 @@ from PyQt6 import QtCore, QtWidgets
 
 logging.basicConfig(level=logging.INFO)
 
-URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
+URI = uri_helper.uri_from_env(default="radio://0/80/2M/E7E7E7E7E7")
 
 if len(sys.argv) > 1:
     URI = sys.argv[1]
@@ -94,7 +95,7 @@ class MainWindow(QtWidgets.QMainWindow):
         QtWidgets.QMainWindow.__init__(self)
 
         self.resize(700, 500)
-        self.setWindowTitle('Multi-ranger point cloud')
+        self.setWindowTitle("Multi-ranger point cloud")
 
         self.canvas = Canvas(self.updateHover)
         self.canvas.create_native()
@@ -103,7 +104,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.canvas.native)
 
         cflib.crtp.init_drivers()
-        self.cf = Crazyflie(ro_cache=None, rw_cache='cache')
+        self.cf = Crazyflie(ro_cache=None, rw_cache="cache")
 
         # Connect callbacks from the Crazyflie API
         self.cf.connected.add_callback(self.connected)
@@ -116,7 +117,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cf.platform.send_arming_request(True)
         time.sleep(1.0)
 
-        self.hover = {'x': 0.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0, 'height': 0.3}
+        self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.3}
 
         self.hoverTimer = QtCore.QTimer()
         self.hoverTimer.timeout.connect(self.sendHoverCommand)
@@ -124,83 +125,75 @@ class MainWindow(QtWidgets.QMainWindow):
         self.hoverTimer.start()
 
     def sendHoverCommand(self):
-        self.cf.commander.send_hover_setpoint(
-            self.hover['x'], self.hover['y'], self.hover['yaw'],
-            self.hover['height'])
+        self.cf.commander.send_hover_setpoint(self.hover["x"], self.hover["y"], self.hover["yaw"], self.hover["height"])
 
     def updateHover(self, k, v):
-        if (k != 'height'):
+        if k != "height":
             self.hover[k] = v * SPEED_FACTOR
         else:
             self.hover[k] += v
 
     def disconnected(self, URI):
-        print('Disconnected')
+        print("Disconnected")
 
     def connected(self, URI):
-        print('We are now connected to {}'.format(URI))
+        print("We are now connected to {}".format(URI))
 
         # The definition of the logconfig can be made before connecting
-        lpos = LogConfig(name='Position', period_in_ms=100)
-        lpos.add_variable('stateEstimate.x')
-        lpos.add_variable('stateEstimate.y')
-        lpos.add_variable('stateEstimate.z')
+        lpos = LogConfig(name="Position", period_in_ms=100)
+        lpos.add_variable("stateEstimate.x")
+        lpos.add_variable("stateEstimate.y")
+        lpos.add_variable("stateEstimate.z")
 
         try:
             self.cf.log.add_config(lpos)
             lpos.data_received_cb.add_callback(self.pos_data)
             lpos.start()
         except KeyError as e:
-            print('Could not start log configuration,'
-                  '{} not found in TOC'.format(str(e)))
+            print("Could not start log configuration," "{} not found in TOC".format(str(e)))
         except AttributeError:
-            print('Could not add Position log config, bad configuration.')
+            print("Could not add Position log config, bad configuration.")
 
-        lmeas = LogConfig(name='Meas', period_in_ms=100)
-        lmeas.add_variable('range.front')
-        lmeas.add_variable('range.back')
-        lmeas.add_variable('range.up')
-        lmeas.add_variable('range.left')
-        lmeas.add_variable('range.right')
-        lmeas.add_variable('range.zrange')
-        lmeas.add_variable('stabilizer.roll')
-        lmeas.add_variable('stabilizer.pitch')
-        lmeas.add_variable('stabilizer.yaw')
+        lmeas = LogConfig(name="Meas", period_in_ms=100)
+        lmeas.add_variable("range.front")
+        lmeas.add_variable("range.back")
+        lmeas.add_variable("range.up")
+        lmeas.add_variable("range.left")
+        lmeas.add_variable("range.right")
+        lmeas.add_variable("range.zrange")
+        lmeas.add_variable("stabilizer.roll")
+        lmeas.add_variable("stabilizer.pitch")
+        lmeas.add_variable("stabilizer.yaw")
 
         try:
             self.cf.log.add_config(lmeas)
             lmeas.data_received_cb.add_callback(self.meas_data)
             lmeas.start()
         except KeyError as e:
-            print('Could not start log configuration,'
-                  '{} not found in TOC'.format(str(e)))
+            print("Could not start log configuration," "{} not found in TOC".format(str(e)))
         except AttributeError:
-            print('Could not add Measurement log config, bad configuration.')
+            print("Could not add Measurement log config, bad configuration.")
 
     def pos_data(self, timestamp, data, logconf):
-        position = [
-            data['stateEstimate.x'],
-            data['stateEstimate.y'],
-            data['stateEstimate.z']
-        ]
+        position = [data["stateEstimate.x"], data["stateEstimate.y"], data["stateEstimate.z"]]
         self.canvas.set_position(position)
 
     def meas_data(self, timestamp, data, logconf):
         measurement = {
-            'roll': data['stabilizer.roll'],
-            'pitch': data['stabilizer.pitch'],
-            'yaw': data['stabilizer.yaw'],
-            'front': data['range.front'],
-            'back': data['range.back'],
-            'up': data['range.up'],
-            'down': data['range.zrange'],
-            'left': data['range.left'],
-            'right': data['range.right']
+            "roll": data["stabilizer.roll"],
+            "pitch": data["stabilizer.pitch"],
+            "yaw": data["stabilizer.yaw"],
+            "front": data["range.front"],
+            "back": data["range.back"],
+            "up": data["range.up"],
+            "down": data["range.zrange"],
+            "left": data["range.left"],
+            "right": data["range.right"],
         }
         self.canvas.set_measurement(measurement)
 
     def closeEvent(self, event):
-        if (self.cf is not None):
+        if self.cf is not None:
             self.cf.close_link()
 
 
@@ -210,9 +203,8 @@ class Canvas(scene.SceneCanvas):
         self.size = 800, 600
         self.unfreeze()
         self.view = self.central_widget.add_view()
-        self.view.bgcolor = '#ffffff'
-        self.view.camera = TurntableCamera(
-            fov=10.0, distance=30.0, up='+z', center=(0.0, 0.0, 0.0))
+        self.view.bgcolor = "#ffffff"
+        self.view.camera = TurntableCamera(fov=10.0, distance=30.0, up="+z", center=(0.0, 0.0, 0.0))
         self.last_pos = [0, 0, 0]
         self.pos_markers = visuals.Markers()
         self.meas_markers = visuals.Markers()
@@ -234,56 +226,56 @@ class Canvas(scene.SceneCanvas):
         scene.visuals.XYZAxis(parent=self.view.scene)
 
     def on_key_press(self, event):
-        if (not event.native.isAutoRepeat()):
-            if (event.native.key() == QtCore.Qt.Key.Key_Left):
-                self.keyCB('y', 1)
-            if (event.native.key() == QtCore.Qt.Key.Key_Right):
-                self.keyCB('y', -1)
-            if (event.native.key() == QtCore.Qt.Key.Key_Up):
-                self.keyCB('x', 1)
-            if (event.native.key() == QtCore.Qt.Key.Key_Down):
-                self.keyCB('x', -1)
-            if (event.native.key() == QtCore.Qt.Key.Key_A):
-                self.keyCB('yaw', -70)
-            if (event.native.key() == QtCore.Qt.Key.Key_D):
-                self.keyCB('yaw', 70)
-            if (event.native.key() == QtCore.Qt.Key.Key_Z):
-                self.keyCB('yaw', -200)
-            if (event.native.key() == QtCore.Qt.Key.Key_X):
-                self.keyCB('yaw', 200)
-            if (event.native.key() == QtCore.Qt.Key.Key_W):
-                self.keyCB('height', 0.1)
-            if (event.native.key() == QtCore.Qt.Key.Key_S):
-                self.keyCB('height', -0.1)
+        if not event.native.isAutoRepeat():
+            if event.native.key() == QtCore.Qt.Key.Key_Left:
+                self.keyCB("y", 1)
+            if event.native.key() == QtCore.Qt.Key.Key_Right:
+                self.keyCB("y", -1)
+            if event.native.key() == QtCore.Qt.Key.Key_Up:
+                self.keyCB("x", 1)
+            if event.native.key() == QtCore.Qt.Key.Key_Down:
+                self.keyCB("x", -1)
+            if event.native.key() == QtCore.Qt.Key.Key_A:
+                self.keyCB("yaw", -70)
+            if event.native.key() == QtCore.Qt.Key.Key_D:
+                self.keyCB("yaw", 70)
+            if event.native.key() == QtCore.Qt.Key.Key_Z:
+                self.keyCB("yaw", -200)
+            if event.native.key() == QtCore.Qt.Key.Key_X:
+                self.keyCB("yaw", 200)
+            if event.native.key() == QtCore.Qt.Key.Key_W:
+                self.keyCB("height", 0.1)
+            if event.native.key() == QtCore.Qt.Key.Key_S:
+                self.keyCB("height", -0.1)
 
     def on_key_release(self, event):
-        if (not event.native.isAutoRepeat()):
-            if (event.native.key() == QtCore.Qt.Key.Key_Left):
-                self.keyCB('y', 0)
-            if (event.native.key() == QtCore.Qt.Key.Key_Right):
-                self.keyCB('y', 0)
-            if (event.native.key() == QtCore.Qt.Key.Key_Up):
-                self.keyCB('x', 0)
-            if (event.native.key() == QtCore.Qt.Key.Key_Down):
-                self.keyCB('x', 0)
-            if (event.native.key() == QtCore.Qt.Key.Key_A):
-                self.keyCB('yaw', 0)
-            if (event.native.key() == QtCore.Qt.Key.Key_D):
-                self.keyCB('yaw', 0)
-            if (event.native.key() == QtCore.Qt.Key.Key_W):
-                self.keyCB('height', 0)
-            if (event.native.key() == QtCore.Qt.Key.Key_S):
-                self.keyCB('height', 0)
-            if (event.native.key() == QtCore.Qt.Key.Key_Z):
-                self.keyCB('yaw', 0)
-            if (event.native.key() == QtCore.Qt.Key.Key_X):
-                self.keyCB('yaw', 0)
+        if not event.native.isAutoRepeat():
+            if event.native.key() == QtCore.Qt.Key.Key_Left:
+                self.keyCB("y", 0)
+            if event.native.key() == QtCore.Qt.Key.Key_Right:
+                self.keyCB("y", 0)
+            if event.native.key() == QtCore.Qt.Key.Key_Up:
+                self.keyCB("x", 0)
+            if event.native.key() == QtCore.Qt.Key.Key_Down:
+                self.keyCB("x", 0)
+            if event.native.key() == QtCore.Qt.Key.Key_A:
+                self.keyCB("yaw", 0)
+            if event.native.key() == QtCore.Qt.Key.Key_D:
+                self.keyCB("yaw", 0)
+            if event.native.key() == QtCore.Qt.Key.Key_W:
+                self.keyCB("height", 0)
+            if event.native.key() == QtCore.Qt.Key.Key_S:
+                self.keyCB("height", 0)
+            if event.native.key() == QtCore.Qt.Key.Key_Z:
+                self.keyCB("yaw", 0)
+            if event.native.key() == QtCore.Qt.Key.Key_X:
+                self.keyCB("yaw", 0)
 
     def set_position(self, pos):
         self.last_pos = pos
-        if (PLOT_CF):
+        if PLOT_CF:
             self.pos_data = np.append(self.pos_data, [pos], axis=0)
-            self.pos_markers.set_data(self.pos_data, face_color='red', size=5)
+            self.pos_markers.set_data(self.pos_data, face_color="red", size=5)
 
     def rot(self, roll, pitch, yaw, origin, point):
         cosr = math.cos(math.radians(roll))
@@ -294,17 +286,11 @@ class Canvas(scene.SceneCanvas):
         sinp = math.sin(math.radians(pitch))
         siny = math.sin(math.radians(yaw))
 
-        roty = np.array([[cosy, -siny, 0],
-                         [siny, cosy, 0],
-                         [0, 0,    1]])
+        roty = np.array([[cosy, -siny, 0], [siny, cosy, 0], [0, 0, 1]])
 
-        rotp = np.array([[cosp, 0, sinp],
-                         [0, 1, 0],
-                         [-sinp, 0, cosp]])
+        rotp = np.array([[cosp, 0, sinp], [0, 1, 0], [-sinp, 0, cosp]])
 
-        rotr = np.array([[1, 0,   0],
-                         [0, cosr, -sinr],
-                         [0, sinr,  cosr]])
+        rotr = np.array([[1, 0, 0], [0, cosr, -sinr], [0, sinr, cosr]])
 
         rotFirst = np.dot(rotr, rotp)
 
@@ -317,32 +303,32 @@ class Canvas(scene.SceneCanvas):
     def rotate_and_create_points(self, m):
         data = []
         o = self.last_pos
-        roll = m['roll']
-        pitch = -m['pitch']
-        yaw = m['yaw']
+        roll = m["roll"]
+        pitch = -m["pitch"]
+        yaw = m["yaw"]
 
-        if (m['up'] < SENSOR_TH):
-            up = [o[0], o[1], o[2] + m['up'] / 1000.0]
+        if m["up"] < SENSOR_TH:
+            up = [o[0], o[1], o[2] + m["up"] / 1000.0]
             data.append(self.rot(roll, pitch, yaw, o, up))
 
-        if (m['down'] < SENSOR_TH and PLOT_SENSOR_DOWN):
-            down = [o[0], o[1], o[2] - m['down'] / 1000.0]
+        if m["down"] < SENSOR_TH and PLOT_SENSOR_DOWN:
+            down = [o[0], o[1], o[2] - m["down"] / 1000.0]
             data.append(self.rot(roll, pitch, yaw, o, down))
 
-        if (m['left'] < SENSOR_TH):
-            left = [o[0], o[1] + m['left'] / 1000.0, o[2]]
+        if m["left"] < SENSOR_TH:
+            left = [o[0], o[1] + m["left"] / 1000.0, o[2]]
             data.append(self.rot(roll, pitch, yaw, o, left))
 
-        if (m['right'] < SENSOR_TH):
-            right = [o[0], o[1] - m['right'] / 1000.0, o[2]]
+        if m["right"] < SENSOR_TH:
+            right = [o[0], o[1] - m["right"] / 1000.0, o[2]]
             data.append(self.rot(roll, pitch, yaw, o, right))
 
-        if (m['front'] < SENSOR_TH):
-            front = [o[0] + m['front'] / 1000.0, o[1], o[2]]
+        if m["front"] < SENSOR_TH:
+            front = [o[0] + m["front"] / 1000.0, o[1], o[2]]
             data.append(self.rot(roll, pitch, yaw, o, front))
 
-        if (m['back'] < SENSOR_TH):
-            back = [o[0] - m['back'] / 1000.0, o[1], o[2]]
+        if m["back"] < SENSOR_TH:
+            back = [o[0] - m["back"] / 1000.0, o[1], o[2]]
             data.append(self.rot(roll, pitch, yaw, o, back))
 
         return data
@@ -351,18 +337,18 @@ class Canvas(scene.SceneCanvas):
         data = self.rotate_and_create_points(measurements)
         o = self.last_pos
         for i in range(6):
-            if (i < len(data)):
+            if i < len(data):
                 o = self.last_pos
                 self.lines[i].set_data(np.array([o, data[i]]))
             else:
                 self.lines[i].set_data(np.array([o, o]))
 
-        if (len(data) > 0):
+        if len(data) > 0:
             self.meas_data = np.append(self.meas_data, data, axis=0)
-        self.meas_markers.set_data(self.meas_data, face_color='blue', size=5)
+        self.meas_markers.set_data(self.meas_data, face_color="blue", size=5)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     appQt = QtWidgets.QApplication(sys.argv)
     win = MainWindow(URI)
     win.show()

@@ -30,11 +30,11 @@ from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 
 
 def activate_led_bit_mask(scf: SyncCrazyflie):
-    scf.cf.param.set_value('led.bitmask', 255)
+    scf.cf.param.set_value("led.bitmask", 255)
 
 
 def deactivate_led_bit_mask(scf: SyncCrazyflie):
-    scf.cf.param.set_value('led.bitmask', 0)
+    scf.cf.param.set_value("led.bitmask", 0)
 
 
 def light_check(scf: SyncCrazyflie):
@@ -85,10 +85,10 @@ def run_square_sequence(scf: SyncCrazyflie):
 
 
 uris = [
-    'radio://0/20/2M/E7E7E7E701',
-    'radio://0/20/2M/E7E7E7E702',
-    'radio://0/20/2M/E7E7E7E703',
-    'radio://0/20/2M/E7E7E7E704',
+    "radio://0/20/2M/E7E7E7E701",
+    "radio://0/20/2M/E7E7E7E702",
+    "radio://0/20/2M/E7E7E7E703",
+    "radio://0/20/2M/E7E7E7E704",
     # Add more URIs if you want more copters in the swarm
     # URIs in a swarm using the same radio must also be on the same channel
 ]
@@ -113,25 +113,25 @@ x1, y1 = -0.5, -0.5
 sequence0 = [
     (x1, y0, h, 3.0),
     (x0, y1, h, 3.0),
-    (x0,  0, h, 3.0),
+    (x0, 0, h, 3.0),
 ]
 
 sequence1 = [
     (x0, y0, h, 3.0),
     (x1, y1, h, 3.0),
-    (.0, y1, h, 3.0),
+    (0.0, y1, h, 3.0),
 ]
 
 sequence2 = [
     (x0, y1, h, 3.0),
     (x1, y0, h, 3.0),
-    (x1,  0, h, 3.0),
+    (x1, 0, h, 3.0),
 ]
 
 sequence3 = [
     (x1, y1, h, 3.0),
     (x0, y0, h, 3.0),
-    (.0, y0, h, 3.0),
+    (0.0, y0, h, 3.0),
 ]
 
 seq_args = {
@@ -151,21 +151,21 @@ def run_sequence(scf: SyncCrazyflie, sequence):
         x, y, z = arguments[0], arguments[1], arguments[2]
         duration = arguments[3]
 
-        print('Setting position {} to cf {}'.format((x, y, z), cf.link_uri))
+        print("Setting position {} to cf {}".format((x, y, z), cf.link_uri))
         commander.go_to(x, y, z, 0, duration, relative=True)
         time.sleep(duration)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cflib.crtp.init_drivers()
-    factory = CachedCfFactory(rw_cache='./cache')
+    factory = CachedCfFactory(rw_cache="./cache")
     with Swarm(uris, factory=factory) as swarm:
-        print('Connected to  Crazyflies')
+        print("Connected to  Crazyflies")
         swarm.parallel_safe(light_check)
-        print('Light check done')
+        print("Light check done")
 
         swarm.reset_estimators()
-        print('Estimators have been reset')
+        print("Estimators have been reset")
 
         swarm.parallel_safe(arm)
         swarm.parallel_safe(take_off)

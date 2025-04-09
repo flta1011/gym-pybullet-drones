@@ -40,7 +40,7 @@ class ReadMem:
     def __init__(self, uri):
         self._event = Event()
 
-        with SyncCrazyflie(uri, cf=Crazyflie(rw_cache='./cache')) as scf:
+        with SyncCrazyflie(uri, cf=Crazyflie(rw_cache="./cache")) as scf:
             helper = LighthouseMemHelper(scf.cf)
 
             helper.read_all_geos(self._geo_read_ready)
@@ -53,22 +53,22 @@ class ReadMem:
 
     def _geo_read_ready(self, geo_data):
         for id, data in geo_data.items():
-            print('---- Geometry for base station', id + 1)
+            print("---- Geometry for base station", id + 1)
             data.dump()
             print()
         self._event.set()
 
     def _calib_read_ready(self, calib_data):
         for id, data in calib_data.items():
-            print('---- Calibration data for base station', id + 1)
+            print("---- Calibration data for base station", id + 1)
             data.dump()
             print()
         self._event.set()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # URI to the Crazyflie to connect to
-    uri = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
+    uri = uri_helper.uri_from_env(default="radio://0/80/2M/E7E7E7E7E7")
 
     # Initialize the low-level drivers
     cflib.crtp.init_drivers()

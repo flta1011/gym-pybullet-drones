@@ -134,8 +134,7 @@ class LighthouseGeometrySolver:
     """
 
     @classmethod
-    def solve(cls, initial_guess: LhBsCfPoses, matched_samples: list[LhCfPoseSample],
-              sensor_positions: npt.ArrayLike) -> LighthouseGeometrySolution:
+    def solve(cls, initial_guess: LhBsCfPoses, matched_samples: list[LhCfPoseSample], sensor_positions: npt.ArrayLike) -> LighthouseGeometrySolution:
         """
         Solve for the pose of base stations and CF samples.
         The pose of the CF in sample 0 defines the global reference frame.
@@ -157,8 +156,7 @@ class LighthouseGeometrySolver:
         solution.bs_id_to_index, solution.bs_index_to_id = cls._create_bs_map(initial_guess.bs_poses)
 
         target_angles = cls._populate_target_angles(matched_samples)
-        idx_agl_pr_to_bs, idx_agl_pr_to_cf, idx_agl_pr_to_sens_pos, jac_sparsity = cls._populate_indexes_and_jacobian(
-            matched_samples, solution)
+        idx_agl_pr_to_bs, idx_agl_pr_to_cf, idx_agl_pr_to_sens_pos, jac_sparsity = cls._populate_indexes_and_jacobian(matched_samples, solution)
         params_bs, params_cfs = cls._populate_initial_guess(initial_guess, solution)
 
         # Extra arguments passed on to calc_residual()
@@ -167,15 +165,7 @@ class LighthouseGeometrySolver:
         # Vector to optimize. Composed of base station parameters followed by cf parameters
         x0 = np.hstack((params_bs.ravel(), params_cfs.ravel()))
 
-        result = scipy.optimize.least_squares(cls._calc_residual,
-                                              x0,
-                                              verbose=0,
-                                              jac_sparsity=jac_sparsity,
-                                              x_scale='jac',
-                                              ftol=1e-8,
-                                              method='trf',
-                                              max_nfev=solution.max_nr_iter,
-                                              args=args)
+        result = scipy.optimize.least_squares(cls._calc_residual, x0, verbose=0, jac_sparsity=jac_sparsity, x_scale="jac", ftol=1e-8, method="trf", max_nfev=solution.max_nr_iter, args=args)
 
         cls._condense_results(result, solution, matched_samples)
         return solution
@@ -193,8 +183,7 @@ class LighthouseGeometrySolver:
         return np.array(result)
 
     @classmethod
-    def _populate_indexes_and_jacobian(cls, matched_samples: list[LhCfPoseSample], defs: LighthouseGeometrySolution
-                                       ) -> tuple[npt.NDArray, npt.NDArray, npt.NDArray, npt.NDArray]:
+    def _populate_indexes_and_jacobian(cls, matched_samples: list[LhCfPoseSample], defs: LighthouseGeometrySolution) -> tuple[npt.NDArray, npt.NDArray, npt.NDArray, npt.NDArray]:
         """
         To speed up calculations all operations in the iteration phase are done on np.arrays of equal length (ish),
         the numpy flavour of parallell work. Some data is reused in multiple equations (for instance sensor
@@ -247,14 +236,10 @@ class LighthouseGeometrySolver:
 
                     row_i += 1
 
-        return (np.array(index_angle_pair_to_bs),
-                np.array(index_angle_pair_to_cf),
-                np.array(index_angle_pair_to_sensor_base),
-                jac_sparsity)
+        return (np.array(index_angle_pair_to_bs), np.array(index_angle_pair_to_cf), np.array(index_angle_pair_to_sensor_base), jac_sparsity)
 
     @classmethod
-    def _populate_initial_guess(cls, initial_guess: LhBsCfPoses,
-                                defs: LighthouseGeometrySolution) -> tuple[npt.NDArray, npt.NDArray]:
+    def _populate_initial_guess(cls, initial_guess: LhBsCfPoses, defs: LighthouseGeometrySolution) -> tuple[npt.NDArray, npt.NDArray]:
         """
         Generate parameters for base stations and CFs, this is the initial guess we start to iterate from.
         """
@@ -282,8 +267,7 @@ class LighthouseGeometrySolver:
         return params_bs_poses, params_cf_poses
 
     @classmethod
-    def _calc_residual(cls, params, defs: LighthouseGeometrySolution, index_angle_pair_to_bs, index_angle_pair_to_cf,
-                       index_angle_pair_to_sensor_base, target_angles, sensor_positions):
+    def _calc_residual(cls, params, defs: LighthouseGeometrySolution, index_angle_pair_to_bs, index_angle_pair_to_cf, index_angle_pair_to_sensor_base, target_angles, sensor_positions):
         """
         Calculate the residual for a set of parameters. The residual is defined as the distance from a sensor to the
         plane given by a measured base station angle.
@@ -302,24 +286,20 @@ class LighthouseGeometrySolver:
         # The first CF pose is defining the origin and is added here
         cfs_full = np.concatenate((np.zeros((1, defs.n_params_per_cf), dtype=float), cfs))
 
-        angle_pairs = cls._poses_to_angle_pairs(bss, cfs_full, sensor_positions, index_angle_pair_to_bs,
-                                                index_angle_pair_to_cf, index_angle_pair_to_sensor_base, defs)
+        angle_pairs = cls._poses_to_angle_pairs(bss, cfs_full, sensor_positions, index_angle_pair_to_bs, index_angle_pair_to_cf, index_angle_pair_to_sensor_base, defs)
         angles = np.ravel(angle_pairs)
 
         diff = angles - target_angles
 
         # Calculate the error at the CF positions
-        distances_to_cfs = np.repeat(np.linalg.norm(
-            bss[index_angle_pair_to_bs][:, 3:] - cfs_full[index_angle_pair_to_cf][:, 3:], axis=1), 2)
+        distances_to_cfs = np.repeat(np.linalg.norm(bss[index_angle_pair_to_bs][:, 3:] - cfs_full[index_angle_pair_to_cf][:, 3:], axis=1), 2)
         residual = np.tan(diff) * distances_to_cfs
 
         return residual
 
     @classmethod
-    def _poses_to_angle_pairs(cls, bss, cf_poses, sensor_base_pos, index_angle_pair_to_bs, index_angle_pair_to_cf,
-                              index_angle_pair_to_sensor_base, defs: LighthouseGeometrySolution):
-        pairs = cls._calc_angle_pairs(bss[index_angle_pair_to_bs], cf_poses[index_angle_pair_to_cf],
-                                      sensor_base_pos[index_angle_pair_to_sensor_base], defs)
+    def _poses_to_angle_pairs(cls, bss, cf_poses, sensor_base_pos, index_angle_pair_to_bs, index_angle_pair_to_cf, index_angle_pair_to_sensor_base, defs: LighthouseGeometrySolution):
+        pairs = cls._calc_angle_pairs(bss[index_angle_pair_to_bs], cf_poses[index_angle_pair_to_cf], sensor_base_pos[index_angle_pair_to_sensor_base], defs)
         return pairs
 
     @classmethod
@@ -334,12 +314,12 @@ class LighthouseGeometrySolver:
 
         All lists are equally long, one entry per output angle pair
         """
-        sensor_points = cls._rotate_translate(sens_pos_p_a, cf_p_a[:, :defs.len_rot_vec], cf_p_a[:, defs.len_rot_vec:])
+        sensor_points = cls._rotate_translate(sens_pos_p_a, cf_p_a[:, : defs.len_rot_vec], cf_p_a[:, defs.len_rot_vec :])
 
         # translate and inverse rotate (-rotation vector == inverse rotation)
-        points_bs_ref = cls._rotate_translate(sensor_points - bs_p_a[:, defs.len_rot_vec:defs.n_params_per_bs],
-                                              -bs_p_a[:, :defs.len_rot_vec],
-                                              np.zeros_like(bs_p_a[:, defs.len_rot_vec:defs.n_params_per_bs]))
+        points_bs_ref = cls._rotate_translate(
+            sensor_points - bs_p_a[:, defs.len_rot_vec : defs.n_params_per_bs], -bs_p_a[:, : defs.len_rot_vec], np.zeros_like(bs_p_a[:, defs.len_rot_vec : defs.n_params_per_bs])
+        )
 
         angle_pair = np.arctan2(points_bs_ref[:, 1:3], points_bs_ref[:, 0, np.newaxis])
         return angle_pair
@@ -351,7 +331,7 @@ class LighthouseGeometrySolver:
         Rodrigues' rotation formula is used.
         """
         theta = np.linalg.norm(rot_vecs, axis=1)[:, np.newaxis]
-        with np.errstate(invalid='ignore'):
+        with np.errstate(invalid="ignore"):
             v = rot_vecs / theta
             v = np.nan_to_num(v)
         dot = np.sum(points * v, axis=1)[:, np.newaxis]
@@ -372,8 +352,8 @@ class LighthouseGeometrySolver:
         """
         Convert from the array format used in the solver to Pose
         """
-        r_vec = params[:defs.len_rot_vec]
-        t = params[defs.len_rot_vec:defs.len_pose]
+        r_vec = params[: defs.len_rot_vec]
+        t = params[defs.len_rot_vec : defs.len_pose]
         return Pose.from_rot_vec(R_vec=r_vec, t_vec=t)
 
     @classmethod
@@ -396,8 +376,7 @@ class LighthouseGeometrySolver:
         return bs_id_to_index, bs_index_to_id
 
     @classmethod
-    def _condense_results(cls, lsq_result, solution: LighthouseGeometrySolution,
-                          matched_samples: list[LhCfPoseSample]) -> None:
+    def _condense_results(cls, lsq_result, solution: LighthouseGeometrySolution, matched_samples: list[LhCfPoseSample]) -> None:
         bss, cf_poses = cls._params_to_struct(lsq_result.x, solution)
 
         # Extract CF pose estimates
@@ -419,7 +398,7 @@ class LighthouseGeometrySolver:
         for sample in matched_samples:
             sample_errors = {}
             for bs_id in sorted(sample.angles_calibrated.keys()):
-                sample_errors[bs_id] = np.linalg.norm(residuals[i:i + 2])
+                sample_errors[bs_id] = np.linalg.norm(residuals[i : i + 2])
                 i += solution.n_sensors * 2
             solution.estimated_errors.append(sample_errors)
 
@@ -437,15 +416,15 @@ class LighthouseGeometrySolver:
                 errors.append(error)
 
         error_info = {}
-        error_info['mean_error'] = np.mean(errors)
-        error_info['max_error'] = np.max(errors)
-        error_info['std_error'] = np.std(errors)
+        error_info["mean_error"] = np.mean(errors)
+        error_info["max_error"] = np.max(errors)
+        error_info["std_error"] = np.std(errors)
 
-        error_info['bs'] = {}
+        error_info["bs"] = {}
         for bs_id, errors in error_per_bs.items():
-            error_info['bs'][bs_id] = {}
-            error_info['bs'][bs_id]['mean_error'] = np.mean(errors)
-            error_info['bs'][bs_id]['max_error'] = np.max(errors)
-            error_info['bs'][bs_id]['std_error'] = np.std(errors)
+            error_info["bs"][bs_id] = {}
+            error_info["bs"][bs_id]["mean_error"] = np.mean(errors)
+            error_info["bs"][bs_id]["max_error"] = np.max(errors)
+            error_info["bs"][bs_id]["std_error"] = np.std(errors)
 
         return error_info

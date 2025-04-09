@@ -46,5 +46,5 @@ class TestBootloader(TestSingleCfGrounded):
         self.assertTrue(BootVersion.is_cf2(bl.protocol_version))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

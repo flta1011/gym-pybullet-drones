@@ -31,16 +31,11 @@ logger = logging.getLogger(__name__)
 class OWElement(MemoryElement):
     """Memory class with extra functionality for 1-wire memories"""
 
-    element_mapping = {
-        1: 'Board name',
-        2: 'Board revision',
-        3: 'Custom'
-    }
+    element_mapping = {1: "Board name", 2: "Board revision", 3: "Custom"}
 
     def __init__(self, id, type, size, addr, mem_handler):
         """Initialize the memory with good defaults"""
-        super(OWElement, self).__init__(id=id, type=type, size=size,
-                                        mem_handler=mem_handler)
+        super(OWElement, self).__init__(id=id, type=type, size=size, mem_handler=mem_handler)
         self.addr = addr
 
         self.valid = False
@@ -69,7 +64,7 @@ class OWElement(MemoryElement):
                         self._update_finished_cb = None
                     else:
                         # We need to fetch the elements, find out the length
-                        (elem_ver, elem_len) = struct.unpack('BB', data[8:10])
+                        (elem_ver, elem_len) = struct.unpack("BB", data[8:10])
                         self.mem_handler.read(self, 8, elem_len + 3)
                 else:
                     # Call the update if the CRC check of the header fails,
@@ -89,14 +84,13 @@ class OWElement(MemoryElement):
         Parse and check the CRC and length of the elements part of the memory
         """
         crc = data[-1]
-        test_crc = crc32(data[:-1]) & 0x0ff
+        test_crc = crc32(data[:-1]) & 0x0FF
         elem_data = data[2:-1]
         if test_crc == crc:
             while len(elem_data) > 0:
-                (eid, elen) = struct.unpack('BB', elem_data[:2])
-                self.elements[self.element_mapping[eid]] = \
-                    elem_data[2:2 + elen].decode('ISO-8859-1')
-                elem_data = elem_data[2 + elen:]
+                (eid, elen) = struct.unpack("BB", elem_data[:2])
+                self.elements[self.element_mapping[eid]] = elem_data[2 : 2 + elen].decode("ISO-8859-1")
+                elem_data = elem_data[2 + elen :]
             return True
         return False
 
@@ -107,9 +101,9 @@ class OWElement(MemoryElement):
 
     def write_data(self, write_finished_cb):
         # First generate the header part
-        header_data = struct.pack('<BIBB', 0xEB, self.pins, self.vid, self.pid)
-        header_crc = crc32(header_data) & 0x0ff
-        header_data += struct.pack('B', header_crc)
+        header_data = struct.pack("<BIBB", 0xEB, self.pins, self.vid, self.pid)
+        header_crc = crc32(header_data) & 0x0FF
+        header_data += struct.pack("B", header_crc)
 
         # Now generate the elements part
         elem = bytearray()
@@ -117,26 +111,23 @@ class OWElement(MemoryElement):
         for element in reversed(list(self.elements.keys())):
             elem_string = self.elements[element]
             key_encoding = self._rev_element_mapping[element]
-            elem += struct.pack('BB', key_encoding, len(elem_string))
-            elem += bytearray(elem_string.encode('ISO-8859-1'))
+            elem += struct.pack("BB", key_encoding, len(elem_string))
+            elem += bytearray(elem_string.encode("ISO-8859-1"))
 
-        elem_data = struct.pack('BB', 0x00, len(elem))
+        elem_data = struct.pack("BB", 0x00, len(elem))
         elem_data += elem
-        elem_crc = crc32(elem_data) & 0x0ff
-        elem_data += struct.pack('B', elem_crc)
+        elem_crc = crc32(elem_data) & 0x0FF
+        elem_data += struct.pack("B", elem_crc)
 
         data = header_data + elem_data
 
-        self.mem_handler.write(self, 0x00,
-                               struct.unpack('B' * len(data), data))
+        self.mem_handler.write(self, 0x00, struct.unpack("B" * len(data), data))
 
         self._write_finished_cb = write_finished_cb
 
     def erase(self, write_finished_cb):
         erase_data = bytes([0xFF] * 112)
-        self.mem_handler.write(self, 0x00,
-                               struct.unpack('B' * len(erase_data),
-                                             erase_data))
+        self.mem_handler.write(self, 0x00, struct.unpack("B" * len(erase_data), erase_data))
 
         self._write_finished_cb = write_finished_cb
 
@@ -145,23 +136,21 @@ class OWElement(MemoryElement):
         if not self._update_finished_cb:
             self._update_finished_cb = update_finished_cb
             self.valid = False
-            logger.debug('Updating content of memory {}'.format(self.id))
+            logger.debug("Updating content of memory {}".format(self.id))
             # Start reading the header
             self.mem_handler.read(self, 0, 11)
 
     def _parse_and_check_header(self, data):
         """Parse and check the CRC of the header part of the memory"""
-        (start, self.pins, self.vid, self.pid, crc) = struct.unpack('<BIBBB',
-                                                                    data)
-        test_crc = crc32(data[:-1]) & 0x0ff
+        (start, self.pins, self.vid, self.pid, crc) = struct.unpack("<BIBBB", data)
+        test_crc = crc32(data[:-1]) & 0x0FF
         if start == 0xEB and crc == test_crc:
             return True
         return False
 
     def __str__(self):
         """Generate debug string for memory"""
-        return ('OW {} ({:02X}:{:02X}): {}'.format(
-            self.addr, self.vid, self.pid, self.elements))
+        return "OW {} ({:02X}:{:02X}): {}".format(self.addr, self.vid, self.pid, self.elements)
 
     def disconnect(self):
         self._update_finished_cb = None

@@ -28,10 +28,11 @@ import cflib.crazyflie.platformservice
 from cflib.crtp.crtpstack import CRTPPacket
 from cflib.crtp.crtpstack import CRTPPort
 from cflib.utils.callbacks import Caller
+
 # from . import Crazyflie
 
-__author__ = 'Bitcraze AB'
-__all__ = ['Appchannel']
+__author__ = "Bitcraze AB"
+__all__ = ["Appchannel"]
 
 logger = logging.getLogger(__name__)
 
@@ -42,8 +43,7 @@ class Appchannel:
 
         self.packet_received = Caller()
 
-        self._cf.add_port_callback(CRTPPort.PLATFORM,
-                                   self._incoming)
+        self._cf.add_port_callback(CRTPPort.PLATFORM, self._incoming)
 
     def send_packet(self, data):
         packet = CRTPPacket()

@@ -31,8 +31,8 @@ from cflib.crtp.crtpstack import CRTPPacket
 from cflib.crtp.crtpstack import CRTPPort
 from cflib.utils.encoding import compress_quaternion
 
-__author__ = 'Bitcraze AB'
-__all__ = ['Commander']
+__author__ = "Bitcraze AB"
+__all__ = ["Commander"]
 
 SET_SETPOINT_CHANNEL = 0
 META_COMMAND_CHANNEL = 1
@@ -47,7 +47,7 @@ TYPE_POSITION = 7
 TYPE_META_COMMAND_NOTIFY_SETPOINT_STOP = 0
 
 
-class Commander():
+class Commander:
     """
     Used for sending control setpoints to the Crazyflie
     """
@@ -81,14 +81,14 @@ class Commander():
         thrust is an integer value ranging from 10001 (next to no power) to 60000 (full power)
         """
         if thrust > 0xFFFF or thrust < 0:
-            raise ValueError('Thrust must be between 0 and 0xFFFF')
+            raise ValueError("Thrust must be between 0 and 0xFFFF")
 
         if self._x_mode:
             roll, pitch = 0.707 * (roll - pitch), 0.707 * (roll + pitch)
 
         pk = CRTPPacket()
         pk.port = CRTPPort.COMMANDER
-        pk.data = struct.pack('<fffH', roll, -pitch, yawrate, thrust)
+        pk.data = struct.pack("<fffH", roll, -pitch, yawrate, thrust)
         self._cf.send_packet(pk)
 
     def send_notify_setpoint_stop(self, remain_valid_milliseconds=0):
@@ -99,8 +99,7 @@ class Commander():
         pk = CRTPPacket()
         pk.port = CRTPPort.COMMANDER_GENERIC
         pk.channel = META_COMMAND_CHANNEL
-        pk.data = struct.pack('<BI', TYPE_META_COMMAND_NOTIFY_SETPOINT_STOP,
-                              remain_valid_milliseconds)
+        pk.data = struct.pack("<BI", TYPE_META_COMMAND_NOTIFY_SETPOINT_STOP, remain_valid_milliseconds)
         self._cf.send_packet(pk)
 
     def send_stop_setpoint(self):
@@ -109,7 +108,7 @@ class Commander():
         """
         pk = CRTPPacket()
         pk.port = CRTPPort.COMMANDER_GENERIC
-        pk.data = struct.pack('<B', TYPE_STOP)
+        pk.data = struct.pack("<B", TYPE_STOP)
         self._cf.send_packet(pk)
 
     def send_velocity_world_setpoint(self, vx, vy, vz, yawrate):
@@ -122,8 +121,7 @@ class Commander():
         pk = CRTPPacket()
         pk.port = CRTPPort.COMMANDER_GENERIC
         pk.channel = SET_SETPOINT_CHANNEL
-        pk.data = struct.pack('<Bffff', TYPE_VELOCITY_WORLD,
-                              vx, vy, vz, yawrate)
+        pk.data = struct.pack("<Bffff", TYPE_VELOCITY_WORLD, vx, vy, vz, yawrate)
         self._cf.send_packet(pk)
 
     def send_zdistance_setpoint(self, roll, pitch, yawrate, zdistance):
@@ -139,8 +137,7 @@ class Commander():
         pk = CRTPPacket()
         pk.port = CRTPPort.COMMANDER_GENERIC
         pk.channel = SET_SETPOINT_CHANNEL
-        pk.data = struct.pack('<Bffff', TYPE_ZDISTANCE,
-                              roll, pitch, yawrate, zdistance)
+        pk.data = struct.pack("<Bffff", TYPE_ZDISTANCE, roll, pitch, yawrate, zdistance)
         self._cf.send_packet(pk)
 
     def send_hover_setpoint(self, vx, vy, yawrate, zdistance):
@@ -156,8 +153,7 @@ class Commander():
         pk = CRTPPacket()
         pk.port = CRTPPort.COMMANDER_GENERIC
         pk.channel = SET_SETPOINT_CHANNEL
-        pk.data = struct.pack('<Bffff', TYPE_HOVER,
-                              vx, vy, yawrate, zdistance)
+        pk.data = struct.pack("<Bffff", TYPE_HOVER, vx, vy, yawrate, zdistance)
         self._cf.send_packet(pk)
 
     def send_full_state_setpoint(self, pos, vel, acc, orientation, rollrate, pitchrate, yawrate):
@@ -171,6 +167,7 @@ class Commander():
         orientation [qx, qy, qz, qw] are the quaternion components of the orientation
         rollrate, pitchrate, yawrate are in degrees/s
         """
+
         def vector_to_mm_16bit(vec):
             return int(vec[0] * 1000), int(vec[1] * 1000), int(vec[2] * 1000)
 
@@ -182,12 +179,7 @@ class Commander():
 
         pk = CRTPPacket()
         pk.port = CRTPPort.COMMANDER_GENERIC
-        pk.data = struct.pack('<BhhhhhhhhhIhhh', TYPE_FULL_STATE,
-                              x, y, z,
-                              vx, vy, vz,
-                              ax, ay, az,
-                              orient_comp,
-                              rr, pr, yr)
+        pk.data = struct.pack("<BhhhhhhhhhIhhh", TYPE_FULL_STATE, x, y, z, vx, vy, vz, ax, ay, az, orient_comp, rr, pr, yr)
         self._cf.send_packet(pk)
 
     def send_position_setpoint(self, x, y, z, yaw):
@@ -201,6 +193,5 @@ class Commander():
         pk = CRTPPacket()
         pk.port = CRTPPort.COMMANDER_GENERIC
         pk.channel = SET_SETPOINT_CHANNEL
-        pk.data = struct.pack('<Bffff', TYPE_POSITION,
-                              x, y, z, yaw)
+        pk.data = struct.pack("<Bffff", TYPE_POSITION, x, y, z, yaw)
         self._cf.send_packet(pk)
