@@ -156,13 +156,13 @@ DEFAULT_MA = False
 
 DEFAULT_DASH_ACTIVE = False
 
-DEFAULT_Multiplier_Collision_Penalty = 10
+DEFAULT_Multiplier_Collision_Penalty = 2
 
 DEFAULT_VelocityScale = 0.5
 
 # Bei wie viel Prozent der Fläche einen Print ausgeben
 DEFAULT_Procent_Step = 0.01
-DEFAULT_REWARD_FOR_NEW_FIELD = 2
+DEFAULT_REWARD_FOR_NEW_FIELD = 4
 DEFAULT_Punishment_for_Step = -0.5
 # 5 bedeutet eine 5x5 Matrix
 DEFAULT_explore_Matrix_Size = 5
@@ -171,9 +171,9 @@ DEFAULT_Maze_number = 21
 DEFAULT_New_Maze_number = 10
 DEFAULT_New_Position_number = 1
 
-DEFAULT_collision_penalty_terminated = -1000  # mit -10 Trainiert SAC gut, bleibt aber noch ca. 50 mal an der Wand hängen--
+DEFAULT_collision_penalty_terminated = -100  # mit -10 Trainiert SAC gut, bleibt aber noch ca. 50 mal an der Wand hängen--
 DEFAULT_Terminated_Wall_Distance = 0.15  # worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25
-DEFAULT_no_collision_reward = 0.25  # nur bei R5 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
+DEFAULT_no_collision_reward = 1  # nur bei R5 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
 
 # R7 - Negative Reward Map Settings
 DEFAULT_Punishment_for_Walls = 8
@@ -200,7 +200,7 @@ MODEL_VERSION = "M5"
 - R6:   R5 mit dem Zusatz, dass wenn die Drohne nicht zu nah an der Wand ist, gibt es einen definierten Bonus (Anstatt nur Peitsche jetzt Zuckerbrot und Peitsche)
 - R7:   Statt Heatmap nun Bestrafungsmap (lineare Bestrafung - Abstand zur Wand), Truncated bei Wandberührung, Abzug für jeden Step
 """
-REWARD_VERSION = "R5"
+REWARD_VERSION = "R6"
 
 #####################################OBSERVATION_TYPE###########################
 """ObservationType:
@@ -214,7 +214,7 @@ REWARD_VERSION = "R5"
 - 08: X-Pos,Y-Pos, raycast readings 4x,4-Interest Werte (Interest-Front,Back, left, right: Summe freie Flächen, die noch nicht besucht wurden), x mal last clipped actions
 - 09: Slam-image, x-Pos, y-Pos, racast readings,4-Interest Werte (Interest-Front,Back, left, right: Summe freie Flächen, die noch nicht besucht wurden), x mal last clipped actions
 """
-OBSERVATION_TYPE = "O9"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
+OBSERVATION_TYPE = "O7"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
 
 #####################################ACTION_TYPE###########################
 """ActionType:'
@@ -234,8 +234,9 @@ TRUNCATED_TYPE = "TR1"
 """ Terminated_type:
 - T1: 80% der Fläche erkundet
 - T2: 80% der Fläche erkundet oder Crash (Abstandswert geringer als X)
+
 """
-TERMINATED_TYPE = "T2"
+TERMINATED_TYPE = "T1"
 
 ################
 # INIT_RPYS = {}
@@ -586,12 +587,12 @@ def run(
                         train_env,
                         device="cuda:0",
                         # policy_kwargs=dict(net_arch=[128, 64, 32]),
-                        learning_rate=0.004,
+                        #learning_rate=0.004,
                         verbose=1,
                         batch_size=32,
                         seed=42,
                         buffer_size=500000,
-                        gamma=0.8,
+                        #gamma=0.8,
                     )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
             case "M6":  # M6: SAC
                 if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
@@ -646,21 +647,21 @@ def run(
         # In your code, the model will train for a specified number of timesteps, using the eval_callback for periodic evaluation, and log information every 100 timesteps.
 
         # # Definiere den Speicherpfad und die Häufigkeit der Checkpoints (z.B. alle 10.000 Schritte)
-        # checkpoint_callback = CheckpointCallback(
-        #     save_freq=10000,  # Speichert alle 10.000 Schritte
-        #     save_path=filename + "/",  # Speicherpfad für die Modelle
-        #     name_prefix=filename + "/",  # Präfix für die Modell-Dateien
-        #     save_replay_buffer=True,  # Speichert auch den Replay Buffer
-        #     save_vecnormalize=True,  # Falls VecNormalize genutzt wird, wird es mitgespeichert
-        # )
+        checkpoint_callback = CheckpointCallback(
+            save_freq=20000,  # Speichert alle 10.000 Schritte
+            save_path=filename + "/",  # Speicherpfad für die Modelle
+            name_prefix=filename + "/",  # Präfix für die Modell-Dateien
+            save_replay_buffer=True,  # Speichert auch den Replay Buffer
+            save_vecnormalize=True,  # Falls VecNormalize genutzt wird, wird es mitgespeichert
+        )
 
         # # Kombiniere beide Callbacks mit CallbackList
-        # callback_list = CallbackList([checkpoint_callback, eval_callback])
+        callback_list = CallbackList([checkpoint_callback, eval_callback])
 
         start_time = time.time()  # Startzeit erfassen
         model.learn(
             total_timesteps=DEFAULT_TRAIN_TIMESTEPS,
-            callback=eval_callback,
+            callback=callback_list,
             log_interval=1000,
             progress_bar=True,
         )  # shorter training in GitHub Actions pytest
