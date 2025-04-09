@@ -170,7 +170,7 @@ DEFAULT_Multiplier_Collision_Penalty = 2
 
 ###########################################################EXPLORATION/MAZE-SETTINGS###########################################################
 DEFAULT_explore_Matrix_Size = 5  # 5 bedeutet eine 5x5 Matrix um die Drohne herum (in diesem Bereich kann die Drohne die Felder einsammeln und diese als erkundet markieren)
-DEFAULT_List_MazesToUse = (22,23,24,25)  # Mazes 0-26 stehen zur Verfügung
+DEFAULT_List_MazesToUse = (22, 23, 24, 25)  # Mazes 0-26 stehen zur Verfügung
 DEFAULT_List_Start_PositionsToUse = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)  # Startpositionen 0-9  stehen zur Verfügung (10 Startpositionen)
 DEFAULT_MaxRoundsOnOneMaze = 6  # nach wie vielen Schritten wird ein neues maze gewählt # NOTE - Verändert nichts
 DEFAULT_MaxRoundsSameStartingPositions = 2
@@ -192,7 +192,7 @@ DEFAULT_Influence_of_Walls = 4
 - M5:   DQN_NN_MultiInputPolicy mit fullyConnectLayer
 - M6:   SAC
 """
-MODEL_VERSION = "M3"
+MODEL_VERSION = "M5"
 
 #####################################REWARD_VERSION###########################
 """REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
@@ -543,7 +543,7 @@ def run(
                         # learning_rate=0.0004, #nicht verwendet --> erst mal standard fürs Training
                         device="cuda:0",
                         verbose=1,
-                        #buffer_size=500000,
+                        # buffer_size=500000,
                     )
 
             case "M3":  # M3: DQN_MLPPolicy
@@ -583,10 +583,10 @@ def run(
                         policy_kwargs=policy_kwargs,
                         device="cuda:0",
                         # learning_rate=0.0004,
-                        #learning_rate=0.001,
+                        # learning_rate=0.001,
                         verbose=1,
                         seed=42,
-                        #buffer_size=5000,
+                        # buffer_size=5000,
                     )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
             # NOTE - OHNE ZUFALLSWERTE AM ANFANG
 
@@ -605,7 +605,7 @@ def run(
                         # policy_kwargs=dict(net_arch=[128, 64, 32]),
                         # learning_rate=0.004,
                         verbose=1,
-                        #batch_size=32,
+                        # batch_size=32,
                         seed=42,
                         buffer_size=500000,
                         # gamma=0.8,
