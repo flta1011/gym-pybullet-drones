@@ -68,9 +68,7 @@ HYPERPARAMETER_SET_PATH = os.path.join(os.path.dirname(__file__), "hyperparamete
 DEFAULT_USE_PRETRAINED_MODEL = False
 # DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/results/durchgelaufen-DQN/final_model.zip'
 # DEFAULT_PRETRAINED_MODEL_PATH = "/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/results/save-03.07.2025_02.23.46/best_model.zip"
-DEFAULT_PRETRAINED_MODEL_PATH = (
-    "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M6_R6_O5_A3_TR1_T1_20250407-013856/save-04.07.2025_01.38.56/best_model.zip"
-)
+DEFAULT_PRETRAINED_MODEL_PATH = "/home/moritz_s/Documents/RKIM_1/F_u_E_Drohnenrennen/GitRepo/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M1_R6_O8_A2_TR1_T1_20250410-005410/save-04.10.2025_00.54.10/results/save-04.10.2025_00.54.10/_750000_steps.zip"
 
 ###############################################################################
 ######################## TRAINING-SETTINGS (Hyperparameter)#################
@@ -89,7 +87,7 @@ DEFAULT_EPISODE_LEN_SEC = 5 * 60  # 15 * 60
 DEFAULT_PUSHBACK_ACTIVE = False
 DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
-NumberOfInterationsTillNextCheckpoint = 250000  # Anzahl Steps, bis ein Modell als .zip gespeichert wird
+NumberOfInterationsTillNextCheckpoint = 90000  # Anzahl Steps, bis ein Modell als .zip gespeichert wird
 DEFAULT_TRAIN_TIMESTEPS = Ziel_Training_TIME_In_Simulation * DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULF_NUMBER_LAST_ACTIONS = 80
 DEFAULT_VelocityScale = 0.5
@@ -131,7 +129,7 @@ MODEL_VERSION = "M2"
 - M5:   DQN_NN_MultiInputPolicy mit fullyConnectLayer
 - M6:   SAC
 """
-MODEL_VERSION = "M1"
+MODEL_VERSION = "M3"
 
 #####################################REWARD_VERSION###########################
 REWARD_VERSION = "R6"
@@ -160,7 +158,7 @@ OBSERVATION_TYPE = "O4"
 - O7: cropped Slam-image, XY Position, Yaw (sin,cos), last actions (n Stück), raycasts
 - O8: X-Pos,Y-Pos, 4-raycast_readings, 4-interest_values, n-last_clipped_actions
 - O9: cropped Slam-image, x-Pos, y-Pos, 4-racast_readings, 4-interest_values, n-last_clipped_actions
- !!!Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen (BaseAviary_MAZE_TRAINING.py) erweitern!!!
+!!!Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen (BaseAviary_MAZE_TRAINING.py) erweitern!!!
 """
 OBSERVATION_TYPE = "O8"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
 
