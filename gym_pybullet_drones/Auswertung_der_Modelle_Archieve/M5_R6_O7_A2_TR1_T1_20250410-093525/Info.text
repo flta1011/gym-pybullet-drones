@@ -1,0 +1,6 @@
+#das Modell ist bei 480.000/1.080.000 step abgebrochen mit dem Fehler "  File "/home/florian/anaconda3/envs/drones/lib/python3.10/site-packages/stable_baselines3/common/vec_env/dummy_vec_env.py", line 110, in _save_obs
+    self.buf_obs[key][env_idx] = obs[key]  # type: ignore[call-overload]
+ValueError: could not broadcast input array from shape (64,63,1) into shape (64,64,1)
+
+bei der Prediction-Testung fällt auf, dass die Drohne gut fliegt, irgendwann dann aber anfängt an einem Ort festzuhöngen und da dann nur noch links-rechts ganz minimal hin und herzufliegen....
+

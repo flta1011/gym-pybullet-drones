@@ -190,6 +190,12 @@ class SimpleSlam:
             cropped_start_y = int(max(0, self.grid_y - self.center_cropped))
             cropped_end_y = int(min(self.grid_size, self.grid_y + self.center_cropped))
 
+            # Ensure the cropped grid is exactly 64x64
+            if cropped_end_x - cropped_start_x != 64:
+                cropped_end_x = cropped_start_x + 64
+            if cropped_end_y - cropped_start_y != 64:
+                cropped_end_y = cropped_start_y + 64
+
             self.cropped_grid = self.occupancy_grid[cropped_start_x:cropped_end_x, cropped_start_y:cropped_end_y]
 
         self.previous_grid_x = self.grid_x
