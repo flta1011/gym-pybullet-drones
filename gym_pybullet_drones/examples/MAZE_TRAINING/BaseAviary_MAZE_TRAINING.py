@@ -1100,7 +1100,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # if self.GUI: #deaktiviert, damit der nachfolgende Plot immer kommt, auch wenn keine GUI eingeschaltet ist
         if truncated:
             # Zusammenfassung Trainingslauf
-            print(f"Zusammenfassung Trainingslauf Truncated (Grund: {Grund_Truncated}) ----- Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
 
             # print(
             #     f"Observations: x,y,yaw: {state[0]:.3f}, {state[1]:.3f}, {state[9]:.3f}, RayFront/Back: {state[21]:.1f}, {state[22]:.1f}, RayLeft/Right: {state[23]:.1f}, {state[24]:.1f}, RayUp: {state[25]:.1f}"
@@ -1128,10 +1127,11 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
             # Aufruf zum Hinzufügen von Trainingsdaten
             self.schreibe_csv(training_daten=training_daten, csv_datei=self.csv_file_path)
+            print(
+                f"Zusammenfassung Trainingslauf Truncated (Grund: {Grund_Truncated})----- Summe Reward am Ende: {self.RewardCounterActualTrainRun}, Flugzeit: {Flugzeit_der_Runde}, Map-Abgedeckt: {self.Ratio_Area}, Wandberührungen: {self.too_close_to_wall_counter}\n"
+            )
 
         if terminated:
-
-            print(f"Zusammenfassung Trainingslauf Terminated (Grund: {Grund_Terminated})----- Summe Reward am Ende: {self.RewardCounterActualTrainRun}\n")
 
             # print(
             #     f"Observations: x,y,yaw: {state[0]:.3f}, {state[1]:.3f}, {state[9]:.3f}, RayFront/Back: {state[21]:.1f}, {state[22]:.1f}, RayLeft/Right: {state[23]:.1f}, {state[24]:.1f}, RayUp: {state[25]:.1f}"
@@ -1159,6 +1159,9 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
             # Aufruf zum Hinzufügen von Trainingsdaten
             self.schreibe_csv(training_daten=training_daten, csv_datei=self.csv_file_path)
+            print(
+                f"Zusammenfassung Trainingslauf Terminated (Grund: {Grund_Terminated})----- Summe Reward am Ende: {self.RewardCounterActualTrainRun}, Flugzeit: {Flugzeit_der_Runde}, Map-Abgedeckt: {self.Ratio_Area}, Wandberührungen: {self.too_close_to_wall_counter}\n"
+            )
 
         # nachfolgendes war nur zum Debugging der getDroneStateVector Funktion genutzt worden
         # ray_cast_readings = self.check_distance_sensors(0)

@@ -44,7 +44,7 @@ from gym_pybullet_drones.utils.utils import str2bool, sync
 #####################################################################################################
 
 ####### TRAINING-MODE #######
-Training_Mode = "Training"  # "Training" oder "Test"
+Training_Mode = "Test"  # "Training" oder "Test"
 GUI_Mode = "Train"  # "Train" oder "Test" oder "NoGUI"
 
 ####### GUI-SETTINGS (u.a. Debug-GUI) #######
@@ -65,14 +65,14 @@ HyperparameterSetIDtoLoad = "SET_20250410-011939"
 
 
 ####### Verwendung von Pretrained-Modellen #######
-DEFAULT_USE_PRETRAINED_MODEL = False
+DEFAULT_USE_PRETRAINED_MODEL = True
 # DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/results/durchgelaufen-DQN/final_model.zip'
 # DEFAULT_PRETRAINED_MODEL_PATH = "/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/results/save-03.07.2025_02.23.46/best_model.zip"
 DEFAULT_PRETRAINED_MODEL_PATH = (
     "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M6_R6_O5_A3_TR1_T1_20250407-013856/save-04.07.2025_01.38.56/best_model.zip"
 )
 DEFAULT_PRETRAINED_MODEL_PATH = (
-    "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M5_R6_O7_A2_TR1_T1_20250410-093525/save-04.10.2025_09.35.25/best_model.zip"
+    "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M5_R6_O9_A2_TR1_T1_20250411-180656/save-04.11.2025_18.06.56/final_model.zip"
 )
 
 ###############################################################################
@@ -150,7 +150,7 @@ REWARD_VERSION = "R6"
 
 
 #####################################OBSERVATION_TYPE###########################
-OBSERVATION_TYPE = "O7"
+OBSERVATION_TYPE = "O9"
 
 """ObservationType:
         - O1: X, Y, Yaw, Raycast readings (nur PPO)                             # no longer supported (Februar 2025) 
@@ -512,6 +512,8 @@ header_params = [
     "DEFAULT_List_Start_PositionsToUse",
     "DEFAULT_MaxRoundsOnOneMaze",
     "DEFAULT_MaxRoundsSameStartingPositions",
+    "DEFAULT_USE_SAVED_HYPERPARAMETER_SET",
+    "HyperparameterSetIDtoLoad",
 ]
 
 # Header für die dynamischen Daten (Trainingsergebnisse)
@@ -558,6 +560,8 @@ parameter_daten = [
     DEFAULT_List_Start_PositionsToUse,
     DEFAULT_MaxRoundsOnOneMaze,
     DEFAULT_MaxRoundsSameStartingPositions,
+    DEFAULT_USE_SAVED_HYPERPARAMETER_SET,
+    HyperparameterSetIDtoLoad,
 ]
 
 # Öffnen oder Erstellen der CSV-Datei
@@ -754,7 +758,7 @@ def run(
                         # learning_rate=0.0004, #nicht verwendet --> erst mal standard fürs Training
                         device="cuda:0",
                         verbose=1,
-                        # buffer_size=500000,
+                        buffer_size=600000,  # buffersize mit 1.000.000 zu groß (8,6 gb>7,3 gb)
                     )
 
             case "M3":  # M3: DQN_MLPPolicy
@@ -826,7 +830,7 @@ def run(
                         # batch_size=32,
                         seed=42,
                         buffer_size=500000,
-                        # gamma=0.8,
+                        gamma=0.95,
                     )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
             case "M6":  # M6: SAC
                 if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
