@@ -37,16 +37,18 @@ class IppeCf:
     """
 
     # Rotation matrix to transform from IPPE to CF
-    _R_ippe_to_cf = np.array([
-        [0.0, 0.0, 1.0],
-        [-1.0, 0.0, 0.0],
-        [0.0, -1.0, 0.0],
-    ])
+    _R_ippe_to_cf = np.array(
+        [
+            [0.0, 0.0, 1.0],
+            [-1.0, 0.0, 0.0],
+            [0.0, -1.0, 0.0],
+        ]
+    )
 
     # Rotation matrix to transform from CF to IPPE
     _R_cf_to_ippe = np.transpose(_R_ippe_to_cf)
 
-    Solution = namedtuple('Solution', ['R', 't', 'reproj_err'])
+    Solution = namedtuple("Solution", ["R", "t", "reproj_err"])
 
     @staticmethod
     def solve(U_cf: npt.ArrayLike, Q_cf: npt.ArrayLike) -> list[Solution]:
@@ -91,16 +93,8 @@ class IppeCf:
     @staticmethod
     def _ippe_to_cf(solutions):
         result = [
-            IppeCf.Solution(
-                IppeCf._rotate_rot_mat_to_cf(solutions['R1']),
-                IppeCf._rotate_vector_to_cf(solutions['t1']),
-                solutions['reprojError1']
-            ),
-            IppeCf.Solution(
-                IppeCf._rotate_rot_mat_to_cf(solutions['R2']),
-                IppeCf._rotate_vector_to_cf(solutions['t2']),
-                solutions['reprojError2']
-            )
+            IppeCf.Solution(IppeCf._rotate_rot_mat_to_cf(solutions["R1"]), IppeCf._rotate_vector_to_cf(solutions["t1"]), solutions["reprojError1"]),
+            IppeCf.Solution(IppeCf._rotate_rot_mat_to_cf(solutions["R2"]), IppeCf._rotate_vector_to_cf(solutions["t2"]), solutions["reprojError2"]),
         ]
 
         return result

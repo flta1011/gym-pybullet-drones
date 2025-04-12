@@ -37,15 +37,14 @@ class LighthouseTestBase(unittest.TestCase):
         _expected = np.array(expected)
         _actual = np.array(actual)
 
-        self.assertEqual(_expected.shape[0], _actual.shape[0], 'Shape differs')
+        self.assertEqual(_expected.shape[0], _actual.shape[0], "Shape differs")
 
         for i in range(_expected.shape[0]):
-            self.assertAlmostEqual(_expected[i], _actual[i], places, f'Lists differs in element {i}')
+            self.assertAlmostEqual(_expected[i], _actual[i], places, f"Lists differs in element {i}")
 
     def assertPosesAlmostEqual(self, expected: Pose, actual: Pose, places: int = 5):
         translation_diff = expected.translation - actual.translation
-        self.assertAlmostEqual(0.0, np.linalg.norm(translation_diff), places,
-                               f'Translation different, expected: {expected.translation}, actual: {actual.translation}')
+        self.assertAlmostEqual(0.0, np.linalg.norm(translation_diff), places, f"Translation different, expected: {expected.translation}, actual: {actual.translation}")
 
         def un_ambiguize(rot_vec):
             quat = Rotation.from_rotvec(rot_vec).as_quat()
@@ -55,5 +54,4 @@ class LighthouseTestBase(unittest.TestCase):
         _actual_rot_vec = un_ambiguize(actual.rot_vec)
 
         rotation_diff = _expected_rot_vec - _actual_rot_vec
-        self.assertAlmostEqual(0.0, np.linalg.norm(rotation_diff), places,
-                               f'Rotation different, expected: {expected.rot_vec}, actual: {actual.rot_vec}')
+        self.assertAlmostEqual(0.0, np.linalg.norm(rotation_diff), places, f"Rotation different, expected: {expected.rot_vec}, actual: {actual.rot_vec}")

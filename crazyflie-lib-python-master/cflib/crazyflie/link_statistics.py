@@ -35,8 +35,8 @@ from cflib.crtp.crtpstack import CRTPPacket
 from cflib.crtp.crtpstack import CRTPPort
 from cflib.utils.callbacks import Caller
 
-__author__ = 'Bitcraze AB'
-__all__ = ['LinkStatistics']
+__author__ = "Bitcraze AB"
+__all__ = ["LinkStatistics"]
 
 PING_HEADER = 0x0
 ECHO_CHANNEL = 0
@@ -99,18 +99,18 @@ class LinkStatistics:
         if not self._is_active:
             return  # Skip processing if link statistics are stopped
 
-        if 'link_quality' in radio_link_statistics:
-            self.link_quality_updated.call(radio_link_statistics['link_quality'])
-        if 'uplink_rssi' in radio_link_statistics:
-            self.uplink_rssi_updated.call(radio_link_statistics['uplink_rssi'])
-        if 'uplink_rate' in radio_link_statistics:
-            self.uplink_rate_updated.call(radio_link_statistics['uplink_rate'])
-        if 'downlink_rate' in radio_link_statistics:
-            self.downlink_rate_updated.call(radio_link_statistics['downlink_rate'])
-        if 'uplink_congestion' in radio_link_statistics:
-            self.uplink_congestion_updated.call(radio_link_statistics['uplink_congestion'])
-        if 'downlink_congestion' in radio_link_statistics:
-            self.downlink_congestion_updated.call(radio_link_statistics['downlink_congestion'])
+        if "link_quality" in radio_link_statistics:
+            self.link_quality_updated.call(radio_link_statistics["link_quality"])
+        if "uplink_rssi" in radio_link_statistics:
+            self.uplink_rssi_updated.call(radio_link_statistics["uplink_rssi"])
+        if "uplink_rate" in radio_link_statistics:
+            self.uplink_rate_updated.call(radio_link_statistics["uplink_rate"])
+        if "downlink_rate" in radio_link_statistics:
+            self.downlink_rate_updated.call(radio_link_statistics["downlink_rate"])
+        if "uplink_congestion" in radio_link_statistics:
+            self.uplink_congestion_updated.call(radio_link_statistics["uplink_congestion"])
+        if "downlink_congestion" in radio_link_statistics:
+            self.downlink_congestion_updated.call(radio_link_statistics["downlink_congestion"])
 
 
 class Latency:
@@ -188,7 +188,7 @@ class Latency:
 
         # Pack the current time as the ping timestamp
         current_time = time.time()
-        ping_packet.data = struct.pack('<Bd', PING_HEADER, current_time)
+        ping_packet.data = struct.pack("<Bd", PING_HEADER, current_time)
         self._cf.send_packet(ping_packet)
 
     def _ping_response(self, packet):
@@ -203,7 +203,7 @@ class Latency:
             packet (CRTPPacket): The packet received from the Crazyflie containing
             the echo response data.
         """
-        received_header, received_timestamp = struct.unpack('<Bd', packet.data)
+        received_header, received_timestamp = struct.unpack("<Bd", packet.data)
         if received_header != PING_HEADER:
             return
         self.latency = self._calculate_p95_latency(received_timestamp)
@@ -223,7 +223,7 @@ class Latency:
         Returns:
             float: The updated 95th percentile latency in milliseconds.
         """
-        if not hasattr(self, '_latencies'):
+        if not hasattr(self, "_latencies"):
             self._latencies = []
 
         instantaneous_latency = (time.time() - timestamp) * 1000

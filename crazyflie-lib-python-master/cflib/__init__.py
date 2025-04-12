@@ -56,8 +56,8 @@ cf.close_link()
 """
 import warnings
 
-warnings.simplefilter('always', DeprecationWarning)  # Enbable DeprecationWarnings
+warnings.simplefilter("always", DeprecationWarning)  # Enbable DeprecationWarnings
 
 __pdoc__ = {}
-__pdoc__['cflib.crtp.cflinkcppdriver'] = False
-__pdoc__['cflib.cpx.transports'] = False
+__pdoc__["cflib.crtp.cflinkcppdriver"] = False
+__pdoc__["cflib.cpx.transports"] = False

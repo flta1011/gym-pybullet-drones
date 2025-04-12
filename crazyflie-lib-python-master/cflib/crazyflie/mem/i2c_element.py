@@ -28,14 +28,13 @@ from .memory_element import MemoryElement
 logger = logging.getLogger(__name__)
 
 
-EEPROM_TOKEN = b'0xBC'
+EEPROM_TOKEN = b"0xBC"
 
 
 class I2CElement(MemoryElement):
 
     def __init__(self, id, type, size, mem_handler):
-        super(I2CElement, self).__init__(id=id, type=type, size=size,
-                                         mem_handler=mem_handler)
+        super(I2CElement, self).__init__(id=id, type=type, size=size, mem_handler=mem_handler)
         self._update_finished_cb = None
         self._write_finished_cb = None
         self.elements = {}
@@ -48,16 +47,13 @@ class I2CElement(MemoryElement):
                 done = False
                 # Check for header
                 if data[0:4] == EEPROM_TOKEN:
-                    logger.debug('Got new data: {}'.format(data))
-                    [self.elements['version'],
-                     self.elements['radio_channel'],
-                     self.elements['radio_speed'],
-                     self.elements['pitch_trim'],
-                     self.elements['roll_trim']] = struct.unpack('<BBBff',
-                                                                 data[4:15])
-                    if self.elements['version'] == 0:
+                    logger.debug("Got new data: {}".format(data))
+                    [self.elements["version"], self.elements["radio_channel"], self.elements["radio_speed"], self.elements["pitch_trim"], self.elements["roll_trim"]] = struct.unpack(
+                        "<BBBff", data[4:15]
+                    )
+                    if self.elements["version"] == 0:
                         done = True
-                    elif self.elements['version'] == 1:
+                    elif self.elements["version"] == 1:
                         self.datav0 = data
                         self.mem_handler.read(self, 16, 5)
                 else:
@@ -67,18 +63,15 @@ class I2CElement(MemoryElement):
                         self._update_finished_cb = None
 
             if addr == 16:
-                [radio_address_upper, radio_address_lower] = struct.unpack(
-                    '<BI', self.datav0[15:16] + data[0:4])
-                self.elements['radio_address'] = int(
-                    radio_address_upper) << 32 | radio_address_lower
+                [radio_address_upper, radio_address_lower] = struct.unpack("<BI", self.datav0[15:16] + data[0:4])
+                self.elements["radio_address"] = int(radio_address_upper) << 32 | radio_address_lower
 
                 logger.debug(self.elements)
                 data = self.datav0 + data
                 done = True
 
             if done:
-                if self._checksum256(data[:len(data) - 1]) == \
-                        data[len(data) - 1]:
+                if self._checksum256(data[: len(data) - 1]) == data[len(data) - 1]:
                     self.valid = True
                 if self._update_finished_cb:
                     self._update_finished_cb(self)
@@ -89,35 +82,34 @@ class I2CElement(MemoryElement):
 
     def write_data(self, write_finished_cb):
         image = bytearray()
-        if self.elements['version'] == 0:
+        if self.elements["version"] == 0:
+            data = (0x00, self.elements["radio_channel"], self.elements["radio_speed"], self.elements["pitch_trim"], self.elements["roll_trim"])
+            image += struct.pack("<BBBff", *data)
+        elif self.elements["version"] == 1:
             data = (
-                0x00, self.elements['radio_channel'],
-                self.elements['radio_speed'],
-                self.elements['pitch_trim'], self.elements['roll_trim'])
-            image += struct.pack('<BBBff', *data)
-        elif self.elements['version'] == 1:
-            data = (
-                0x01, self.elements['radio_channel'],
-                self.elements['radio_speed'],
-                self.elements['pitch_trim'], self.elements['roll_trim'],
-                self.elements['radio_address'] >> 32,
-                self.elements['radio_address'] & 0xFFFFFFFF)
-            image += struct.pack('<BBBffBI', *data)
+                0x01,
+                self.elements["radio_channel"],
+                self.elements["radio_speed"],
+                self.elements["pitch_trim"],
+                self.elements["roll_trim"],
+                self.elements["radio_address"] >> 32,
+                self.elements["radio_address"] & 0xFFFFFFFF,
+            )
+            image += struct.pack("<BBBffBI", *data)
         # Adding some magic:
         image = EEPROM_TOKEN + image
-        image += struct.pack('B', self._checksum256(image))
+        image += struct.pack("B", self._checksum256(image))
 
         self._write_finished_cb = write_finished_cb
 
-        self.mem_handler.write(self, 0x00,
-                               struct.unpack('B' * len(image), image))
+        self.mem_handler.write(self, 0x00, struct.unpack("B" * len(image), image))
 
     def update(self, update_finished_cb):
         """Request an update of the memory content"""
         if not self._update_finished_cb:
             self._update_finished_cb = update_finished_cb
             self.valid = False
-            logger.debug('Updating content of memory {}'.format(self.id))
+            logger.debug("Updating content of memory {}".format(self.id))
             # Start reading the header
             self.mem_handler.read(self, 0, 16)
 

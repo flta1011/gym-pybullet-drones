@@ -40,31 +40,31 @@ class CRTPPacketTest(unittest.TestCase):
         actual = self.sut.get_header()
 
         # Assert
-        expected = 0x2d
+        expected = 0x2D
         self.assertEqual(expected, actual)
 
     def test_that_port_is_truncated_in_header(self):
         # Fixture
-        port = 0xff
+        port = 0xFF
         self.sut.set_header(port, 0)
 
         # Test
         actual = self.sut.get_header()
 
         # Assert
-        expected = 0xfc
+        expected = 0xFC
         self.assertEqual(expected, actual)
 
     def test_that_channel_is_truncated_in_header(self):
         # Fixture
-        channel = 0xff
+        channel = 0xFF
         self.sut.set_header(0, channel)
 
         # Test
         actual = self.sut.get_header()
 
         # Assert
-        expected = 0x0f
+        expected = 0x0F
         self.assertEqual(expected, actual)
 
     def test_that_port_and_channel_is_encoded_in_header_when_set_separat(self):
@@ -76,7 +76,7 @@ class CRTPPacketTest(unittest.TestCase):
         actual = self.sut.get_header()
 
         # Assert
-        expected = 0x2d
+        expected = 0x2D
         self.assertEqual(expected, actual)
 
     def test_that_default_header_is_set_when_constructed(self):
@@ -86,7 +86,7 @@ class CRTPPacketTest(unittest.TestCase):
         actual = self.sut.get_header()
 
         # Assert
-        expected = 0x0c
+        expected = 0x0C
         self.assertEqual(expected, actual)
 
     def test_that_header_is_set_when_constructed(self):
@@ -97,6 +97,6 @@ class CRTPPacketTest(unittest.TestCase):
         actual = sut.get_header()
 
         # Assert
-        self.assertEqual(0x2d, actual)
+        self.assertEqual(0x2D, actual)
         self.assertEqual(2, sut.port)
         self.assertEqual(1, sut.channel)

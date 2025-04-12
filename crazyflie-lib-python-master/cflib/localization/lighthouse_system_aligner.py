@@ -30,9 +30,9 @@ from cflib.localization.lighthouse_types import Pose
 
 class LighthouseSystemAligner:
     """This class is used to align a lighthouse system to a few sampled positions"""
+
     @classmethod
-    def align(cls, origin: npt.ArrayLike, x_axis: list[npt.ArrayLike], xy_plane: list[npt.ArrayLike],
-              bs_poses: dict[int, Pose]) -> tuple[dict[int, Pose], Pose]:
+    def align(cls, origin: npt.ArrayLike, x_axis: list[npt.ArrayLike], xy_plane: list[npt.ArrayLike], bs_poses: dict[int, Pose]) -> tuple[dict[int, Pose], Pose]:
         """
         Align a coordinate system with the physical world. Finds the transform from the
         current reference frame to one that is aligned with measured positions, and transforms base station
@@ -55,8 +55,7 @@ class LighthouseSystemAligner:
         return result, transformation
 
     @classmethod
-    def _find_transformation(cls, origin: npt.ArrayLike, x_axis: list[npt.ArrayLike],
-                             xy_plane: list[npt.ArrayLike]) -> Pose:
+    def _find_transformation(cls, origin: npt.ArrayLike, x_axis: list[npt.ArrayLike], xy_plane: list[npt.ArrayLike]) -> Pose:
         """
         Finds the transformation from the current reference frame to a desired reference frame based on measured
         positions of the desired reference frame.
@@ -72,14 +71,7 @@ class LighthouseSystemAligner:
 
         x0 = np.zeros((6))
 
-        result = scipy.optimize.least_squares(cls._calc_residual,
-                                              x0, verbose=0,
-                                              jac_sparsity=None,
-                                              x_scale='jac',
-                                              ftol=1e-8,
-                                              method='trf',
-                                              max_nfev=10,
-                                              args=args)
+        result = scipy.optimize.least_squares(cls._calc_residual, x0, verbose=0, jac_sparsity=None, x_scale="jac", ftol=1e-8, method="trf", max_nfev=10, args=args)
         return cls._Pose_from_params(result.x)
 
     @classmethod
@@ -106,8 +98,7 @@ class LighthouseSystemAligner:
         return Pose.from_rot_vec(R_vec=params[:3], t_vec=params[3:])
 
     @classmethod
-    def _de_flip_transformation(cls, raw_transformation: Pose, x_axis: list[npt.ArrayLike],
-                                bs_poses: dict[int, Pose]) -> Pose:
+    def _de_flip_transformation(cls, raw_transformation: Pose, x_axis: list[npt.ArrayLike], bs_poses: dict[int, Pose]) -> Pose:
         """
         Investigats a transformation and flips it if needed. This method assumes that
         1. all base stations are at Z>0

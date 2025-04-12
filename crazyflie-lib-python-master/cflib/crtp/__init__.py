@@ -34,7 +34,7 @@ from .tcpdriver import TcpDriver
 from .udpdriver import UdpDriver
 from .usbdriver import UsbDriver
 
-__author__ = 'Bitcraze AB'
+__author__ = "Bitcraze AB"
 __all__ = []
 
 logger = logging.getLogger(__name__)
@@ -46,15 +46,16 @@ CLASSES = []
 def init_drivers(enable_debug_driver=False, enable_serial_driver=False):
     """Initialize all the drivers."""
 
-    env = os.getenv('USE_CFLINK')
-    if env is not None and env == 'cpp':
+    env = os.getenv("USE_CFLINK")
+    if env is not None and env == "cpp":
         from .cflinkcppdriver import CfLinkCppDriver
+
         CLASSES.append(CfLinkCppDriver)
     else:
         CLASSES.extend([RadioDriver, UsbDriver])
 
     if enable_debug_driver:
-        logger.warn('The debug driver is no longer supported!')
+        logger.warn("The debug driver is no longer supported!")
 
     if enable_serial_driver:
         CLASSES.append(SerialDriver)
@@ -63,12 +64,12 @@ def init_drivers(enable_debug_driver=False, enable_serial_driver=False):
 
 
 def scan_interfaces(address=None):
-    """ Scan all the interfaces for available Crazyflies """
+    """Scan all the interfaces for available Crazyflies"""
     available = []
     found = []
     for driverClass in CLASSES:
         try:
-            logger.debug('Scanning: %s', driverClass)
+            logger.debug("Scanning: %s", driverClass)
             instance = driverClass()
             found = instance.scan_interface(address)
             available += found

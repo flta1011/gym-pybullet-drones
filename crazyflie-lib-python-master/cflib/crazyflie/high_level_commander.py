@@ -31,11 +31,11 @@ import struct
 from cflib.crtp.crtpstack import CRTPPacket
 from cflib.crtp.crtpstack import CRTPPort
 
-__author__ = 'Bitcraze AB'
-__all__ = ['HighLevelCommander']
+__author__ = "Bitcraze AB"
+__all__ = ["HighLevelCommander"]
 
 
-class HighLevelCommander():
+class HighLevelCommander:
     """
     Used for sending high level setpoints to the Crazyflie
     """
@@ -69,12 +69,9 @@ class HighLevelCommander():
 
         :param group_mask: Mask for which groups this CF belongs to
         """
-        self._send_packet(struct.pack('<BB',
-                                      self.COMMAND_SET_GROUP_MASK,
-                                      group_mask))
+        self._send_packet(struct.pack("<BB", self.COMMAND_SET_GROUP_MASK, group_mask))
 
-    def takeoff(self, absolute_height_m, duration_s, group_mask=ALL_GROUPS,
-                yaw=0.0):
+    def takeoff(self, absolute_height_m, duration_s, group_mask=ALL_GROUPS, yaw=0.0):
         """
         vertical takeoff from current x-y position to given height
 
@@ -90,16 +87,9 @@ class HighLevelCommander():
             target_yaw = 0.0
             useCurrentYaw = True
 
-        self._send_packet(struct.pack('<BBff?f',
-                                      self.COMMAND_TAKEOFF_2,
-                                      group_mask,
-                                      absolute_height_m,
-                                      target_yaw,
-                                      useCurrentYaw,
-                                      duration_s))
+        self._send_packet(struct.pack("<BBff?f", self.COMMAND_TAKEOFF_2, group_mask, absolute_height_m, target_yaw, useCurrentYaw, duration_s))
 
-    def land(self, absolute_height_m, duration_s, group_mask=ALL_GROUPS,
-             yaw=0.0):
+    def land(self, absolute_height_m, duration_s, group_mask=ALL_GROUPS, yaw=0.0):
         """
         vertical land from current x-y position to given height
 
@@ -115,13 +105,7 @@ class HighLevelCommander():
             target_yaw = 0.0
             useCurrentYaw = True
 
-        self._send_packet(struct.pack('<BBff?f',
-                                      self.COMMAND_LAND_2,
-                                      group_mask,
-                                      absolute_height_m,
-                                      target_yaw,
-                                      useCurrentYaw,
-                                      duration_s))
+        self._send_packet(struct.pack("<BBff?f", self.COMMAND_LAND_2, group_mask, absolute_height_m, target_yaw, useCurrentYaw, duration_s))
 
     def stop(self, group_mask=ALL_GROUPS):
         """
@@ -130,12 +114,9 @@ class HighLevelCommander():
         :param group_mask: Mask for which CFs this should apply to
         :return:
         """
-        self._send_packet(struct.pack('<BB',
-                                      self.COMMAND_STOP,
-                                      group_mask))
+        self._send_packet(struct.pack("<BB", self.COMMAND_STOP, group_mask))
 
-    def go_to(self, x, y, z, yaw, duration_s, relative=False, linear=False,
-              group_mask=ALL_GROUPS):
+    def go_to(self, x, y, z, yaw, duration_s, relative=False, linear=False, group_mask=ALL_GROUPS):
         """
         Go to an absolute or relative position
 
@@ -150,26 +131,12 @@ class HighLevelCommander():
         """
         if self._cf.platform.get_protocol_version() < 8:
             if linear:
-                print('Warning: Linear mode not supported in protocol version < 8, update your crazyflie\'s firmware')
-            self._send_packet(struct.pack('<BBBfffff',
-                                          self.COMMAND_GO_TO,
-                                          group_mask,
-                                          relative,
-                                          x, y, z,
-                                          yaw,
-                                          duration_s))
+                print("Warning: Linear mode not supported in protocol version < 8, update your crazyflie's firmware")
+            self._send_packet(struct.pack("<BBBfffff", self.COMMAND_GO_TO, group_mask, relative, x, y, z, yaw, duration_s))
         else:
-            self._send_packet(struct.pack('<BBBBfffff',
-                                          self.COMMAND_GO_TO_2,
-                                          group_mask,
-                                          relative,
-                                          linear,
-                                          x, y, z,
-                                          yaw,
-                                          duration_s))
+            self._send_packet(struct.pack("<BBBBfffff", self.COMMAND_GO_TO_2, group_mask, relative, linear, x, y, z, yaw, duration_s))
 
-    def spiral(self, angle, r0, rF, ascent, duration_s, sideways=False, clockwise=False,
-               group_mask=ALL_GROUPS):
+    def spiral(self, angle, r0, rF, ascent, duration_s, sideways=False, clockwise=False, group_mask=ALL_GROUPS):
         """
         Follow a spiral-like segment (spline approximation of a spiral/arc for <= 90-degree segments)
 
@@ -183,32 +150,23 @@ class HighLevelCommander():
         :param group_mask: Mask for which CFs this should apply to
         """
         if self._cf.platform.get_protocol_version() < 8:
-            print('Warning: Spiral command is not supported in protocol version < 8, update your crazyflie\'s firmware')
+            print("Warning: Spiral command is not supported in protocol version < 8, update your crazyflie's firmware")
         else:
-            if angle > 2*math.pi:
-                angle = 2*math.pi
-                print('Warning: Spiral angle saturated at 2pi as it was too large')
-            elif angle < -2*math.pi:
-                angle = -2*math.pi
-                print('Warning: Spiral angle saturated at -2pi as it was too small')
+            if angle > 2 * math.pi:
+                angle = 2 * math.pi
+                print("Warning: Spiral angle saturated at 2pi as it was too large")
+            elif angle < -2 * math.pi:
+                angle = -2 * math.pi
+                print("Warning: Spiral angle saturated at -2pi as it was too small")
             if r0 < 0:
                 r0 = 0
-                print('Warning: Initial radius set to 0 as it cannot be negative')
+                print("Warning: Initial radius set to 0 as it cannot be negative")
             if rF < 0:
                 rF = 0
-                print('Warning: Final radius set to 0 as it cannot be negative')
-            self._send_packet(struct.pack('<BBBBfffff',
-                                          self.COMMAND_SPIRAL,
-                                          group_mask,
-                                          sideways,
-                                          clockwise,
-                                          angle,
-                                          r0, rF,
-                                          ascent,
-                                          duration_s))
+                print("Warning: Final radius set to 0 as it cannot be negative")
+            self._send_packet(struct.pack("<BBBBfffff", self.COMMAND_SPIRAL, group_mask, sideways, clockwise, angle, r0, rF, ascent, duration_s))
 
-    def start_trajectory(self, trajectory_id, time_scale=1.0, relative=False,
-                         reversed=False, group_mask=ALL_GROUPS):
+    def start_trajectory(self, trajectory_id, time_scale=1.0, relative=False, reversed=False, group_mask=ALL_GROUPS):
         """
         starts executing a specified trajectory
 
@@ -224,13 +182,7 @@ class HighLevelCommander():
         :param group_mask: Mask for which CFs this should apply to
         :return:
         """
-        self._send_packet(struct.pack('<BBBBBf',
-                                      self.COMMAND_START_TRAJECTORY,
-                                      group_mask,
-                                      relative,
-                                      reversed,
-                                      trajectory_id,
-                                      time_scale))
+        self._send_packet(struct.pack("<BBBBBf", self.COMMAND_START_TRAJECTORY, group_mask, relative, reversed, trajectory_id, time_scale))
 
     def define_trajectory(self, trajectory_id, offset, n_pieces, type=TRAJECTORY_TYPE_POLY4D):
         """
@@ -242,13 +194,7 @@ class HighLevelCommander():
         :param type: The type of trajectory data; TRAJECTORY_TYPE_POLY4D or TRAJECTORY_TYPE_POLY4D_COMPRESSED
         :return:
         """
-        self._send_packet(struct.pack('<BBBBIB',
-                                      self.COMMAND_DEFINE_TRAJECTORY,
-                                      trajectory_id,
-                                      self.TRAJECTORY_LOCATION_MEM,
-                                      type,
-                                      offset,
-                                      n_pieces))
+        self._send_packet(struct.pack("<BBBBIB", self.COMMAND_DEFINE_TRAJECTORY, trajectory_id, self.TRAJECTORY_LOCATION_MEM, type, offset, n_pieces))
 
     def _send_packet(self, data):
         pk = CRTPPacket()

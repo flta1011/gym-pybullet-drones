@@ -31,8 +31,7 @@ class PAA3905Memory(MemoryElement):
     """Memory interface for reading the multiranger values"""
 
     def __init__(self, id, type, size, mem_handler):
-        super(PAA3905Memory, self).__init__(id=id, type=type, size=size,
-                                            mem_handler=mem_handler)
+        super(PAA3905Memory, self).__init__(id=id, type=type, size=size, mem_handler=mem_handler)
         self._read_finished_cb = None
 
     def new_data(self, mem, addr, data):
@@ -41,7 +40,7 @@ class PAA3905Memory(MemoryElement):
             print(len(data))
             image_matrix = []
             for i in range(35):
-                image_matrix.append(data[i*35:i*35+35])
+                image_matrix.append(data[i * 35 : i * 35 + 35])
 
             self._read_finished_cb(addr, image_matrix)
 
@@ -62,7 +61,7 @@ class PAA3905Memory(MemoryElement):
 
     def read_failed(self, mem, addr):
         if mem.id == self.id:
-            logger.debug('Read failed')
+            logger.debug("Read failed")
 
     def disconnect(self):
         self._read_finished_cb = None

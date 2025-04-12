@@ -47,12 +47,11 @@ class LED:
 
 class LEDDriverMemory(MemoryElement):
     """Memory interface for using the LED-ring mapped memory for setting RGB
-       values for all the LEDs in the ring"""
+    values for all the LEDs in the ring"""
 
     def __init__(self, id, type, size, mem_handler):
         """Initialize with 12 LEDs"""
-        super(LEDDriverMemory, self).__init__(id=id, type=type, size=size,
-                                              mem_handler=mem_handler)
+        super(LEDDriverMemory, self).__init__(id=id, type=type, size=size, mem_handler=mem_handler)
         self._update_finished_cb = None
         self._write_finished_cb = None
 
@@ -63,8 +62,7 @@ class LEDDriverMemory(MemoryElement):
     def new_data(self, mem, addr, data):
         """Callback for when new memory data has been fetched"""
         if mem.id == self.id:
-            logger.debug(
-                "Got new data from the LED driver, but we don't care.")
+            logger.debug("Got new data from the LED driver, but we don't care.")
 
     def write_data(self, write_finished_cb):
         """Write the saved LED-ring data to the Crazyflie"""
@@ -76,12 +74,9 @@ class LEDDriverMemory(MemoryElement):
             # RGB into 2 bytes RGB565. Then shifts the value of each color to
             # LSB, applies the intensity and shifts them back for correct
             # alignment on 2 bytes.
-            R5 = ((int)((((int(led.r) & 0xFF) * 249 + 1014) >> 11) & 0x1F) *
-                  led.intensity / 100)
-            G6 = ((int)((((int(led.g) & 0xFF) * 253 + 505) >> 10) & 0x3F) *
-                  led.intensity / 100)
-            B5 = ((int)((((int(led.b) & 0xFF) * 249 + 1014) >> 11) & 0x1F) *
-                  led.intensity / 100)
+            R5 = (int)((((int(led.r) & 0xFF) * 249 + 1014) >> 11) & 0x1F) * led.intensity / 100
+            G6 = (int)((((int(led.g) & 0xFF) * 253 + 505) >> 10) & 0x3F) * led.intensity / 100
+            B5 = (int)((((int(led.b) & 0xFF) * 249 + 1014) >> 11) & 0x1F) * led.intensity / 100
             tmp = (int(R5) << 11) | (int(G6) << 5) | (int(B5) << 0)
             data += bytearray((tmp >> 8, tmp & 0xFF))
         self.mem_handler.write(self, 0x00, data, flush_queue=True)
@@ -91,13 +86,13 @@ class LEDDriverMemory(MemoryElement):
         if not self._update_finished_cb:
             self._update_finished_cb = update_finished_cb
             self.valid = False
-            logger.debug('Updating content of memory {}'.format(self.id))
+            logger.debug("Updating content of memory {}".format(self.id))
             # Start reading the header
             self.mem_handler.read(self, 0, 16)
 
     def write_done(self, mem, addr):
         if self._write_finished_cb and mem.id == self.id:
-            logger.debug('Write to LED driver done')
+            logger.debug("Write to LED driver done")
             self._write_finished_cb(self, addr)
             self._write_finished_cb = None
 

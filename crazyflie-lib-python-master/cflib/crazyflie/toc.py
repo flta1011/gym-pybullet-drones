@@ -31,8 +31,8 @@ import struct
 
 from cflib.crtp.crtpstack import CRTPPacket
 
-__author__ = 'Bitcraze AB'
-__all__ = ['Toc', 'TocFetcher']
+__author__ = "Bitcraze AB"
+__all__ = ["Toc", "TocFetcher"]
 
 logger = logging.getLogger(__name__)
 
@@ -40,14 +40,14 @@ TOC_CHANNEL = 0
 
 # Commands used when accessing the Table of Contents
 CMD_TOC_ELEMENT = 0  # original version: up to 255 entries
-CMD_TOC_INFO = 1    # original version: up to 255 entries
+CMD_TOC_INFO = 1  # original version: up to 255 entries
 CMD_TOC_ITEM_V2 = 2  # version 2: up to 16k entries
 CMD_TOC_INFO_V2 = 3  # version 2: up to 16k entries
 
 # Possible states when receiving TOC
-IDLE = 'IDLE'
-GET_TOC_INFO = 'GET_TOC_INFO'
-GET_TOC_ELEMENT = 'GET_TOC_ELEMENT'
+IDLE = "IDLE"
+GET_TOC_INFO = "GET_TOC_INFO"
+GET_TOC_ELEMENT = "GET_TOC_ELEMENT"
 
 
 class Toc:
@@ -80,12 +80,12 @@ class Toc:
     def get_element_id(self, complete_name):
         """Get the TocElement element id-number of the element with the
         supplied name."""
-        [group, name] = complete_name.split('.')
+        [group, name] = complete_name.split(".")
         element = self.get_element(group, name)
         if element:
             return element.ident
         else:
-            logger.warning('Unable to find variable [%s]', complete_name)
+            logger.warning("Unable to find variable [%s]", complete_name)
             return None
 
     def get_element(self, group, name):
@@ -109,8 +109,7 @@ class Toc:
 class TocFetcher:
     """Fetches TOC entries from the Crazyflie"""
 
-    def __init__(self, crazyflie, element_class, port, toc_holder,
-                 finished_callback, toc_cache):
+    def __init__(self, crazyflie, element_class, port, toc_holder, finished_callback, toc_cache):
         self.cf = crazyflie
         self.port = port
         self._crc = 0
@@ -127,9 +126,9 @@ class TocFetcher:
         """Initiate fetching of the TOC."""
         self._useV2 = self.cf.platform.get_protocol_version() >= 4
 
-        logger.debug('[%d]: Using V2 protocol: %d', self.port, self._useV2)
+        logger.debug("[%d]: Using V2 protocol: %d", self.port, self._useV2)
 
-        logger.debug('[%d]: Start fetching...', self.port)
+        logger.debug("[%d]: Start fetching...", self.port)
         # Register callback in this class for the port
         self.cf.add_port_callback(self.port, self._new_packet_cb)
 
@@ -147,46 +146,43 @@ class TocFetcher:
     def _toc_fetch_finished(self):
         """Callback for when the TOC fetching is finished"""
         self.cf.remove_port_callback(self.port, self._new_packet_cb)
-        logger.debug('[%d]: Done!', self.port)
+        logger.debug("[%d]: Done!", self.port)
         self.finished_callback()
 
     def _new_packet_cb(self, packet):
         """Handle a newly arrived packet"""
         chan = packet.channel
-        if (chan != 0):
+        if chan != 0:
             return
         payload = packet.data[1:]
 
-        if (self.state == GET_TOC_INFO):
+        if self.state == GET_TOC_INFO:
             if self._useV2:
-                [self.nbr_of_items, self._crc] = struct.unpack(
-                    '<HI', payload[:6])
+                [self.nbr_of_items, self._crc] = struct.unpack("<HI", payload[:6])
             else:
-                [self.nbr_of_items, self._crc] = struct.unpack(
-                    '<BI', payload[:5])
-            logger.debug('[%d]: Got TOC CRC, %d items and crc=0x%08X',
-                         self.port, self.nbr_of_items, self._crc)
+                [self.nbr_of_items, self._crc] = struct.unpack("<BI", payload[:5])
+            logger.debug("[%d]: Got TOC CRC, %d items and crc=0x%08X", self.port, self.nbr_of_items, self._crc)
 
             cache_data = self._toc_cache.fetch(self._crc)
-            if (cache_data):
+            if cache_data:
                 self.toc.toc = cache_data
-                logger.info('TOC for port [%s] found in cache' % self.port)
+                logger.info("TOC for port [%s] found in cache" % self.port)
                 self._toc_fetch_finished()
             else:
                 self.state = GET_TOC_ELEMENT
                 self.requested_index = 0
-                if (self.nbr_of_items > 0):
+                if self.nbr_of_items > 0:
                     self._request_toc_element(self.requested_index)
                 else:
-                    logger.debug('No TOC entries for port [%s]' % self.port)
+                    logger.debug("No TOC entries for port [%s]" % self.port)
                     self._toc_cache.insert(self._crc, self.toc.toc)
                     self._toc_fetch_finished()
 
-        elif (self.state == GET_TOC_ELEMENT):
+        elif self.state == GET_TOC_ELEMENT:
             # Always add new element, but only request new if it's not the
             # last one.
             if self._useV2:
-                ident = struct.unpack('<H', payload[:2])[0]
+                ident = struct.unpack("<H", payload[:2])[0]
             else:
                 ident = payload[0]
 
@@ -196,10 +192,9 @@ class TocFetcher:
                 self.toc.add_element(self.element_class(ident, payload[2:]))
             else:
                 self.toc.add_element(self.element_class(ident, payload[1:]))
-            logger.debug('Added element [%s]', ident)
-            if (self.requested_index < (self.nbr_of_items - 1)):
-                logger.debug('[%d]: More variables, requesting index %d',
-                             self.port, self.requested_index + 1)
+            logger.debug("Added element [%s]", ident)
+            if self.requested_index < (self.nbr_of_items - 1):
+                logger.debug("[%d]: More variables, requesting index %d", self.port, self.requested_index + 1)
                 self.requested_index += 1
                 self._request_toc_element(self.requested_index)
             else:  # No more variables in TOC
@@ -208,13 +203,12 @@ class TocFetcher:
 
     def _request_toc_element(self, index):
         """Request information about a specific item in the TOC"""
-        logger.debug('Requesting index %d on port %d', index, self.port)
+        logger.debug("Requesting index %d on port %d", index, self.port)
         pk = CRTPPacket()
         if self._useV2:
             pk.set_header(self.port, TOC_CHANNEL)
-            pk.data = (CMD_TOC_ITEM_V2, index & 0x0ff, (index >> 8) & 0x0ff)
-            self.cf.send_packet(pk, expected_reply=(
-                CMD_TOC_ITEM_V2, index & 0x0ff, (index >> 8) & 0x0ff))
+            pk.data = (CMD_TOC_ITEM_V2, index & 0x0FF, (index >> 8) & 0x0FF)
+            self.cf.send_packet(pk, expected_reply=(CMD_TOC_ITEM_V2, index & 0x0FF, (index >> 8) & 0x0FF))
         else:
             pk.set_header(self.port, TOC_CHANNEL)
             pk.data = (CMD_TOC_ELEMENT, index)

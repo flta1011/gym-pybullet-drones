@@ -38,44 +38,42 @@ logging.basicConfig(level=logging.ERROR)
 class ReadMem:
     def __init__(self, uri):
         self._event = Event()
-        self._cf = Crazyflie(rw_cache='./cache')
+        self._cf = Crazyflie(rw_cache="./cache")
 
         with SyncCrazyflie(uri, cf=self._cf) as scf:
             mems = scf.cf.mem.get_mems(MemoryElement.TYPE_DECK_MEMORY)
 
             count = len(mems)
             if count != 1:
-                raise Exception('Unexpected nr of memories found:', count)
+                raise Exception("Unexpected nr of memories found:", count)
 
             mem = mems[0]
             mem.query_decks(self.query_complete_cb)
             self._event.wait()
 
             if len(mem.deck_memories.items()) == 0:
-                print('No memories to read')
+                print("No memories to read")
 
             for id, deck_mem in mem.deck_memories.items():
-                print('-----')
-                print('Deck id:', id)
-                print('Name:', deck_mem.name)
-                print('is_started:', deck_mem.is_started)
-                print('supports_read:', deck_mem.supports_read)
-                print('supports_write:', deck_mem.supports_write)
+                print("-----")
+                print("Deck id:", id)
+                print("Name:", deck_mem.name)
+                print("is_started:", deck_mem.is_started)
+                print("supports_read:", deck_mem.supports_read)
+                print("supports_write:", deck_mem.supports_write)
 
                 if deck_mem.supports_fw_upgrade:
-                    print('This deck supports FW upgrades')
-                    print(
-                        f'  The required FW is: hash={deck_mem.required_hash}, '
-                        f'length={deck_mem.required_length}, name={deck_mem.name}')
-                    print('  is_fw_upgrade_required:', deck_mem.is_fw_upgrade_required)
-                    if (deck_mem.is_bootloader_active):
-                        print('  In bootloader mode, ready to be flashed')
+                    print("This deck supports FW upgrades")
+                    print(f"  The required FW is: hash={deck_mem.required_hash}, " f"length={deck_mem.required_length}, name={deck_mem.name}")
+                    print("  is_fw_upgrade_required:", deck_mem.is_fw_upgrade_required)
+                    if deck_mem.is_bootloader_active:
+                        print("  In bootloader mode, ready to be flashed")
                     else:
-                        print('  In FW mode')
-                    print('')
+                        print("  In FW mode")
+                    print("")
 
                 if deck_mem.supports_read:
-                    print('Reading first 10 bytes of memory')
+                    print("Reading first 10 bytes of memory")
                     self._event.clear()
                     deck_mem.read(0, 10, self.read_complete, self.read_failed)
                     self._event.wait()
@@ -88,13 +86,13 @@ class ReadMem:
         self._event.set()
 
     def read_failed(self, addr):
-        print('Read failed @ {}'.format(addr))
+        print("Read failed @ {}".format(addr))
         self._event.set()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # URI to the Crazyflie to connect to
-    uri = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
+    uri = uri_helper.uri_from_env(default="radio://0/80/2M/E7E7E7E7E7")
 
     # Initialize the low-level drivers
     cflib.crtp.init_drivers()

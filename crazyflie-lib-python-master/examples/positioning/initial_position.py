@@ -44,7 +44,7 @@ from cflib.crazyflie.syncLogger import SyncLogger
 from cflib.utils import uri_helper
 
 # URI to the Crazyflie to connect to
-uri = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
+uri = uri_helper.uri_from_env(default="radio://0/80/2M/E7E7E7E7E7")
 
 # Change the sequence according to your setup
 #             x    y    z
@@ -57,12 +57,12 @@ sequence = [
 
 
 def wait_for_position_estimator(scf):
-    print('Waiting for estimator to find position...')
+    print("Waiting for estimator to find position...")
 
-    log_config = LogConfig(name='Kalman Variance', period_in_ms=500)
-    log_config.add_variable('kalman.varPX', 'float')
-    log_config.add_variable('kalman.varPY', 'float')
-    log_config.add_variable('kalman.varPZ', 'float')
+    log_config = LogConfig(name="Kalman Variance", period_in_ms=500)
+    log_config.add_variable("kalman.varPX", "float")
+    log_config.add_variable("kalman.varPY", "float")
+    log_config.add_variable("kalman.varPZ", "float")
 
     var_y_history = [1000] * 10
     var_x_history = [1000] * 10
@@ -74,11 +74,11 @@ def wait_for_position_estimator(scf):
         for log_entry in logger:
             data = log_entry[1]
 
-            var_x_history.append(data['kalman.varPX'])
+            var_x_history.append(data["kalman.varPX"])
             var_x_history.pop(0)
-            var_y_history.append(data['kalman.varPY'])
+            var_y_history.append(data["kalman.varPY"])
             var_y_history.pop(0)
-            var_z_history.append(data['kalman.varPZ'])
+            var_z_history.append(data["kalman.varPZ"])
             var_z_history.pop(0)
 
             min_x = min(var_x_history)
@@ -91,26 +91,24 @@ def wait_for_position_estimator(scf):
             # print("{} {} {}".
             #       format(max_x - min_x, max_y - min_y, max_z - min_z))
 
-            if (max_x - min_x) < threshold and (
-                    max_y - min_y) < threshold and (
-                    max_z - min_z) < threshold:
+            if (max_x - min_x) < threshold and (max_y - min_y) < threshold and (max_z - min_z) < threshold:
                 break
 
 
 def set_initial_position(scf, x, y, z, yaw_deg):
-    scf.cf.param.set_value('kalman.initialX', x)
-    scf.cf.param.set_value('kalman.initialY', y)
-    scf.cf.param.set_value('kalman.initialZ', z)
+    scf.cf.param.set_value("kalman.initialX", x)
+    scf.cf.param.set_value("kalman.initialY", y)
+    scf.cf.param.set_value("kalman.initialZ", z)
 
     yaw_radians = math.radians(yaw_deg)
-    scf.cf.param.set_value('kalman.initialYaw', yaw_radians)
+    scf.cf.param.set_value("kalman.initialYaw", yaw_radians)
 
 
 def reset_estimator(scf):
     cf = scf.cf
-    cf.param.set_value('kalman.resetEstimation', '1')
+    cf.param.set_value("kalman.resetEstimation", "1")
     time.sleep(0.1)
-    cf.param.set_value('kalman.resetEstimation', '0')
+    cf.param.set_value("kalman.resetEstimation", "0")
 
     wait_for_position_estimator(cf)
 
@@ -123,7 +121,7 @@ def run_sequence(scf, sequence, base_x, base_y, base_z, yaw):
     time.sleep(1.0)
 
     for position in sequence:
-        print('Setting position {}'.format(position))
+        print("Setting position {}".format(position))
 
         x = position[0] + base_x
         y = position[1] + base_y
@@ -142,7 +140,7 @@ def run_sequence(scf, sequence, base_x, base_y, base_z, yaw):
     time.sleep(0.1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cflib.crtp.init_drivers()
 
     # Set these to the position and yaw based on how your Crazyflie is placed
@@ -156,8 +154,7 @@ if __name__ == '__main__':
     # 180: negative X direction
     # 270: negative Y direction
 
-    with SyncCrazyflie(uri, cf=Crazyflie(rw_cache='./cache')) as scf:
+    with SyncCrazyflie(uri, cf=Crazyflie(rw_cache="./cache")) as scf:
         set_initial_position(scf, initial_x, initial_y, initial_z, initial_yaw)
         reset_estimator(scf)
-        run_sequence(scf, sequence,
-                     initial_x, initial_y, initial_z, initial_yaw)
+        run_sequence(scf, sequence, initial_x, initial_y, initial_z, initial_yaw)

@@ -76,8 +76,7 @@ class TestLighthouseSystemAligner(LighthouseTestBase):
         actual, transform = LighthouseSystemAligner.align(origin, x_axis, xy_plane, bs_poses)
 
         # Assert
-        self.assertPosesAlmostEqual(Pose.from_rot_vec(
-            R_vec=(0.0, 0.0, -np.pi / 2), t_vec=(0.0, 0.0, 1.0)), actual[bs_id])
+        self.assertPosesAlmostEqual(Pose.from_rot_vec(R_vec=(0.0, 0.0, -np.pi / 2), t_vec=(0.0, 0.0, 1.0)), actual[bs_id])
 
     def test_that_solution_is_de_flipped(self):
         # Fixture

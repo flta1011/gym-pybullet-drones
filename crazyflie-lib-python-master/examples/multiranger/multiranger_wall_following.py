@@ -54,7 +54,7 @@ from cflib.positioning.motion_commander import MotionCommander
 from cflib.utils import uri_helper
 from cflib.utils.multiranger import Multiranger
 
-URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
+URI = uri_helper.uri_from_env(default="radio://0/80/2M/E7E7E7E7E7")
 
 
 def handle_range_measurement(range):
@@ -63,7 +63,7 @@ def handle_range_measurement(range):
     return range
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Initialize the low-level drivers
     cflib.crtp.init_drivers()
 
@@ -72,15 +72,13 @@ if __name__ == '__main__':
 
     keep_flying = True
 
-    wall_following = WallFollowing(
-        angle_value_buffer=0.1, reference_distance_from_wall=0.3,
-        max_forward_speed=0.3, init_state=WallFollowing.StateWallFollowing.FORWARD)
+    wall_following = WallFollowing(angle_value_buffer=0.1, reference_distance_from_wall=0.3, max_forward_speed=0.3, init_state=WallFollowing.StateWallFollowing.FORWARD)
 
     # Setup logging to get the yaw data
-    lg_stab = LogConfig(name='Stabilizer', period_in_ms=100)
-    lg_stab.add_variable('stabilizer.yaw', 'float')
+    lg_stab = LogConfig(name="Stabilizer", period_in_ms=100)
+    lg_stab.add_variable("stabilizer.yaw", "float")
 
-    cf = Crazyflie(rw_cache='./cache')
+    cf = Crazyflie(rw_cache="./cache")
     with SyncCrazyflie(URI, cf=cf) as scf:
         # Arm the Crazyflie
         scf.cf.platform.send_arming_request(True)
@@ -101,7 +99,7 @@ if __name__ == '__main__':
                         # Get Yaw
                         log_entry = logger.next()
                         data = log_entry[1]
-                        actual_yaw = data['stabilizer.yaw']
+                        actual_yaw = data["stabilizer.yaw"]
                         actual_yaw_rad = radians(actual_yaw)
 
                         # get front range in meters
@@ -115,19 +113,16 @@ if __name__ == '__main__':
                         side_range = left_range
 
                         # get velocity commands and current state from wall following state machine
-                        velocity_x, velocity_y, yaw_rate, state_wf = wall_following.wall_follower(
-                            front_range, side_range, actual_yaw_rad, wall_following_direction, time.time())
+                        velocity_x, velocity_y, yaw_rate, state_wf = wall_following.wall_follower(front_range, side_range, actual_yaw_rad, wall_following_direction, time.time())
 
-                        print('velocity_x', velocity_x, 'velocity_y', velocity_y,
-                              'yaw_rate', yaw_rate, 'state_wf', state_wf)
+                        print("velocity_x", velocity_x, "velocity_y", velocity_y, "yaw_rate", yaw_rate, "state_wf", state_wf)
 
                         # convert yaw_rate from rad to deg
                         # the negative sign is because of this ticket:
                         #    https://github.com/bitcraze/crazyflie-lib-python/issues/389
                         yaw_rate_deg = -1 * degrees(yaw_rate)
 
-                        motion_commander.start_linear_motion(
-                            velocity_x, velocity_y, 0, rate_yaw=yaw_rate_deg)
+                        motion_commander.start_linear_motion(velocity_x, velocity_y, 0, rate_yaw=yaw_rate_deg)
 
                         # if top_range is activated, stop the demo
                         if top_range < 0.2:

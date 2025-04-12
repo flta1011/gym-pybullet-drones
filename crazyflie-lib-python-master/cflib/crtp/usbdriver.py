@@ -37,20 +37,20 @@ from .exceptions import WrongUriType
 from cflib.crtp.crtpdriver import CRTPDriver
 from cflib.drivers.cfusb import CfUsb
 
-__author__ = 'Bitcraze AB'
-__all__ = ['UsbDriver']
+__author__ = "Bitcraze AB"
+__all__ = ["UsbDriver"]
 
 logger = logging.getLogger(__name__)
 
 
 class UsbDriver(CRTPDriver):
-    """ Crazyradio link driver """
+    """Crazyradio link driver"""
 
     def __init__(self):
-        """ Create the link driver """
+        """Create the link driver"""
         CRTPDriver.__init__(self)
         self.cfusb = None
-        self.uri = ''
+        self.uri = ""
         self.link_error_callback = None
         self.radio_link_statistics_callback = None
         self.in_queue = None
@@ -68,15 +68,13 @@ class UsbDriver(CRTPDriver):
         """
 
         # check if the URI is a radio URI
-        uri_data = re.search('^usb://([0-9]+)$',
-                             uri)
+        uri_data = re.search("^usb://([0-9]+)$", uri)
         if not uri_data:
-            raise WrongUriType('Not a radio URI')
+            raise WrongUriType("Not a radio URI")
 
         # Open the USB dongle
-        if not re.search('^usb://([0-9]+)$',
-                         uri):
-            raise WrongUriType('Wrong radio URI format!')
+        if not re.search("^usb://([0-9]+)$", uri):
+            raise WrongUriType("Wrong radio URI format!")
 
         self.uri = uri
 
@@ -86,10 +84,10 @@ class UsbDriver(CRTPDriver):
                 self.cfusb.set_crtp_to_usb(True)
             else:
                 self.cfusb = None
-                raise Exception('Could not open {}'.format(self.uri))
+                raise Exception("Could not open {}".format(self.uri))
 
         else:
-            raise Exception('Link already open!')
+            raise Exception("Link already open!")
 
         # Prepare the inter-thread communication queue
         self.in_queue = queue.Queue()
@@ -97,9 +95,7 @@ class UsbDriver(CRTPDriver):
         self.out_queue = queue.Queue(50)
 
         # Launch the comm thread
-        self._thread = _UsbReceiveThread(self.cfusb, self.in_queue,
-                                         radio_link_statistics_callback,
-                                         link_error_callback)
+        self._thread = _UsbReceiveThread(self.cfusb, self.in_queue, radio_link_statistics_callback, link_error_callback)
         self._thread.start()
 
         self.link_error_callback = link_error_callback
@@ -126,10 +122,10 @@ class UsbDriver(CRTPDriver):
                 return None
 
     def send_packet(self, pk):
-        """ Send the packet pk though the link """
+        """Send the packet pk though the link"""
         # if self.out_queue.full():
         #    self.out_queue.get()
-        if (self.cfusb is None):
+        if self.cfusb is None:
             return
 
         try:
@@ -138,8 +134,7 @@ class UsbDriver(CRTPDriver):
             self.cfusb.send_packet(dataOut)
         except queue.Full:
             if self.link_error_callback:
-                self.link_error_callback(
-                    'UsbDriver: Could not send packet to Crazyflie')
+                self.link_error_callback("UsbDriver: Could not send packet to Crazyflie")
 
     def pause(self):
         self._thread.stop()
@@ -149,13 +144,11 @@ class UsbDriver(CRTPDriver):
         if self._thread:
             return
 
-        self._thread = _UsbReceiveThread(self.cfusb, self.in_queue,
-                                         self.radio_link_statistics_callback,
-                                         self.link_error_callback)
+        self._thread = _UsbReceiveThread(self.cfusb, self.in_queue, self.radio_link_statistics_callback, self.link_error_callback)
         self._thread.start()
 
     def close(self):
-        """ Close the link. """
+        """Close the link."""
         # Stop the comm thread
         self._thread.stop()
 
@@ -166,22 +159,20 @@ class UsbDriver(CRTPDriver):
                 self.cfusb.close()
         except Exception as e:
             # If we pull out the dongle we will not make this call
-            logger.info('Could not close {}'.format(e))
+            logger.info("Could not close {}".format(e))
             pass
         self.cfusb = None
 
     def scan_interface(self, address):
-        """ Scan interface for Crazyflies """
+        """Scan interface for Crazyflies"""
         if self.cfusb is None:
             try:
                 self.cfusb = CfUsb()
             except Exception as e:
-                logger.warn(
-                    'Exception while scanning for Crazyflie USB: {}'.format(
-                        str(e)))
+                logger.warn("Exception while scanning for Crazyflie USB: {}".format(str(e)))
                 return []
         else:
-            raise Exception('Cannot scan for links while the link is open!')
+            raise Exception("Cannot scan for links while the link is open!")
 
         # : implements serial number in the Crazyradio driver!
         # serial = "N/A"
@@ -194,21 +185,20 @@ class UsbDriver(CRTPDriver):
         return found
 
     def get_status(self):
-        return 'No information available'
+        return "No information available"
 
     def get_name(self):
-        return 'UsbCdc'
+        return "UsbCdc"
 
 
 # Transmit/receive radio thread
 class _UsbReceiveThread(threading.Thread):
     """
     Radio link receiver thread used to read data from the
-    Crazyradio USB driver. """
+    Crazyradio USB driver."""
 
-    def __init__(self, cfusb, inQueue, radio_link_statistics_callback,
-                 link_error_callback):
-        """ Create the object """
+    def __init__(self, cfusb, inQueue, radio_link_statistics_callback, link_error_callback):
+        """Create the object"""
         threading.Thread.__init__(self)
         self.cfusb = cfusb
         self.in_queue = inQueue
@@ -217,7 +207,7 @@ class _UsbReceiveThread(threading.Thread):
         self.radio_link_statistics_callback = radio_link_statistics_callback
 
     def stop(self):
-        """ Stop the thread """
+        """Stop the thread"""
         self.sp = True
         try:
             self.join()
@@ -225,10 +215,10 @@ class _UsbReceiveThread(threading.Thread):
             pass
 
     def run(self):
-        """ Run the receiver thread """
+        """Run the receiver thread"""
 
-        while (True):
-            if (self.sp):
+        while True:
+            if self.sp:
                 break
             try:
                 # Blocking until USB data available
@@ -239,8 +229,4 @@ class _UsbReceiveThread(threading.Thread):
             except Exception as e:
                 import traceback
 
-                self.link_error_callback(
-                    'Error communicating with the Crazyflie'
-                    ' ,it has probably been unplugged!\n'
-                    'Exception:%s\n\n%s' % (e,
-                                            traceback.format_exc()))
+                self.link_error_callback("Error communicating with the Crazyflie" " ,it has probably been unplugged!\n" "Exception:%s\n\n%s" % (e, traceback.format_exc()))

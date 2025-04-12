@@ -53,10 +53,12 @@ class TestLighthouseInitialEstimator(LighthouseTestBase):
         bs_id0 = 3
         bs_id1 = 1
         samples = [
-            LhCfPoseSample(angles_calibrated={
-                bs_id0: self.fixtures.angles_cf_origin_bs0,
-                bs_id1: self.fixtures.angles_cf_origin_bs1,
-            }),
+            LhCfPoseSample(
+                angles_calibrated={
+                    bs_id0: self.fixtures.angles_cf_origin_bs0,
+                    bs_id1: self.fixtures.angles_cf_origin_bs1,
+                }
+            ),
         ]
 
         # Test
@@ -74,18 +76,24 @@ class TestLighthouseInitialEstimator(LighthouseTestBase):
         bs_id2 = 5
         bs_id3 = 0
         samples = [
-            LhCfPoseSample(angles_calibrated={
-                bs_id0: self.fixtures.angles_cf_origin_bs0,
-                bs_id1: self.fixtures.angles_cf_origin_bs1,
-            }),
-            LhCfPoseSample(angles_calibrated={
-                bs_id1: self.fixtures.angles_cf1_bs1,
-                bs_id2: self.fixtures.angles_cf1_bs2,
-            }),
-            LhCfPoseSample(angles_calibrated={
-                bs_id2: self.fixtures.angles_cf2_bs2,
-                bs_id3: self.fixtures.angles_cf2_bs3,
-            }),
+            LhCfPoseSample(
+                angles_calibrated={
+                    bs_id0: self.fixtures.angles_cf_origin_bs0,
+                    bs_id1: self.fixtures.angles_cf_origin_bs1,
+                }
+            ),
+            LhCfPoseSample(
+                angles_calibrated={
+                    bs_id1: self.fixtures.angles_cf1_bs1,
+                    bs_id2: self.fixtures.angles_cf1_bs2,
+                }
+            ),
+            LhCfPoseSample(
+                angles_calibrated={
+                    bs_id2: self.fixtures.angles_cf2_bs2,
+                    bs_id3: self.fixtures.angles_cf2_bs3,
+                }
+            ),
         ]
 
         # Test
@@ -105,18 +113,24 @@ class TestLighthouseInitialEstimator(LighthouseTestBase):
         bs_id2 = 5
         bs_id3 = 0
         samples = [
-            LhCfPoseSample(angles_calibrated={
-                bs_id0: self.fixtures.angles_cf_origin_bs0,
-                bs_id1: self.fixtures.angles_cf_origin_bs1,
-            }),
-            LhCfPoseSample(angles_calibrated={
-                bs_id1: self.fixtures.angles_cf1_bs1,
-                bs_id2: self.fixtures.angles_cf1_bs2,
-            }),
-            LhCfPoseSample(angles_calibrated={
-                bs_id2: self.fixtures.angles_cf2_bs2,
-                bs_id3: self.fixtures.angles_cf2_bs3,
-            }),
+            LhCfPoseSample(
+                angles_calibrated={
+                    bs_id0: self.fixtures.angles_cf_origin_bs0,
+                    bs_id1: self.fixtures.angles_cf_origin_bs1,
+                }
+            ),
+            LhCfPoseSample(
+                angles_calibrated={
+                    bs_id1: self.fixtures.angles_cf1_bs1,
+                    bs_id2: self.fixtures.angles_cf1_bs2,
+                }
+            ),
+            LhCfPoseSample(
+                angles_calibrated={
+                    bs_id2: self.fixtures.angles_cf2_bs2,
+                    bs_id3: self.fixtures.angles_cf2_bs3,
+                }
+            ),
         ]
 
         # Test
@@ -134,26 +148,27 @@ class TestLighthouseInitialEstimator(LighthouseTestBase):
         bs_id1 = 1
         bs_id2 = 2
         samples = [
-            LhCfPoseSample(angles_calibrated={
-                bs_id0: self.fixtures.angles_cf2_bs0,
-                bs_id1: self.fixtures.angles_cf2_bs1,
-            }),
-            LhCfPoseSample(angles_calibrated={
-                bs_id1: self.fixtures.angles_cf1_bs1,
-                bs_id2: self.fixtures.angles_cf1_bs2,
-            }),
+            LhCfPoseSample(
+                angles_calibrated={
+                    bs_id0: self.fixtures.angles_cf2_bs0,
+                    bs_id1: self.fixtures.angles_cf2_bs1,
+                }
+            ),
+            LhCfPoseSample(
+                angles_calibrated={
+                    bs_id1: self.fixtures.angles_cf1_bs1,
+                    bs_id2: self.fixtures.angles_cf1_bs2,
+                }
+            ),
         ]
 
         # Test
         actual, cleaned_samples = LighthouseInitialEstimator.estimate(samples, LhDeck4SensorPositions.positions)
 
         # Assert
-        self.assertPosesAlmostEqual(
-            Pose.from_rot_vec(R_vec=(0.0, 0.0, -np.pi / 2), t_vec=(1.0, 3.0, 3.0)), actual.bs_poses[bs_id0], places=3)
-        self.assertPosesAlmostEqual(
-            Pose.from_rot_vec(R_vec=(0.0, 0.0, 0.0), t_vec=(-2.0, 1.0, 3.0)), actual.bs_poses[bs_id1], places=3)
-        self.assertPosesAlmostEqual(
-            Pose.from_rot_vec(R_vec=(0.0, 0.0, np.pi), t_vec=(2.0, 1.0, 3.0)), actual.bs_poses[bs_id2], places=3)
+        self.assertPosesAlmostEqual(Pose.from_rot_vec(R_vec=(0.0, 0.0, -np.pi / 2), t_vec=(1.0, 3.0, 3.0)), actual.bs_poses[bs_id0], places=3)
+        self.assertPosesAlmostEqual(Pose.from_rot_vec(R_vec=(0.0, 0.0, 0.0), t_vec=(-2.0, 1.0, 3.0)), actual.bs_poses[bs_id1], places=3)
+        self.assertPosesAlmostEqual(Pose.from_rot_vec(R_vec=(0.0, 0.0, np.pi), t_vec=(2.0, 1.0, 3.0)), actual.bs_poses[bs_id2], places=3)
 
     def test_that_raises_for_isolated_bs(self):
         # Fixture
@@ -162,14 +177,18 @@ class TestLighthouseInitialEstimator(LighthouseTestBase):
         bs_id2 = 2
         bs_id3 = 4
         samples = [
-            LhCfPoseSample(angles_calibrated={
-                bs_id0: self.fixtures.angles_cf_origin_bs0,
-                bs_id1: self.fixtures.angles_cf_origin_bs1,
-            }),
-            LhCfPoseSample(angles_calibrated={
-                bs_id2: self.fixtures.angles_cf1_bs2,
-                bs_id3: self.fixtures.angles_cf2_bs2,
-            }),
+            LhCfPoseSample(
+                angles_calibrated={
+                    bs_id0: self.fixtures.angles_cf_origin_bs0,
+                    bs_id1: self.fixtures.angles_cf_origin_bs1,
+                }
+            ),
+            LhCfPoseSample(
+                angles_calibrated={
+                    bs_id2: self.fixtures.angles_cf1_bs2,
+                    bs_id3: self.fixtures.angles_cf2_bs2,
+                }
+            ),
         ]
 
         # Test

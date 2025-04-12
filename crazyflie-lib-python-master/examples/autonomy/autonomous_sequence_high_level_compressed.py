@@ -43,7 +43,7 @@ from cflib.crazyflie.syncLogger import SyncLogger
 from cflib.utils import uri_helper
 
 # URI to the Crazyflie to connect to
-uri = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
+uri = uri_helper.uri_from_env(default="radio://0/80/2M/E7E7E7E7E7")
 
 # The trajectory to fly
 a = 0.9
@@ -59,12 +59,12 @@ trajectory = [
 
 
 def wait_for_position_estimator(scf):
-    print('Waiting for estimator to find position...')
+    print("Waiting for estimator to find position...")
 
-    log_config = LogConfig(name='Kalman Variance', period_in_ms=500)
-    log_config.add_variable('kalman.varPX', 'float')
-    log_config.add_variable('kalman.varPY', 'float')
-    log_config.add_variable('kalman.varPZ', 'float')
+    log_config = LogConfig(name="Kalman Variance", period_in_ms=500)
+    log_config.add_variable("kalman.varPX", "float")
+    log_config.add_variable("kalman.varPY", "float")
+    log_config.add_variable("kalman.varPZ", "float")
 
     var_y_history = [1000] * 10
     var_x_history = [1000] * 10
@@ -76,11 +76,11 @@ def wait_for_position_estimator(scf):
         for log_entry in logger:
             data = log_entry[1]
 
-            var_x_history.append(data['kalman.varPX'])
+            var_x_history.append(data["kalman.varPX"])
             var_x_history.pop(0)
-            var_y_history.append(data['kalman.varPY'])
+            var_y_history.append(data["kalman.varPY"])
             var_y_history.pop(0)
-            var_z_history.append(data['kalman.varPZ'])
+            var_z_history.append(data["kalman.varPZ"])
             var_z_history.pop(0)
 
             min_x = min(var_x_history)
@@ -93,22 +93,20 @@ def wait_for_position_estimator(scf):
             # print("{} {} {}".
             #       format(max_x - min_x, max_y - min_y, max_z - min_z))
 
-            if (max_x - min_x) < threshold and (
-                    max_y - min_y) < threshold and (
-                    max_z - min_z) < threshold:
+            if (max_x - min_x) < threshold and (max_y - min_y) < threshold and (max_z - min_z) < threshold:
                 break
 
 
 def reset_estimator(cf):
-    cf.param.set_value('kalman.resetEstimation', '1')
+    cf.param.set_value("kalman.resetEstimation", "1")
     time.sleep(0.1)
-    cf.param.set_value('kalman.resetEstimation', '0')
+    cf.param.set_value("kalman.resetEstimation", "0")
 
     wait_for_position_estimator(cf)
 
 
 def activate_mellinger_controller(cf):
-    cf.param.set_value('stabilizer.controller', '2')
+    cf.param.set_value("stabilizer.controller", "2")
 
 
 def upload_trajectory(cf, trajectory_id, trajectory):
@@ -118,13 +116,9 @@ def upload_trajectory(cf, trajectory_id, trajectory):
 
     upload_result = trajectory_mem.write_data_sync()
     if not upload_result:
-        print('Upload failed, aborting!')
+        print("Upload failed, aborting!")
         sys.exit(1)
-    cf.high_level_commander.define_trajectory(
-        trajectory_id,
-        0,
-        len(trajectory),
-        type=HighLevelCommander.TRAJECTORY_TYPE_POLY4D_COMPRESSED)
+    cf.high_level_commander.define_trajectory(trajectory_id, 0, len(trajectory), type=HighLevelCommander.TRAJECTORY_TYPE_POLY4D_COMPRESSED)
 
     total_duration = 0
     # Skip the start element
@@ -151,15 +145,15 @@ def run_sequence(cf, trajectory_id, duration):
     commander.stop()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cflib.crtp.init_drivers()
 
-    with SyncCrazyflie(uri, cf=Crazyflie(rw_cache='./cache')) as scf:
+    with SyncCrazyflie(uri, cf=Crazyflie(rw_cache="./cache")) as scf:
         cf = scf.cf
         trajectory_id = 1
 
         # activate_mellinger_controller(cf)
         duration = upload_trajectory(cf, trajectory_id, trajectory)
-        print('The sequence is {:.1f} seconds long'.format(duration))
+        print("The sequence is {:.1f} seconds long".format(duration))
         reset_estimator(cf)
         run_sequence(cf, trajectory_id, duration)

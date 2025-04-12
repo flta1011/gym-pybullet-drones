@@ -29,8 +29,8 @@ import queue
 import struct
 import threading
 
-__author__ = 'Bitcraze AB'
-__all__ = ['CPXRouter']
+__author__ = "Bitcraze AB"
+__all__ = ["CPXRouter"]
 logger = logging.getLogger(__name__)
 
 
@@ -38,6 +38,7 @@ class CPXTarget(enum.Enum):
     """
     List of CPX targets
     """
+
     STM32 = 1
     ESP32 = 2
     HOST = 3
@@ -48,6 +49,7 @@ class CPXFunction(enum.Enum):
     """
     List of CPX targets
     """
+
     SYSTEM = 1
     CONSOLE = 2
     CRTP = 3
@@ -61,6 +63,7 @@ class CPXPacket(object):
     """
     A packet with routing and data
     """
+
     CPX_VERSION = 0
 
     def __init__(self, function=0, destination=0, source=CPXTarget.HOST, data=bytearray()):
@@ -84,17 +87,17 @@ class CPXPacket(object):
             targetsAndFlags |= 0x40
 
         functionAndVersion = (self.function.value & 0x3F) | ((self.version & 0x3) << 6)
-        raw.extend(struct.pack('<BB', targetsAndFlags, functionAndVersion))
+        raw.extend(struct.pack("<BB", targetsAndFlags, functionAndVersion))
         raw.extend(self.data)
 
         return raw
 
     def _set_wire_data(self, data):
-        [targetsAndFlags, functionAndVersion] = struct.unpack('<BB', data[0:2])
+        [targetsAndFlags, functionAndVersion] = struct.unpack("<BB", data[0:2])
         self.version = (functionAndVersion >> 6) & 0x3
         if self.version != self.CPX_VERSION:
-            logging.error(f'Unsupported CPX version {self.version} instead of {self.CPX_VERSION}')
-            raise RuntimeError(f'Unsupported CPX version {self.version} instead of {self.CPX_VERSION}')
+            logging.error(f"Unsupported CPX version {self.version} instead of {self.CPX_VERSION}")
+            raise RuntimeError(f"Unsupported CPX version {self.version} instead of {self.CPX_VERSION}")
         self.source = CPXTarget((targetsAndFlags >> 3) & 0x07)
         self.destination = CPXTarget(targetsAndFlags & 0x07)
         self.lastPacket = targetsAndFlags & 0x40 != 0
@@ -104,7 +107,7 @@ class CPXPacket(object):
 
     def __str__(self):
         """Get a string representation of the packet"""
-        return '{}->{}/{} (size={} bytes)'.format(self.source, self.destination, self.function, self.length)
+        return "{}->{}/{} (size={} bytes)".format(self.source, self.destination, self.function, self.length)
 
     wireData = property(_get_wire_data, _set_wire_data)
 
@@ -125,7 +128,7 @@ class CPXRouter(threading.Thread):
         # Check if a queue exists, if not then create it
         # the user might have implemented new functions
         if function.value not in self._rxQueues:
-            print('Creating queue for {}'.format(function))
+            print("Creating queue for {}".format(function))
             self._rxQueues[function.value] = queue.Queue()
 
         return self._rxQueues[function.value].get(block=True, timeout=timeout)
@@ -142,7 +145,7 @@ class CPXRouter(threading.Thread):
         return self._transport
 
     def run(self):
-        while (self._connected):
+        while self._connected:
             # Read one packet from the transport
 
             # Packages might have been split up along the
@@ -155,10 +158,12 @@ class CPXRouter(threading.Thread):
                 else:
                     self._rxQueues[packet.function.value].put(packet)
             except Exception as e:
-                print('Exception while reading transport, link probably closed?')
+                print("Exception while reading transport, link probably closed?")
                 print(e)
                 import traceback
+
                 print(traceback.format_exc())
+
 
 # Public facing
 

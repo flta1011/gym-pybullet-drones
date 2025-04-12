@@ -35,7 +35,7 @@ from cflib.crazyflie.mem import MemoryElement
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 from cflib.utils import uri_helper
 
-uri = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
+uri = uri_helper.uri_from_env(default="radio://0/80/2M/E7E7E7E7E7")
 
 # Only output errors from the logging framework
 logging.basicConfig(level=logging.ERROR)
@@ -45,40 +45,40 @@ update_event = Event()
 
 def read_ow_mems(cf):
     mems = cf.mem.get_mems(MemoryElement.TYPE_1W)
-    print(f'Found {len(mems)} 1-wire memories')
+    print(f"Found {len(mems)} 1-wire memories")
 
     for m in mems:
         update_event.clear()
 
-        print(f'Reading id={m.id}')
+        print(f"Reading id={m.id}")
         m.update(data_updated_cb)
         success = update_event.wait(timeout=5.0)
         if not success:
-            print(f'Mem read time out for memory {m.id}')
+            print(f"Mem read time out for memory {m.id}")
             sys.exit(1)
 
 
 def data_updated_cb(mem):
-    print(f'Got id={mem.id}')
-    print(f'\tAddr      : {mem.addr}')
-    print(f'\tType      : {mem.type}')
-    print(f'\tSize      : {mem.size}')
-    print(f'\tValid     : {mem.valid}')
-    print(f'\tName      : {mem.name}')
-    print(f'\tVID       : 0x{mem.vid:02X}')
-    print(f'\tPID       : 0x{mem.pid:02X}')
-    print(f'\tPins      : 0x{mem.pins:02X}')
-    print('\tElements  : ')
+    print(f"Got id={mem.id}")
+    print(f"\tAddr      : {mem.addr}")
+    print(f"\tType      : {mem.type}")
+    print(f"\tSize      : {mem.size}")
+    print(f"\tValid     : {mem.valid}")
+    print(f"\tName      : {mem.name}")
+    print(f"\tVID       : 0x{mem.vid:02X}")
+    print(f"\tPID       : 0x{mem.pid:02X}")
+    print(f"\tPins      : 0x{mem.pins:02X}")
+    print("\tElements  : ")
 
     for key, element in mem.elements.items():
-        print(f'\t\t{key}={element}')
+        print(f"\t\t{key}={element}")
 
     update_event.set()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Initialize the low-level drivers
     cflib.crtp.init_drivers()
 
-    with SyncCrazyflie(uri, cf=Crazyflie(rw_cache='./cache')) as scf:
+    with SyncCrazyflie(uri, cf=Crazyflie(rw_cache="./cache")) as scf:
         read_ow_mems(scf.cf)

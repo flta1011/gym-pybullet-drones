@@ -1,7 +1,0 @@
-DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_REWARD_FOR_NEW_FIELD,DEFAULT_Punishment_for_Step,DEFAULT_EVAL_FREQ,DEFAULT_EVAL_EPISODES,DEFAULT_TRAIN_TIMESTEPS,DEFAULT_TARGET_REWARD,DEFAULT_NUMBER_LAST_ACTIONS,DEFAULT_PYB_FREQ,DEFAULT_CTRL_FREQ,DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_Multiplier_Collision_Penalty,DEFAULT_VelocityScale,DEFAULT_explore_Matrix_Size,DEFAULT_collision_penalty_terminated,DEFAULT_Terminated_Wall_Distance,DEFAULT_no_collision_reward,DEFAULT_Punishment_for_Walls,DEFAULT_Influence_of_Walls,DEFAULT_USE_PRETRAINED_MODEL,DEFAULT_PRETRAINED_MODEL_PATH,DEFAULT_NUMBER_LAST_ACTIONS
-2,300,2,-0.5,50000.0,1,172800,99999999999999,20,100,50,2,300,10,0.5,5,-1000,0.15,0.25,True,/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M6_R6_O5_A3_TR1_T1_20250407-013856/save-04.07.2025_01.38.56/best_model.zip,20,8,4
-
-Runde,Terminated,Truncated,Map-Abgedeckt,Wand berührungen,Summe Reward,Flugzeit der Runde,Maze_number,Uhrzeit Welt
-1,kein_Terminated,Zeit abgelaufen,0.43,31,2655.5,300.5,21,20250408-170745
-2,kein_Terminated,Zeit abgelaufen,0.43,28,2689.5,300.5,21,20250408-170754
-3,kein_Terminated,Zeit abgelaufen,0.43,26,2685.5,300.5,21,20250408-170802

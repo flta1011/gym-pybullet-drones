@@ -24,12 +24,12 @@ from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 
 
 class Multiranger:
-    FRONT = 'range.front'
-    BACK = 'range.back'
-    LEFT = 'range.left'
-    RIGHT = 'range.right'
-    UP = 'range.up'
-    DOWN = 'range.zrange'
+    FRONT = "range.front"
+    BACK = "range.back"
+    LEFT = "range.left"
+    RIGHT = "range.right"
+    UP = "range.up"
+    DOWN = "range.zrange"
 
     def __init__(self, crazyflie, rate_ms=100, zranger=False):
         if isinstance(crazyflie, SyncCrazyflie):
@@ -46,7 +46,7 @@ class Multiranger:
         self._down_distance = None
 
     def _create_log_config(self, rate_ms):
-        log_config = LogConfig('multiranger', rate_ms)
+        log_config = LogConfig("multiranger", rate_ms)
         log_config.add_variable(self.FRONT)
         log_config.add_variable(self.BACK)
         log_config.add_variable(self.LEFT)
@@ -75,8 +75,7 @@ class Multiranger:
         self._left_distance = self._convert_log_to_distance(data[self.LEFT])
         self._right_distance = self._convert_log_to_distance(data[self.RIGHT])
         if self.DOWN in data:
-            self._down_distance = self._convert_log_to_distance(data[self.DOWN]
-                                                                )
+            self._down_distance = self._convert_log_to_distance(data[self.DOWN])
 
     def stop(self):
         self._log_config.delete()

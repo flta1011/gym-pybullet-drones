@@ -27,22 +27,22 @@ from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 from cflib.utils import uri_helper
 
 # Reads the CFLIB_URI environment variable for URI or uses default
-uri = uri_helper.uri_from_env(default='radio://0/30/2M/E7E7E7E7E7')
+uri = uri_helper.uri_from_env(default="radio://0/30/2M/E7E7E7E7E7")
 
 
 def console_callback(text: str):
-    '''A callback to run when we get console text from Crazyflie'''
+    """A callback to run when we get console text from Crazyflie"""
     # We do not add newlines to the text received, we get them from the
     # Crazyflie at appropriate places.
-    print(text, end='')
+    print(text, end="")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Initialize the low-level drivers
     cflib.crtp.init_drivers()
 
     # Create Crazyflie object, with cache to avoid re-reading param and log TOC
-    cf = Crazyflie(rw_cache='./cache')
+    cf = Crazyflie(rw_cache="./cache")
 
     # Add a callback to whenever we receive 'console' text from the Crazyflie
     # This is the output from DEBUG_PRINT calls in the firmware.
@@ -55,7 +55,7 @@ if __name__ == '__main__':
     # You might have to restart your Crazyflie in order to get output
     # from console, since not much is written during regular uptime.
     with SyncCrazyflie(uri, cf=cf) as scf:
-        print('[host] Connected, use ctrl-c to quit.')
+        print("[host] Connected, use ctrl-c to quit.")
 
         while True:
             time.sleep(1)

@@ -27,9 +27,9 @@ from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 
 
 class TestSwarm(unittest.TestCase):
-    URI1 = 'uri1'
-    URI2 = 'uri2'
-    URI3 = 'uri3'
+    URI1 = "uri1"
+    URI2 = "uri2"
+    URI3 = "uri3"
 
     def setUp(self):
         self.uris = [self.URI1, self.URI2, self.URI3]
@@ -116,9 +116,9 @@ class TestSwarm(unittest.TestCase):
         # Fixture
         func = MagicMock()
         args_dict = {
-            self.URI1: ['cf1-arg1'],
-            self.URI2: ['cf2-arg1'],
-            self.URI3: ['cf3-arg1'],
+            self.URI1: ["cf1-arg1"],
+            self.URI2: ["cf2-arg1"],
+            self.URI3: ["cf3-arg1"],
         }
 
         cf1 = self.factory.mocks[self.URI1]
@@ -129,9 +129,9 @@ class TestSwarm(unittest.TestCase):
         self.sut.sequential(func, args_dict=args_dict)
 
         # Assert
-        func.assert_any_call(cf1, 'cf1-arg1')
-        func.assert_any_call(cf2, 'cf2-arg1')
-        func.assert_any_call(cf3, 'cf3-arg1')
+        func.assert_any_call(cf1, "cf1-arg1")
+        func.assert_any_call(cf2, "cf2-arg1")
+        func.assert_any_call(cf3, "cf3-arg1")
 
     def test_parallel_execution_without_arguments(self):
         # Fixture
@@ -148,9 +148,9 @@ class TestSwarm(unittest.TestCase):
         # Fixture
         func = MagicMock()
         args_dict = {
-            self.URI1: ['cf1-arg1'],
-            self.URI2: ['cf2-arg1'],
-            self.URI3: ['cf3-arg1'],
+            self.URI1: ["cf1-arg1"],
+            self.URI2: ["cf2-arg1"],
+            self.URI3: ["cf3-arg1"],
         }
 
         cf1 = self.factory.mocks[self.URI1]
@@ -161,18 +161,18 @@ class TestSwarm(unittest.TestCase):
         self.sut.parallel(func, args_dict=args_dict)
 
         # Assert
-        func.assert_any_call(cf1, 'cf1-arg1')
-        func.assert_any_call(cf2, 'cf2-arg1')
-        func.assert_any_call(cf3, 'cf3-arg1')
+        func.assert_any_call(cf1, "cf1-arg1")
+        func.assert_any_call(cf2, "cf2-arg1")
+        func.assert_any_call(cf3, "cf3-arg1")
 
     def test_parallel_execution_with_exception(self):
         # Fixture
         func_fail = MagicMock()
         func_fail.side_effect = Exception()
         args_dict = {
-            self.URI1: ['cf1-arg1'],
-            self.URI2: ['cf2-arg1'],
-            self.URI3: ['cf3-arg1'],
+            self.URI1: ["cf1-arg1"],
+            self.URI2: ["cf2-arg1"],
+            self.URI3: ["cf3-arg1"],
         }
 
         cf1 = self.factory.mocks[self.URI1]
@@ -183,18 +183,18 @@ class TestSwarm(unittest.TestCase):
         self.sut.parallel(func_fail, args_dict=args_dict)
 
         # Assert
-        func_fail.assert_any_call(cf1, 'cf1-arg1')
-        func_fail.assert_any_call(cf2, 'cf2-arg1')
-        func_fail.assert_any_call(cf3, 'cf3-arg1')
+        func_fail.assert_any_call(cf1, "cf1-arg1")
+        func_fail.assert_any_call(cf2, "cf2-arg1")
+        func_fail.assert_any_call(cf3, "cf3-arg1")
 
     def test_parallel_safe_execution_with_exception(self):
         # Fixture
         func_fail = MagicMock()
         func_fail.side_effect = Exception()
         args_dict = {
-            self.URI1: ['cf1-arg1'],
-            self.URI2: ['cf2-arg1'],
-            self.URI3: ['cf3-arg1'],
+            self.URI1: ["cf1-arg1"],
+            self.URI2: ["cf2-arg1"],
+            self.URI3: ["cf3-arg1"],
         }
 
         # Test
@@ -209,10 +209,10 @@ class MockFactory:
         self.mocks = {}
 
     def construct(self, uri):
-        mock = MagicMock(spec=SyncCrazyflie, name='CF-' + uri)
+        mock = MagicMock(spec=SyncCrazyflie, name="CF-" + uri)
         self.mocks[uri] = mock
         return mock
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

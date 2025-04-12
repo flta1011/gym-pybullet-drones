@@ -31,7 +31,7 @@ from cflib.localization.lighthouse_bs_vector import LighthouseBsVectors
 
 
 class Pose:
-    """ Holds the full pose (position and orientation) of an object.
+    """Holds the full pose (position and orientation) of an object.
     Contains functionality to convert between various formats."""
 
     _NO_ROTATION_MTX = np.identity(3)
@@ -47,14 +47,14 @@ class Pose:
         self._t_vec = np.array(t_vec)
 
     @classmethod
-    def from_rot_vec(cls, R_vec: npt.ArrayLike = _NO_ROTATION_VCT, t_vec: npt.ArrayLike = _ORIGIN) -> 'Pose':
+    def from_rot_vec(cls, R_vec: npt.ArrayLike = _NO_ROTATION_VCT, t_vec: npt.ArrayLike = _ORIGIN) -> "Pose":
         """
         Create a Pose from a rotation vector and translation vector
         """
         return Pose(Rotation.from_rotvec(R_vec).as_matrix(), t_vec)
 
     @classmethod
-    def from_quat(cls, R_quat: npt.ArrayLike = _NO_ROTATION_QUAT, t_vec: npt.ArrayLike = _ORIGIN) -> 'Pose':
+    def from_quat(cls, R_quat: npt.ArrayLike = _NO_ROTATION_QUAT, t_vec: npt.ArrayLike = _ORIGIN) -> "Pose":
         """
         Create a Pose from a quaternion and translation vector
         """
@@ -115,7 +115,7 @@ class Pose:
         """
         return np.dot(np.transpose(self.rot_matrix), point - self.translation)
 
-    def rotate_translate_pose(self, pose: 'Pose') -> 'Pose':
+    def rotate_translate_pose(self, pose: "Pose") -> "Pose":
         """
         Rotate and translate a pose
         """
@@ -124,7 +124,7 @@ class Pose:
 
         return Pose(R_matrix=R, t_vec=t)
 
-    def inv_rotate_translate_pose(self, pose: 'Pose') -> 'Pose':
+    def inv_rotate_translate_pose(self, pose: "Pose") -> "Pose":
         """
         Inverse rotate and translate a point, that is transform from global
         to local reference frame
@@ -138,6 +138,7 @@ class Pose:
 
 class LhMeasurement(NamedTuple):
     """Represents a measurement from one base station."""
+
     timestamp: float
     base_station_id: int
     angles: LighthouseBsVectors
@@ -145,12 +146,13 @@ class LhMeasurement(NamedTuple):
 
 class LhBsCfPoses(NamedTuple):
     """Represents all poses of base stations and CF samples"""
+
     bs_poses: dict[int, Pose]
     cf_poses: list[Pose]
 
 
 class LhCfPoseSample:
-    """ Represents a sample of a Crazyflie pose in space, it contains
+    """Represents a sample of a Crazyflie pose in space, it contains
     various data related to the pose such as:
     - lighthouse angles from one or more base stations
     - initial estimate of the pose
@@ -169,16 +171,20 @@ class LhCfPoseSample:
 
 
 class LhDeck4SensorPositions:
-    """ Positions of the sensors on the Lighthouse 4 deck """
+    """Positions of the sensors on the Lighthouse 4 deck"""
+
     # Sensor distances on the lighthouse deck
     _sensor_distance_width = 0.015
     _sensor_distance_length = 0.03
 
     # Sensor positions in the Crazyflie reference frame
-    positions = np.float32([
-        (-_sensor_distance_length / 2, _sensor_distance_width / 2, 0.0),
-        (-_sensor_distance_length / 2, -_sensor_distance_width / 2, 0.0),
-        (_sensor_distance_length / 2, _sensor_distance_width / 2, 0.0),
-        (_sensor_distance_length / 2, -_sensor_distance_width / 2, 0.0)])
+    positions = np.float32(
+        [
+            (-_sensor_distance_length / 2, _sensor_distance_width / 2, 0.0),
+            (-_sensor_distance_length / 2, -_sensor_distance_width / 2, 0.0),
+            (_sensor_distance_length / 2, _sensor_distance_width / 2, 0.0),
+            (_sensor_distance_length / 2, -_sensor_distance_width / 2, 0.0),
+        ]
+    )
 
-    diagonal_distance = np.sqrt(_sensor_distance_length ** 2 + _sensor_distance_length ** 2)
+    diagonal_distance = np.sqrt(_sensor_distance_length**2 + _sensor_distance_length**2)

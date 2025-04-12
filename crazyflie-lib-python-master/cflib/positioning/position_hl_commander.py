@@ -46,12 +46,7 @@ class PositionHlCommander:
 
     DEFAULT = None
 
-    def __init__(self, crazyflie,
-                 x=0.0, y=0.0, z=0.0,
-                 default_velocity=0.5,
-                 default_height=0.5,
-                 controller=None,
-                 default_landing_height=0.0):
+    def __init__(self, crazyflie, x=0.0, y=0.0, z=0.0, default_velocity=0.5, default_height=0.5, controller=None, default_landing_height=0.0):
         """
         Construct an instance of a PositionHlCommander
 
@@ -98,15 +93,15 @@ class PositionHlCommander:
         :return:
         """
         if self._is_flying:
-            raise Exception('Already flying')
+            raise Exception("Already flying")
 
         if not self._cf.is_connected():
-            raise Exception('Crazyflie is not connected')
+            raise Exception("Crazyflie is not connected")
 
         # Wait a bit to let the HL commander record the current position
         now = time.time()
         hold_back = self._init_time + 1.0 - now
-        if (hold_back > 0.0):
+        if hold_back > 0.0:
             time.sleep(hold_back)
 
         self._is_flying = True
@@ -205,8 +200,7 @@ class PositionHlCommander:
         """
         self.move_distance(0.0, 0.0, -distance_m, velocity)
 
-    def move_distance(self, distance_x_m, distance_y_m, distance_z_m,
-                      velocity=DEFAULT):
+    def move_distance(self, distance_x_m, distance_y_m, distance_z_m, velocity=DEFAULT):
         """
         Move in a straight line.
         positive X is forward
@@ -280,7 +274,7 @@ class PositionHlCommander:
     def _activate_controller(self):
         if self._controller is not None:
             value = str(self._controller)
-            self._cf.param.set_value('stabilizer.controller', value)
+            self._cf.param.set_value("stabilizer.controller", value)
 
     def _velocity(self, velocity):
         if velocity is self.DEFAULT:

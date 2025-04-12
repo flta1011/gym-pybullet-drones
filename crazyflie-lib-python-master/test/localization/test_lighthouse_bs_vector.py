@@ -133,12 +133,14 @@ class TestLighthouseBsVector(LighthouseTestBase):
 
     def test_conversion_to_projection_pair_list(self):
         # Fixture
-        vectors = LighthouseBsVectors((
-            LighthouseBsVector(0.0, 0.0),
-            LighthouseBsVector(0.1, 0.1),
-            LighthouseBsVector(0.2, 0.2),
-            LighthouseBsVector(0.3, 0.3),
-        ))
+        vectors = LighthouseBsVectors(
+            (
+                LighthouseBsVector(0.0, 0.0),
+                LighthouseBsVector(0.1, 0.1),
+                LighthouseBsVector(0.2, 0.2),
+                LighthouseBsVector(0.3, 0.3),
+            )
+        )
 
         # Test
         actual = vectors.projection_pair_list()
@@ -150,12 +152,14 @@ class TestLighthouseBsVector(LighthouseTestBase):
 
     def test_conversion_to_angle_list(self):
         # Fixture
-        vectors = LighthouseBsVectors((
-            LighthouseBsVector(0.0, 0.1),
-            LighthouseBsVector(0.2, 0.3),
-            LighthouseBsVector(0.4, 0.5),
-            LighthouseBsVector(0.6, 0.7),
-        ))
+        vectors = LighthouseBsVectors(
+            (
+                LighthouseBsVector(0.0, 0.1),
+                LighthouseBsVector(0.2, 0.3),
+                LighthouseBsVector(0.4, 0.5),
+                LighthouseBsVector(0.6, 0.7),
+            )
+        )
 
         # Test
         actual = vectors.angle_list()

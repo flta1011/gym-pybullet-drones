@@ -2,13 +2,14 @@ import os
 import numpy as np
 import xml.etree.ElementTree as etxml
 import pkg_resources
-import socket 
+import socket
 import struct
 
 from transforms3d.quaternions import rotate_vector, qconjugate, mat2quat, qmult
 from transforms3d.utils import normalized_vector
 
 from gym_pybullet_drones.utils.enums import DroneModel
+
 
 class CTBRControl(object):
     """Base class for control.
@@ -20,10 +21,7 @@ class CTBRControl(object):
 
     ################################################################################
 
-    def __init__(self,
-                 drone_model: DroneModel,
-                 g: float=9.8
-                 ):
+    def __init__(self, drone_model: DroneModel, g: float = 9.8):
         """Common control classes __init__ method.
 
         Parameters
@@ -37,13 +35,13 @@ class CTBRControl(object):
         #### Set general use constants #############################
         self.DRONE_MODEL = drone_model
         """DroneModel: The type of drone to control."""
-        self.GRAVITY = g*self._getURDFParameter('m')
+        self.GRAVITY = g * self._getURDFParameter("m")
         """float: The gravitational force (M*g) acting on each drone."""
-        self.KF = self._getURDFParameter('kf')
+        self.KF = self._getURDFParameter("kf")
         """float: The coefficient converting RPMs into thrust."""
-        self.KM = self._getURDFParameter('km')
+        self.KM = self._getURDFParameter("km")
         """float: The coefficient converting RPMs into torque."""
-        
+
         self.reset()
 
     ################################################################################
@@ -58,14 +56,7 @@ class CTBRControl(object):
 
     ################################################################################
 
-    def computeControlFromState(self,
-                                control_timestep,
-                                state,
-                                target_pos,
-                                target_rpy=np.zeros(3),
-                                target_vel=np.zeros(3),
-                                target_rpy_rates=np.zeros(3)
-                                ):
+    def computeControlFromState(self, control_timestep, state, target_pos, target_rpy=np.zeros(3), target_vel=np.zeros(3), target_rpy_rates=np.zeros(3)):
         """Interface method using `computeControl`.
 
         It can be used to compute a control action directly from the value of key "state"
@@ -87,30 +78,21 @@ class CTBRControl(object):
             (3,1)-shaped array of floats containing the desired roll, pitch, and yaw rates.
         """
 
-        return self.computeControl(control_timestep=control_timestep,
-                                   cur_pos=state[0:3],
-                                   cur_quat=np.array([state[6], state[3], state[4], state[5]]),
-                                   cur_vel=state[10:13],
-                                   cur_ang_vel=state[13:16],
-                                   target_pos=target_pos,
-                                   target_rpy=target_rpy,
-                                   target_vel=target_vel,
-                                   target_rpy_rates=target_rpy_rates
-                                   )
+        return self.computeControl(
+            control_timestep=control_timestep,
+            cur_pos=state[0:3],
+            cur_quat=np.array([state[6], state[3], state[4], state[5]]),
+            cur_vel=state[10:13],
+            cur_ang_vel=state[13:16],
+            target_pos=target_pos,
+            target_rpy=target_rpy,
+            target_vel=target_vel,
+            target_rpy_rates=target_rpy_rates,
+        )
 
     ################################################################################
 
-    def computeControl(self,
-                       control_timestep,
-                       cur_pos,
-                       cur_quat,
-                       cur_vel,
-                       cur_ang_vel,
-                       target_pos,
-                       target_rpy=np.zeros(3),
-                       target_vel=np.zeros(3),
-                       target_rpy_rates=np.zeros(3)
-                       ):
+    def computeControl(self, control_timestep, cur_pos, cur_quat, cur_vel, cur_ang_vel, target_pos, target_rpy=np.zeros(3), target_vel=np.zeros(3), target_rpy_rates=np.zeros(3)):
         """Abstract method to compute the control action for a single drone.
 
         It must be implemented by each subclass of `BaseControl`.
@@ -137,26 +119,26 @@ class CTBRControl(object):
             (3,1)-shaped array of floats containing the desired roll, pitch, and yaw rates.
 
         """
-        assert(cur_pos.shape == (3,)), f"cur_pos {cur_pos.shape}"
-        assert(cur_quat.shape == (4,)), f"cur_quat {cur_quat.shape}"
-        assert(cur_vel.shape == (3,)), f"cur_vel {cur_vel.shape}"
-        assert(cur_ang_vel.shape == (3,)), f"cur_ang_vel {cur_ang_vel.shape}"
-        assert(target_pos.shape == (3,)), f"target_pos {target_pos.shape}"
-        assert(target_rpy.shape == (3,)), f"target_rpy {target_rpy.shape}"
-        assert(target_vel.shape == (3,)), f"target_vel {target_vel.shape}"
-        assert(target_rpy_rates.shape == (3,)), f"target_rpy_rates {target_rpy_rates.shape}"
+        assert cur_pos.shape == (3,), f"cur_pos {cur_pos.shape}"
+        assert cur_quat.shape == (4,), f"cur_quat {cur_quat.shape}"
+        assert cur_vel.shape == (3,), f"cur_vel {cur_vel.shape}"
+        assert cur_ang_vel.shape == (3,), f"cur_ang_vel {cur_ang_vel.shape}"
+        assert target_pos.shape == (3,), f"target_pos {target_pos.shape}"
+        assert target_rpy.shape == (3,), f"target_rpy {target_rpy.shape}"
+        assert target_vel.shape == (3,), f"target_vel {target_vel.shape}"
+        assert target_rpy_rates.shape == (3,), f"target_rpy_rates {target_rpy_rates.shape}"
 
-        G = np.array([.0, .0, -9.8])
-        K_P = np.array([3., 3., 8.])
-        K_D = np.array([2.5, 2.5, 5.])
-        K_RATES = np.array([5., 5., 1.])
+        G = np.array([0.0, 0.0, -9.8])
+        K_P = np.array([3.0, 3.0, 8.0])
+        K_D = np.array([2.5, 2.5, 5.0])
+        K_RATES = np.array([5.0, 5.0, 1.0])
         P = target_pos - cur_pos
         D = target_vel - cur_vel
         tar_acc = K_P * P + K_D * D - G
-        norm_thrust = np.dot(tar_acc, rotate_vector([.0, .0, 1.], cur_quat))
+        norm_thrust = np.dot(tar_acc, rotate_vector([0.0, 0.0, 1.0], cur_quat))
         # Calculate target attitude
         z_body = normalized_vector(tar_acc)
-        x_body = normalized_vector(np.cross(np.array([.0, 1., .0]), z_body))
+        x_body = normalized_vector(np.cross(np.array([0.0, 1.0, 0.0]), z_body))
         y_body = normalized_vector(np.cross(z_body, x_body))
         tar_att = mat2quat(np.vstack([x_body, y_body, z_body]).T)
         # Calculate body rates
@@ -167,16 +149,9 @@ class CTBRControl(object):
 
         return norm_thrust, *body_rates
 
-################################################################################
+    ################################################################################
 
-    def setPIDCoefficients(self,
-                           p_coeff_pos=None,
-                           i_coeff_pos=None,
-                           d_coeff_pos=None,
-                           p_coeff_att=None,
-                           i_coeff_att=None,
-                           d_coeff_att=None
-                           ):
+    def setPIDCoefficients(self, p_coeff_pos=None, i_coeff_pos=None, d_coeff_pos=None, p_coeff_att=None, i_coeff_att=None, d_coeff_att=None):
         """Sets the coefficients of a PID controller.
 
         This method throws an error message and exist is the coefficients
@@ -198,7 +173,7 @@ class CTBRControl(object):
             (3,1)-shaped array of floats containing the attitude control derivative coefficients.
 
         """
-        ATTR_LIST = ['P_COEFF_FOR', 'I_COEFF_FOR', 'D_COEFF_FOR', 'P_COEFF_TOR', 'I_COEFF_TOR', 'D_COEFF_TOR']
+        ATTR_LIST = ["P_COEFF_FOR", "I_COEFF_FOR", "D_COEFF_FOR", "P_COEFF_TOR", "I_COEFF_TOR", "D_COEFF_TOR"]
         if not all(hasattr(self, attr) for attr in ATTR_LIST):
             print("[ERROR] in BaseControl.setPIDCoefficients(), not all PID coefficients exist as attributes in the instantiated control class.")
             exit()
@@ -211,10 +186,8 @@ class CTBRControl(object):
             self.D_COEFF_TOR = self.D_COEFF_TOR if d_coeff_att is None else d_coeff_att
 
     ################################################################################
-    
-    def _getURDFParameter(self,
-                          parameter_name: str
-                          ):
+
+    def _getURDFParameter(self, parameter_name: str):
         """Reads a parameter from a drone's URDF file.
 
         This method is nothing more than a custom XML parser for the .urdf
@@ -233,18 +206,17 @@ class CTBRControl(object):
         """
         #### Get the XML tree of the drone model to control ########
         URDF = self.DRONE_MODEL.value + ".urdf"
-        path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets/'+URDF)
+        path = pkg_resources.resource_filename("gym_pybullet_drones", "assets/" + URDF)
         URDF_TREE = etxml.parse(path).getroot()
         #### Find and return the desired parameter #################
-        if parameter_name == 'm':
-            return float(URDF_TREE[1][0][1].attrib['value'])
-        elif parameter_name in ['ixx', 'iyy', 'izz']:
+        if parameter_name == "m":
+            return float(URDF_TREE[1][0][1].attrib["value"])
+        elif parameter_name in ["ixx", "iyy", "izz"]:
             return float(URDF_TREE[1][0][2].attrib[parameter_name])
-        elif parameter_name in ['arm', 'thrust2weight', 'kf', 'km', 'max_speed_kmh', 'gnd_eff_coeff' 'prop_radius', \
-                                'drag_coeff_xy', 'drag_coeff_z', 'dw_coeff_1', 'dw_coeff_2', 'dw_coeff_3']:
+        elif parameter_name in ["arm", "thrust2weight", "kf", "km", "max_speed_kmh", "gnd_eff_coeff" "prop_radius", "drag_coeff_xy", "drag_coeff_z", "dw_coeff_1", "dw_coeff_2", "dw_coeff_3"]:
             return float(URDF_TREE[0].attrib[parameter_name])
-        elif parameter_name in ['length', 'radius']:
+        elif parameter_name in ["length", "radius"]:
             return float(URDF_TREE[1][2][1][0].attrib[parameter_name])
-        elif parameter_name == 'collision_z_offset':
-            COLLISION_SHAPE_OFFSETS = [float(s) for s in URDF_TREE[1][2][0].attrib['xyz'].split(' ')]
+        elif parameter_name == "collision_z_offset":
+            COLLISION_SHAPE_OFFSETS = [float(s) for s in URDF_TREE[1][2][0].attrib["xyz"].split(" ")]
             return COLLISION_SHAPE_OFFSETS[2]

@@ -100,12 +100,12 @@ class TestLink(TestSingleCfGrounded):
             end_time = time.time()
 
             # make sure we actually received the expected value
-            i_recv, = struct.unpack('<I', pk_ack.data[0:4])
+            (i_recv,) = struct.unpack("<I", pk_ack.data[0:4])
             self.assertEqual(i, i_recv)
             latencies.append((end_time - start_time) * 1000)
         link.close()
         result = np.min(latencies)
-        print('Latency for {} (packet size {} B): {:.2f} ms'.format(uri, packet_size, result))
+        print("Latency for {} (packet size {} B): {:.2f} ms".format(uri, packet_size, result))
         return result
 
     def bandwidth(self, uri, packet_size=4, count=500):
@@ -131,24 +131,23 @@ class TestLink(TestSingleCfGrounded):
                 if pk_ack.port == CRTPPort.LINKCTRL and pk_ack.channel == 0:
                     break
             # make sure we actually received the expected value
-            i_recv, = struct.unpack('<I', pk_ack.data[0:4])
+            (i_recv,) = struct.unpack("<I", pk_ack.data[0:4])
             self.assertEqual(i, i_recv)
         end_time = time.time()
         link.close()
         result = count / (end_time - start_time)
         kbps = (count * packet_size) / 1024 / (end_time - start_time)
-        print('Bandwith for {} (packet size {} B): {:.2f} packets/s ({:.2f} kB/s)'.format(
-            uri, packet_size, result, kbps))
+        print("Bandwith for {} (packet size {} B): {:.2f} packets/s ({:.2f} kB/s)".format(uri, packet_size, result, kbps))
         return result
 
     def error_cb(self, error):
         self.assertIsNone(None, error)
 
     def build_data(self, i, packet_size):
-        assert (packet_size % 4 == 0)
+        assert packet_size % 4 == 0
         repeats = packet_size // 4
-        return struct.pack('<' + 'I'*repeats, *[i]*repeats)
+        return struct.pack("<" + "I" * repeats, *[i] * repeats)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

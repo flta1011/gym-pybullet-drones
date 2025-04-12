@@ -51,8 +51,7 @@ class TestConnection(unittest.TestCase):
 
             actual = connected_time - start_time
             max_expected = EXPECTED_CONNECTION_TIME * nr_of_devices
-            print('Connection time for', nr_of_devices, ':', actual,
-                  ', per device:', actual / nr_of_devices)
+            print("Connection time for", nr_of_devices, ":", actual, ", per device:", actual / nr_of_devices)
 
             # Assert
             self.assertLess(actual, max_expected)
@@ -62,7 +61,7 @@ class TestConnection(unittest.TestCase):
         self.test_rig_support.restart_devices(self.test_rig_support.all_uris)
 
         # Fill caches first by connecting to all devices
-        factory = CachedCfFactory(rw_cache='./cache')
+        factory = CachedCfFactory(rw_cache="./cache")
         with Swarm(self.test_rig_support.all_uris, factory=factory):
             pass
 
@@ -78,8 +77,7 @@ class TestConnection(unittest.TestCase):
 
             actual = connected_time - start_time
             max_expected = EXPECTED_CONNECTION_TIME * nr_of_devices
-            print('Connection time for', nr_of_devices, ':', actual,
-                  ', per device:', actual / nr_of_devices)
+            print("Connection time for", nr_of_devices, ":", actual, ", per device:", actual / nr_of_devices)
 
             # Assert
             self.assertLess(actual, max_expected)
@@ -104,7 +102,7 @@ class TestConnection(unittest.TestCase):
     def test_that_the_same_cf_object_can_be_connected_multiple_times(self):
         # Fixture
         self.test_rig_support.restart_devices(self.test_rig_support.all_uris)
-        cf = Crazyflie(rw_cache='./cache')
+        cf = Crazyflie(rw_cache="./cache")
 
         # Test
         for uri in self.test_rig_support.all_uris:

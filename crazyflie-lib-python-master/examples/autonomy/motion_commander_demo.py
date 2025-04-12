@@ -41,17 +41,17 @@ from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 from cflib.positioning.motion_commander import MotionCommander
 from cflib.utils import uri_helper
 
-URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
+URI = uri_helper.uri_from_env(default="radio://0/80/2M/E7E7E7E7E7")
 
 # Only output errors from the logging framework
 logging.basicConfig(level=logging.ERROR)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Initialize the low-level drivers
     cflib.crtp.init_drivers()
 
-    with SyncCrazyflie(URI, cf=Crazyflie(rw_cache='./cache')) as scf:
+    with SyncCrazyflie(URI, cf=Crazyflie(rw_cache="./cache")) as scf:
         # Arm the Crazyflie
         scf.cf.platform.send_arming_request(True)
         time.sleep(1.0)
@@ -94,7 +94,7 @@ if __name__ == '__main__':
             # The motion is started and we can do other stuff, printing for
             # instance
             for _ in range(5):
-                print('Doing other work')
+                print("Doing other work")
                 time.sleep(0.2)
 
             # And we can stop

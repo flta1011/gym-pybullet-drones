@@ -18,12 +18,12 @@ Eine Visualisierung über die Methode visualize() ist ebenfalls möglich.
 
 """
 
-
 import numpy as np
 import matplotlib.pyplot as plt
 import random
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
+
 
 class MazeGenerator:
     def __init__(self, width=3, height=3, discretization=0.05, min_corridor_size=0.3, seed=30):
@@ -111,7 +111,7 @@ class MazeGenerator:
     def _has_min_orthogonal_distance(self, x, y, direction):
         """Check if there is a minimum orthogonal distance to other walls."""
         orthogonal_directions = [(1, 0), (-1, 0)] if direction == (0, 1) else [(0, 1), (0, -1)]
-        
+
         # Check orthogonal distance for the current position
         for ox, oy in orthogonal_directions:
             for dist in range(1, self.min_corridor_size + 1):
@@ -130,7 +130,7 @@ class MazeGenerator:
                             return False
 
         return True
-    
+
     def _has_min_colinear_distance(self, x, y, direction):
         """Check if there is a minimum colinear distance to other walls."""
         dx, dy = direction
@@ -142,7 +142,7 @@ class MazeGenerator:
         return True
 
     def _has_adjacent_wall(self, x, y):
-        """Check if a cell has adjacent walls (not diagonal).""" # adjacent = benachbart
+        """Check if a cell has adjacent walls (not diagonal)."""  # adjacent = benachbart
         neighbors = [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
         for nx, ny in neighbors:
             if self.grid[ny, nx] == 1:
@@ -167,28 +167,28 @@ class MazeGenerator:
         """Visualize the maze using matplotlib."""
         if ax is None:
             fig, ax = plt.subplots()
-            ax.imshow(self.grid, cmap='binary')
-            ax.set_title(f'Maze with seed {self.seed}')
-            ax.axis('off')
+            ax.imshow(self.grid, cmap="binary")
+            ax.set_title(f"Maze with seed {self.seed}")
+            ax.axis("off")
             plt.show()
         else:
-            ax.imshow(self.grid, cmap='binary')
-            ax.set_title(f'Maze with seed {self.seed}')
-            ax.axis('off')
-    
+            ax.imshow(self.grid, cmap="binary")
+            ax.set_title(f"Maze with seed {self.seed}")
+            ax.axis("off")
+
     def visualize_range_of_mazes(self, start_seed=1, stop_seed=9):
         """Visualize a range of mazes with different seeds."""
-        n = (stop_seed - start_seed) + 1 # Number of mazes to generate; +1 because range is inclusive
+        n = (stop_seed - start_seed) + 1  # Number of mazes to generate; +1 because range is inclusive
         max_per_row = 8
-        rows = (n + max_per_row -1) // max_per_row
+        rows = (n + max_per_row - 1) // max_per_row
         cols = min(n, max_per_row)
-        fig, axes = plt.subplots(rows, cols, figsize=(10 * cols, 10 * rows)) # Create n subplots
+        fig, axes = plt.subplots(rows, cols, figsize=(10 * cols, 10 * rows))  # Create n subplots
 
         # Flatten axes array if it is 2D
         if rows > 1:
             axes = axes.flatten()
 
-        for i, seed in enumerate(range(start_seed, stop_seed+1)):
+        for i, seed in enumerate(range(start_seed, stop_seed + 1)):
             self.seed = seed
             self.generate()
             # ax = axes[i] if n > 1 else axes # Handle the case when n is 1
@@ -239,13 +239,13 @@ class MazeGenerator:
                 if self.grid[y, x] == 1:
                     wall_size = f"{self.discretization} {self.discretization} {maze_height}"
                     wall_xyz = f"{x * self.discretization + self.discretization / 2} {y * self.discretization + self.discretization / 2} {maze_height / 2}"
-                    
+
                     # Add visual geometry
                     visual = ET.SubElement(wall_link, "visual")
                     geometry = ET.SubElement(visual, "geometry")
                     box = ET.SubElement(geometry, "box", size=wall_size)
                     origin = ET.SubElement(visual, "origin", xyz=wall_xyz, rpy="0 0 0")
-                    
+
                     # Add collision geometry
                     collision = ET.SubElement(wall_link, "collision")
                     collision_geometry = ET.SubElement(collision, "geometry")
@@ -264,15 +264,13 @@ class MazeGenerator:
 
 
 if __name__ == "__main__":
-    rs = 42 # Random seed
+    rs = 42  # Random seed
     maze = MazeGenerator(seed=rs)
     maze.generate()
     maze.visualize()
     maze.visualize_range_of_mazes(start_seed=1, stop_seed=104)
 
-    #Maze_Name = f"gym_pybullet_drones/assets/maze/maze_rs_{rs}.urdf"
-    #maze.generate_urdf_from_maze(maze_height=1, filename=Maze_Name)
+    # Maze_Name = f"gym_pybullet_drones/assets/maze/maze_rs_{rs}.urdf"
+    # maze.generate_urdf_from_maze(maze_height=1, filename=Maze_Name)
 
-
-
-    # best usable mazes -> 1, 6, 7, 8, 12, 42, 
+    # best usable mazes -> 1, 6, 7, 8, 12, 42,

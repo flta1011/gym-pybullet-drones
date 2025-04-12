@@ -49,7 +49,7 @@ class RadioLinkStatistics:
             self._retry_sum += retry
             if len(self._retries) > 100:
                 self._retry_sum -= self._retries.popleft()
-            self.radio_link_statistics['link_quality'] = float(self._retry_sum) / len(self._retries) * 10
+            self.radio_link_statistics["link_quality"] = float(self._retry_sum) / len(self._retries) * 10
 
     def _update_rssi(self, ack):
         """
@@ -57,13 +57,13 @@ class RadioLinkStatistics:
 
         :param ack: Acknowledgment object with RSSI data.
         """
-        if not hasattr(self, '_rssi_timestamps'):
+        if not hasattr(self, "_rssi_timestamps"):
             self._rssi_timestamps = collections.deque(maxlen=100)
-        if not hasattr(self, '_rssi_values'):
+        if not hasattr(self, "_rssi_values"):
             self._rssi_values = collections.deque(maxlen=100)
 
         # update RSSI if the acknowledgment contains RSSI data
-        if ack.ack and len(ack.data) > 2 and ack.data[0] & 0xf3 == 0xf3 and ack.data[1] == 0x01:
+        if ack.ack and len(ack.data) > 2 and ack.data[0] & 0xF3 == 0xF3 and ack.data[1] == 0x01:
             instantaneous_rssi = ack.data[2]
             self._rssi_values.append(instantaneous_rssi)
             self._rssi_timestamps.append(time.time())
@@ -73,7 +73,7 @@ class RadioLinkStatistics:
                 time_diffs = np.diff(self._rssi_timestamps, prepend=time.time())
                 weights = np.exp(-time_diffs)
                 weighted_average = np.sum(weights * self._rssi_values) / np.sum(weights)
-                self.radio_link_statistics['uplink_rssi'] = weighted_average
+                self.radio_link_statistics["uplink_rssi"] = weighted_average
 
     def _update_rate_and_congestion(self, ack, packet_out):
         """
@@ -81,15 +81,15 @@ class RadioLinkStatistics:
 
         :param ack: Acknowledgment object with congestion data.
         """
-        if not hasattr(self, '_previous_time_stamp'):
+        if not hasattr(self, "_previous_time_stamp"):
             self._previous_time_stamp = time.time()
-        if not hasattr(self, '_amount_null_packets_up'):
+        if not hasattr(self, "_amount_null_packets_up"):
             self._amount_null_packets_up = 0
-        if not hasattr(self, '_amount_packets_up'):
+        if not hasattr(self, "_amount_packets_up"):
             self._amount_packets_up = 0
-        if not hasattr(self, '_amount_null_packets_down'):
+        if not hasattr(self, "_amount_null_packets_down"):
             self._amount_null_packets_down = 0
-        if not hasattr(self, '_amount_packets_down'):
+        if not hasattr(self, "_amount_packets_down"):
             self._amount_packets_down = 0
 
         self._amount_packets_up += 1  # everytime this function is called, a packet is sent
@@ -108,14 +108,10 @@ class RadioLinkStatistics:
             # rate and congestion stats every N seconds
             if time.time() - self._previous_time_stamp > 0.1:
                 # self._uplink_rate = self._amount_packets_up / (time.time() - self._previous_time_stamp)
-                self.radio_link_statistics['uplink_rate'] = self._amount_packets_up / \
-                    (time.time() - self._previous_time_stamp)
-                self.radio_link_statistics['downlink_rate'] = self._amount_packets_down / \
-                    (time.time() - self._previous_time_stamp)
-                self.radio_link_statistics['uplink_congestion'] = 1.0 - \
-                    self._amount_null_packets_up / self._amount_packets_up
-                self.radio_link_statistics['downlink_congestion'] = 1.0 - \
-                    self._amount_null_packets_down / self._amount_packets_down
+                self.radio_link_statistics["uplink_rate"] = self._amount_packets_up / (time.time() - self._previous_time_stamp)
+                self.radio_link_statistics["downlink_rate"] = self._amount_packets_down / (time.time() - self._previous_time_stamp)
+                self.radio_link_statistics["uplink_congestion"] = 1.0 - self._amount_null_packets_up / self._amount_packets_up
+                self.radio_link_statistics["downlink_congestion"] = 1.0 - self._amount_null_packets_down / self._amount_packets_down
 
                 self._amount_packets_up = 0
                 self._amount_null_packets_up = 0

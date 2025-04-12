@@ -26,11 +26,11 @@
 Used for sending external position to the Crazyflie
 """
 
-__author__ = 'Bitcraze AB'
-__all__ = ['Extpos']
+__author__ = "Bitcraze AB"
+__all__ = ["Extpos"]
 
 
-class Extpos():
+class Extpos:
     """
     Used for sending its position to the Crazyflie
     """

@@ -33,7 +33,7 @@ from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 
 
 class SyncLogger:
-    DISCONNECT_EVENT = 'DISCONNECT_EVENT'
+    DISCONNECT_EVENT = "DISCONNECT_EVENT"
 
     def __init__(self, crazyflie, log_config):
         """
@@ -58,7 +58,7 @@ class SyncLogger:
 
     def connect(self):
         if self._is_connected:
-            raise Exception('Already connected')
+            raise Exception("Already connected")
 
         self._cf.disconnected.add_callback(self._disconnected)
         for config in self._log_config:
@@ -74,8 +74,7 @@ class SyncLogger:
                 config.stop()
                 config.delete()
 
-                config.data_received_cb.remove_callback(
-                    self._log_callback)
+                config.data_received_cb.remove_callback(self._log_callback)
 
             self._cf.disconnected.remove_callback(self._disconnected)
 

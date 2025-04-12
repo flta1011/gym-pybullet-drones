@@ -49,7 +49,7 @@ class LighthouseBsVector:
         self._lh_v1_vert_angle = lh_v1_vert_angle
 
     @classmethod
-    def from_lh2(cls, lh_v2_angle_1: float, lh_v2_angle_2: float) -> 'LighthouseBsVector':
+    def from_lh2(cls, lh_v2_angle_1: float, lh_v2_angle_2: float) -> "LighthouseBsVector":
         """
         Create a LighthouseBsVector object from lighthouse V2 angles
         :param lh_v2_angle_1: First sweep angles, 0 straight ahead
@@ -63,7 +63,7 @@ class LighthouseBsVector:
         return cls(lh_v1_horiz_angle, lh_v1_vert_angle)
 
     @classmethod
-    def from_cart(cls, cart_vector: list[float]) -> 'LighthouseBsVector':
+    def from_cart(cls, cart_vector: list[float]) -> "LighthouseBsVector":
         """
         Create a LighthouseBsVector object from cartesian coordinates.
         :param cart_vector: (x, y, z) to a point
@@ -74,7 +74,7 @@ class LighthouseBsVector:
         return cls(lh_v1_horiz_angle, lh_v1_vert_angle)
 
     @classmethod
-    def from_projection(cls, proj_point: list[float]) -> 'LighthouseBsVector':
+    def from_projection(cls, proj_point: list[float]) -> "LighthouseBsVector":
         """
         Create a LighthouseBsVector object from the projection point on the plane x=1.0
         :param projection point: (y, z)
@@ -103,7 +103,10 @@ class LighthouseBsVector:
         """
         Lightouse V1 angle pair (horiz, vert)
         """
-        return self._lh_v1_horiz_angle, self._lh_v1_vert_angle,
+        return (
+            self._lh_v1_horiz_angle,
+            self._lh_v1_vert_angle,
+        )
 
     @property
     def lh_v2_angle_1(self) -> float:
@@ -140,7 +143,7 @@ class LighthouseBsVector:
 
 class LighthouseBsVectors(list):
     """A list of 4 LighthouseBsVector, one for each sensor.
-       LighthouseBsVectors is essentially the same as list[LighthouseBsVector]"""
+    LighthouseBsVectors is essentially the same as list[LighthouseBsVector]"""
 
     def projection_pair_list(self) -> npt.NDArray:
         """

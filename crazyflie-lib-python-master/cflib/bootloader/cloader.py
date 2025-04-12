@@ -36,8 +36,8 @@ from .boottypes import Target
 from .boottypes import TargetTypes
 from cflib.crtp.crtpstack import CRTPPacket
 
-__author__ = 'Bitcraze AB'
-__all__ = ['Cloader']
+__author__ = "Bitcraze AB"
+__all__ = ["Cloader"]
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ class Cloader:
         self.buffer_pages = 0
         self.flash_pages = 0
         self.start_page = 0
-        self.cpuid = 'N/A'
+        self.cpuid = "N/A"
         self.error_code = 0
         self.protocol_version = 0xFF
 
@@ -69,15 +69,15 @@ class Cloader:
 
         self.targets = {}
         self.mapping = None
-        self._available_boot_uri = ('radio://0/110/2M/E7E7E7E7E7', 'radio://0/0/2M/E7E7E7E7E7')
+        self._available_boot_uri = ("radio://0/110/2M/E7E7E7E7E7", "radio://0/0/2M/E7E7E7E7E7")
 
     def close(self):
-        """ Close the link """
+        """Close the link"""
         if self.link:
             self.link.close()
 
     def scan_for_bootloader(self):
-        link = cflib.crtp.get_link_driver('radio://0/80/2M/E7E7E7E7E7')
+        link = cflib.crtp.get_link_driver("radio://0/80/2M/E7E7E7E7E7")
         ts = time.time()
         res = ()
         while len(res) == 0 and (time.time() - ts) < 10:
@@ -101,24 +101,24 @@ class Cloader:
             if pk is None:
                 continue
             if pk.port == 15 and pk.channel == 3 and len(pk.data) > 3:
-                if struct.unpack('<BB', pk.data[0:2]) != (target_id, 0xFF):
+                if struct.unpack("<BB", pk.data[0:2]) != (target_id, 0xFF):
                     continue
 
-                address = 'B1' + binascii.hexlify(pk.data[2:6][::-1]).upper().decode('utf8')
+                address = "B1" + binascii.hexlify(pk.data[2:6][::-1]).upper().decode("utf8")
 
                 pk = CRTPPacket(0xFF, [target_id, 0xF0, 0x00])
                 self.link.send_packet(pk)
                 time.sleep(0.5)
 
                 self.link.close()
-                self.link = cflib.crtp.get_link_driver(f'radio://0/0/2M/{address}?safelink=0')
+                self.link = cflib.crtp.get_link_driver(f"radio://0/0/2M/{address}?safelink=0")
                 time.sleep(0.5)
                 return True
 
         return False
 
     def reset_to_firmware(self, target_id: int) -> bool:
-        """ Reset to firmware
+        """Reset to firmware
         The parameter target_id corresponds to the device to reset.
 
         Return True if the reset has been done, False on timeout
@@ -134,9 +134,9 @@ class Cloader:
                 self.link.send_packet(pk)
                 continue
             if answer.port == 15 and answer.channel == 3 and len(answer.data) > 2:
-                if struct.unpack('<BB', pk.data[0:2]) != (target_id, 0xFF):
+                if struct.unpack("<BB", pk.data[0:2]) != (target_id, 0xFF):
                     continue
-                pk = CRTPPacket(0xff, [target_id, 0xf0, 0x01])
+                pk = CRTPPacket(0xFF, [target_id, 0xF0, 0x01])
                 self.link.send_packet(pk)
                 time.sleep(1)
                 return True
@@ -148,18 +148,16 @@ class Cloader:
         if self.link:
             self.link.close()
         if uri:
-            self.link = cflib.crtp.get_link_driver(uri + '?safelink=0')
+            self.link = cflib.crtp.get_link_driver(uri + "?safelink=0")
         else:
-            self.link = cflib.crtp.get_link_driver(
-                self.clink_address + '?safelink=0')
+            self.link = cflib.crtp.get_link_driver(self.clink_address + "?safelink=0")
 
     def check_link_and_get_info(self, target_id=0xFF):
         """Try to get a connection with the bootloader ...
-           update_info has a timeout of 10 seconds """
+        update_info has a timeout of 10 seconds"""
         if self._update_info(target_id):
             if self._in_boot_cb:
-                self._in_boot_cb.call(True, self.targets[
-                    target_id].protocol_version)
+                self._in_boot_cb.call(True, self.targets[target_id].protocol_version)
             if self._info_cb:
                 self._info_cb.call(self.targets[target_id])
             return True
@@ -173,7 +171,7 @@ class Cloader:
         return self.targets[target_id]
 
     def _update_info(self, target_id):
-        """ Call the command getInfo and fill up the information received in
+        """Call the command getInfo and fill up the information received in
         the fields of the object
         """
 
@@ -191,10 +189,9 @@ class Cloader:
             if answer is None:
                 self.link.send_packet(pk)
 
-            if (answer and answer.header == 0xFF and struct.unpack('<BB', answer.data[0:2]) ==
-                    (target_id, 0x10)):
-                tab = struct.unpack('BBHHHH', answer.data[0:10])
-                cpuid = struct.unpack('B' * 12, answer.data[10:22])
+            if answer and answer.header == 0xFF and struct.unpack("<BB", answer.data[0:2]) == (target_id, 0x10):
+                tab = struct.unpack("BBHHHH", answer.data[0:10])
+                cpuid = struct.unpack("B" * 12, answer.data[10:22])
                 if target_id not in self.targets:
                     self.targets[target_id] = Target(target_id)
                 self.targets[target_id].addr = target_id
@@ -202,24 +199,23 @@ class Cloader:
                     self.targets[target_id].protocol_version = answer.data[22]
                     self.protocol_version = answer.data[22]
                 if len(answer.data) > 23 and len(answer.data) > 26:
-                    code_state = ''
+                    code_state = ""
                     if answer.data[24] & 0x80 != 0:
-                        code_state = '+'
+                        code_state = "+"
                     answer.data[24] &= 0x7F
-                    major = struct.unpack('H', answer.data[23:25])[0]
+                    major = struct.unpack("H", answer.data[23:25])[0]
                     minor = answer.data[25]
                     patch = answer.data[26]
-                    self.targets[target_id].version = '{}.{}.{}{}'.format(major, minor, patch, code_state)
+                    self.targets[target_id].version = "{}.{}.{}{}".format(major, minor, patch, code_state)
                 self.targets[target_id].page_size = tab[2]
                 self.targets[target_id].buffer_pages = tab[3]
                 self.targets[target_id].flash_pages = tab[4]
                 self.targets[target_id].start_page = tab[5]
-                self.targets[target_id].cpuid = '%02X' % cpuid[0]
+                self.targets[target_id].cpuid = "%02X" % cpuid[0]
                 for i in cpuid[1:]:
-                    self.targets[target_id].cpuid += ':%02X' % i
+                    self.targets[target_id].cpuid += ":%02X" % i
 
-                if (self.protocol_version == 0x10 and
-                        target_id == TargetTypes.STM32):
+                if self.protocol_version == 0x10 and target_id == TargetTypes.STM32:
                     self._update_mapping(target_id)
 
                 return True
@@ -228,18 +224,17 @@ class Cloader:
 
     def _update_mapping(self, target_id):
         pk = CRTPPacket()
-        pk.set_header(0xff, 0xff)
+        pk.set_header(0xFF, 0xFF)
         pk.data = (target_id, 0x12)
         self.link.send_packet(pk)
 
         pk = self.link.receive_packet(2)
 
-        if (pk and pk.header == 0xFF and len(pk.data) >= 2 and struct.unpack('<BB', pk.data[0:2]) ==
-                (target_id, 0x12)):
+        if pk and pk.header == 0xFF and len(pk.data) >= 2 and struct.unpack("<BB", pk.data[0:2]) == (target_id, 0x12):
             m = pk.datat[2:]
 
             if (len(m) % 2) != 0:
-                raise Exception('Malformed flash mapping packet')
+                raise Exception("Malformed flash mapping packet")
 
             self.mapping = []
             page = 0
@@ -254,7 +249,7 @@ class Cloader:
         count = 0
         pk = CRTPPacket()
         pk.set_header(0xFF, 0xFF)
-        pk.data = struct.pack('=BBHH', target_id, 0x14, page, address)
+        pk.data = struct.pack("=BBHH", target_id, 0x14, page, address)
 
         for i in range(0, len(buff)):
             pk.data.append(buff[i])
@@ -266,8 +261,7 @@ class Cloader:
                 count = 0
                 pk = CRTPPacket()
                 pk.set_header(0xFF, 0xFF)
-                pk.data = struct.pack('=BBHH', target_id, 0x14, page,
-                                      i + address + 1)
+                pk.data = struct.pack("=BBHH", target_id, 0x14, page, i + address + 1)
 
         self.link.send_packet(pk)
 
@@ -280,17 +274,15 @@ class Cloader:
         for i in range(0, int(math.ceil(page_size / 25.0))):
             pk = None
             retry_counter = 5
-            while ((not pk or pk.header != 0xFF or
-                    struct.unpack('<BBHH', pk.data[0:6]) != (addr, 0x1C, page, (i * 25))) and
-                    retry_counter >= 0):
+            while (not pk or pk.header != 0xFF or struct.unpack("<BBHH", pk.data[0:6]) != (addr, 0x1C, page, (i * 25))) and retry_counter >= 0:
                 pk = CRTPPacket()
                 pk.set_header(0xFF, 0xFF)
-                pk.data = struct.pack('<BBHH', addr, 0x1C, page, (i * 25))
+                pk.data = struct.pack("<BBHH", addr, 0x1C, page, (i * 25))
                 self.link.send_packet(pk)
 
                 pk = self.link.receive_packet(1)
                 retry_counter -= 1
-            if (retry_counter < 0):
+            if retry_counter < 0:
                 return None
             else:
                 buff += pk.data[6:]
@@ -311,13 +303,10 @@ class Cloader:
 
         retry_counter = 5
         # print "Flasing to 0x{:X}".format(addr)
-        while ((not pk or pk.header != 0xFF or len(pk.data) < 2 or
-                struct.unpack('<BB', pk.data[0:2]) != (addr, 0x18)) and
-               retry_counter >= 0):
+        while (not pk or pk.header != 0xFF or len(pk.data) < 2 or struct.unpack("<BB", pk.data[0:2]) != (addr, 0x18)) and retry_counter >= 0:
             pk = CRTPPacket()
             pk.set_header(0xFF, 0xFF)
-            pk.data = struct.pack('<BBHHH', addr, 0x18, page_buffer,
-                                  target_page, page_count)
+            pk.data = struct.pack("<BBHHH", addr, 0x18, page_buffer, target_page, page_count)
             self.link.send_packet(pk)
 
             # Timeout for writing to flash is raised from 1s (used elsewhere
@@ -340,7 +329,7 @@ class Cloader:
     def decode_cpu_id(self, cpuid):
         """Decode the CPU id into a string"""
         ret = ()
-        for i in cpuid.split(':'):
-            ret += (eval('0x' + i),)
+        for i in cpuid.split(":"):
+            ret += (eval("0x" + i),)
 
         return ret

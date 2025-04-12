@@ -29,8 +29,8 @@ CRTP packet and ports.
 """
 import logging
 
-__author__ = 'Bitcraze AB'
-__all__ = ['CRTPPort', 'CRTPPacket']
+__author__ = "Bitcraze AB"
+__all__ = ["CRTPPort", "CRTPPacket"]
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +39,7 @@ class CRTPPort:
     """
     Lists the available ports for the CRTP.
     """
+
     CONSOLE = 0x00
     PARAM = 0x02
     COMMANDER = 0x03
@@ -109,8 +110,7 @@ class CRTPPacket(object):
         """Update the header with the port/channel values"""
         # The two bits in position 3 and 4 needs to be set for legacy
         # support of the bootloader
-        self.header = ((self._port & 0x0f) << 4 | 3 << 2 |
-                       (self.channel & 0x03))
+        self.header = (self._port & 0x0F) << 4 | 3 << 2 | (self.channel & 0x03)
 
     # Some python madness to access different format of the data
     def _get_data(self):
@@ -122,14 +122,13 @@ class CRTPPacket(object):
         if isinstance(data, bytearray):
             self._data = data
         elif isinstance(data, str):
-            self._data = bytearray(data.encode('ISO-8859-1'))
+            self._data = bytearray(data.encode("ISO-8859-1"))
         elif isinstance(data, list) or isinstance(data, tuple):
             self._data = bytearray(data)
         elif isinstance(data, bytes):
             self._data = bytearray(data)
         else:
-            raise Exception('Data must be bytearray, string, list or tuple,'
-                            ' not {}'.format(type(data)))
+            raise Exception("Data must be bytearray, string, list or tuple," " not {}".format(type(data)))
 
     def _get_data_l(self):
         """Get the data in the packet as a list"""
@@ -141,7 +140,7 @@ class CRTPPacket(object):
 
     def __str__(self):
         """Get a string representation of the packet"""
-        return '{}:{} {}'.format(self._port, self.channel, self.datat)
+        return "{}:{} {}".format(self._port, self.channel, self.datat)
 
     def get_data_size(self):
         return len(self._data)

@@ -23,11 +23,12 @@ from cflib.localization import LighthouseBsVector
 from cflib.localization.lighthouse_bs_vector import LighthouseBsVectors
 
 
-class LighthouseSweepAngleReader():
+class LighthouseSweepAngleReader:
     """
     Wrapper to simplify reading of lighthouse sweep angles from the locSrv stream
     """
-    ANGLE_STREAM_PARAM = 'locSrv.enLhAngleStream'
+
+    ANGLE_STREAM_PARAM = "locSrv.enLhAngleStream"
     NR_OF_SENSORS = 4
 
     def __init__(self, cf, data_recevied_cb):
@@ -59,9 +60,9 @@ class LighthouseSweepAngleReader():
             return
 
         if self._cb:
-            base_station_id = packet.data['basestation']
-            horiz_angles = packet.data['x']
-            vert_angles = packet.data['y']
+            base_station_id = packet.data["basestation"]
+            horiz_angles = packet.data["x"]
+            vert_angles = packet.data["y"]
 
             result = []
             for i in range(self.NR_OF_SENSORS):
@@ -70,7 +71,7 @@ class LighthouseSweepAngleReader():
             self._cb(base_station_id, LighthouseBsVectors(result))
 
 
-class LighthouseSweepAngleAverageReader():
+class LighthouseSweepAngleAverageReader:
     """
     Helper class to make it easy read sweep angles for multiple base stations and average the result
     """

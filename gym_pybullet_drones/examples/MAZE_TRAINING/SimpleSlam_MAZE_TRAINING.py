@@ -94,14 +94,14 @@ class SimpleSlam:
         angles = {"front": drone_yaw, "back": drone_yaw + np.pi, "left": drone_yaw + np.pi / 2, "right": drone_yaw - np.pi / 2}
         for direction in ["front", "back", "left", "right"]:
             distance = raycast_results.get(direction, 9999)
-            if distance < 9999:  # Treffer – Wand erkannt
+            if distance < 4:  # Treffer – Wand erkannt
                 angle = angles[direction]
                 end_x = x + distance * np.cos(angle)
                 end_y = y + distance * np.sin(angle)
                 end_grid_x, end_grid_y = self.world_to_grid(end_x, end_y)
                 cells = self.get_line(grid_x, grid_y, end_grid_x, end_grid_y)
                 # Markiere Zellen entlang der Strahlbahn als frei:
-                for cx, cy in cells[:-1]:
+                for cx, cy in cells[:-1]:  # alles bis auf den Endpunkt frei markieren
                     if (
                         0 <= cx < self.grid_size
                         and 0 <= cy < self.grid_size
@@ -114,6 +114,24 @@ class SimpleSlam:
                 # Markiere den Endpunkt als Wand:
                 if 0 <= end_grid_x < self.grid_size and 0 <= end_grid_y < self.grid_size and self.occupancy_grid[end_grid_x, end_grid_y] != self.frei_value:
                     self.occupancy_grid[end_grid_x, end_grid_y] = self.wand_value
+
+            elif distance >= 4:  # Distanz ist auf 4 m gekappt, da das die Range des Sensors ist --> alles als frei markieren
+                angle = angles[direction]
+                end_x = x + distance * np.cos(angle)
+                end_y = y + distance * np.sin(angle)
+                end_grid_x, end_grid_y = self.world_to_grid(end_x, end_y)
+                cells = self.get_line(grid_x, grid_y, end_grid_x, end_grid_y)
+                # Markiere Zellen entlang der Strahlbahn als frei:
+                for cx, cy in cells[:]:  # alles frei markieren
+                    if (
+                        0 <= cx < self.grid_size
+                        and 0 <= cy < self.grid_size
+                        and self.occupancy_grid[cx, cy] != self.wand_value
+                        and self.occupancy_grid[cx, cy] != self.besucht_value
+                        and self.occupancy_grid[cx, cy] != self.actual_Position_value
+                    ):
+                        self.occupancy_grid[cx, cy] = self.frei_value
+                        self.counter_free_space += 1
 
         self.Prev_DrohnePosition = self.DrohnePosition
 

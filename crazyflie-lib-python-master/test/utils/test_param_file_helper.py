@@ -43,13 +43,13 @@ class ParamFileHelperTests(unittest.TestCase):
         except Exception:
             self.assertIsNone(helper)
         else:
-            self.fail('Expect exception')
+            self.fail("Expect exception")
 
     def test_ParamFileHelper_Crazyflie_Object(self):
         helper = ParamFileHelper(self.cf_mock)
         self.assertIsNotNone(helper)
 
-    @patch('cflib.crazyflie.Param')
+    @patch("cflib.crazyflie.Param")
     def test_ParamFileHelper_writesAndStoresParamFromFileToCrazyflie(self, mock_Param):
         # Setup
         cf_mock = MagicMock(spec=Crazyflie)
@@ -58,15 +58,15 @@ class ParamFileHelperTests(unittest.TestCase):
         # Mock blocking wait and call callback instead. This lets the flow work as it would in the asynch world
 
         def mock_wait(self, timeout=None):
-            helper._persistent_stored_callback('activeMarker.back', True)
+            helper._persistent_stored_callback("activeMarker.back", True)
             return
 
-        with patch.object(Event, 'wait', new=mock_wait):
-            self.assertTrue(helper.store_params_from_file('test/utils/fixtures/single_param.yaml'))
-            mock_Param.set_value.assert_called_once_with('activeMarker.back', 10)
-            mock_Param.persistent_store.assert_called_once_with('activeMarker.back', helper._persistent_stored_callback)
+        with patch.object(Event, "wait", new=mock_wait):
+            self.assertTrue(helper.store_params_from_file("test/utils/fixtures/single_param.yaml"))
+            mock_Param.set_value.assert_called_once_with("activeMarker.back", 10)
+            mock_Param.persistent_store.assert_called_once_with("activeMarker.back", helper._persistent_stored_callback)
 
-    @patch('cflib.crazyflie.Param')
+    @patch("cflib.crazyflie.Param")
     def test_ParamFileHelper_writesParamAndFailsToSetPersistantShouldReturnFalse(self, mock_Param):
         # Setup
         cf_mock = MagicMock(spec=Crazyflie)
@@ -75,15 +75,15 @@ class ParamFileHelperTests(unittest.TestCase):
         # Mock blocking wait and call callback instead. This lets the flow work as it would in the asynch world
 
         def mock_wait(self, timeout=None):
-            helper._persistent_stored_callback('activeMarker.back', False)
+            helper._persistent_stored_callback("activeMarker.back", False)
             return
 
-        with patch.object(Event, 'wait', new=mock_wait):
-            self.assertFalse(helper.store_params_from_file('test/utils/fixtures/single_param.yaml'))
-            mock_Param.set_value.assert_called_once_with('activeMarker.back', 10)
-            mock_Param.persistent_store.assert_called_once_with('activeMarker.back', helper._persistent_stored_callback)
+        with patch.object(Event, "wait", new=mock_wait):
+            self.assertFalse(helper.store_params_from_file("test/utils/fixtures/single_param.yaml"))
+            mock_Param.set_value.assert_called_once_with("activeMarker.back", 10)
+            mock_Param.persistent_store.assert_called_once_with("activeMarker.back", helper._persistent_stored_callback)
 
-    @patch('cflib.crazyflie.Param')
+    @patch("cflib.crazyflie.Param")
     def test_ParamFileHelper_TryWriteSeveralParamsPersistantShouldBreakAndReturnFalse(self, mock_Param):
         # Setup
         cf_mock = MagicMock(spec=Crazyflie)
@@ -92,17 +92,17 @@ class ParamFileHelperTests(unittest.TestCase):
         # Mock blocking wait and call callback instead. This lets the flow work as it would in the asynch world
 
         def mock_wait(self, timeout=None):
-            helper._persistent_stored_callback('activeMarker.back', False)
+            helper._persistent_stored_callback("activeMarker.back", False)
             return
 
-        with patch.object(Event, 'wait', new=mock_wait):
+        with patch.object(Event, "wait", new=mock_wait):
             # Test and assert
-            self.assertFalse(helper.store_params_from_file('test/utils/fixtures/five_params.yaml'))
+            self.assertFalse(helper.store_params_from_file("test/utils/fixtures/five_params.yaml"))
             # Assert it breaks directly by checking number of calls
-            mock_Param.set_value.assert_called_once_with('activeMarker.back', 10)
-            mock_Param.persistent_store.assert_called_once_with('activeMarker.back', helper._persistent_stored_callback)
+            mock_Param.set_value.assert_called_once_with("activeMarker.back", 10)
+            mock_Param.persistent_store.assert_called_once_with("activeMarker.back", helper._persistent_stored_callback)
 
-    @patch('cflib.crazyflie.Param')
+    @patch("cflib.crazyflie.Param")
     def test_ParamFileHelper_writesAndStoresAllParamsFromFileToCrazyflie(self, mock_Param):
         # Setup
         cf_mock = MagicMock(spec=Crazyflie)
@@ -111,10 +111,11 @@ class ParamFileHelperTests(unittest.TestCase):
         # Mock blocking wait and call callback instead. This lets the flow work as it would in the asynch world
 
         def mock_wait(self, timeout=None):
-            helper._persistent_stored_callback('something', True)
+            helper._persistent_stored_callback("something", True)
             return
-        with patch.object(Event, 'wait', new=mock_wait):
+
+        with patch.object(Event, "wait", new=mock_wait):
             # Test and  Assert
-            self.assertTrue(helper.store_params_from_file('test/utils/fixtures/five_params.yaml'))
+            self.assertTrue(helper.store_params_from_file("test/utils/fixtures/five_params.yaml"))
             self.assertEqual(5, len(mock_Param.set_value.mock_calls))
             self.assertEqual(5, len(mock_Param.persistent_store.mock_calls))

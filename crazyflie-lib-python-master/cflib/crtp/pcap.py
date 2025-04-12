@@ -4,8 +4,8 @@ import time
 from enum import IntEnum
 
 
-class PCAPLog():
-    """"
+class PCAPLog:
+    """ "
     From wiki.wireshark.org:
 
     Global Header
@@ -92,38 +92,39 @@ class PCAPLog():
               was captured. If incl_len and orig_len differ, the actually saved
               packet size was limited by snaplen.
     """
+
     # Link type options for CRTP packet
     class LinkType(IntEnum):
         RADIO = 1
         USB = 2
 
     # Global header for pcap 2.4
-    pcap_global_header = ('D4 C3 B2 A1 '
-                          '02 00 '         # major revision (i.e. pcap <2>.4)
-                          '04 00 '         # minor revision (i.e. pcap 2.<4>)
-                          '00 00 00 00 '
-                          '00 00 00 00 '
-                          'FF FF 00 00 '
-                          'A2 00 00 00 ')
+    pcap_global_header = (
+        "D4 C3 B2 A1 "
+        "02 00 "  # major revision (i.e. pcap <2>.4)
+        "04 00 "  # minor revision (i.e. pcap 2.<4>)
+        "00 00 00 00 "
+        "00 00 00 00 "
+        "FF FF 00 00 "
+        "A2 00 00 00 "
+    )
 
     _instance = None
 
     def __init__(self):
-        raise RuntimeError('singleton: call instance() instead')
+        raise RuntimeError("singleton: call instance() instead")
 
     @classmethod
     def instance(cls):
         if cls._instance is None:
             cls._instance = cls.__new__(cls)
 
-            logfile = os.environ['CRTP_PCAP_LOG']
-            print(f'opening {logfile}')
-            cls._instance._log = open(logfile, 'wb')
+            logfile = os.environ["CRTP_PCAP_LOG"]
+            print(f"opening {logfile}")
+            cls._instance._log = open(logfile, "wb")
 
             array = bytearray.fromhex(PCAPLog.pcap_global_header)
-            cls._instance._log.write(
-                struct.pack('<{}'.format('B' * len(array)), *array)
-            )
+            cls._instance._log.write(struct.pack("<{}".format("B" * len(array)), *array))
 
         return cls._instance
 
@@ -133,12 +134,9 @@ class PCAPLog():
         self._log.write(record)
 
     def _assemble_record(self, link_type, receive, address, channel, devid, crtp_packet):
-        return struct.pack(
-            '<BB{}BB{}'.format(len(address) * 'B', len(crtp_packet) * 'B'),
-            link_type, receive, *address, channel, devid, *crtp_packet
-        )
+        return struct.pack("<BB{}BB{}".format(len(address) * "B", len(crtp_packet) * "B"), link_type, receive, *address, channel, devid, *crtp_packet)
 
     def _pcap_header(self, len):
         seconds = time.time()
-        u_sec = int((seconds % 1)*1000000)
-        return struct.pack('<LLLL', int(seconds), u_sec, len, len)
+        u_sec = int((seconds % 1) * 1000000)
+        return struct.pack("<LLLL", int(seconds), u_sec, len, len)

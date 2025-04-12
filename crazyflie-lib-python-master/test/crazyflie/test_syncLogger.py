@@ -50,8 +50,7 @@ class SyncLoggerTest(unittest.TestCase):
         self.log_config_mock2.data_received_cb = Caller()
 
         self.sut = SyncLogger(self.cf_mock, self.log_config_mock)
-        self.sut_multi = SyncLogger(
-            self.cf_mock, [self.log_config_mock, self.log_config_mock2])
+        self.sut_multi = SyncLogger(self.cf_mock, [self.log_config_mock, self.log_config_mock2])
 
     def test_that_log_configuration_is_added_on_connect(self):
         # Fixture
@@ -69,10 +68,7 @@ class SyncLoggerTest(unittest.TestCase):
         self.sut_multi.connect()
 
         # Assert
-        self.log_mock.add_config.assert_has_calls([
-            call(self.log_config_mock),
-            call(self.log_config_mock2)
-        ])
+        self.log_mock.add_config.assert_has_calls([call(self.log_config_mock), call(self.log_config_mock2)])
 
     def test_that_logging_is_started_on_connect(self):
         # Fixture
@@ -112,8 +108,7 @@ class SyncLoggerTest(unittest.TestCase):
 
         # Assert
         self.assertEqual(0, len(self.cf_mock.disconnected.callbacks))
-        self.assertEqual(0,
-                         len(self.log_config_mock.data_received_cb.callbacks))
+        self.assertEqual(0, len(self.log_config_mock.data_received_cb.callbacks))
 
     def test_that_log_config_is_stopped_on_disconnect(self):
         # Fixture
@@ -144,10 +139,8 @@ class SyncLoggerTest(unittest.TestCase):
         # Fixture
         self.sut.connect()
 
-        expected = ('Some ts', 'Some data', 'Some logblock')
-        AsyncCallbackCaller(cb=self.log_config_mock.data_received_cb,
-                            args=[expected[0], expected[1], expected[2]]
-                            ).trigger()
+        expected = ("Some ts", "Some data", "Some logblock")
+        AsyncCallbackCaller(cb=self.log_config_mock.data_received_cb, args=[expected[0], expected[1], expected[2]]).trigger()
 
         # Test
         actual = None
@@ -202,7 +195,7 @@ class SyncLoggerTest(unittest.TestCase):
         # Fixture
 
         # Test
-        with (SyncLogger(self.cf_mock, self.log_config_mock)) as sut:
+        with SyncLogger(self.cf_mock, self.log_config_mock) as sut:
             # Assert
             self.assertTrue(sut.is_connected())
 
@@ -243,9 +236,7 @@ class SyncLoggerTest(unittest.TestCase):
         self.sut.connect()
 
         # Test
-        AsyncCallbackCaller(cb=self.cf_mock.disconnected,
-                            args=['Some uri']
-                            ).call_and_wait()
+        AsyncCallbackCaller(cb=self.cf_mock.disconnected, args=["Some uri"]).call_and_wait()
 
         # Assert
         self.assertFalse(self.sut.is_connected())
@@ -257,10 +248,7 @@ class SyncLoggerTest(unittest.TestCase):
         # Note this is not foolproof, the disconnected callback may be called
         # before we are waiting on data. It will raise the same exception
         # though and will pass
-        AsyncCallbackCaller(cb=self.cf_mock.disconnected,
-                            delay=0.5,
-                            args=['Some uri']
-                            ).trigger()
+        AsyncCallbackCaller(cb=self.cf_mock.disconnected, delay=0.5, args=["Some uri"]).trigger()
 
         # Test
         # Assert
