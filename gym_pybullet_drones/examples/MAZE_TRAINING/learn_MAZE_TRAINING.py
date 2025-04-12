@@ -89,7 +89,8 @@ DEFAULT_EPISODE_LEN_SEC = 5 * 60  # 15 * 60
 DEFAULT_PUSHBACK_ACTIVE = False
 DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
-NumberOfInterationsTillNextCheckpoint = 250000  # Anzahl Steps, bis ein Modell als .zip gespeichert wird
+NumberOfInterationsTillNextCheckpoint = 100000  # Anzahl Steps, bis ein Modell als .zip gespeichert wird
+
 DEFAULT_TRAIN_TIMESTEPS = Ziel_Training_TIME_In_Simulation * DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULF_NUMBER_LAST_ACTIONS = 80
 DEFAULT_VelocityScale = 0.5
@@ -113,12 +114,12 @@ print(f"type of DEFAULT_List_Start_PositionsToUse is {type(DEFAULT_List_Start_Po
 DEFAULT_MaxRoundsOnOneMaze = 6  # nach wie vielen Schritten wird ein neues maze gewählt # NOTE - Verändert nichts
 DEFAULT_MaxRoundsSameStartingPositions = 2
 DEFAULT_collision_penalty_terminated = -100  # mit -10 Trainiert SAC gut, bleibt aber noch ca. 50 mal an der Wand hängen--
-DEFAULT_Terminated_Wall_Distance = 0.1  # worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25;; WAR ORIGINAL ALEX BEI =0,15!!
+DEFAULT_Terminated_Wall_Distance = 0.15  # worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25
+DEFAULT_no_collision_reward = 0.5  # nur bei R5 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
 
-
-###############################################################################################
-########################MODEL-&Umbgebungs-SETTINGS##############################################
-###############################################################################################
+# R7 - Negative Reward Map Settings
+DEFAULT_Punishment_for_Walls = 8
+DEFAULT_Influence_of_Walls = 4
 
 #####################################MODEL_VERSION###########################
 MODEL_VERSION = "M2"
@@ -131,7 +132,7 @@ MODEL_VERSION = "M2"
 - M5:   DQN_NN_MultiInputPolicy mit fullyConnectLayer
 - M6:   SAC
 """
-MODEL_VERSION = "M1"
+MODEL_VERSION = "M3"
 
 #####################################REWARD_VERSION###########################
 REWARD_VERSION = "R6"
@@ -729,6 +730,7 @@ def run(
                         "MlpPolicy",
                         train_env,
                         verbose=1,
+                        gamma=0.995,  # Discount factor: how strongly future rewards are discounted (high value -> more future rewards)
                         # Learning-Rate 0,0002 zu gering -> auf 0.0004 erhöht -> auf 0.0005 erhöht --> auf 0.0004 reduziert, da die Policy zu stark angepasst wurde, obwohl es schon 5s am Ziel war..
                     )
 
