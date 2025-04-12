@@ -27,23 +27,27 @@ def _preprocessAction(self, action):
 
         match self.ACTION_SPACE_VERSION:
             case "A2" | "A3":
-                Calculate_new_yaw = self.INIT_RPYS[0, 2]  # wenn Drehung nicht in der ActionSpace ist , soll die Drohne nicht verdreht werden!
-
+                # Keine Drehung zulassen, Yaw bleibt konstant
+                Calculate_new_yaw = self.INIT_RPYS[0, 2]  # Initiale Yaw-Ausrichtung
+                cur_ang_vel = np.array([0, 0, 0])  # Keine Drehgeschwindigkeit
             case "A1":
                 # NOTE - neu hinzuegefügt, dass die Drohne sich auch drehen kann
+                # Drehung zulassen
                 current_yaw = state[9]
                 change_value_yaw = action[k, 4]
                 Calculate_new_yaw = current_yaw + change_value_yaw
+                cur_ang_vel = state[13:16]  # Aktuelle Drehgeschwindigkeit
 
+        #### Compute Control #######################################
         temp, _, _ = self.ctrl[k].computeControl(
             control_timestep=self.CTRL_TIMESTEP,
             cur_pos=state[0:3],
             cur_quat=state[3:7],
             cur_vel=state[10:13],
-            cur_ang_vel=state[13:16],
-            target_pos=np.array([state[0], state[1], 0.5]),  # same as the current position on X, and same on y (not as in fly to wall scenario) and z = 0.5
-            target_rpy=np.array([0, 0, Calculate_new_yaw]),  # neue Yaw-Werte durch Drehung der Drohne
-            target_vel=self.SPEED_LIMIT * np.abs(target_v[3]) * v_unit_vector,  # target the desired velocity vector
+            cur_ang_vel=cur_ang_vel,  # Dynamisch basierend auf Action Space
+            target_pos=np.array([state[0], state[1], 0.5]),  # Zielposition
+            target_rpy=np.array([0, 0, Calculate_new_yaw]),  # Zielausrichtung
+            target_vel=self.SPEED_LIMIT * np.abs(target_v[3]) * v_unit_vector,  # Zielgeschwindigkeit
         )
         rpm[k, :] = temp
     return rpm
