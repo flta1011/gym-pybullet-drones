@@ -85,10 +85,10 @@ class SimpleSlam:
         grid_x, grid_y = self.world_to_grid(x, y)
 
         # FALLBACK für Errror "index 210 is out of bounds for axis 0 with size 180"
-        if grid_x > self.grid_size:
-            grid_x = self.grid_size
-        if grid_y > self.grid_size:
-            grid_y = self.grid_size
+        if grid_x >= self.grid_size:
+            grid_x = self.grid_size - 1
+        if grid_y >= self.grid_size:
+            grid_y = self.grid_size - 1
         # Fallback für Cases < 0 (sollten eigentlich nie auftreten)
         if grid_x < 0:
             grid_x = 0
