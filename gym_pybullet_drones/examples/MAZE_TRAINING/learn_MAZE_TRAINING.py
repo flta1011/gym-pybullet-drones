@@ -44,7 +44,7 @@ from gym_pybullet_drones.utils.utils import str2bool, sync
 #####################################################################################################
 
 ####### TRAINING-MODE #######
-Training_Mode = "Test"  # "Training" oder "Test"
+Training_Mode = "Training"  # "Training" oder "Test"
 GUI_Mode = "Train"  # "Train" oder "Test" oder "NoGUI"
 
 ####### GUI-SETTINGS (u.a. Debug-GUI) #######
@@ -59,13 +59,15 @@ HyperparameterSetDescription = "FT:#Neue Hyperparameter-Sets, weil mit dem Absta
 
 ###### Verwendung von gespeicherten Hyperparameter-Sets #######
 DEFAULT_USE_SAVED_HYPERPARAMETER_SET = True
-HyperparameterSetIDtoLoad = "SET_20250410-011939"
+# HyperparameterSetIDtoLoad = "SET_20250410-011939"
 # SET_20250409-233159 = am 9.4.25 besprochenen Hyperparameter-Set, mit dem Alex mit DQN erste gute Ergebnisse erzielt hat
 # SET_20250410-011939 = Belohnung für nicht Kollision auf 0,75 reduziert (vorher 1)
+# For Testing:
+HyperparameterSetIDtoLoad = "SET_20250410-011939_TEST_WITH_ADOPTED_MAZES"
 
 
 ####### Verwendung von Pretrained-Modellen #######
-DEFAULT_USE_PRETRAINED_MODEL = True
+DEFAULT_USE_PRETRAINED_MODEL = False
 # DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/results/durchgelaufen-DQN/final_model.zip'
 # DEFAULT_PRETRAINED_MODEL_PATH = "/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/results/save-03.07.2025_02.23.46/best_model.zip"
 DEFAULT_PRETRAINED_MODEL_PATH = (
@@ -73,6 +75,9 @@ DEFAULT_PRETRAINED_MODEL_PATH = (
 )
 DEFAULT_PRETRAINED_MODEL_PATH = (
     "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M5_R6_O9_A2_TR1_T1_20250411-180656/save-04.11.2025_18.06.56/final_model.zip"
+)
+DEFAULT_PRETRAINED_MODEL_PATH = (
+    "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M5_R6_O9_A2_TR1_T1_20250412-011854/save-04.12.2025_01.18.54/final_model.zip"
 )
 
 ###############################################################################
@@ -424,8 +429,12 @@ def load_hyperparameter_set(csv_file_path, set_id):
                         try:
                             if value == "True":
                                 params[key] = True
+                                globals()[key] = True
+                                print(f"Setting {key} = True")
                             elif value == "False":
                                 params[key] = False
+                                globals()[key] = False
+                                print(f"Setting {key} = False")
                             elif value.startswith("(") and value.endswith(")"):
                                 # Convert tuple string to tuple of integers
                                 num_str = value.strip("()").strip()
@@ -434,6 +443,8 @@ def load_hyperparameter_set(csv_file_path, set_id):
                                     params[key] = tuple(nums)
                                 else:
                                     params[key] = tuple()
+                                globals()[key] = params[key]
+                                print(f"Setting {key} = {params[key]}")
                             else:
                                 # Try converting to float first
                                 try:
@@ -441,11 +452,17 @@ def load_hyperparameter_set(csv_file_path, set_id):
                                     # If it's a whole number, convert to int
                                     if params[key].is_integer():
                                         params[key] = int(params[key])
+                                    globals()[key] = params[key]
+                                    print(f"Setting {key} = {params[key]}")
                                 except ValueError:
                                     params[key] = value
+                                    globals()[key] = value
+                                    print(f"Setting {key} = {params[key]}")
                         except Exception as e:
                             print(f"Warning: Could not convert {key}={value}, using as string. Error: {str(e)}")
                             params[key] = value
+                            globals()[key] = value
+                            print(f"Setting {key} = {params[key]}")
 
                     print(f"Successfully loaded hyperparameter set {set_id}")
                     return params
@@ -830,7 +847,7 @@ def run(
                         # batch_size=32,
                         seed=42,
                         buffer_size=500000,
-                        gamma=0.95,
+                        gamma=0.95,  # reduizert von 0.99 auf 0.95, nun neuer Test mit Gamma =0.9
                     )  # Reduced from 1,000,000 to 10,000 nochmal reduziert auf 5000 da zu wenig speicher
             case "M6":  # M6: SAC
                 if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
@@ -1045,10 +1062,10 @@ def run(
             seed=0,
         )
 
-        wrapped_train_env = model.get_env()
+        wrapped_eval_env = model.get_env()
         # print(f"Type of wrapped training environment: {type(wrapped_train_env)}")
         # Apply the same wrapper to eval_env
-        if isinstance(wrapped_train_env, VecTransposeImage):
+        if isinstance(wrapped_eval_env, VecTransposeImage):
             eval_env = VecTransposeImage(eval_env)
 
         # logger = Logger(logging_freq_hz=int(test_env.CTRL_FREQ), num_drones=DEFAULT_AGENTS if multiagent else 1, output_folder=output_folder, colab=colab)
