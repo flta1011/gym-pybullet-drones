@@ -89,7 +89,7 @@ DEFAULT_EPISODE_LEN_SEC = 5 * 60  # 15 * 60
 DEFAULT_PUSHBACK_ACTIVE = False
 DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
-NumberOfInterationsTillNextCheckpoint = 100000  # Anzahl Steps, bis ein Modell als .zip gespeichert wird
+NumberOfInterationsTillNextCheckpoint = 60000  # Anzahl Steps, bis ein Modell als .zip gespeichert wird
 
 DEFAULT_TRAIN_TIMESTEPS = Ziel_Training_TIME_In_Simulation * DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULF_NUMBER_LAST_ACTIONS = 80
@@ -115,7 +115,7 @@ DEFAULT_MaxRoundsOnOneMaze = 6  # nach wie vielen Schritten wird ein neues maze 
 DEFAULT_MaxRoundsSameStartingPositions = 2
 DEFAULT_collision_penalty_terminated = -100  # mit -10 Trainiert SAC gut, bleibt aber noch ca. 50 mal an der Wand hängen--
 DEFAULT_Terminated_Wall_Distance = 0.15  # worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25
-DEFAULT_no_collision_reward = 0.5  # nur bei R5 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
+DEFAULT_no_collision_reward = 0.4  # nur bei R5 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
 
 # R7 - Negative Reward Map Settings
 DEFAULT_Punishment_for_Walls = 8
