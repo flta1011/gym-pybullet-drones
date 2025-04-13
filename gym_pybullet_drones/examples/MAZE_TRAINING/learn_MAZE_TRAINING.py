@@ -97,7 +97,7 @@ DEFAULT_EPISODE_LEN_SEC = 5 * 60  # 15 * 60
 DEFAULT_PUSHBACK_ACTIVE = False
 DEFAULT_EVAL_FREQ = 5 * 1e4
 DEFAULT_EVAL_EPISODES = 1
-NumberOfInterationsTillNextCheckpoint = 60000  # Anzahl Steps, bis ein Modell als .zip gespeichert wird
+NumberOfInterationsTillNextCheckpoint = 250000  # Anzahl Steps, bis ein Modell als .zip gespeichert wird
 
 DEFAULT_TRAIN_TIMESTEPS = Ziel_Training_TIME_In_Simulation * DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 DEFAULF_NUMBER_LAST_ACTIONS = 80
@@ -139,7 +139,7 @@ MODEL_VERSION = "M5"
 - M5:   DQN_NN_MultiInputPolicy mit fullyConnectLayer
 - M6:   SAC
 """
-MODEL_VERSION = "M3"
+
 
 #####################################REWARD_VERSION###########################
 REWARD_VERSION = "R6"
@@ -153,7 +153,7 @@ REWARD_VERSION = "R6"
 - R6:   R5 mit dem Zusatz, dass wenn die Drohne nicht zu nah an der Wand ist, gibt es einen definierten Bonus (Anstatt nur Peitsche jetzt Zuckerbrot und Peitsche)
 - R7:   Statt Heatmap nun Bestrafungsmap (lineare Bestrafung - Abstand zur Wand), Truncated bei Wandberührung, Abzug für jeden Step
 """
-REWARD_VERSION = "R6"
+
 
 #####################################OBSERVATION_TYPE###########################
 OBSERVATION_TYPE = "O9"
@@ -168,9 +168,9 @@ OBSERVATION_TYPE = "O9"
 - O7: cropped Slam-image, XY Position, Yaw (sin,cos), last actions (n Stück), raycasts
 - O8: X-Pos,Y-Pos, 4-raycast_readings, 4-interest_values, n-last_clipped_actions
 - O9: cropped Slam-image, x-Pos, y-Pos, 4-racast_readings, 4-interest_values, n-last_clipped_actions
- !!!Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen (BaseAviary_MAZE_TRAINING.py) erweitern!!!
+!!!Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen (BaseAviary_MAZE_TRAINING.py) erweitern!!!
 """
-OBSERVATION_TYPE = "O8"  # Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen erweitern!!!
+
 
 #####################################ACTION_TYPE###########################
 ACTION_TYPE = "A2"
@@ -203,7 +203,6 @@ TERMINATED_TYPE = "T1"
 ##############################################################################
 
 DEFAULT_RECORD_VIDEO = False
-DEFAULT_OUTPUT_FOLDER = "results"
 DEFAULT_OUTPUT_FOLDER = "results"
 DEFAULT_COLAB = False
 DEFAULT_OBS = ObservationType("kin")  # 'kin' or 'rgb'
