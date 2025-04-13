@@ -1,0 +1,1958 @@
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_REWARD_FOR_NEW_FIELD,DEFAULT_Punishment_for_Step,DEFAULT_EVAL_FREQ,DEFAULT_EVAL_EPISODES,DEFAULT_TRAIN_TIMESTEPS,DEFAULT_TARGET_REWARD,DEFAULT_NUMBER_LAST_ACTIONS,DEFAULT_PYB_FREQ,DEFAULT_CTRL_FREQ,DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_Multiplier_Collision_Penalty,DEFAULT_VelocityScale,DEFAULT_explore_Matrix_Size,DEFAULT_collision_penalty_terminated,DEFAULT_Terminated_Wall_Distance,DEFAULT_no_collision_reward,DEFAULT_Punishment_for_Walls,DEFAULT_Influence_of_Walls,DEFAULT_USE_PRETRAINED_MODEL,DEFAULT_PRETRAINED_MODEL_PATH,DEFAULT_List_MazesToUse,DEFAULT_List_Start_PositionsToUse,DEFAULT_MaxRoundsOnOneMaze,DEFAULT_MaxRoundsSameStartingPositions,DEFAULT_USE_SAVED_HYPERPARAMETER_SET,HyperparameterSetIDtoLoad
+2,300,4,-0.5,50000,1,1080000,99999,20,100,50,2,300,2,0.5,5,-100,0.1,0.75,False,/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M5_R6_O9_A2_TR1_T1_20250411-180656/save-04.11.2025_18.06.56/final_model.zip,20,8,4,"(22, 23, 24, 25)","(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)",6,2,True,SET_20250410-011939
+
+Runde,Terminated,Truncated,Map-Abgedeckt,Wand berührungen,Summe Reward,Flugzeit der Runde,Maze_number,Start-Position,Uhrzeit Welt
+1,kein_Terminated,Zeit abgelaufen,0.13,255,-6438.25,300.5,22,3,20250412-011907
+2,kein_Terminated,Zeit abgelaufen,0.17,234,-7965.25,300.5,22,5,20250412-011918
+3,kein_Terminated,Zeit abgelaufen,0.17,277,-7775.75,300.5,22,5,20250412-011930
+4,kein_Terminated,Zeit abgelaufen,0.19,189,-2196.75,300.5,22,6,20250412-011941
+5,kein_Terminated,Zeit abgelaufen,0.24,202,-5421.25,300.5,22,6,20250412-011953
+6,kein_Terminated,Zeit abgelaufen,0.17,219,-4773.25,300.5,22,0,20250412-012005
+7,kein_Terminated,Zeit abgelaufen,0.16,253,-9781.25,300.5,25,5,20250412-012020
+8,kein_Terminated,Zeit abgelaufen,0.17,398,-14722.75,300.5,25,5,20250412-012034
+9,kein_Terminated,Zeit abgelaufen,0.21,263,-2229.5,300.5,25,8,20250412-012049
+10,kein_Terminated,Zeit abgelaufen,0.14,162,-812.25,300.5,25,8,20250412-012103
+11,kein_Terminated,Zeit abgelaufen,0.14,276,-6096.0,300.5,25,7,20250412-012117
+12,kein_Terminated,Zeit abgelaufen,0.13,331,-4414.5,300.5,25,7,20250412-012131
+13,kein_Terminated,Zeit abgelaufen,0.16,359,-8117.25,300.5,25,1,20250412-012145
+14,kein_Terminated,Zeit abgelaufen,0.11,299,-7370.75,300.5,25,7,20250412-012158
+15,kein_Terminated,Zeit abgelaufen,0.19,317,-6833.75,300.5,25,7,20250412-012212
+16,kein_Terminated,Zeit abgelaufen,0.18,327,-7079.25,300.5,25,7,20250412-012226
+17,kein_Terminated,Zeit abgelaufen,0.22,121,389.25,300.5,25,7,20250412-012240
+18,kein_Terminated,Zeit abgelaufen,0.06,433,-11126.0,300.5,25,4,20250412-012254
+19,kein_Terminated,Zeit abgelaufen,0.07,441,-12134.25,300.5,25,4,20250412-012308
+20,kein_Terminated,Zeit abgelaufen,0.01,602,-60521.0,300.5,25,3,20250412-012324
+21,kein_Terminated,Zeit abgelaufen,0.43,555,-44280.0,300.5,23,7,20250412-012339
+22,kein_Terminated,Zeit abgelaufen,0.55,211,566.5,300.5,23,7,20250412-012351
+23,kein_Terminated,Zeit abgelaufen,0.6,244,-1856.0,300.5,23,1,20250412-012403
+24,kein_Terminated,Zeit abgelaufen,0.4,288,-5182.0,300.5,23,1,20250412-012415
+25,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,383,-5886.5,297.0,23,8,20250412-012427
+26,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,23,8,20250412-012429
+27,kein_Terminated,Zeit abgelaufen,0.74,432,-14894.25,300.5,23,4,20250412-012442
+28,kein_Terminated,Zeit abgelaufen,0.06,595,-58361.75,300.5,23,8,20250412-012456
+29,kein_Terminated,Zeit abgelaufen,0.22,567,-49394.75,300.5,23,8,20250412-012510
+30,kein_Terminated,Zeit abgelaufen,0.33,265,-4663.5,300.5,23,4,20250412-012522
+31,kein_Terminated,Zeit abgelaufen,0.65,440,-17646.25,300.5,23,4,20250412-012534
+32,kein_Terminated,Zeit abgelaufen,0.63,392,-8931.5,300.5,23,5,20250412-012547
+33,kein_Terminated,Zeit abgelaufen,0.59,481,-28082.25,300.5,23,5,20250412-012559
+34,kein_Terminated,Zeit abgelaufen,0.72,490,-25906.5,300.5,23,1,20250412-012613
+35,kein_Terminated,Zeit abgelaufen,0.36,158,-628.5,300.5,23,0,20250412-012625
+36,kein_Terminated,Zeit abgelaufen,0.62,315,-4646.5,300.5,23,0,20250412-012637
+37,kein_Terminated,Zeit abgelaufen,0.36,543,-46393.0,300.5,23,2,20250412-012651
+38,kein_Terminated,Zeit abgelaufen,0.16,152,-1097.5,300.5,23,2,20250412-012703
+39,kein_Terminated,Zeit abgelaufen,0.42,262,-545.75,300.5,23,9,20250412-012715
+40,kein_Terminated,Zeit abgelaufen,0.31,102,1979.5,300.5,23,9,20250412-012727
+41,kein_Terminated,Zeit abgelaufen,0.46,177,155.75,300.5,23,4,20250412-012739
+42,kein_Terminated,Zeit abgelaufen,0.27,255,-3344.5,300.5,24,2,20250412-012751
+43,kein_Terminated,Zeit abgelaufen,0.39,304,-2828.0,300.5,24,2,20250412-012803
+44,kein_Terminated,Zeit abgelaufen,0.44,182,234.0,300.5,24,1,20250412-012815
+45,kein_Terminated,Zeit abgelaufen,0.67,265,1981.75,300.5,24,1,20250412-012828
+46,kein_Terminated,Zeit abgelaufen,0.42,209,-2044.25,300.5,24,3,20250412-012840
+47,kein_Terminated,Zeit abgelaufen,0.72,298,-1234.75,300.5,24,3,20250412-012852
+48,kein_Terminated,Zeit abgelaufen,0.35,392,-19628.75,300.5,24,1,20250412-012905
+49,kein_Terminated,Zeit abgelaufen,0.44,310,-5220.25,300.5,25,0,20250412-012919
+50,kein_Terminated,Zeit abgelaufen,0.43,340,-6863.5,300.5,25,0,20250412-012934
+51,kein_Terminated,Zeit abgelaufen,0.02,602,-60393.0,300.5,25,3,20250412-012951
+52,kein_Terminated,Zeit abgelaufen,0.01,602,-11858.75,300.5,25,3,20250412-013006
+53,kein_Terminated,Zeit abgelaufen,0.39,302,-2108.5,300.5,25,7,20250412-013020
+54,kein_Terminated,Zeit abgelaufen,0.45,402,-1570.75,300.5,25,7,20250412-013034
+55,kein_Terminated,Zeit abgelaufen,0.36,321,-2118.25,300.5,25,4,20250412-013048
+56,kein_Terminated,Zeit abgelaufen,0.21,180,-497.5,300.5,23,8,20250412-013101
+57,kein_Terminated,Zeit abgelaufen,0.29,288,-1000.75,300.5,23,8,20250412-013113
+58,kein_Terminated,Zeit abgelaufen,0.27,185,-865.75,300.5,23,3,20250412-013125
+59,kein_Terminated,Zeit abgelaufen,0.34,220,-1416.25,300.5,23,3,20250412-013137
+60,kein_Terminated,Zeit abgelaufen,0.22,130,29.5,300.5,23,4,20250412-013149
+61,kein_Terminated,Zeit abgelaufen,0.54,199,1211.75,300.5,23,4,20250412-013201
+62,kein_Terminated,Zeit abgelaufen,0.46,300,-3829.5,300.5,23,3,20250412-013213
+63,kein_Terminated,Zeit abgelaufen,0.43,193,239.5,300.5,23,0,20250412-013226
+64,kein_Terminated,Zeit abgelaufen,0.35,283,-2731.5,300.5,23,0,20250412-013238
+65,kein_Terminated,Zeit abgelaufen,0.49,233,-355.0,300.5,23,9,20250412-013250
+66,kein_Terminated,Zeit abgelaufen,0.59,285,1356.75,300.5,23,9,20250412-013302
+67,kein_Terminated,Zeit abgelaufen,0.38,283,-4479.25,300.5,23,9,20250412-013314
+68,kein_Terminated,Zeit abgelaufen,0.52,286,-1453.5,300.5,23,9,20250412-013326
+69,kein_Terminated,Zeit abgelaufen,0.55,241,-824.0,300.5,23,3,20250412-013338
+70,kein_Terminated,Zeit abgelaufen,0.56,235,944.0,300.5,22,7,20250412-013350
+71,kein_Terminated,Zeit abgelaufen,0.51,244,-2146.75,300.5,22,7,20250412-013402
+72,kein_Terminated,Zeit abgelaufen,0.55,294,-2847.75,300.5,22,3,20250412-013414
+73,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,320,-767.5,300.0,22,3,20250412-013425
+74,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,2,20250412-013428
+75,kein_Terminated,Zeit abgelaufen,0.75,434,-17983.0,300.5,22,2,20250412-013440
+76,kein_Terminated,Zeit abgelaufen,0.45,549,-44326.25,300.5,22,8,20250412-013453
+77,kein_Terminated,Zeit abgelaufen,0.23,279,-8022.5,300.5,25,2,20250412-013508
+78,kein_Terminated,Zeit abgelaufen,0.16,446,-18449.75,300.5,25,2,20250412-013522
+79,kein_Terminated,Zeit abgelaufen,0.23,269,-2501.25,300.5,25,5,20250412-013536
+80,kein_Terminated,Zeit abgelaufen,0.11,377,-4799.25,300.5,25,5,20250412-013550
+81,kein_Terminated,Zeit abgelaufen,0.19,252,-5798.25,300.5,25,9,20250412-013604
+82,kein_Terminated,Zeit abgelaufen,0.2,277,-2885.25,300.5,25,9,20250412-013618
+83,kein_Terminated,Zeit abgelaufen,0.14,438,-16335.75,300.5,25,2,20250412-013633
+84,kein_Terminated,Zeit abgelaufen,0.18,357,-8050.75,300.5,24,5,20250412-013645
+85,kein_Terminated,Zeit abgelaufen,0.38,166,1485.0,300.5,24,5,20250412-013657
+1,kein_Terminated,Zeit abgelaufen,0.05,7,-17690.0,300.5,22,5,20250412-013712
+86,kein_Terminated,Zeit abgelaufen,0.33,322,-2056.0,300.5,24,9,20250412-013721
+87,kein_Terminated,Zeit abgelaufen,0.4,297,-1414.25,300.5,24,9,20250412-013733
+88,kein_Terminated,Zeit abgelaufen,0.14,389,-12205.75,300.5,24,5,20250412-013745
+89,kein_Terminated,Zeit abgelaufen,0.36,233,-1640.0,300.5,24,5,20250412-013758
+90,kein_Terminated,Zeit abgelaufen,0.17,332,-6796.25,300.5,24,7,20250412-013810
+91,kein_Terminated,Zeit abgelaufen,0.37,296,-4248.25,300.5,22,2,20250412-013822
+92,kein_Terminated,Zeit abgelaufen,0.33,235,188.5,300.5,22,2,20250412-013834
+93,kein_Terminated,Zeit abgelaufen,0.33,291,-666.25,300.5,22,3,20250412-013845
+94,kein_Terminated,Zeit abgelaufen,0.44,243,2112.25,300.5,22,3,20250412-013857
+95,kein_Terminated,Zeit abgelaufen,0.42,180,365.0,300.5,22,7,20250412-013909
+96,kein_Terminated,Zeit abgelaufen,0.27,312,-8143.75,300.5,22,7,20250412-013921
+97,kein_Terminated,Zeit abgelaufen,0.31,243,-3364.25,300.5,22,6,20250412-013933
+98,kein_Terminated,Zeit abgelaufen,0.33,239,-556.75,300.5,24,0,20250412-013945
+99,kein_Terminated,Zeit abgelaufen,0.33,260,-3177.0,300.5,24,0,20250412-013958
+100,kein_Terminated,Zeit abgelaufen,0.31,393,-7736.5,300.5,24,9,20250412-014010
+101,kein_Terminated,Zeit abgelaufen,0.4,333,-4114.5,300.5,24,9,20250412-014022
+102,kein_Terminated,Zeit abgelaufen,0.15,292,-3143.75,300.5,24,6,20250412-014035
+103,kein_Terminated,Zeit abgelaufen,0.39,228,2157.5,300.5,24,6,20250412-014047
+104,kein_Terminated,Zeit abgelaufen,0.36,290,112.75,300.5,24,8,20250412-014059
+105,kein_Terminated,Zeit abgelaufen,0.28,305,-3309.25,300.5,24,3,20250412-014111
+106,kein_Terminated,Zeit abgelaufen,0.42,245,220.25,300.5,24,3,20250412-014124
+107,kein_Terminated,Zeit abgelaufen,0.38,283,-2443.5,300.5,24,3,20250412-014136
+108,kein_Terminated,Zeit abgelaufen,0.37,225,188.75,300.5,24,3,20250412-014149
+109,kein_Terminated,Zeit abgelaufen,0.37,224,2800.25,300.5,24,9,20250412-014201
+110,kein_Terminated,Zeit abgelaufen,0.39,298,-207.75,300.5,24,9,20250412-014214
+111,kein_Terminated,Zeit abgelaufen,0.42,298,-1008.75,300.5,24,3,20250412-014226
+112,kein_Terminated,Zeit abgelaufen,0.26,384,-6362.25,300.5,22,2,20250412-014238
+113,kein_Terminated,Zeit abgelaufen,0.38,286,538.25,300.5,22,2,20250412-014250
+114,kein_Terminated,Zeit abgelaufen,0.34,240,-18.5,300.5,22,9,20250412-014301
+115,kein_Terminated,Zeit abgelaufen,0.45,253,2752.0,300.5,22,9,20250412-014313
+116,kein_Terminated,Zeit abgelaufen,0.5,201,744.5,300.5,22,4,20250412-014325
+117,kein_Terminated,Zeit abgelaufen,0.34,338,-5124.75,300.5,22,4,20250412-014337
+118,kein_Terminated,Zeit abgelaufen,0.41,242,-2314.5,300.5,22,2,20250412-014349
+119,kein_Terminated,Zeit abgelaufen,0.39,242,803.0,300.5,22,3,20250412-014401
+120,kein_Terminated,Zeit abgelaufen,0.43,131,3906.5,300.5,22,3,20250412-014413
+121,kein_Terminated,Zeit abgelaufen,0.35,188,1008.25,300.5,22,1,20250412-014425
+122,kein_Terminated,Zeit abgelaufen,0.51,190,1661.75,300.5,22,1,20250412-014437
+123,kein_Terminated,Zeit abgelaufen,0.5,276,2065.5,300.5,22,9,20250412-014449
+124,kein_Terminated,Zeit abgelaufen,0.38,297,1525.75,300.5,22,9,20250412-014501
+125,kein_Terminated,Zeit abgelaufen,0.4,204,330.5,300.5,22,5,20250412-014512
+126,kein_Terminated,Zeit abgelaufen,0.51,269,-457.25,300.5,24,9,20250412-014525
+127,kein_Terminated,Zeit abgelaufen,0.39,377,-5302.0,300.5,24,9,20250412-014537
+128,kein_Terminated,Zeit abgelaufen,0.44,218,-3795.25,300.5,24,0,20250412-014550
+129,kein_Terminated,Zeit abgelaufen,0.43,318,-5692.75,300.5,24,0,20250412-014602
+130,kein_Terminated,Zeit abgelaufen,0.44,265,-4952.25,300.5,24,0,20250412-014615
+131,kein_Terminated,Zeit abgelaufen,0.33,292,-3172.25,300.5,24,0,20250412-014627
+132,kein_Terminated,Zeit abgelaufen,0.38,275,-94.25,300.5,24,1,20250412-014640
+133,kein_Terminated,Zeit abgelaufen,0.35,305,1045.75,300.5,25,2,20250412-014654
+134,kein_Terminated,Zeit abgelaufen,0.09,523,-22417.0,300.5,25,2,20250412-014709
+135,kein_Terminated,Zeit abgelaufen,0.39,302,-1371.25,300.5,25,5,20250412-014723
+136,kein_Terminated,Zeit abgelaufen,0.11,322,-3562.25,300.5,25,5,20250412-014738
+137,kein_Terminated,Zeit abgelaufen,0.2,391,-6238.0,300.5,25,4,20250412-014752
+138,kein_Terminated,Zeit abgelaufen,0.2,402,-7733.25,300.5,25,4,20250412-014806
+139,kein_Terminated,Zeit abgelaufen,0.49,353,698.75,300.5,25,6,20250412-014821
+140,kein_Terminated,Zeit abgelaufen,0.57,277,-640.75,300.5,22,9,20250412-014833
+141,kein_Terminated,Zeit abgelaufen,0.54,270,4371.75,300.5,22,9,20250412-014845
+142,kein_Terminated,Zeit abgelaufen,0.54,173,3465.0,300.5,22,0,20250412-014857
+143,kein_Terminated,Zeit abgelaufen,0.52,154,5135.25,300.5,22,0,20250412-014909
+144,kein_Terminated,Zeit abgelaufen,0.4,327,-2796.75,300.5,22,2,20250412-014921
+145,kein_Terminated,Zeit abgelaufen,0.26,421,-1320.75,300.5,22,2,20250412-014933
+146,kein_Terminated,Zeit abgelaufen,0.52,303,311.25,300.5,22,9,20250412-014945
+147,kein_Terminated,Zeit abgelaufen,0.43,334,-6047.75,300.5,24,2,20250412-014957
+148,kein_Terminated,Zeit abgelaufen,0.48,301,666.0,300.5,24,2,20250412-015010
+149,kein_Terminated,Zeit abgelaufen,0.35,330,-120.0,300.5,24,6,20250412-015022
+150,kein_Terminated,Zeit abgelaufen,0.34,368,-3024.25,300.5,24,6,20250412-015035
+151,kein_Terminated,Zeit abgelaufen,0.24,307,-3623.75,300.5,24,2,20250412-015048
+152,kein_Terminated,Zeit abgelaufen,0.43,279,1415.75,300.5,24,2,20250412-015100
+153,kein_Terminated,Zeit abgelaufen,0.32,324,-7056.75,300.5,24,5,20250412-015113
+154,kein_Terminated,Zeit abgelaufen,0.33,440,-24229.0,300.5,23,7,20250412-015125
+155,kein_Terminated,Zeit abgelaufen,0.38,293,-211.0,300.5,23,7,20250412-015138
+156,kein_Terminated,Zeit abgelaufen,0.27,294,-2147.5,300.5,23,6,20250412-015150
+157,kein_Terminated,Zeit abgelaufen,0.35,372,-7615.5,300.5,23,6,20250412-015203
+158,kein_Terminated,Zeit abgelaufen,0.3,327,-4632.5,300.5,23,1,20250412-015215
+159,kein_Terminated,Zeit abgelaufen,0.46,280,-9891.25,300.5,23,1,20250412-015228
+160,kein_Terminated,Zeit abgelaufen,0.47,184,1747.0,300.5,23,2,20250412-015240
+161,kein_Terminated,Zeit abgelaufen,0.42,211,2456.75,300.5,22,5,20250412-015252
+162,kein_Terminated,Zeit abgelaufen,0.5,176,4294.75,300.5,22,5,20250412-015304
+163,kein_Terminated,Zeit abgelaufen,0.44,175,3929.75,300.5,22,5,20250412-015316
+164,kein_Terminated,Zeit abgelaufen,0.45,285,2461.75,300.5,22,5,20250412-015328
+165,kein_Terminated,Zeit abgelaufen,0.59,228,2347.5,300.5,22,2,20250412-015340
+166,kein_Terminated,Zeit abgelaufen,0.4,212,1487.5,300.5,22,2,20250412-015352
+167,kein_Terminated,Zeit abgelaufen,0.45,316,-157.75,300.5,22,3,20250412-015405
+168,kein_Terminated,Zeit abgelaufen,0.58,214,5234.0,300.5,22,7,20250412-015417
+2,kein_Terminated,Zeit abgelaufen,0.15,553,1821.75,300.5,22,1,20250412-015432
+169,kein_Terminated,Zeit abgelaufen,0.4,288,931.0,300.5,22,7,20250412-015440
+170,kein_Terminated,Zeit abgelaufen,0.38,190,2427.75,300.5,22,7,20250412-015452
+171,kein_Terminated,Zeit abgelaufen,0.58,253,6696.5,300.5,22,7,20250412-015504
+172,kein_Terminated,Zeit abgelaufen,0.49,284,3715.0,300.5,22,9,20250412-015517
+173,kein_Terminated,Zeit abgelaufen,0.4,334,769.5,300.5,22,9,20250412-015529
+174,kein_Terminated,Zeit abgelaufen,0.46,303,2323.5,300.5,22,2,20250412-015541
+175,kein_Terminated,Zeit abgelaufen,0.35,244,867.5,300.5,24,6,20250412-015553
+176,kein_Terminated,Zeit abgelaufen,0.37,269,-13799.5,300.5,24,6,20250412-015606
+177,kein_Terminated,Zeit abgelaufen,0.48,234,1620.75,300.5,24,4,20250412-015619
+178,kein_Terminated,Zeit abgelaufen,0.24,317,-2233.25,300.5,24,4,20250412-015631
+179,kein_Terminated,Zeit abgelaufen,0.27,266,-1619.0,300.5,24,1,20250412-015644
+180,kein_Terminated,Zeit abgelaufen,0.23,318,-314.25,300.5,24,1,20250412-015657
+181,kein_Terminated,Zeit abgelaufen,0.2,346,1675.75,300.5,24,4,20250412-015709
+182,kein_Terminated,Zeit abgelaufen,0.37,104,2402.75,300.5,25,4,20250412-015724
+183,kein_Terminated,Zeit abgelaufen,0.47,266,-1435.5,300.5,25,4,20250412-015738
+184,kein_Terminated,Zeit abgelaufen,0.32,303,2681.5,300.5,25,1,20250412-015753
+185,kein_Terminated,Zeit abgelaufen,0.27,258,-3968.25,300.5,25,1,20250412-015807
+186,kein_Terminated,Zeit abgelaufen,0.31,349,3254.0,300.5,25,9,20250412-015822
+187,kein_Terminated,Zeit abgelaufen,0.23,280,2064.5,300.5,25,9,20250412-015836
+188,kein_Terminated,Zeit abgelaufen,0.31,306,102.75,300.5,25,7,20250412-015851
+189,kein_Terminated,Zeit abgelaufen,0.44,286,-531.25,300.5,24,7,20250412-015904
+190,kein_Terminated,Zeit abgelaufen,0.32,410,-31132.0,300.5,24,7,20250412-015917
+191,kein_Terminated,Zeit abgelaufen,0.34,236,1807.75,300.5,24,1,20250412-015929
+192,kein_Terminated,Zeit abgelaufen,0.51,120,4669.0,300.5,24,1,20250412-015942
+193,kein_Terminated,Zeit abgelaufen,0.47,321,-10988.25,300.5,24,7,20250412-015955
+194,kein_Terminated,Zeit abgelaufen,0.42,363,-18213.0,300.5,24,7,20250412-020007
+195,kein_Terminated,Zeit abgelaufen,0.21,241,-2069.5,300.5,24,2,20250412-020020
+196,kein_Terminated,Zeit abgelaufen,0.38,241,2089.5,300.5,24,9,20250412-020033
+197,kein_Terminated,Zeit abgelaufen,0.36,297,-28.0,300.5,24,9,20250412-020045
+198,kein_Terminated,Zeit abgelaufen,0.33,223,-283.25,300.5,24,2,20250412-020058
+199,kein_Terminated,Zeit abgelaufen,0.37,297,954.75,300.5,24,2,20250412-020110
+200,kein_Terminated,Zeit abgelaufen,0.51,187,3081.0,300.5,24,6,20250412-020123
+201,kein_Terminated,Zeit abgelaufen,0.35,233,3052.0,300.5,24,6,20250412-020136
+202,kein_Terminated,Zeit abgelaufen,0.39,328,811.75,300.5,24,8,20250412-020148
+203,kein_Terminated,Zeit abgelaufen,0.48,307,-805.25,300.5,22,1,20250412-020201
+204,kein_Terminated,Zeit abgelaufen,0.42,104,5269.75,300.5,22,1,20250412-020213
+205,kein_Terminated,Zeit abgelaufen,0.45,322,-73.0,300.5,22,7,20250412-020225
+206,kein_Terminated,Zeit abgelaufen,0.49,233,5601.25,300.5,22,7,20250412-020237
+207,kein_Terminated,Zeit abgelaufen,0.6,219,5151.75,300.5,22,9,20250412-020249
+208,kein_Terminated,Zeit abgelaufen,0.45,219,5194.0,300.5,22,9,20250412-020301
+209,kein_Terminated,Zeit abgelaufen,0.39,98,3072.25,300.5,22,8,20250412-020313
+210,kein_Terminated,Zeit abgelaufen,0.54,319,-6901.0,300.5,22,2,20250412-020326
+211,kein_Terminated,Zeit abgelaufen,0.38,246,1202.75,300.5,22,2,20250412-020338
+212,kein_Terminated,Zeit abgelaufen,0.53,282,3219.5,300.5,22,4,20250412-020350
+213,kein_Terminated,Zeit abgelaufen,0.57,155,5738.5,300.5,22,4,20250412-020402
+214,kein_Terminated,Zeit abgelaufen,0.45,108,5137.25,300.5,22,5,20250412-020414
+215,kein_Terminated,Zeit abgelaufen,0.47,364,513.25,300.5,22,5,20250412-020427
+216,kein_Terminated,Zeit abgelaufen,0.44,180,3506.0,300.5,22,5,20250412-020439
+217,kein_Terminated,Zeit abgelaufen,0.33,364,651.5,300.5,24,0,20250412-020451
+218,kein_Terminated,Zeit abgelaufen,0.49,188,4348.25,300.5,24,0,20250412-020504
+219,kein_Terminated,Zeit abgelaufen,0.38,181,-2476.25,300.5,24,9,20250412-020517
+220,kein_Terminated,Zeit abgelaufen,0.38,236,2464.5,300.5,24,9,20250412-020530
+221,kein_Terminated,Zeit abgelaufen,0.34,106,2521.0,300.5,24,4,20250412-020542
+222,kein_Terminated,Zeit abgelaufen,0.45,139,5009.25,300.5,24,4,20250412-020555
+223,kein_Terminated,Zeit abgelaufen,0.47,261,969.0,300.5,24,7,20250412-020607
+224,kein_Terminated,Zeit abgelaufen,0.27,236,-208.5,300.5,23,2,20250412-020620
+225,kein_Terminated,Zeit abgelaufen,0.36,175,3651.0,300.5,23,2,20250412-020632
+226,kein_Terminated,Zeit abgelaufen,0.51,228,3443.25,300.5,23,1,20250412-020645
+227,kein_Terminated,Zeit abgelaufen,0.38,195,1082.75,300.5,23,1,20250412-020658
+228,kein_Terminated,Zeit abgelaufen,0.3,232,1598.0,300.5,23,0,20250412-020710
+229,kein_Terminated,Zeit abgelaufen,0.32,244,-3744.0,300.5,23,0,20250412-020723
+230,kein_Terminated,Zeit abgelaufen,0.39,190,1138.0,300.5,23,4,20250412-020735
+231,kein_Terminated,Zeit abgelaufen,0.14,379,-3602.0,300.5,23,9,20250412-020748
+232,kein_Terminated,Zeit abgelaufen,0.36,289,1853.5,300.5,23,9,20250412-020800
+233,kein_Terminated,Zeit abgelaufen,0.51,273,3858.25,300.5,23,5,20250412-020812
+234,kein_Terminated,Zeit abgelaufen,0.41,81,4582.0,300.5,23,5,20250412-020825
+235,kein_Terminated,Zeit abgelaufen,0.36,352,3151.25,300.5,23,9,20250412-020837
+236,kein_Terminated,Zeit abgelaufen,0.35,414,1415.25,300.5,23,9,20250412-020850
+237,kein_Terminated,Zeit abgelaufen,0.48,264,-2901.0,300.5,23,3,20250412-020902
+238,kein_Terminated,Zeit abgelaufen,0.27,427,364.75,300.5,25,6,20250412-020917
+239,kein_Terminated,Zeit abgelaufen,0.27,422,-1932.5,300.5,25,6,20250412-020931
+240,kein_Terminated,Zeit abgelaufen,0.24,417,-5802.75,300.5,25,1,20250412-020946
+241,kein_Terminated,Zeit abgelaufen,0.33,318,-1156.5,300.5,25,1,20250412-021000
+242,kein_Terminated,Zeit abgelaufen,0.01,602,146.5,300.5,25,3,20250412-021016
+243,kein_Terminated,Zeit abgelaufen,0.01,602,29.75,300.5,25,3,20250412-021031
+244,kein_Terminated,Zeit abgelaufen,0.42,261,-9168.0,300.5,25,7,20250412-021046
+245,kein_Terminated,Zeit abgelaufen,0.31,220,3128.5,300.5,23,1,20250412-021058
+246,kein_Terminated,Zeit abgelaufen,0.29,307,893.5,300.5,23,1,20250412-021111
+247,kein_Terminated,Zeit abgelaufen,0.37,287,2018.25,300.5,23,9,20250412-021123
+248,kein_Terminated,Zeit abgelaufen,0.42,301,2283.25,300.5,23,9,20250412-021135
+249,kein_Terminated,Zeit abgelaufen,0.33,224,1139.25,300.5,23,1,20250412-021148
+250,kein_Terminated,Zeit abgelaufen,0.53,308,3800.75,300.5,23,1,20250412-021200
+251,kein_Terminated,Zeit abgelaufen,0.36,230,-1551.25,300.5,23,8,20250412-021213
+3,kein_Terminated,Zeit abgelaufen,0.22,479,2483.5,300.5,22,1,20250412-021230
+252,kein_Terminated,Zeit abgelaufen,0.01,602,-60521.0,300.5,25,3,20250412-021241
+253,kein_Terminated,Zeit abgelaufen,0.01,602,45.75,300.5,25,3,20250412-021257
+254,kein_Terminated,Zeit abgelaufen,0.2,459,-12610.0,300.5,25,8,20250412-021311
+255,kein_Terminated,Zeit abgelaufen,0.21,343,619.5,300.5,25,8,20250412-021326
+256,kein_Terminated,Zeit abgelaufen,0.1,275,-3013.0,300.5,25,5,20250412-021340
+257,kein_Terminated,Zeit abgelaufen,0.1,234,-1796.0,300.5,25,5,20250412-021355
+258,kein_Terminated,Zeit abgelaufen,0.3,276,720.0,300.5,25,0,20250412-021409
+259,kein_Terminated,Zeit abgelaufen,0.32,307,-13539.25,300.5,25,0,20250412-021424
+260,kein_Terminated,Zeit abgelaufen,0.26,257,1268.25,300.5,25,0,20250412-021438
+261,kein_Terminated,Zeit abgelaufen,0.48,338,3670.0,300.5,25,2,20250412-021453
+262,kein_Terminated,Zeit abgelaufen,0.09,345,-2190.25,300.5,25,2,20250412-021507
+263,kein_Terminated,Zeit abgelaufen,0.01,602,-60489.0,300.5,25,3,20250412-021522
+264,kein_Terminated,Zeit abgelaufen,0.01,602,-60521.0,300.5,25,3,20250412-021540
+265,kein_Terminated,Zeit abgelaufen,0.14,391,-5140.5,300.5,25,0,20250412-021554
+266,kein_Terminated,Zeit abgelaufen,0.33,255,-2982.75,300.5,23,1,20250412-021607
+267,kein_Terminated,Zeit abgelaufen,0.49,197,3583.0,300.5,23,1,20250412-021619
+268,kein_Terminated,Zeit abgelaufen,0.3,172,449.0,300.5,23,1,20250412-021632
+269,kein_Terminated,Zeit abgelaufen,0.35,324,-4109.25,300.5,23,1,20250412-021644
+270,kein_Terminated,Zeit abgelaufen,0.53,232,2079.25,300.5,23,0,20250412-021657
+271,kein_Terminated,Zeit abgelaufen,0.58,168,2082.75,300.5,23,0,20250412-021709
+272,kein_Terminated,Zeit abgelaufen,0.56,326,-14011.0,300.5,23,2,20250412-021722
+273,kein_Terminated,Zeit abgelaufen,0.5,211,-537.25,300.5,24,6,20250412-021734
+274,kein_Terminated,Zeit abgelaufen,0.48,266,-635.75,300.5,24,6,20250412-021747
+275,kein_Terminated,Zeit abgelaufen,0.3,182,280.25,300.5,24,1,20250412-021800
+276,kein_Terminated,Zeit abgelaufen,0.53,154,3856.75,300.5,24,1,20250412-021812
+277,kein_Terminated,Zeit abgelaufen,0.54,229,-3749.0,300.5,24,4,20250412-021825
+278,kein_Terminated,Zeit abgelaufen,0.37,247,1558.5,300.5,24,4,20250412-021838
+279,kein_Terminated,Zeit abgelaufen,0.36,240,2688.25,300.5,24,0,20250412-021850
+280,kein_Terminated,Zeit abgelaufen,0.25,363,-665.25,300.5,25,8,20250412-021905
+281,kein_Terminated,Zeit abgelaufen,0.24,241,1612.0,300.5,25,8,20250412-021919
+282,kein_Terminated,Zeit abgelaufen,0.29,222,2430.25,300.5,25,0,20250412-021934
+283,kein_Terminated,Zeit abgelaufen,0.27,188,2484.5,300.5,25,0,20250412-021948
+284,kein_Terminated,Zeit abgelaufen,0.26,106,3214.5,300.5,25,7,20250412-022003
+285,kein_Terminated,Zeit abgelaufen,0.23,359,-3835.0,300.5,25,7,20250412-022017
+286,kein_Terminated,Zeit abgelaufen,0.01,602,77.75,300.5,25,3,20250412-022032
+287,kein_Terminated,Zeit abgelaufen,0.41,147,3796.0,300.5,24,2,20250412-022045
+288,kein_Terminated,Zeit abgelaufen,0.25,221,-2064.5,300.5,24,2,20250412-022057
+289,kein_Terminated,Zeit abgelaufen,0.54,347,5524.0,300.5,24,2,20250412-022110
+290,kein_Terminated,Zeit abgelaufen,0.37,333,-3051.25,300.5,24,2,20250412-022123
+291,kein_Terminated,Zeit abgelaufen,0.36,309,-11477.5,300.5,24,6,20250412-022135
+292,kein_Terminated,Zeit abgelaufen,0.52,276,3181.0,300.5,24,6,20250412-022148
+293,kein_Terminated,Zeit abgelaufen,0.4,327,3245.0,300.5,24,9,20250412-022201
+294,kein_Terminated,Zeit abgelaufen,0.57,281,2905.5,300.5,22,1,20250412-022213
+295,kein_Terminated,Zeit abgelaufen,0.47,170,2798.5,300.5,22,1,20250412-022225
+296,kein_Terminated,Zeit abgelaufen,0.56,182,5131.5,300.5,22,8,20250412-022237
+297,kein_Terminated,Zeit abgelaufen,0.53,136,4658.0,300.5,22,8,20250412-022249
+298,kein_Terminated,Zeit abgelaufen,0.62,214,6616.75,300.5,22,1,20250412-022301
+299,kein_Terminated,Zeit abgelaufen,0.51,237,3109.0,300.5,22,1,20250412-022314
+300,kein_Terminated,Zeit abgelaufen,0.68,158,6369.25,300.5,22,7,20250412-022326
+301,kein_Terminated,Zeit abgelaufen,0.5,236,3324.0,300.5,23,0,20250412-022338
+302,kein_Terminated,Zeit abgelaufen,0.53,221,4094.25,300.5,23,0,20250412-022351
+303,kein_Terminated,Zeit abgelaufen,0.52,192,5220.0,300.5,23,8,20250412-022403
+304,kein_Terminated,Zeit abgelaufen,0.54,279,2574.25,300.5,23,8,20250412-022416
+305,kein_Terminated,Zeit abgelaufen,0.35,286,1576.75,300.5,23,3,20250412-022428
+306,kein_Terminated,Zeit abgelaufen,0.5,246,3154.5,300.5,23,3,20250412-022441
+307,kein_Terminated,Zeit abgelaufen,0.47,248,1532.75,300.5,23,2,20250412-022453
+308,kein_Terminated,Zeit abgelaufen,0.16,267,197.0,300.5,25,9,20250412-022507
+309,kein_Terminated,Zeit abgelaufen,0.22,213,1779.0,300.5,25,9,20250412-022522
+310,kein_Terminated,Zeit abgelaufen,0.44,389,-8295.5,300.5,25,2,20250412-022536
+311,kein_Terminated,Zeit abgelaufen,0.45,295,3225.25,300.5,25,2,20250412-022551
+312,kein_Terminated,Zeit abgelaufen,0.44,377,122.75,300.5,25,5,20250412-022605
+313,kein_Terminated,Zeit abgelaufen,0.11,229,-547.75,300.5,25,5,20250412-022620
+314,kein_Terminated,Zeit abgelaufen,0.24,429,-4787.25,300.5,25,8,20250412-022634
+315,kein_Terminated,Zeit abgelaufen,0.62,307,3212.0,300.5,23,0,20250412-022647
+316,kein_Terminated,Zeit abgelaufen,0.66,177,4054.25,300.5,23,0,20250412-022659
+317,kein_Terminated,Zeit abgelaufen,0.43,287,-1151.0,300.5,23,7,20250412-022712
+318,kein_Terminated,Zeit abgelaufen,0.45,236,3896.25,300.5,23,7,20250412-022724
+319,kein_Terminated,Zeit abgelaufen,0.52,179,4978.5,300.5,23,9,20250412-022737
+320,kein_Terminated,Zeit abgelaufen,0.55,227,-2665.5,300.5,23,9,20250412-022749
+321,kein_Terminated,Zeit abgelaufen,0.46,208,3383.75,300.5,23,0,20250412-022802
+322,kein_Terminated,Zeit abgelaufen,0.57,255,6532.5,300.5,22,9,20250412-022814
+323,kein_Terminated,Zeit abgelaufen,0.51,166,-2762.5,300.5,22,9,20250412-022826
+324,kein_Terminated,Zeit abgelaufen,0.68,106,8214.75,300.5,22,1,20250412-022838
+325,kein_Terminated,Zeit abgelaufen,0.51,287,3193.75,300.5,22,1,20250412-022850
+326,kein_Terminated,Zeit abgelaufen,0.6,247,3442.25,300.5,22,9,20250412-022902
+327,kein_Terminated,Zeit abgelaufen,0.53,137,2059.25,300.5,22,9,20250412-022915
+328,kein_Terminated,Zeit abgelaufen,0.59,200,-1348.25,300.5,22,6,20250412-022927
+329,kein_Terminated,Zeit abgelaufen,0.17,186,1933.0,300.5,25,9,20250412-022941
+330,kein_Terminated,Zeit abgelaufen,0.22,223,2359.5,300.5,25,9,20250412-022956
+331,kein_Terminated,Zeit abgelaufen,0.37,315,1790.25,300.5,25,6,20250412-023010
+332,kein_Terminated,Zeit abgelaufen,0.15,166,843.0,300.5,25,6,20250412-023024
+333,kein_Terminated,Zeit abgelaufen,0.27,309,1908.0,300.5,25,1,20250412-023039
+334,kein_Terminated,Zeit abgelaufen,0.31,310,2432.0,300.5,25,1,20250412-023053
+4,kein_Terminated,Zeit abgelaufen,0.09,585,1142.5,300.5,23,2,20250412-023112
+335,kein_Terminated,Zeit abgelaufen,0.19,341,-1373.25,300.5,25,9,20250412-023120
+336,kein_Terminated,Zeit abgelaufen,0.37,176,2369.25,300.5,23,9,20250412-023132
+337,kein_Terminated,Zeit abgelaufen,0.41,340,-21126.0,300.5,23,9,20250412-023145
+338,kein_Terminated,Zeit abgelaufen,0.43,141,3366.75,300.5,23,7,20250412-023157
+339,kein_Terminated,Zeit abgelaufen,0.56,235,6622.75,300.5,23,7,20250412-023210
+340,kein_Terminated,Zeit abgelaufen,0.53,158,4711.5,300.5,23,0,20250412-023222
+341,kein_Terminated,Zeit abgelaufen,0.45,120,4932.5,300.5,23,0,20250412-023235
+342,kein_Terminated,Zeit abgelaufen,0.57,168,6315.0,300.5,23,5,20250412-023247
+343,kein_Terminated,Zeit abgelaufen,0.5,322,-3539.0,300.5,24,3,20250412-023300
+344,kein_Terminated,Zeit abgelaufen,0.42,332,-12317.5,300.5,24,3,20250412-023312
+345,kein_Terminated,Zeit abgelaufen,0.57,254,4300.75,300.5,24,9,20250412-023325
+346,kein_Terminated,Zeit abgelaufen,0.42,117,5015.5,300.5,24,9,20250412-023338
+347,kein_Terminated,Zeit abgelaufen,0.24,132,1511.25,300.5,24,2,20250412-023350
+348,kein_Terminated,Zeit abgelaufen,0.59,178,7115.5,300.5,24,2,20250412-023403
+349,kein_Terminated,Zeit abgelaufen,0.57,258,3313.25,300.5,24,7,20250412-023415
+350,kein_Terminated,Zeit abgelaufen,0.13,273,-562.0,300.5,25,6,20250412-023430
+351,kein_Terminated,Zeit abgelaufen,0.11,202,-403.0,300.5,25,6,20250412-023444
+352,kein_Terminated,Zeit abgelaufen,0.17,426,-1455.75,300.5,25,9,20250412-023459
+353,kein_Terminated,Zeit abgelaufen,0.25,215,-105.5,300.5,25,9,20250412-023514
+354,kein_Terminated,Zeit abgelaufen,0.11,267,-765.25,300.5,25,6,20250412-023528
+355,kein_Terminated,Zeit abgelaufen,0.11,227,116.75,300.5,25,6,20250412-023543
+356,kein_Terminated,Zeit abgelaufen,0.15,203,758.25,300.5,25,6,20250412-023557
+357,kein_Terminated,Zeit abgelaufen,0.47,181,3918.75,300.5,23,8,20250412-023610
+358,kein_Terminated,Zeit abgelaufen,0.57,141,6279.0,300.5,23,8,20250412-023622
+359,kein_Terminated,Zeit abgelaufen,0.54,164,4883.5,300.5,23,8,20250412-023635
+360,kein_Terminated,Zeit abgelaufen,0.54,121,5903.0,300.5,23,8,20250412-023647
+361,kein_Terminated,Zeit abgelaufen,0.56,178,5828.75,300.5,23,8,20250412-023659
+362,kein_Terminated,Zeit abgelaufen,0.53,135,6613.0,300.5,23,8,20250412-023712
+363,kein_Terminated,Zeit abgelaufen,0.57,238,5573.75,300.5,23,8,20250412-023724
+364,kein_Terminated,Zeit abgelaufen,0.6,129,4700.75,300.5,23,7,20250412-023737
+365,kein_Terminated,Zeit abgelaufen,0.48,138,4369.75,300.5,23,7,20250412-023749
+366,kein_Terminated,Zeit abgelaufen,0.25,267,1533.75,300.5,23,3,20250412-023802
+367,kein_Terminated,Zeit abgelaufen,0.54,170,5778.25,300.5,23,3,20250412-023814
+368,kein_Terminated,Zeit abgelaufen,0.38,312,953.25,300.5,23,3,20250412-023826
+369,kein_Terminated,Zeit abgelaufen,0.51,265,5192.75,300.5,23,3,20250412-023839
+370,kein_Terminated,Zeit abgelaufen,0.46,156,3408.5,300.5,23,4,20250412-023851
+371,kein_Terminated,Zeit abgelaufen,0.46,323,-9040.5,300.5,24,6,20250412-023904
+372,kein_Terminated,Zeit abgelaufen,0.54,121,5927.0,300.5,24,6,20250412-023917
+373,kein_Terminated,Zeit abgelaufen,0.52,201,3394.5,300.5,24,1,20250412-023929
+374,kein_Terminated,Zeit abgelaufen,0.33,173,2920.75,300.5,24,1,20250412-023942
+375,kein_Terminated,Zeit abgelaufen,0.53,247,-2465.75,300.5,24,0,20250412-023954
+376,kein_Terminated,Zeit abgelaufen,0.56,191,5253.0,300.5,24,0,20250412-024007
+377,kein_Terminated,Zeit abgelaufen,0.29,489,-41312.75,300.5,24,3,20250412-024020
+378,kein_Terminated,Zeit abgelaufen,0.38,130,3855.0,300.5,24,9,20250412-024032
+379,kein_Terminated,Zeit abgelaufen,0.41,154,5141.75,300.5,24,9,20250412-024045
+380,kein_Terminated,Zeit abgelaufen,0.63,152,6011.5,300.5,24,2,20250412-024058
+381,kein_Terminated,Zeit abgelaufen,0.48,260,3228.75,300.5,24,2,20250412-024110
+382,kein_Terminated,Zeit abgelaufen,0.56,150,6071.0,300.5,24,5,20250412-024123
+383,kein_Terminated,Zeit abgelaufen,0.5,199,982.0,300.5,24,5,20250412-024135
+384,kein_Terminated,Zeit abgelaufen,0.67,254,6398.75,300.5,24,4,20250412-024148
+385,kein_Terminated,Zeit abgelaufen,0.48,154,5961.0,300.5,24,8,20250412-024201
+386,kein_Terminated,Zeit abgelaufen,0.59,110,6890.0,300.5,24,8,20250412-024213
+387,kein_Terminated,Zeit abgelaufen,0.39,406,-28277.0,300.5,24,7,20250412-024226
+388,kein_Terminated,Zeit abgelaufen,0.52,170,2934.75,300.5,24,7,20250412-024238
+389,kein_Terminated,Zeit abgelaufen,0.38,229,2936.25,300.5,24,9,20250412-024251
+390,kein_Terminated,Zeit abgelaufen,0.53,104,5690.25,300.5,24,9,20250412-024304
+391,kein_Terminated,Zeit abgelaufen,0.26,259,2706.0,300.5,24,3,20250412-024316
+392,kein_Terminated,Zeit abgelaufen,0.09,277,-5080.0,300.5,25,2,20250412-024331
+393,kein_Terminated,Zeit abgelaufen,0.08,260,-2568.5,300.5,25,2,20250412-024345
+394,kein_Terminated,Zeit abgelaufen,0.01,602,-60521.0,300.5,25,3,20250412-024401
+395,kein_Terminated,Zeit abgelaufen,0.01,602,81.75,300.5,25,3,20250412-024416
+396,kein_Terminated,Zeit abgelaufen,0.08,341,-4462.75,300.5,25,2,20250412-024431
+397,kein_Terminated,Zeit abgelaufen,0.09,280,-582.25,300.5,25,2,20250412-024445
+398,kein_Terminated,Zeit abgelaufen,0.21,330,668.25,300.5,25,2,20250412-024500
+399,kein_Terminated,Zeit abgelaufen,0.29,295,672.75,300.5,25,4,20250412-024514
+400,kein_Terminated,Zeit abgelaufen,0.11,455,-5814.75,300.5,25,4,20250412-024529
+401,kein_Terminated,Zeit abgelaufen,0.32,183,2310.5,300.5,25,1,20250412-024543
+402,kein_Terminated,Zeit abgelaufen,0.26,339,1146.75,300.5,25,1,20250412-024558
+403,kein_Terminated,Zeit abgelaufen,0.1,355,-2646.75,300.5,25,5,20250412-024612
+404,kein_Terminated,Zeit abgelaufen,0.1,251,-1139.5,300.5,25,5,20250412-024626
+405,kein_Terminated,Zeit abgelaufen,0.16,328,124.25,300.5,25,8,20250412-024641
+406,kein_Terminated,Zeit abgelaufen,0.61,142,7290.75,300.5,24,9,20250412-024653
+407,kein_Terminated,Zeit abgelaufen,0.38,257,-2665.75,300.5,24,9,20250412-024706
+408,kein_Terminated,Zeit abgelaufen,0.5,172,5959.5,300.5,24,1,20250412-024718
+409,kein_Terminated,Zeit abgelaufen,0.34,161,1344.0,300.5,24,1,20250412-024731
+410,kein_Terminated,Zeit abgelaufen,0.53,230,5235.25,300.5,24,2,20250412-024744
+411,kein_Terminated,Zeit abgelaufen,0.6,107,6465.5,300.5,24,2,20250412-024756
+412,kein_Terminated,Zeit abgelaufen,0.46,128,2852.0,300.5,24,1,20250412-024809
+413,kein_Terminated,Zeit abgelaufen,0.49,160,5085.5,300.5,22,1,20250412-024821
+414,kein_Terminated,Zeit abgelaufen,0.49,248,5444.5,300.5,22,1,20250412-024833
+415,kein_Terminated,Zeit abgelaufen,0.53,116,6097.25,300.5,22,7,20250412-024845
+416,kein_Terminated,Zeit abgelaufen,0.62,194,5794.0,300.5,22,7,20250412-024858
+417,kein_Terminated,Zeit abgelaufen,0.64,163,7211.0,300.5,22,5,20250412-024910
+5,kein_Terminated,Zeit abgelaufen,0.01,602,162.5,300.5,23,5,20250412-024929
+418,kein_Terminated,Zeit abgelaufen,0.54,262,4641.25,300.5,22,5,20250412-024936
+419,kein_Terminated,Zeit abgelaufen,0.44,168,2462.5,300.5,22,0,20250412-024948
+420,kein_Terminated,Zeit abgelaufen,0.55,256,-4232.75,300.5,24,2,20250412-025001
+421,kein_Terminated,Zeit abgelaufen,0.59,180,4101.0,300.5,24,2,20250412-025013
+422,kein_Terminated,Zeit abgelaufen,0.51,142,5745.25,300.5,24,7,20250412-025026
+423,kein_Terminated,Zeit abgelaufen,0.54,231,-198.0,300.5,24,7,20250412-025039
+424,kein_Terminated,Zeit abgelaufen,0.52,131,5760.5,300.5,24,5,20250412-025051
+425,kein_Terminated,Zeit abgelaufen,0.47,155,5426.75,300.5,24,5,20250412-025104
+426,kein_Terminated,Zeit abgelaufen,0.55,212,5511.25,300.5,24,6,20250412-025116
+427,kein_Terminated,Zeit abgelaufen,0.46,317,5132.5,300.5,23,5,20250412-025129
+428,kein_Terminated,Zeit abgelaufen,0.49,138,3783.75,300.5,23,5,20250412-025141
+429,kein_Terminated,Zeit abgelaufen,0.45,179,3582.0,300.5,23,7,20250412-025154
+430,kein_Terminated,Zeit abgelaufen,0.57,146,6529.25,300.5,23,7,20250412-025206
+431,kein_Terminated,Zeit abgelaufen,0.42,219,4810.0,300.5,23,9,20250412-025219
+432,kein_Terminated,Zeit abgelaufen,0.49,124,5138.25,300.5,23,9,20250412-025231
+433,kein_Terminated,Zeit abgelaufen,0.5,280,4162.0,300.5,23,7,20250412-025244
+434,kein_Terminated,Zeit abgelaufen,0.41,162,-1072.0,300.5,24,6,20250412-025256
+435,kein_Terminated,Zeit abgelaufen,0.38,339,-22912.5,300.5,24,6,20250412-025309
+436,kein_Terminated,Zeit abgelaufen,0.51,164,5898.0,300.5,24,4,20250412-025322
+437,kein_Terminated,Zeit abgelaufen,0.45,204,3542.0,300.5,24,4,20250412-025334
+438,kein_Terminated,Zeit abgelaufen,0.63,205,6757.5,300.5,24,9,20250412-025347
+439,kein_Terminated,Zeit abgelaufen,0.46,185,3134.25,300.5,24,9,20250412-025400
+440,kein_Terminated,Zeit abgelaufen,0.54,171,5472.0,300.5,24,6,20250412-025412
+441,kein_Terminated,Zeit abgelaufen,0.39,245,1904.75,300.5,25,8,20250412-025427
+442,kein_Terminated,Zeit abgelaufen,0.27,170,2686.0,300.5,25,8,20250412-025441
+443,kein_Terminated,Zeit abgelaufen,0.54,194,1452.25,300.5,25,4,20250412-025456
+444,kein_Terminated,Zeit abgelaufen,0.5,194,3361.5,300.5,25,4,20250412-025510
+445,kein_Terminated,Zeit abgelaufen,0.23,355,493.25,300.5,25,9,20250412-025525
+446,kein_Terminated,Zeit abgelaufen,0.39,340,3536.75,300.5,25,9,20250412-025539
+447,kein_Terminated,Zeit abgelaufen,0.21,349,-162.5,300.5,25,9,20250412-025554
+448,kein_Terminated,Zeit abgelaufen,0.17,376,-1822.75,300.5,25,0,20250412-025608
+449,kein_Terminated,Zeit abgelaufen,0.27,209,2564.5,300.5,25,0,20250412-025623
+450,kein_Terminated,Zeit abgelaufen,0.25,315,289.5,300.5,25,8,20250412-025637
+451,kein_Terminated,Zeit abgelaufen,0.25,316,88.0,300.5,25,8,20250412-025651
+452,kein_Terminated,Zeit abgelaufen,0.09,293,-296.0,300.5,25,2,20250412-025706
+453,kein_Terminated,Zeit abgelaufen,0.09,254,-711.0,300.5,25,2,20250412-025720
+454,kein_Terminated,Zeit abgelaufen,0.51,120,5017.5,300.5,25,4,20250412-025735
+455,kein_Terminated,Zeit abgelaufen,0.7,180,6544.5,300.5,22,3,20250412-025747
+456,kein_Terminated,Zeit abgelaufen,0.59,102,6857.25,300.5,22,3,20250412-025759
+457,kein_Terminated,Zeit abgelaufen,0.55,210,4519.0,300.5,22,1,20250412-025811
+458,kein_Terminated,Zeit abgelaufen,0.57,160,6681.25,300.5,22,1,20250412-025823
+459,kein_Terminated,Zeit abgelaufen,0.56,197,6436.5,300.5,22,8,20250412-025835
+460,kein_Terminated,Zeit abgelaufen,0.58,164,4448.0,300.5,22,8,20250412-025847
+461,kein_Terminated,Zeit abgelaufen,0.54,199,6282.0,300.5,22,2,20250412-025900
+462,kein_Terminated,Zeit abgelaufen,0.47,168,4850.25,300.5,24,8,20250412-025912
+463,kein_Terminated,Zeit abgelaufen,0.52,105,3749.5,300.5,24,8,20250412-025925
+464,kein_Terminated,Zeit abgelaufen,0.38,250,1352.25,300.5,24,9,20250412-025937
+465,kein_Terminated,Zeit abgelaufen,0.65,206,-119.75,300.5,24,9,20250412-025950
+466,kein_Terminated,Zeit abgelaufen,0.35,138,3325.5,300.5,24,9,20250412-030002
+467,kein_Terminated,Zeit abgelaufen,0.38,202,1816.0,300.5,24,9,20250412-030015
+468,kein_Terminated,Zeit abgelaufen,0.58,254,-5771.0,300.5,24,7,20250412-030028
+469,kein_Terminated,Zeit abgelaufen,0.65,209,7714.0,300.5,23,6,20250412-030040
+470,kein_Terminated,Zeit abgelaufen,0.51,127,5655.75,300.5,23,6,20250412-030053
+471,kein_Terminated,Zeit abgelaufen,0.58,220,-375.25,300.5,23,1,20250412-030105
+472,kein_Terminated,Zeit abgelaufen,0.63,144,7220.5,300.5,23,1,20250412-030118
+473,kein_Terminated,Zeit abgelaufen,0.6,178,6026.5,300.5,23,5,20250412-030130
+474,kein_Terminated,Zeit abgelaufen,0.54,222,5141.0,300.5,23,5,20250412-030142
+475,kein_Terminated,Zeit abgelaufen,0.34,412,-23802.75,300.5,23,3,20250412-030155
+476,kein_Terminated,Zeit abgelaufen,0.69,114,8709.0,300.5,22,9,20250412-030207
+477,kein_Terminated,Zeit abgelaufen,0.67,173,7707.75,300.5,22,9,20250412-030219
+478,kein_Terminated,Zeit abgelaufen,0.58,217,5439.5,300.5,22,2,20250412-030231
+479,kein_Terminated,Zeit abgelaufen,0.67,196,7292.75,300.5,22,2,20250412-030244
+480,kein_Terminated,Zeit abgelaufen,0.67,83,7970.0,300.5,22,6,20250412-030256
+481,kein_Terminated,Zeit abgelaufen,0.68,132,7747.0,300.5,22,6,20250412-030308
+482,kein_Terminated,Zeit abgelaufen,0.49,139,5463.75,300.5,22,8,20250412-030320
+483,kein_Terminated,Zeit abgelaufen,0.66,163,7318.25,300.5,23,8,20250412-030332
+484,kein_Terminated,Zeit abgelaufen,0.65,141,6481.0,300.5,23,8,20250412-030345
+485,kein_Terminated,Zeit abgelaufen,0.49,313,-14371.25,300.5,23,4,20250412-030357
+486,kein_Terminated,Zeit abgelaufen,0.56,347,-13128.25,300.5,23,4,20250412-030410
+487,kein_Terminated,Zeit abgelaufen,0.54,181,5217.75,300.5,23,8,20250412-030422
+488,kein_Terminated,Zeit abgelaufen,0.36,148,2990.5,300.5,23,8,20250412-030435
+489,kein_Terminated,Zeit abgelaufen,0.59,242,4693.5,300.5,23,2,20250412-030447
+490,kein_Terminated,Zeit abgelaufen,0.59,270,5394.75,300.5,23,5,20250412-030500
+491,kein_Terminated,Zeit abgelaufen,0.52,183,4578.75,300.5,23,5,20250412-030512
+492,kein_Terminated,Zeit abgelaufen,0.54,193,3613.75,300.5,23,1,20250412-030525
+493,kein_Terminated,Zeit abgelaufen,0.58,195,6890.75,300.5,23,1,20250412-030537
+494,kein_Terminated,Zeit abgelaufen,0.58,124,6556.5,300.5,23,7,20250412-030550
+495,kein_Terminated,Zeit abgelaufen,0.54,230,4415.75,300.5,23,7,20250412-030602
+496,kein_Terminated,Zeit abgelaufen,0.4,303,-13633.0,300.5,23,6,20250412-030615
+497,kein_Terminated,Zeit abgelaufen,0.49,66,5988.25,300.5,22,8,20250412-030627
+498,kein_Terminated,Zeit abgelaufen,0.68,147,8315.5,300.5,22,8,20250412-030639
+499,kein_Terminated,Zeit abgelaufen,0.44,150,5477.0,300.5,22,0,20250412-030651
+500,kein_Terminated,Zeit abgelaufen,0.5,140,4024.5,300.5,22,0,20250412-030703
+6,kein_Terminated,Zeit abgelaufen,0.12,551,1618.5,300.5,23,1,20250412-030721
+501,kein_Terminated,Zeit abgelaufen,0.66,178,6459.5,300.5,22,5,20250412-030727
+502,kein_Terminated,Zeit abgelaufen,0.59,219,6929.25,300.5,22,5,20250412-030740
+503,kein_Terminated,Zeit abgelaufen,0.7,170,7733.5,300.5,22,8,20250412-030752
+504,kein_Terminated,Zeit abgelaufen,0.01,602,-60521.0,300.5,25,3,20250412-030809
+505,kein_Terminated,Zeit abgelaufen,0.01,602,114.5,300.5,25,3,20250412-030825
+506,kein_Terminated,Zeit abgelaufen,0.58,370,-15888.5,300.5,25,7,20250412-030839
+507,kein_Terminated,Zeit abgelaufen,0.44,201,4242.25,300.5,25,7,20250412-030854
+508,kein_Terminated,Zeit abgelaufen,0.3,248,2537.5,300.5,25,8,20250412-030908
+509,kein_Terminated,Zeit abgelaufen,0.24,378,-1402.5,300.5,25,8,20250412-030923
+510,kein_Terminated,Zeit abgelaufen,0.1,360,-184.75,300.5,25,5,20250412-030937
+511,kein_Terminated,Zeit abgelaufen,0.46,208,2497.0,300.5,24,0,20250412-030950
+512,kein_Terminated,Zeit abgelaufen,0.44,195,3253.25,300.5,24,0,20250412-031003
+513,kein_Terminated,Zeit abgelaufen,0.36,216,3361.5,300.5,24,1,20250412-031015
+514,kein_Terminated,Zeit abgelaufen,0.49,101,5956.25,300.5,24,1,20250412-031028
+515,kein_Terminated,Zeit abgelaufen,0.54,232,4404.5,300.5,24,7,20250412-031040
+516,kein_Terminated,Zeit abgelaufen,0.44,83,4719.75,300.5,24,7,20250412-031053
+517,kein_Terminated,Zeit abgelaufen,0.52,226,-4452.0,300.5,24,3,20250412-031106
+518,kein_Terminated,Zeit abgelaufen,0.56,252,4256.75,300.5,23,8,20250412-031118
+519,kein_Terminated,Zeit abgelaufen,0.41,290,3086.0,300.5,23,8,20250412-031131
+520,kein_Terminated,Zeit abgelaufen,0.52,241,-6036.0,300.5,23,2,20250412-031143
+521,kein_Terminated,Zeit abgelaufen,0.58,200,6141.5,300.5,23,2,20250412-031156
+522,kein_Terminated,Zeit abgelaufen,0.33,423,-34485.5,300.5,23,4,20250412-031208
+523,kein_Terminated,Zeit abgelaufen,0.6,222,6397.5,300.5,23,4,20250412-031221
+524,kein_Terminated,Zeit abgelaufen,0.48,273,3801.25,300.5,23,4,20250412-031233
+525,kein_Terminated,Zeit abgelaufen,0.47,190,2045.25,300.5,24,0,20250412-031246
+526,kein_Terminated,Zeit abgelaufen,0.65,224,6489.0,300.5,24,0,20250412-031259
+527,kein_Terminated,Zeit abgelaufen,0.65,185,5199.25,300.5,24,9,20250412-031311
+528,kein_Terminated,Zeit abgelaufen,0.66,155,6383.5,300.5,24,9,20250412-031324
+529,kein_Terminated,Zeit abgelaufen,0.53,146,5747.0,300.5,24,1,20250412-031337
+530,kein_Terminated,Zeit abgelaufen,0.34,242,691.5,300.5,24,1,20250412-031349
+531,kein_Terminated,Zeit abgelaufen,0.51,138,6051.5,300.5,24,5,20250412-031402
+532,kein_Terminated,Zeit abgelaufen,0.58,240,-3836.75,300.5,23,2,20250412-031414
+533,kein_Terminated,Zeit abgelaufen,0.58,241,4843.75,300.5,23,2,20250412-031427
+534,kein_Terminated,Zeit abgelaufen,0.57,163,4925.25,300.5,23,7,20250412-031439
+535,kein_Terminated,Zeit abgelaufen,0.51,221,-574.75,300.5,23,7,20250412-031452
+536,kein_Terminated,Zeit abgelaufen,0.61,93,7472.25,300.5,23,4,20250412-031504
+537,kein_Terminated,Zeit abgelaufen,0.51,308,-18398.75,300.5,23,4,20250412-031517
+538,kein_Terminated,Zeit abgelaufen,0.69,165,7408.0,300.5,23,1,20250412-031529
+539,kein_Terminated,Zeit abgelaufen,0.61,200,5985.75,300.5,24,6,20250412-031542
+540,kein_Terminated,Zeit abgelaufen,0.55,226,5773.5,300.5,24,6,20250412-031554
+541,kein_Terminated,Zeit abgelaufen,0.5,294,-6783.0,300.5,24,2,20250412-031607
+542,kein_Terminated,Zeit abgelaufen,0.32,263,-382.5,300.5,24,2,20250412-031620
+543,kein_Terminated,Zeit abgelaufen,0.36,178,3808.5,300.5,24,3,20250412-031632
+544,kein_Terminated,Zeit abgelaufen,0.57,268,5086.0,300.5,24,3,20250412-031645
+545,kein_Terminated,Zeit abgelaufen,0.6,206,554.0,300.5,24,0,20250412-031657
+546,kein_Terminated,Zeit abgelaufen,0.59,182,6575.0,300.5,23,2,20250412-031710
+547,kein_Terminated,Zeit abgelaufen,0.47,382,-24278.5,300.5,23,2,20250412-031723
+548,kein_Terminated,Zeit abgelaufen,0.69,122,8318.75,300.5,23,2,20250412-031735
+549,kein_Terminated,Zeit abgelaufen,0.35,402,-31622.75,300.5,23,2,20250412-031748
+550,kein_Terminated,Zeit abgelaufen,0.71,191,7688.0,300.5,23,8,20250412-031800
+551,kein_Terminated,Zeit abgelaufen,0.36,168,3856.5,300.5,23,8,20250412-031813
+552,kein_Terminated,Zeit abgelaufen,0.46,230,5653.0,300.5,23,2,20250412-031825
+553,kein_Terminated,Zeit abgelaufen,0.66,165,7487.0,300.5,22,9,20250412-031837
+554,kein_Terminated,Zeit abgelaufen,0.55,223,6219.75,300.5,22,9,20250412-031849
+555,kein_Terminated,Zeit abgelaufen,0.66,229,6588.25,300.5,22,6,20250412-031901
+556,kein_Terminated,Zeit abgelaufen,0.72,157,8078.25,300.5,22,6,20250412-031914
+557,kein_Terminated,Zeit abgelaufen,0.54,203,5193.75,300.5,22,8,20250412-031926
+558,kein_Terminated,Zeit abgelaufen,0.69,192,7802.25,300.5,22,8,20250412-031938
+559,kein_Terminated,Zeit abgelaufen,0.68,164,8210.75,300.5,22,5,20250412-031950
+560,kein_Terminated,Zeit abgelaufen,0.6,172,5422.0,300.5,23,4,20250412-032002
+561,kein_Terminated,Zeit abgelaufen,0.33,434,-36061.5,300.5,23,4,20250412-032015
+562,kein_Terminated,Zeit abgelaufen,0.31,183,2181.0,300.5,23,0,20250412-032027
+563,kein_Terminated,Zeit abgelaufen,0.63,182,6181.0,300.5,23,0,20250412-032040
+564,kein_Terminated,Zeit abgelaufen,0.35,161,4010.75,300.5,23,8,20250412-032052
+565,kein_Terminated,Zeit abgelaufen,0.56,265,-8159.5,300.5,23,8,20250412-032105
+566,kein_Terminated,Zeit abgelaufen,0.75,191,9200.25,300.5,23,3,20250412-032117
+567,kein_Terminated,Zeit abgelaufen,0.42,243,2049.75,300.5,23,1,20250412-032130
+568,kein_Terminated,Zeit abgelaufen,0.62,134,7149.25,300.5,23,1,20250412-032142
+569,kein_Terminated,Zeit abgelaufen,0.36,427,-34581.25,300.5,23,4,20250412-032155
+570,kein_Terminated,Zeit abgelaufen,0.32,460,-39675.75,300.5,23,4,20250412-032208
+571,kein_Terminated,Zeit abgelaufen,0.34,471,-37517.5,300.5,23,4,20250412-032221
+572,kein_Terminated,Zeit abgelaufen,0.64,197,1815.25,300.5,23,4,20250412-032233
+573,kein_Terminated,Zeit abgelaufen,0.51,222,5184.75,300.5,23,1,20250412-032246
+574,kein_Terminated,Zeit abgelaufen,0.62,164,6113.0,300.5,23,2,20250412-032258
+575,kein_Terminated,Zeit abgelaufen,0.5,200,4867.25,300.5,23,2,20250412-032311
+576,kein_Terminated,Zeit abgelaufen,0.57,222,5295.5,300.5,23,4,20250412-032323
+577,kein_Terminated,Zeit abgelaufen,0.65,214,1790.5,300.5,23,4,20250412-032336
+578,kein_Terminated,Zeit abgelaufen,0.52,145,4329.25,300.5,23,1,20250412-032348
+579,kein_Terminated,Zeit abgelaufen,0.3,115,3471.5,300.5,23,1,20250412-032401
+580,kein_Terminated,Zeit abgelaufen,0.48,378,-23760.25,300.5,23,8,20250412-032413
+581,kein_Terminated,Zeit abgelaufen,0.66,116,7128.0,300.5,22,7,20250412-032425
+582,kein_Terminated,Zeit abgelaufen,0.6,193,6743.0,300.5,22,7,20250412-032438
+583,kein_Terminated,Zeit abgelaufen,0.73,108,8523.75,300.5,22,9,20250412-032450
+7,kein_Terminated,Zeit abgelaufen,0.07,571,958.5,300.5,23,7,20250412-032508
+584,kein_Terminated,Zeit abgelaufen,0.71,169,7551.25,300.5,22,9,20250412-032514
+585,kein_Terminated,Zeit abgelaufen,0.63,158,6216.25,300.5,22,8,20250412-032526
+586,kein_Terminated,Zeit abgelaufen,0.65,182,6803.25,300.5,22,8,20250412-032538
+587,kein_Terminated,Zeit abgelaufen,0.72,93,8694.0,300.5,22,5,20250412-032551
+588,kein_Terminated,Zeit abgelaufen,0.51,161,5499.0,300.5,24,9,20250412-032603
+589,kein_Terminated,Zeit abgelaufen,0.73,199,7638.5,300.5,24,9,20250412-032616
+590,kein_Terminated,Zeit abgelaufen,0.38,381,-26725.0,300.5,24,8,20250412-032628
+591,kein_Terminated,Zeit abgelaufen,0.54,207,4396.5,300.5,24,8,20250412-032641
+592,kein_Terminated,Zeit abgelaufen,0.57,291,-14737.0,300.5,24,5,20250412-032654
+593,kein_Terminated,Zeit abgelaufen,0.67,133,7273.5,300.5,24,5,20250412-032706
+594,kein_Terminated,Zeit abgelaufen,0.53,126,6178.0,300.5,24,8,20250412-032719
+595,kein_Terminated,Zeit abgelaufen,0.73,164,7533.0,300.5,22,2,20250412-032731
+596,kein_Terminated,Zeit abgelaufen,0.61,277,6049.0,300.5,22,2,20250412-032743
+597,kein_Terminated,Zeit abgelaufen,0.65,162,7387.75,300.5,22,1,20250412-032755
+598,kein_Terminated,Zeit abgelaufen,0.64,172,7674.75,300.5,22,1,20250412-032807
+599,kein_Terminated,Zeit abgelaufen,0.66,169,6713.75,300.5,22,0,20250412-032820
+600,kein_Terminated,Zeit abgelaufen,0.67,183,7345.5,300.5,22,0,20250412-032832
+601,kein_Terminated,Zeit abgelaufen,0.6,159,7682.5,300.5,22,8,20250412-032844
+602,kein_Terminated,Zeit abgelaufen,0.33,312,15.0,300.5,23,0,20250412-032856
+603,kein_Terminated,Zeit abgelaufen,0.5,216,4613.75,300.5,23,0,20250412-032909
+604,kein_Terminated,Zeit abgelaufen,0.38,231,2976.25,300.5,23,9,20250412-032921
+605,kein_Terminated,Zeit abgelaufen,0.66,211,7600.5,300.5,23,9,20250412-032934
+606,kein_Terminated,Zeit abgelaufen,0.62,166,6193.75,300.5,23,3,20250412-032946
+607,kein_Terminated,Zeit abgelaufen,0.64,253,6477.75,300.5,23,3,20250412-032959
+608,kein_Terminated,Zeit abgelaufen,0.31,217,2209.75,300.5,23,1,20250412-033011
+609,kein_Terminated,Zeit abgelaufen,0.61,184,7424.25,300.5,24,7,20250412-033024
+610,kein_Terminated,Zeit abgelaufen,0.62,177,7217.25,300.5,24,7,20250412-033037
+611,kein_Terminated,Zeit abgelaufen,0.47,140,4539.25,300.5,24,5,20250412-033049
+612,kein_Terminated,Zeit abgelaufen,0.65,225,7117.5,300.5,24,5,20250412-033102
+613,kein_Terminated,Zeit abgelaufen,0.67,132,6076.5,300.5,24,0,20250412-033114
+614,kein_Terminated,Zeit abgelaufen,0.69,201,8705.75,300.5,24,0,20250412-033127
+615,kein_Terminated,Zeit abgelaufen,0.59,204,5950.5,300.5,24,4,20250412-033139
+616,kein_Terminated,Zeit abgelaufen,0.5,194,5443.0,300.5,22,4,20250412-033152
+617,kein_Terminated,Zeit abgelaufen,0.73,169,8641.25,300.5,22,4,20250412-033204
+618,kein_Terminated,Zeit abgelaufen,0.6,208,7255.5,300.5,22,5,20250412-033216
+619,kein_Terminated,Zeit abgelaufen,0.63,139,6836.75,300.5,22,5,20250412-033228
+620,kein_Terminated,Zeit abgelaufen,0.71,128,8566.75,300.5,22,4,20250412-033240
+621,kein_Terminated,Zeit abgelaufen,0.67,192,7921.25,300.5,22,4,20250412-033252
+622,kein_Terminated,Zeit abgelaufen,0.7,86,8941.75,300.5,22,9,20250412-033305
+623,kein_Terminated,Zeit abgelaufen,0.67,201,8199.5,300.5,23,7,20250412-033317
+624,kein_Terminated,Zeit abgelaufen,0.78,185,9294.0,300.5,23,7,20250412-033330
+625,kein_Terminated,Zeit abgelaufen,0.5,168,5270.25,300.5,23,1,20250412-033342
+626,kein_Terminated,Zeit abgelaufen,0.55,210,4951.5,300.5,23,1,20250412-033355
+627,kein_Terminated,Zeit abgelaufen,0.5,246,5612.5,300.5,23,7,20250412-033407
+628,kein_Terminated,Zeit abgelaufen,0.52,144,6433.0,300.5,23,7,20250412-033419
+629,kein_Terminated,Zeit abgelaufen,0.52,245,-10239.5,300.5,23,3,20250412-033432
+630,kein_Terminated,Zeit abgelaufen,0.69,146,5312.25,300.5,22,8,20250412-033444
+631,kein_Terminated,Zeit abgelaufen,0.73,125,9121.0,300.5,22,8,20250412-033456
+632,kein_Terminated,Zeit abgelaufen,0.75,156,8212.0,300.5,22,7,20250412-033508
+633,kein_Terminated,Zeit abgelaufen,0.74,133,8394.25,300.5,22,7,20250412-033521
+634,kein_Terminated,Zeit abgelaufen,0.72,172,8351.75,300.5,22,7,20250412-033533
+635,kein_Terminated,Zeit abgelaufen,0.68,98,7876.5,300.5,22,7,20250412-033545
+636,kein_Terminated,Zeit abgelaufen,0.68,191,7368.75,300.5,22,1,20250412-033557
+637,kein_Terminated,Zeit abgelaufen,0.63,256,5427.0,300.5,22,4,20250412-033609
+638,kein_Terminated,Zeit abgelaufen,0.71,156,8320.5,300.5,22,4,20250412-033621
+639,kein_Terminated,Zeit abgelaufen,0.66,142,7370.25,300.5,22,2,20250412-033634
+640,kein_Terminated,Zeit abgelaufen,0.76,184,9633.75,300.5,22,2,20250412-033646
+641,kein_Terminated,Zeit abgelaufen,0.73,185,9217.0,300.5,22,0,20250412-033658
+642,kein_Terminated,Zeit abgelaufen,0.53,79,6137.25,300.5,22,0,20250412-033710
+643,kein_Terminated,Zeit abgelaufen,0.57,235,5811.25,300.5,22,0,20250412-033722
+644,kein_Terminated,Zeit abgelaufen,0.45,268,2371.25,300.5,25,6,20250412-033736
+645,kein_Terminated,Zeit abgelaufen,0.2,451,-790.25,300.5,25,6,20250412-033751
+646,kein_Terminated,Zeit abgelaufen,0.27,320,372.0,300.5,25,4,20250412-033806
+647,kein_Terminated,Zeit abgelaufen,0.24,418,1789.5,300.5,25,4,20250412-033820
+648,kein_Terminated,Zeit abgelaufen,0.01,602,-60521.0,300.5,25,3,20250412-033838
+649,kein_Terminated,Zeit abgelaufen,0.01,602,-60521.0,300.5,25,3,20250412-033855
+650,kein_Terminated,Zeit abgelaufen,0.58,296,525.75,300.5,25,0,20250412-033910
+651,kein_Terminated,Zeit abgelaufen,0.78,145,5710.25,300.5,22,8,20250412-033922
+652,kein_Terminated,Zeit abgelaufen,0.32,425,-8012.25,300.5,22,8,20250412-033934
+653,kein_Terminated,Zeit abgelaufen,0.6,262,-1010.0,300.5,22,2,20250412-033946
+654,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,168,5263.5,256.0,22,2,20250412-033957
+655,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,0,20250412-034000
+656,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,174,6088.25,277.5,22,0,20250412-034011
+657,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,0,20250412-034014
+658,kein_Terminated,Zeit abgelaufen,0.49,334,-1995.75,300.5,22,4,20250412-034026
+659,kein_Terminated,Zeit abgelaufen,0.56,302,-47.5,300.5,22,4,20250412-034038
+660,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,123,7684.75,254.5,22,4,20250412-034049
+661,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,22,4,20250412-034051
+662,kein_Terminated,Zeit abgelaufen,0.59,221,1041.75,300.5,22,9,20250412-034104
+663,kein_Terminated,Zeit abgelaufen,0.69,187,2075.5,300.5,22,9,20250412-034116
+664,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,130,6712.0,188.0,22,4,20250412-034125
+665,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-124.5,0.0,24,5,20250412-034127
+666,kein_Terminated,Zeit abgelaufen,0.49,269,-6037.0,300.5,24,5,20250412-034140
+667,kein_Terminated,Zeit abgelaufen,0.55,284,-1750.75,300.5,24,5,20250412-034153
+668,kein_Terminated,Zeit abgelaufen,0.78,357,-12165.75,300.5,24,5,20250412-034206
+669,kein_Terminated,Zeit abgelaufen,0.56,368,-14280.5,300.5,24,7,20250412-034220
+670,kein_Terminated,Zeit abgelaufen,0.26,578,-52146.75,300.5,24,7,20250412-034235
+671,kein_Terminated,Zeit abgelaufen,0.46,151,4738.25,300.5,24,3,20250412-034248
+8,kein_Terminated,Zeit abgelaufen,0.21,558,2453.75,300.5,25,0,20250412-034306
+672,kein_Terminated,Zeit abgelaufen,0.57,284,-3465.75,300.5,22,7,20250412-034314
+673,kein_Terminated,Zeit abgelaufen,0.66,177,7733.25,300.5,22,7,20250412-034326
+674,kein_Terminated,Zeit abgelaufen,0.76,115,8989.25,300.5,22,6,20250412-034338
+675,kein_Terminated,Zeit abgelaufen,0.68,115,8098.0,300.5,22,6,20250412-034350
+676,kein_Terminated,Zeit abgelaufen,0.68,215,7287.25,300.5,22,5,20250412-034402
+677,kein_Terminated,Zeit abgelaufen,0.54,258,5024.25,300.5,22,5,20250412-034415
+678,kein_Terminated,Zeit abgelaufen,0.67,225,7502.25,300.5,22,2,20250412-034427
+679,kein_Terminated,Zeit abgelaufen,0.62,153,7112.5,300.5,23,4,20250412-034439
+680,kein_Terminated,Zeit abgelaufen,0.65,136,7549.25,300.5,23,4,20250412-034452
+681,kein_Terminated,Zeit abgelaufen,0.55,171,5596.0,300.5,23,1,20250412-034504
+682,kein_Terminated,Zeit abgelaufen,0.63,227,6245.0,300.5,23,1,20250412-034517
+683,kein_Terminated,Zeit abgelaufen,0.67,234,4637.25,300.5,23,8,20250412-034529
+684,kein_Terminated,Zeit abgelaufen,0.54,88,6467.5,300.5,23,8,20250412-034542
+685,kein_Terminated,Zeit abgelaufen,0.74,178,8048.0,300.5,23,9,20250412-034554
+686,kein_Terminated,Zeit abgelaufen,0.64,217,5163.25,300.5,22,8,20250412-034606
+687,kein_Terminated,Zeit abgelaufen,0.66,125,8269.0,300.5,22,8,20250412-034619
+688,kein_Terminated,Zeit abgelaufen,0.65,205,7028.75,300.5,22,1,20250412-034631
+689,kein_Terminated,Zeit abgelaufen,0.55,178,6208.5,300.5,22,1,20250412-034643
+690,kein_Terminated,Zeit abgelaufen,0.72,132,8698.0,300.5,22,6,20250412-034655
+691,kein_Terminated,Zeit abgelaufen,0.71,123,8127.0,300.5,22,6,20250412-034707
+692,kein_Terminated,Zeit abgelaufen,0.64,173,6936.75,300.5,22,1,20250412-034719
+693,kein_Terminated,Zeit abgelaufen,0.5,181,5153.5,300.5,24,2,20250412-034732
+694,kein_Terminated,Zeit abgelaufen,0.74,183,8782.0,300.5,24,2,20250412-034744
+695,kein_Terminated,Zeit abgelaufen,0.69,228,8226.0,300.5,24,8,20250412-034757
+696,kein_Terminated,Zeit abgelaufen,0.55,250,5733.5,300.5,24,8,20250412-034809
+697,kein_Terminated,Zeit abgelaufen,0.54,290,-11550.75,300.5,24,8,20250412-034822
+698,kein_Terminated,Zeit abgelaufen,0.71,174,7164.25,300.5,24,8,20250412-034835
+699,kein_Terminated,Zeit abgelaufen,0.42,333,-23286.5,300.5,24,5,20250412-034847
+700,kein_Terminated,Zeit abgelaufen,0.39,371,-27809.25,300.5,23,4,20250412-034900
+701,kein_Terminated,Zeit abgelaufen,0.69,212,327.5,300.5,23,4,20250412-034913
+702,kein_Terminated,Zeit abgelaufen,0.66,218,6871.25,300.5,23,1,20250412-034925
+703,kein_Terminated,Zeit abgelaufen,0.63,216,7675.5,300.5,23,1,20250412-034937
+704,kein_Terminated,Zeit abgelaufen,0.53,296,-8821.75,300.5,23,3,20250412-034950
+705,kein_Terminated,Zeit abgelaufen,0.62,198,-1020.25,300.5,23,3,20250412-035002
+706,kein_Terminated,Zeit abgelaufen,0.64,174,7763.5,300.5,23,0,20250412-035015
+707,kein_Terminated,Zeit abgelaufen,0.74,141,8047.25,300.5,22,7,20250412-035027
+708,kein_Terminated,Zeit abgelaufen,0.64,165,6852.0,300.5,22,7,20250412-035039
+709,kein_Terminated,Zeit abgelaufen,0.72,152,7691.25,300.5,22,1,20250412-035051
+710,kein_Terminated,Zeit abgelaufen,0.7,176,7515.25,300.5,22,1,20250412-035104
+711,kein_Terminated,Zeit abgelaufen,0.73,113,9088.25,300.5,22,7,20250412-035116
+712,kein_Terminated,Zeit abgelaufen,0.73,172,8327.0,300.5,22,7,20250412-035128
+713,kein_Terminated,Zeit abgelaufen,0.72,207,7968.75,300.5,22,7,20250412-035140
+714,kein_Terminated,Zeit abgelaufen,0.35,238,3313.5,300.5,23,1,20250412-035152
+715,kein_Terminated,Zeit abgelaufen,0.65,92,7299.0,300.5,23,1,20250412-035205
+716,kein_Terminated,Zeit abgelaufen,0.7,169,8173.25,300.5,23,8,20250412-035217
+717,kein_Terminated,Zeit abgelaufen,0.66,151,7346.25,300.5,23,8,20250412-035230
+718,kein_Terminated,Zeit abgelaufen,0.77,150,8121.75,300.5,23,1,20250412-035242
+719,kein_Terminated,Zeit abgelaufen,0.58,237,5741.75,300.5,23,1,20250412-035255
+720,kein_Terminated,Zeit abgelaufen,0.72,204,7054.75,300.5,23,0,20250412-035307
+721,kein_Terminated,Zeit abgelaufen,0.65,178,1379.5,300.5,24,6,20250412-035320
+722,kein_Terminated,Zeit abgelaufen,0.61,173,6827.75,300.5,24,6,20250412-035333
+723,kein_Terminated,Zeit abgelaufen,0.64,208,6522.5,300.5,24,6,20250412-035345
+724,kein_Terminated,Zeit abgelaufen,0.45,236,5078.0,300.5,24,6,20250412-035358
+725,kein_Terminated,Zeit abgelaufen,0.63,222,7349.25,300.5,24,9,20250412-035411
+726,kein_Terminated,Zeit abgelaufen,0.67,143,7611.75,300.5,24,9,20250412-035423
+727,kein_Terminated,Zeit abgelaufen,0.6,245,-5785.25,300.5,24,1,20250412-035436
+728,kein_Terminated,Zeit abgelaufen,0.32,266,677.75,300.5,25,7,20250412-035451
+729,kein_Terminated,Zeit abgelaufen,0.34,316,-230.5,300.5,25,7,20250412-035505
+730,kein_Terminated,Zeit abgelaufen,0.32,464,-36784.5,300.5,25,0,20250412-035520
+731,kein_Terminated,Zeit abgelaufen,0.38,393,3663.0,300.5,25,0,20250412-035534
+732,kein_Terminated,Zeit abgelaufen,0.59,285,5098.75,300.5,25,6,20250412-035549
+733,kein_Terminated,Zeit abgelaufen,0.28,337,1605.0,300.5,25,6,20250412-035603
+734,kein_Terminated,Zeit abgelaufen,0.49,284,3120.75,300.5,25,5,20250412-035618
+735,kein_Terminated,Zeit abgelaufen,0.68,171,7178.5,300.5,22,8,20250412-035630
+736,kein_Terminated,Zeit abgelaufen,0.72,161,8219.0,300.5,22,8,20250412-035642
+737,kein_Terminated,Zeit abgelaufen,0.74,168,7894.5,300.5,22,1,20250412-035654
+738,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,212,8006.0,292.5,22,1,20250412-035706
+739,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,3,20250412-035708
+740,kein_Terminated,Zeit abgelaufen,0.69,176,7452.0,300.5,22,3,20250412-035721
+741,kein_Terminated,Zeit abgelaufen,0.65,122,8137.0,300.5,22,9,20250412-035733
+742,kein_Terminated,Zeit abgelaufen,0.59,171,5519.5,300.5,24,8,20250412-035745
+743,kein_Terminated,Zeit abgelaufen,0.67,194,579.25,300.5,24,8,20250412-035758
+744,kein_Terminated,Zeit abgelaufen,0.53,206,5424.75,300.5,24,5,20250412-035811
+745,kein_Terminated,Zeit abgelaufen,0.64,140,6824.75,300.5,24,5,20250412-035823
+746,kein_Terminated,Zeit abgelaufen,0.73,149,8017.5,300.5,24,9,20250412-035836
+747,kein_Terminated,Zeit abgelaufen,0.24,398,-387.75,300.5,24,9,20250412-035848
+748,kein_Terminated,Zeit abgelaufen,0.51,282,-9738.25,300.5,24,2,20250412-035901
+749,kein_Terminated,Zeit abgelaufen,0.66,167,4449.25,300.5,24,4,20250412-035914
+750,kein_Terminated,Zeit abgelaufen,0.69,195,8117.25,300.5,24,4,20250412-035926
+751,kein_Terminated,Zeit abgelaufen,0.51,254,3778.25,300.5,24,7,20250412-035939
+752,kein_Terminated,Zeit abgelaufen,0.61,151,6723.0,300.5,24,7,20250412-035952
+753,kein_Terminated,Zeit abgelaufen,0.6,164,5474.75,300.5,24,4,20250412-040004
+754,kein_Terminated,Zeit abgelaufen,0.46,311,-19172.25,300.5,24,4,20250412-040017
+755,kein_Terminated,Zeit abgelaufen,0.67,254,6358.75,300.5,24,0,20250412-040030
+9,kein_Terminated,Zeit abgelaufen,0.11,561,1350.5,300.5,25,0,20250412-040049
+756,kein_Terminated,Zeit abgelaufen,0.67,200,7293.5,300.5,23,9,20250412-040056
+757,kein_Terminated,Zeit abgelaufen,0.68,186,7026.5,300.5,23,9,20250412-040109
+758,kein_Terminated,Zeit abgelaufen,0.54,266,6153.25,300.5,23,2,20250412-040121
+759,kein_Terminated,Zeit abgelaufen,0.57,176,6142.25,300.5,23,2,20250412-040134
+760,kein_Terminated,Zeit abgelaufen,0.69,141,7899.75,300.5,23,9,20250412-040146
+761,kein_Terminated,Zeit abgelaufen,0.62,234,4751.25,300.5,23,9,20250412-040159
+762,kein_Terminated,Zeit abgelaufen,0.65,121,7730.75,300.5,23,9,20250412-040211
+763,kein_Terminated,Zeit abgelaufen,0.64,152,7377.25,300.5,24,9,20250412-040224
+764,kein_Terminated,Zeit abgelaufen,0.7,146,7742.25,300.5,24,9,20250412-040237
+765,kein_Terminated,Zeit abgelaufen,0.68,204,6143.75,300.5,24,8,20250412-040249
+766,kein_Terminated,Zeit abgelaufen,0.63,184,7253.25,300.5,24,8,20250412-040302
+767,kein_Terminated,Zeit abgelaufen,0.69,134,8214.0,300.5,24,5,20250412-040315
+768,kein_Terminated,Zeit abgelaufen,0.66,205,2716.5,300.5,24,5,20250412-040327
+769,kein_Terminated,Zeit abgelaufen,0.71,225,7596.0,300.5,24,0,20250412-040340
+770,kein_Terminated,Zeit abgelaufen,0.74,120,8459.0,300.5,22,7,20250412-040352
+771,kein_Terminated,Zeit abgelaufen,0.65,114,7282.25,300.5,22,7,20250412-040404
+772,kein_Terminated,Zeit abgelaufen,0.66,170,7052.0,300.5,22,9,20250412-040416
+773,kein_Terminated,Zeit abgelaufen,0.76,108,9412.25,300.5,22,9,20250412-040428
+774,kein_Terminated,Zeit abgelaufen,0.78,202,8072.25,300.5,22,9,20250412-040441
+775,kein_Terminated,Zeit abgelaufen,0.71,132,8506.0,300.5,22,9,20250412-040453
+776,kein_Terminated,Zeit abgelaufen,0.71,163,9134.5,300.5,22,4,20250412-040505
+777,kein_Terminated,Zeit abgelaufen,0.39,311,988.5,300.5,23,9,20250412-040517
+778,kein_Terminated,Zeit abgelaufen,0.55,232,6196.5,300.5,23,9,20250412-040530
+779,kein_Terminated,Zeit abgelaufen,0.69,178,6920.25,300.5,23,2,20250412-040542
+780,kein_Terminated,Zeit abgelaufen,0.56,268,4474.25,300.5,23,2,20250412-040555
+781,kein_Terminated,Zeit abgelaufen,0.72,177,8505.25,300.5,23,4,20250412-040607
+782,kein_Terminated,Zeit abgelaufen,0.62,273,-5924.25,300.5,23,4,20250412-040620
+783,kein_Terminated,Zeit abgelaufen,0.66,226,5927.75,300.5,23,6,20250412-040632
+784,kein_Terminated,Zeit abgelaufen,0.74,124,8647.75,300.5,22,4,20250412-040644
+785,kein_Terminated,Zeit abgelaufen,0.74,180,8136.0,300.5,22,4,20250412-040657
+786,kein_Terminated,Zeit abgelaufen,0.72,172,8565.25,300.5,22,7,20250412-040709
+787,kein_Terminated,Zeit abgelaufen,0.73,139,8101.5,300.5,22,7,20250412-040721
+788,kein_Terminated,Zeit abgelaufen,0.52,137,6452.25,300.5,22,3,20250412-040733
+789,kein_Terminated,Zeit abgelaufen,0.73,145,7980.0,300.5,22,3,20250412-040745
+790,kein_Terminated,Zeit abgelaufen,0.72,180,8392.5,300.5,22,9,20250412-040757
+791,kein_Terminated,Zeit abgelaufen,0.61,178,6666.25,300.5,24,7,20250412-040810
+792,kein_Terminated,Zeit abgelaufen,0.56,236,6670.75,300.5,24,7,20250412-040823
+793,kein_Terminated,Zeit abgelaufen,0.59,149,6858.0,300.5,24,7,20250412-040835
+794,kein_Terminated,Zeit abgelaufen,0.71,155,8901.75,300.5,24,7,20250412-040848
+795,kein_Terminated,Zeit abgelaufen,0.71,224,7471.25,300.5,24,3,20250412-040900
+796,kein_Terminated,Zeit abgelaufen,0.63,252,7055.75,300.5,24,3,20250412-040913
+797,kein_Terminated,Zeit abgelaufen,0.58,206,2848.75,300.5,24,6,20250412-040925
+798,kein_Terminated,Zeit abgelaufen,0.66,175,6037.25,300.5,24,5,20250412-040938
+799,kein_Terminated,Zeit abgelaufen,0.67,186,6258.0,300.5,24,5,20250412-040951
+800,kein_Terminated,Zeit abgelaufen,0.73,190,7634.5,300.5,24,0,20250412-041003
+801,kein_Terminated,Zeit abgelaufen,0.76,199,7695.5,300.5,24,0,20250412-041016
+802,kein_Terminated,Zeit abgelaufen,0.57,280,-9675.5,300.5,24,4,20250412-041028
+803,kein_Terminated,Zeit abgelaufen,0.68,228,6212.5,300.5,24,4,20250412-041041
+804,kein_Terminated,Zeit abgelaufen,0.67,165,7756.5,300.5,24,3,20250412-041054
+805,kein_Terminated,Zeit abgelaufen,0.62,257,3836.5,300.5,24,9,20250412-041106
+806,kein_Terminated,Zeit abgelaufen,0.67,197,8034.75,300.5,24,9,20250412-041119
+807,kein_Terminated,Zeit abgelaufen,0.59,237,5943.25,300.5,24,1,20250412-041132
+808,kein_Terminated,Zeit abgelaufen,0.76,134,8998.0,300.5,24,1,20250412-041144
+809,kein_Terminated,Zeit abgelaufen,0.59,256,5096.5,300.5,24,2,20250412-041157
+810,kein_Terminated,Zeit abgelaufen,0.64,276,6030.75,300.5,24,2,20250412-041210
+811,kein_Terminated,Zeit abgelaufen,0.61,220,5707.5,300.5,24,1,20250412-041223
+812,kein_Terminated,Zeit abgelaufen,0.65,323,2570.0,300.5,25,6,20250412-041237
+813,kein_Terminated,Zeit abgelaufen,0.6,238,4468.75,300.5,25,6,20250412-041252
+814,kein_Terminated,Zeit abgelaufen,0.39,390,1401.0,300.5,25,0,20250412-041307
+815,kein_Terminated,Zeit abgelaufen,0.41,342,1222.0,300.5,25,0,20250412-041321
+816,kein_Terminated,Zeit abgelaufen,0.6,344,3675.5,300.5,25,8,20250412-041335
+817,kein_Terminated,Zeit abgelaufen,0.32,355,678.5,300.5,25,8,20250412-041350
+818,kein_Terminated,Zeit abgelaufen,0.25,352,415.0,300.5,25,9,20250412-041404
+819,kein_Terminated,Zeit abgelaufen,0.74,143,7657.75,300.5,23,9,20250412-041417
+820,kein_Terminated,Zeit abgelaufen,0.66,228,317.75,300.5,23,9,20250412-041429
+821,kein_Terminated,Zeit abgelaufen,0.71,185,7962.25,300.5,23,2,20250412-041442
+822,kein_Terminated,Zeit abgelaufen,0.68,200,4499.75,300.5,23,2,20250412-041454
+823,kein_Terminated,Zeit abgelaufen,0.6,130,5801.0,300.5,23,6,20250412-041507
+824,kein_Terminated,Zeit abgelaufen,0.65,170,6791.25,300.5,23,6,20250412-041519
+825,kein_Terminated,Zeit abgelaufen,0.67,196,8131.5,300.5,23,6,20250412-041532
+826,kein_Terminated,Zeit abgelaufen,0.74,146,8704.5,300.5,22,8,20250412-041544
+827,kein_Terminated,Zeit abgelaufen,0.79,140,9284.5,300.5,22,8,20250412-041556
+828,kein_Terminated,Zeit abgelaufen,0.48,282,4921.5,300.5,22,3,20250412-041608
+829,kein_Terminated,Zeit abgelaufen,0.75,143,9166.75,300.5,22,3,20250412-041621
+830,kein_Terminated,Zeit abgelaufen,0.7,148,8333.25,300.5,22,2,20250412-041633
+831,kein_Terminated,Zeit abgelaufen,0.53,200,4678.75,300.5,22,2,20250412-041645
+832,kein_Terminated,Zeit abgelaufen,0.63,123,7707.5,300.5,22,2,20250412-041657
+833,kein_Terminated,Zeit abgelaufen,0.49,337,-9158.75,300.5,25,1,20250412-041712
+834,kein_Terminated,Zeit abgelaufen,0.5,276,3845.25,300.5,25,1,20250412-041726
+835,kein_Terminated,Zeit abgelaufen,0.33,376,806.5,300.5,25,7,20250412-041741
+836,kein_Terminated,Zeit abgelaufen,0.36,350,1250.5,300.5,25,7,20250412-041755
+837,kein_Terminated,Zeit abgelaufen,0.33,325,911.25,300.5,25,7,20250412-041809
+838,kein_Terminated,Zeit abgelaufen,0.33,408,-926.25,300.5,25,7,20250412-041824
+10,kein_Terminated,Zeit abgelaufen,0.5,321,854.75,300.5,25,5,20250412-041847
+839,kein_Terminated,Zeit abgelaufen,0.43,334,1276.5,300.5,25,1,20250412-041855
+840,kein_Terminated,Zeit abgelaufen,0.65,110,7141.5,300.5,23,7,20250412-041907
+841,kein_Terminated,Zeit abgelaufen,0.71,190,7954.25,300.5,23,7,20250412-041920
+842,kein_Terminated,Zeit abgelaufen,0.56,167,5945.5,300.5,23,1,20250412-041932
+843,kein_Terminated,Zeit abgelaufen,0.61,170,6727.0,300.5,23,1,20250412-041945
+844,kein_Terminated,Zeit abgelaufen,0.64,177,6591.25,300.5,23,5,20250412-041957
+845,kein_Terminated,Zeit abgelaufen,0.7,173,7472.0,300.5,23,5,20250412-042010
+846,kein_Terminated,Zeit abgelaufen,0.66,225,7136.75,300.5,23,0,20250412-042022
+847,kein_Terminated,Zeit abgelaufen,0.69,246,6570.0,300.5,24,0,20250412-042034
+848,kein_Terminated,Zeit abgelaufen,0.73,178,8073.5,300.5,24,0,20250412-042047
+849,kein_Terminated,Zeit abgelaufen,0.69,131,7703.0,300.5,24,5,20250412-042100
+850,kein_Terminated,Zeit abgelaufen,0.63,207,-3334.25,300.5,24,5,20250412-042112
+851,kein_Terminated,Zeit abgelaufen,0.7,172,7225.75,300.5,24,5,20250412-042125
+852,kein_Terminated,Zeit abgelaufen,0.64,142,6590.5,300.5,24,5,20250412-042138
+853,kein_Terminated,Zeit abgelaufen,0.73,193,8009.5,300.5,24,9,20250412-042150
+854,kein_Terminated,Zeit abgelaufen,0.69,149,7114.5,300.5,24,9,20250412-042203
+855,kein_Terminated,Zeit abgelaufen,0.69,164,7412.0,300.5,24,9,20250412-042215
+856,kein_Terminated,Zeit abgelaufen,0.76,162,9030.0,300.5,24,2,20250412-042228
+857,kein_Terminated,Zeit abgelaufen,0.72,157,7929.5,300.5,24,2,20250412-042241
+858,kein_Terminated,Zeit abgelaufen,0.6,264,-376.75,300.5,24,3,20250412-042253
+859,kein_Terminated,Zeit abgelaufen,0.56,207,5969.5,300.5,24,3,20250412-042306
+860,kein_Terminated,Zeit abgelaufen,0.67,163,6749.75,300.5,24,5,20250412-042318
+861,kein_Terminated,Zeit abgelaufen,0.64,255,-1699.0,300.5,24,9,20250412-042331
+862,kein_Terminated,Zeit abgelaufen,0.7,203,7484.0,300.5,24,9,20250412-042344
+863,kein_Terminated,Zeit abgelaufen,0.71,194,8176.5,300.5,24,8,20250412-042356
+864,kein_Terminated,Zeit abgelaufen,0.67,157,7144.0,300.5,24,8,20250412-042409
+865,kein_Terminated,Zeit abgelaufen,0.56,155,4007.25,300.5,24,8,20250412-042421
+866,kein_Terminated,Zeit abgelaufen,0.66,267,-3743.5,300.5,24,8,20250412-042434
+867,kein_Terminated,Zeit abgelaufen,0.71,135,7442.5,300.5,24,1,20250412-042447
+868,kein_Terminated,Zeit abgelaufen,0.68,271,5578.25,300.5,25,0,20250412-042501
+869,kein_Terminated,Zeit abgelaufen,0.43,252,2675.0,300.5,25,0,20250412-042516
+870,kein_Terminated,Zeit abgelaufen,0.01,602,81.75,300.5,25,3,20250412-042531
+871,kein_Terminated,Zeit abgelaufen,0.01,602,114.5,300.5,25,3,20250412-042547
+872,kein_Terminated,Zeit abgelaufen,0.22,384,-2254.25,300.5,25,0,20250412-042601
+873,kein_Terminated,Zeit abgelaufen,0.67,285,6098.75,300.5,25,0,20250412-042616
+874,kein_Terminated,Zeit abgelaufen,0.46,328,-1901.75,300.5,25,9,20250412-042630
+875,kein_Terminated,Zeit abgelaufen,0.7,125,8241.25,300.5,22,7,20250412-042643
+876,kein_Terminated,Zeit abgelaufen,0.62,197,7342.0,300.5,22,7,20250412-042655
+877,kein_Terminated,Zeit abgelaufen,0.74,190,8261.5,300.5,22,3,20250412-042707
+878,kein_Terminated,Zeit abgelaufen,0.65,217,6609.75,300.5,22,3,20250412-042719
+879,kein_Terminated,Zeit abgelaufen,0.73,138,8742.0,300.5,22,3,20250412-042731
+880,kein_Terminated,Zeit abgelaufen,0.76,109,7852.25,300.5,22,3,20250412-042743
+881,kein_Terminated,Zeit abgelaufen,0.73,172,8826.0,300.5,22,7,20250412-042755
+882,kein_Terminated,Zeit abgelaufen,0.67,237,6326.0,300.5,23,8,20250412-042808
+883,kein_Terminated,Zeit abgelaufen,0.72,186,8525.25,300.5,23,8,20250412-042820
+884,kein_Terminated,Zeit abgelaufen,0.57,207,5908.0,300.5,23,9,20250412-042833
+885,kein_Terminated,Zeit abgelaufen,0.66,154,7270.25,300.5,23,9,20250412-042845
+886,kein_Terminated,Zeit abgelaufen,0.73,211,7509.0,300.5,23,2,20250412-042858
+887,kein_Terminated,Zeit abgelaufen,0.6,265,5325.25,300.5,23,2,20250412-042910
+888,kein_Terminated,Zeit abgelaufen,0.69,209,5313.0,300.5,23,7,20250412-042922
+889,kein_Terminated,Zeit abgelaufen,0.73,116,8674.0,300.5,23,6,20250412-042935
+890,kein_Terminated,Zeit abgelaufen,0.68,136,7651.0,300.5,23,6,20250412-042947
+891,kein_Terminated,Zeit abgelaufen,0.59,185,6236.75,300.5,23,8,20250412-043000
+892,kein_Terminated,Zeit abgelaufen,0.75,148,8796.5,300.5,23,8,20250412-043012
+893,kein_Terminated,Zeit abgelaufen,0.75,189,7773.0,300.5,23,2,20250412-043025
+894,kein_Terminated,Zeit abgelaufen,0.74,150,7564.25,300.5,23,2,20250412-043037
+895,kein_Terminated,Zeit abgelaufen,0.72,148,7546.5,300.5,23,8,20250412-043050
+896,kein_Terminated,Zeit abgelaufen,0.73,193,8000.75,300.5,22,4,20250412-043102
+897,kein_Terminated,Zeit abgelaufen,0.74,143,8036.0,300.5,22,4,20250412-043114
+898,kein_Terminated,Zeit abgelaufen,0.77,193,9826.5,300.5,22,0,20250412-043126
+899,kein_Terminated,Zeit abgelaufen,0.78,150,9660.25,300.5,22,0,20250412-043138
+900,kein_Terminated,Zeit abgelaufen,0.75,192,8401.5,300.5,22,5,20250412-043150
+901,kein_Terminated,Zeit abgelaufen,0.56,233,5948.75,300.5,22,5,20250412-043202
+902,kein_Terminated,Zeit abgelaufen,0.77,148,9600.25,300.5,22,7,20250412-043214
+903,kein_Terminated,Zeit abgelaufen,0.56,211,4998.0,300.5,22,7,20250412-043227
+904,kein_Terminated,Zeit abgelaufen,0.76,180,8755.0,300.5,22,7,20250412-043239
+905,kein_Terminated,Zeit abgelaufen,0.79,170,9808.25,300.5,22,8,20250412-043251
+906,kein_Terminated,Zeit abgelaufen,0.77,141,9572.25,300.5,22,8,20250412-043303
+907,kein_Terminated,Zeit abgelaufen,0.71,131,8670.75,300.5,22,2,20250412-043315
+908,kein_Terminated,Zeit abgelaufen,0.72,143,8215.0,300.5,22,2,20250412-043327
+909,kein_Terminated,Zeit abgelaufen,0.77,181,9007.75,300.5,22,1,20250412-043339
+910,kein_Terminated,Zeit abgelaufen,0.72,198,6096.0,300.5,23,4,20250412-043352
+911,kein_Terminated,Zeit abgelaufen,0.72,165,8255.75,300.5,23,4,20250412-043404
+912,kein_Terminated,Zeit abgelaufen,0.72,183,8324.5,300.5,23,5,20250412-043417
+913,kein_Terminated,Zeit abgelaufen,0.75,152,8390.25,300.5,23,5,20250412-043429
+914,kein_Terminated,Zeit abgelaufen,0.7,133,7995.75,300.5,23,9,20250412-043442
+915,kein_Terminated,Zeit abgelaufen,0.75,203,5443.75,300.5,23,9,20250412-043454
+916,kein_Terminated,Zeit abgelaufen,0.65,168,7238.25,300.5,23,6,20250412-043507
+917,kein_Terminated,Zeit abgelaufen,0.48,290,3016.75,300.5,25,9,20250412-043521
+918,kein_Terminated,Zeit abgelaufen,0.53,315,2654.0,300.5,25,9,20250412-043536
+919,kein_Terminated,Zeit abgelaufen,0.62,246,4431.25,300.5,25,2,20250412-043550
+920,kein_Terminated,Zeit abgelaufen,0.51,252,2901.75,300.5,25,2,20250412-043605
+921,kein_Terminated,Zeit abgelaufen,0.4,175,3504.0,300.5,25,9,20250412-043619
+11,kein_Terminated,Zeit abgelaufen,0.22,96,2681.75,300.5,23,3,20250412-043639
+922,kein_Terminated,Zeit abgelaufen,0.61,305,5254.0,300.5,25,9,20250412-043646
+923,kein_Terminated,Zeit abgelaufen,0.5,287,2858.5,300.5,25,4,20250412-043700
+924,kein_Terminated,Zeit abgelaufen,0.69,181,8298.75,300.5,23,1,20250412-043713
+925,kein_Terminated,Zeit abgelaufen,0.73,194,8488.5,300.5,23,1,20250412-043725
+926,kein_Terminated,Zeit abgelaufen,0.75,175,6350.5,300.5,23,7,20250412-043738
+927,kein_Terminated,Zeit abgelaufen,0.7,126,8258.0,300.5,23,7,20250412-043750
+928,kein_Terminated,Zeit abgelaufen,0.7,159,7068.25,300.5,23,5,20250412-043803
+929,kein_Terminated,Zeit abgelaufen,0.74,199,8330.25,300.5,23,5,20250412-043815
+930,kein_Terminated,Zeit abgelaufen,0.73,162,8371.75,300.5,23,6,20250412-043828
+931,kein_Terminated,Zeit abgelaufen,0.62,205,6839.0,300.5,23,0,20250412-043840
+932,kein_Terminated,Zeit abgelaufen,0.7,247,7656.75,300.5,23,0,20250412-043852
+933,kein_Terminated,Zeit abgelaufen,0.65,208,6920.75,300.5,23,7,20250412-043905
+934,kein_Terminated,Zeit abgelaufen,0.75,216,1712.0,300.5,23,7,20250412-043917
+935,kein_Terminated,Zeit abgelaufen,0.62,201,5649.25,300.5,23,3,20250412-043930
+936,kein_Terminated,Zeit abgelaufen,0.69,180,7972.5,300.5,23,3,20250412-043942
+937,kein_Terminated,Zeit abgelaufen,0.77,164,9278.75,300.5,23,6,20250412-043955
+938,kein_Terminated,Zeit abgelaufen,0.75,144,8627.75,300.5,23,8,20250412-044007
+939,kein_Terminated,Zeit abgelaufen,0.73,201,8480.5,300.5,23,8,20250412-044020
+940,kein_Terminated,Zeit abgelaufen,0.71,170,7434.5,300.5,23,5,20250412-044032
+941,kein_Terminated,Zeit abgelaufen,0.65,186,7267.0,300.5,23,5,20250412-044045
+942,kein_Terminated,Zeit abgelaufen,0.58,178,5476.25,300.5,23,5,20250412-044057
+943,kein_Terminated,Zeit abgelaufen,0.7,195,6887.5,300.5,23,5,20250412-044110
+944,kein_Terminated,Zeit abgelaufen,0.75,172,9062.75,300.5,23,8,20250412-044122
+945,kein_Terminated,Zeit abgelaufen,0.6,223,5086.0,300.5,25,5,20250412-044137
+946,kein_Terminated,Zeit abgelaufen,0.58,340,4527.0,300.5,25,5,20250412-044151
+947,kein_Terminated,Zeit abgelaufen,0.57,332,-10588.75,300.5,25,0,20250412-044206
+948,kein_Terminated,Zeit abgelaufen,0.4,352,2658.0,300.5,25,0,20250412-044220
+949,kein_Terminated,Zeit abgelaufen,0.56,322,4614.0,300.5,25,5,20250412-044235
+950,kein_Terminated,Zeit abgelaufen,0.53,281,4930.5,300.5,25,5,20250412-044249
+951,kein_Terminated,Zeit abgelaufen,0.43,411,-15617.5,300.5,25,4,20250412-044304
+952,kein_Terminated,Zeit abgelaufen,0.54,311,4258.25,300.5,22,5,20250412-044316
+953,kein_Terminated,Zeit abgelaufen,0.7,171,8632.25,300.5,22,5,20250412-044328
+954,kein_Terminated,Zeit abgelaufen,0.75,157,8615.0,300.5,22,7,20250412-044341
+955,kein_Terminated,Zeit abgelaufen,0.78,176,9148.5,300.5,22,7,20250412-044353
+956,kein_Terminated,Zeit abgelaufen,0.79,198,9207.75,300.5,22,0,20250412-044405
+957,kein_Terminated,Zeit abgelaufen,0.73,127,8600.5,300.5,22,0,20250412-044417
+958,kein_Terminated,Zeit abgelaufen,0.72,182,7098.75,300.5,22,4,20250412-044429
+959,kein_Terminated,Zeit abgelaufen,0.7,146,6971.5,300.5,22,4,20250412-044441
+960,kein_Terminated,Zeit abgelaufen,0.73,164,7932.0,300.5,22,4,20250412-044453
+961,kein_Terminated,Zeit abgelaufen,0.74,134,8188.75,300.5,22,8,20250412-044506
+962,kein_Terminated,Zeit abgelaufen,0.77,97,9334.0,300.5,22,8,20250412-044518
+963,kein_Terminated,Zeit abgelaufen,0.71,159,7119.5,300.5,22,3,20250412-044530
+964,kein_Terminated,Zeit abgelaufen,0.73,163,8068.75,300.5,22,3,20250412-044542
+965,kein_Terminated,Zeit abgelaufen,0.73,163,8862.75,300.5,22,9,20250412-044554
+966,kein_Terminated,Zeit abgelaufen,0.71,141,8300.5,300.5,23,9,20250412-044607
+967,kein_Terminated,Zeit abgelaufen,0.4,322,2443.0,300.5,23,9,20250412-044619
+968,kein_Terminated,Zeit abgelaufen,0.75,139,9107.5,300.5,23,5,20250412-044632
+969,kein_Terminated,Zeit abgelaufen,0.74,201,7496.25,300.5,23,5,20250412-044644
+970,kein_Terminated,Zeit abgelaufen,0.7,177,8015.75,300.5,23,3,20250412-044657
+971,kein_Terminated,Zeit abgelaufen,0.74,157,8431.0,300.5,23,3,20250412-044709
+972,kein_Terminated,Zeit abgelaufen,0.71,249,8047.0,300.5,23,8,20250412-044722
+973,kein_Terminated,Zeit abgelaufen,0.77,168,8661.5,300.5,23,5,20250412-044734
+974,kein_Terminated,Zeit abgelaufen,0.69,148,7585.5,300.5,23,5,20250412-044747
+975,kein_Terminated,Zeit abgelaufen,0.61,212,6267.25,300.5,23,7,20250412-044759
+976,kein_Terminated,Zeit abgelaufen,0.68,159,7106.5,300.5,23,7,20250412-044811
+977,kein_Terminated,Zeit abgelaufen,0.79,136,9490.0,300.5,23,0,20250412-044824
+978,kein_Terminated,Zeit abgelaufen,0.75,168,8675.75,300.5,23,0,20250412-044836
+979,kein_Terminated,Zeit abgelaufen,0.73,175,8552.5,300.5,23,9,20250412-044849
+980,kein_Terminated,Zeit abgelaufen,0.64,287,3703.75,300.5,25,7,20250412-044903
+981,kein_Terminated,Zeit abgelaufen,0.51,259,3925.25,300.5,25,7,20250412-044918
+982,kein_Terminated,Zeit abgelaufen,0.53,355,-11273.5,300.5,25,8,20250412-044932
+983,kein_Terminated,Zeit abgelaufen,0.35,337,-154.5,300.5,25,8,20250412-044947
+984,kein_Terminated,Zeit abgelaufen,0.62,284,5990.5,300.5,25,4,20250412-045001
+985,kein_Terminated,Zeit abgelaufen,0.64,278,6484.75,300.5,25,4,20250412-045016
+986,kein_Terminated,Zeit abgelaufen,0.52,325,-1037.0,300.5,25,2,20250412-045030
+987,kein_Terminated,Zeit abgelaufen,0.69,167,7613.5,300.5,24,0,20250412-045043
+988,kein_Terminated,Zeit abgelaufen,0.77,201,8017.0,300.5,24,0,20250412-045055
+989,kein_Terminated,Zeit abgelaufen,0.68,215,4632.5,300.5,24,8,20250412-045108
+990,kein_Terminated,Zeit abgelaufen,0.65,200,7650.0,300.5,24,8,20250412-045121
+991,kein_Terminated,Zeit abgelaufen,0.71,161,8466.0,300.5,24,7,20250412-045133
+992,kein_Terminated,Zeit abgelaufen,0.69,191,7903.75,300.5,24,7,20250412-045146
+993,kein_Terminated,Zeit abgelaufen,0.75,153,8527.0,300.5,24,1,20250412-045158
+994,kein_Terminated,Zeit abgelaufen,0.77,141,8746.25,300.5,22,0,20250412-045210
+995,kein_Terminated,Zeit abgelaufen,0.79,176,9877.0,300.5,22,0,20250412-045223
+996,kein_Terminated,Zeit abgelaufen,0.75,168,7873.0,300.5,22,5,20250412-045235
+997,kein_Terminated,Zeit abgelaufen,0.6,184,6586.25,300.5,22,5,20250412-045247
+998,kein_Terminated,Zeit abgelaufen,0.77,166,9246.0,300.5,22,7,20250412-045259
+999,kein_Terminated,Zeit abgelaufen,0.75,209,8465.5,300.5,22,7,20250412-045311
+1000,kein_Terminated,Zeit abgelaufen,0.76,181,8598.25,300.5,22,0,20250412-045324
+1001,kein_Terminated,Zeit abgelaufen,0.77,161,9749.75,300.5,22,1,20250412-045336
+1002,kein_Terminated,Zeit abgelaufen,0.75,139,8767.75,300.5,22,1,20250412-045348
+1003,kein_Terminated,Zeit abgelaufen,0.69,169,6932.25,300.5,22,1,20250412-045400
+1004,kein_Terminated,Zeit abgelaufen,0.58,218,4161.75,300.5,22,1,20250412-045412
+12,kein_Terminated,Zeit abgelaufen,0.01,602,202.5,300.5,23,5,20250412-045432
+1005,kein_Terminated,Zeit abgelaufen,0.73,175,8391.0,300.5,22,0,20250412-045437
+1006,kein_Terminated,Zeit abgelaufen,0.79,184,9429.25,300.5,22,0,20250412-045449
+1007,kein_Terminated,Zeit abgelaufen,0.68,187,7057.75,300.5,22,1,20250412-045501
+1008,kein_Terminated,Zeit abgelaufen,0.61,275,6191.25,300.5,24,1,20250412-045514
+1009,kein_Terminated,Zeit abgelaufen,0.72,214,8376.5,300.5,24,1,20250412-045526
+1010,kein_Terminated,Zeit abgelaufen,0.74,187,8358.25,300.5,24,6,20250412-045539
+1011,kein_Terminated,Zeit abgelaufen,0.78,188,9761.75,300.5,24,6,20250412-045552
+1012,kein_Terminated,Zeit abgelaufen,0.54,223,5137.75,300.5,24,1,20250412-045604
+1013,kein_Terminated,Zeit abgelaufen,0.76,184,7043.0,300.5,24,1,20250412-045617
+1014,kein_Terminated,Zeit abgelaufen,0.53,232,3566.5,300.5,24,4,20250412-045629
+1015,kein_Terminated,Zeit abgelaufen,0.45,402,-6486.75,300.5,25,2,20250412-045644
+1016,kein_Terminated,Zeit abgelaufen,0.49,248,3258.25,300.5,25,2,20250412-045658
+1017,kein_Terminated,Zeit abgelaufen,0.56,297,2957.25,300.5,25,5,20250412-045713
+1018,kein_Terminated,Zeit abgelaufen,0.51,370,-5585.25,300.5,25,5,20250412-045728
+1019,kein_Terminated,Zeit abgelaufen,0.29,475,-576.25,300.5,25,6,20250412-045742
+1020,kein_Terminated,Zeit abgelaufen,0.65,253,6995.0,300.5,25,6,20250412-045757
+1021,kein_Terminated,Zeit abgelaufen,0.56,314,3948.75,300.5,25,4,20250412-045811
+1022,kein_Terminated,Zeit abgelaufen,0.74,186,8367.0,300.5,24,9,20250412-045824
+1023,kein_Terminated,Zeit abgelaufen,0.71,239,8865.0,300.5,24,9,20250412-045836
+1024,kein_Terminated,Zeit abgelaufen,0.76,203,7594.75,300.5,24,3,20250412-045849
+1025,kein_Terminated,Zeit abgelaufen,0.56,210,6263.75,300.5,24,3,20250412-045902
+1026,kein_Terminated,Zeit abgelaufen,0.78,174,9209.25,300.5,24,2,20250412-045914
+1027,kein_Terminated,Zeit abgelaufen,0.75,171,8260.75,300.5,24,2,20250412-045927
+1028,kein_Terminated,Zeit abgelaufen,0.76,165,8034.5,300.5,24,4,20250412-045939
+1029,kein_Terminated,Zeit abgelaufen,0.71,162,6600.5,300.5,23,5,20250412-045952
+1030,kein_Terminated,Zeit abgelaufen,0.77,197,8258.5,300.5,23,5,20250412-050004
+1031,kein_Terminated,Zeit abgelaufen,0.79,143,8607.25,300.5,23,3,20250412-050017
+1032,kein_Terminated,Zeit abgelaufen,0.65,165,6259.5,300.5,23,3,20250412-050029
+1033,kein_Terminated,Zeit abgelaufen,0.76,168,7546.75,300.5,23,9,20250412-050042
+1034,kein_Terminated,Zeit abgelaufen,0.71,216,7845.5,300.5,23,9,20250412-050054
+1035,kein_Terminated,Zeit abgelaufen,0.75,177,7668.25,300.5,23,3,20250412-050107
+1036,kein_Terminated,Zeit abgelaufen,0.54,310,-13759.25,300.5,24,4,20250412-050119
+1037,kein_Terminated,Zeit abgelaufen,0.75,167,7761.0,300.5,24,4,20250412-050132
+1038,kein_Terminated,Zeit abgelaufen,0.66,133,6750.5,300.5,24,1,20250412-050144
+1039,kein_Terminated,Zeit abgelaufen,0.63,185,6350.5,300.5,24,1,20250412-050157
+1040,kein_Terminated,Zeit abgelaufen,0.47,233,1275.25,300.5,24,4,20250412-050210
+1041,kein_Terminated,Zeit abgelaufen,0.69,187,8254.75,300.5,24,4,20250412-050222
+1042,kein_Terminated,Zeit abgelaufen,0.77,175,8500.75,300.5,24,7,20250412-050235
+1043,kein_Terminated,Zeit abgelaufen,0.39,389,-25133.75,300.5,23,9,20250412-050247
+1044,kein_Terminated,Zeit abgelaufen,0.78,199,8363.25,300.5,23,9,20250412-050300
+1045,kein_Terminated,Zeit abgelaufen,0.73,153,9262.5,300.5,23,4,20250412-050312
+1046,kein_Terminated,Zeit abgelaufen,0.79,195,8353.75,300.5,23,4,20250412-050325
+1047,kein_Terminated,Zeit abgelaufen,0.65,218,4111.75,300.5,23,9,20250412-050337
+1048,kein_Terminated,Zeit abgelaufen,0.73,178,4732.0,300.5,23,9,20250412-050350
+1049,kein_Terminated,Zeit abgelaufen,0.74,146,7705.75,300.5,23,7,20250412-050402
+1050,kein_Terminated,Zeit abgelaufen,0.64,240,7445.25,300.5,24,3,20250412-050415
+1051,kein_Terminated,Zeit abgelaufen,0.66,206,7649.25,300.5,24,3,20250412-050427
+1052,kein_Terminated,Zeit abgelaufen,0.56,282,-9247.75,300.5,24,5,20250412-050440
+1053,kein_Terminated,Zeit abgelaufen,0.67,183,6966.5,300.5,24,5,20250412-050453
+1054,kein_Terminated,Zeit abgelaufen,0.66,199,6734.5,300.5,24,5,20250412-050506
+1055,kein_Terminated,Zeit abgelaufen,0.65,248,33.0,300.5,24,5,20250412-050518
+1056,kein_Terminated,Zeit abgelaufen,0.72,187,7695.25,300.5,24,5,20250412-050531
+1057,kein_Terminated,Zeit abgelaufen,0.74,198,8359.0,300.5,24,7,20250412-050544
+1058,kein_Terminated,Zeit abgelaufen,0.76,230,8550.25,300.5,24,7,20250412-050556
+1059,kein_Terminated,Zeit abgelaufen,0.75,119,9309.0,300.5,24,5,20250412-050609
+1060,kein_Terminated,Zeit abgelaufen,0.66,157,7080.75,300.5,24,5,20250412-050621
+1061,kein_Terminated,Zeit abgelaufen,0.71,222,8184.5,300.5,24,1,20250412-050634
+1062,kein_Terminated,Zeit abgelaufen,0.66,219,6460.25,300.5,24,1,20250412-050647
+1063,kein_Terminated,Zeit abgelaufen,0.77,211,8150.5,300.5,24,7,20250412-050659
+1064,kein_Terminated,Zeit abgelaufen,0.64,260,279.25,300.5,22,1,20250412-050712
+1065,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,189,8595.25,294.0,22,1,20250412-050724
+1066,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-11.75,0.0,22,8,20250412-050726
+1067,kein_Terminated,Zeit abgelaufen,0.78,180,9570.75,300.5,22,8,20250412-050738
+1068,kein_Terminated,Zeit abgelaufen,0.62,246,-6328.0,300.5,22,0,20250412-050750
+1069,kein_Terminated,Zeit abgelaufen,0.75,226,7474.75,300.5,22,0,20250412-050803
+1070,kein_Terminated,Zeit abgelaufen,0.63,241,7336.5,300.5,22,2,20250412-050815
+1071,kein_Terminated,Zeit abgelaufen,0.47,228,2591.25,300.5,25,9,20250412-050829
+1072,kein_Terminated,Zeit abgelaufen,0.64,262,6291.25,300.5,25,9,20250412-050844
+1073,kein_Terminated,Zeit abgelaufen,0.4,429,-10125.25,300.5,25,1,20250412-050859
+1074,kein_Terminated,Zeit abgelaufen,0.67,238,6453.75,300.5,25,1,20250412-050913
+1075,kein_Terminated,Zeit abgelaufen,0.47,429,-25861.0,300.5,25,0,20250412-050928
+1076,kein_Terminated,Zeit abgelaufen,0.58,275,3015.75,300.5,25,0,20250412-050942
+1077,kein_Terminated,Zeit abgelaufen,0.67,283,5623.0,300.5,25,9,20250412-050957
+1078,kein_Terminated,Zeit abgelaufen,0.76,172,9081.25,300.5,22,9,20250412-051009
+1079,kein_Terminated,Zeit abgelaufen,0.75,186,7285.25,300.5,22,9,20250412-051021
+1080,kein_Terminated,Zeit abgelaufen,0.75,138,8071.25,300.5,22,6,20250412-051033
+1081,kein_Terminated,Zeit abgelaufen,0.77,191,8205.75,300.5,22,6,20250412-051046
+1082,kein_Terminated,Zeit abgelaufen,0.71,176,7458.5,300.5,22,0,20250412-051058
+1083,kein_Terminated,Zeit abgelaufen,0.69,183,8011.75,300.5,22,0,20250412-051110
+1084,kein_Terminated,Zeit abgelaufen,0.77,178,7484.5,300.5,22,6,20250412-051122
+1085,kein_Terminated,Zeit abgelaufen,0.79,192,9171.75,300.5,22,5,20250412-051134
+1086,kein_Terminated,Zeit abgelaufen,0.71,135,6459.0,300.5,22,5,20250412-051146
+1087,kein_Terminated,Zeit abgelaufen,0.76,166,8388.75,300.5,22,4,20250412-051158
+1088,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,196,9499.0,280.0,22,4,20250412-051210
+1089,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,6,20250412-051212
+13,kein_Terminated,Zeit abgelaufen,0.16,538,2070.5,300.5,23,1,20250412-051233
+1090,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,179,8503.25,295.5,22,6,20250412-051237
+1091,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,6,20250412-051239
+1092,kein_Terminated,Zeit abgelaufen,0.62,219,6145.0,300.5,22,5,20250412-051251
+1093,kein_Terminated,Zeit abgelaufen,0.79,210,6757.0,300.5,22,5,20250412-051303
+1094,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,167,8823.0,298.5,22,0,20250412-051316
+1095,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,0,20250412-051318
+1096,kein_Terminated,Zeit abgelaufen,0.77,187,8363.25,300.5,22,2,20250412-051330
+1097,kein_Terminated,Zeit abgelaufen,0.71,221,8071.0,300.5,22,2,20250412-051342
+1098,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,202,9425.75,287.0,22,8,20250412-051354
+1099,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,24,3,20250412-051357
+1100,kein_Terminated,Zeit abgelaufen,0.72,223,5709.0,300.5,24,3,20250412-051410
+1101,kein_Terminated,Zeit abgelaufen,0.71,211,6987.5,300.5,24,7,20250412-051422
+1102,kein_Terminated,Zeit abgelaufen,0.73,206,8311.0,300.5,24,7,20250412-051435
+1103,kein_Terminated,Zeit abgelaufen,0.73,216,7412.25,300.5,24,9,20250412-051447
+1104,kein_Terminated,Zeit abgelaufen,0.67,213,4956.25,300.5,24,9,20250412-051500
+1105,kein_Terminated,Zeit abgelaufen,0.34,237,2557.0,300.5,24,1,20250412-051512
+1106,kein_Terminated,Zeit abgelaufen,0.73,230,7328.25,300.5,24,7,20250412-051525
+1107,kein_Terminated,Zeit abgelaufen,0.49,217,-954.75,300.5,24,7,20250412-051538
+1108,kein_Terminated,Zeit abgelaufen,0.78,185,8564.75,300.5,24,0,20250412-051550
+1109,kein_Terminated,Zeit abgelaufen,0.67,230,5758.25,300.5,24,0,20250412-051603
+1110,kein_Terminated,Zeit abgelaufen,0.69,170,6812.25,300.5,24,4,20250412-051615
+1111,kein_Terminated,Zeit abgelaufen,0.67,263,-1185.5,300.5,24,4,20250412-051628
+1112,kein_Terminated,Zeit abgelaufen,0.65,189,6743.25,300.5,24,1,20250412-051641
+1113,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,199,10023.75,298.0,22,7,20250412-051653
+1114,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,7,20250412-051655
+1115,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,179,8110.75,292.5,22,4,20250412-051707
+1116,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,22,4,20250412-051710
+1117,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,203,8829.0,286.5,22,1,20250412-051721
+1118,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,1,20250412-051724
+1119,kein_Terminated,Zeit abgelaufen,0.71,203,7522.5,300.5,22,9,20250412-051736
+1120,kein_Terminated,Zeit abgelaufen,0.26,320,381.5,300.5,25,9,20250412-051751
+1121,kein_Terminated,Zeit abgelaufen,0.26,380,-4688.0,300.5,25,9,20250412-051805
+1122,kein_Terminated,Zeit abgelaufen,0.41,356,-4803.0,300.5,25,0,20250412-051819
+1123,kein_Terminated,Zeit abgelaufen,0.72,290,7352.0,300.5,25,0,20250412-051834
+1124,kein_Terminated,Zeit abgelaufen,0.44,336,151.5,300.5,25,7,20250412-051848
+1125,kein_Terminated,Zeit abgelaufen,0.3,389,-7408.0,300.5,25,7,20250412-051903
+1126,kein_Terminated,Zeit abgelaufen,0.31,331,-252.25,300.5,25,7,20250412-051918
+1127,kein_Terminated,Zeit abgelaufen,0.3,311,-1678.0,300.5,25,7,20250412-051932
+1128,kein_Terminated,Zeit abgelaufen,0.54,291,2673.25,300.5,25,7,20250412-051946
+1129,kein_Terminated,Zeit abgelaufen,0.66,280,5269.5,300.5,25,8,20250412-052001
+1130,kein_Terminated,Zeit abgelaufen,0.64,329,6468.0,300.5,25,8,20250412-052016
+1131,kein_Terminated,Zeit abgelaufen,0.01,602,61.75,300.5,25,3,20250412-052031
+1132,kein_Terminated,Zeit abgelaufen,0.01,602,45.75,300.5,25,3,20250412-052046
+1133,kein_Terminated,Zeit abgelaufen,0.61,352,-13384.75,300.5,25,9,20250412-052101
+1134,kein_Terminated,Zeit abgelaufen,0.71,197,6463.0,300.5,23,0,20250412-052113
+1135,kein_Terminated,Zeit abgelaufen,0.71,190,8115.75,300.5,23,0,20250412-052126
+1136,kein_Terminated,Zeit abgelaufen,0.65,243,6634.5,300.5,23,3,20250412-052138
+1137,kein_Terminated,Zeit abgelaufen,0.62,234,5492.5,300.5,23,3,20250412-052151
+1138,kein_Terminated,Zeit abgelaufen,0.77,186,7698.75,300.5,23,0,20250412-052203
+1139,kein_Terminated,Zeit abgelaufen,0.77,190,8779.0,300.5,23,0,20250412-052216
+1140,kein_Terminated,Zeit abgelaufen,0.72,218,6369.5,300.5,23,7,20250412-052228
+1141,kein_Terminated,Zeit abgelaufen,0.76,177,8456.75,300.5,22,2,20250412-052240
+1142,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,186,9339.25,283.5,22,2,20250412-052252
+1143,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,0,20250412-052254
+1144,kein_Terminated,Zeit abgelaufen,0.77,171,8766.25,300.5,22,0,20250412-052306
+1145,kein_Terminated,Zeit abgelaufen,0.73,194,7516.25,300.5,22,8,20250412-052318
+1146,kein_Terminated,Zeit abgelaufen,0.74,186,8479.0,300.5,22,8,20250412-052330
+1147,kein_Terminated,Zeit abgelaufen,0.73,150,9229.0,300.5,22,6,20250412-052343
+1148,kein_Terminated,Zeit abgelaufen,0.56,351,4162.25,300.5,25,5,20250412-052357
+1149,kein_Terminated,Zeit abgelaufen,0.68,268,5150.5,300.5,25,5,20250412-052412
+1150,kein_Terminated,Zeit abgelaufen,0.49,319,3112.75,300.5,25,0,20250412-052426
+1151,kein_Terminated,Zeit abgelaufen,0.41,354,-1522.25,300.5,25,0,20250412-052441
+1152,kein_Terminated,Zeit abgelaufen,0.61,299,3295.0,300.5,25,4,20250412-052455
+1153,kein_Terminated,Zeit abgelaufen,0.42,275,3477.75,300.5,25,4,20250412-052510
+1154,kein_Terminated,Zeit abgelaufen,0.52,229,4113.25,300.5,25,4,20250412-052524
+1155,kein_Terminated,Zeit abgelaufen,0.67,277,5768.5,300.5,25,5,20250412-052539
+1156,kein_Terminated,Zeit abgelaufen,0.64,304,5900.25,300.5,25,5,20250412-052553
+1157,kein_Terminated,Zeit abgelaufen,0.66,291,6333.75,300.5,25,8,20250412-052608
+1158,kein_Terminated,Zeit abgelaufen,0.38,343,1620.0,300.5,25,8,20250412-052623
+1159,kein_Terminated,Zeit abgelaufen,0.5,453,-25376.25,300.5,25,5,20250412-052637
+1160,kein_Terminated,Zeit abgelaufen,0.41,359,230.5,300.5,25,5,20250412-052652
+1161,kein_Terminated,Zeit abgelaufen,0.41,316,1363.5,300.5,25,5,20250412-052706
+1162,kein_Terminated,Zeit abgelaufen,0.71,193,7325.75,300.5,24,5,20250412-052719
+1163,kein_Terminated,Zeit abgelaufen,0.69,236,7368.0,300.5,24,5,20250412-052731
+1164,kein_Terminated,Zeit abgelaufen,0.63,231,5495.75,300.5,24,4,20250412-052744
+1165,kein_Terminated,Zeit abgelaufen,0.76,215,8530.25,300.5,24,4,20250412-052757
+1166,kein_Terminated,Zeit abgelaufen,0.7,232,6166.25,300.5,24,4,20250412-052809
+1167,kein_Terminated,Zeit abgelaufen,0.61,226,5594.0,300.5,24,4,20250412-052822
+1168,kein_Terminated,Zeit abgelaufen,0.74,208,7745.75,300.5,24,9,20250412-052834
+1169,kein_Terminated,Zeit abgelaufen,0.78,189,6742.5,300.5,22,1,20250412-052847
+1170,kein_Terminated,Zeit abgelaufen,0.79,197,8477.75,300.5,22,1,20250412-052859
+1171,kein_Terminated,Zeit abgelaufen,0.64,171,6469.0,300.5,22,9,20250412-052911
+1172,kein_Terminated,Zeit abgelaufen,0.7,152,8091.75,300.5,22,9,20250412-052923
+1173,kein_Terminated,Zeit abgelaufen,0.76,198,8174.5,300.5,22,7,20250412-052935
+1174,kein_Terminated,Zeit abgelaufen,0.78,203,9155.75,300.5,22,7,20250412-052947
+1175,kein_Terminated,Zeit abgelaufen,0.8,208,10005.0,300.5,22,4,20250412-052959
+1176,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,24,0,20250412-053002
+1177,kein_Terminated,Zeit abgelaufen,0.72,256,6663.75,300.5,24,0,20250412-053015
+1178,kein_Terminated,Zeit abgelaufen,0.67,237,6173.25,300.5,24,3,20250412-053028
+1179,kein_Terminated,Zeit abgelaufen,0.75,179,7499.5,300.5,24,3,20250412-053040
+1180,kein_Terminated,Zeit abgelaufen,0.79,214,8588.0,300.5,24,1,20250412-053053
+14,kein_Terminated,Zeit abgelaufen,0.59,297,6471.0,300.5,23,5,20250412-053116
+1181,kein_Terminated,Zeit abgelaufen,0.67,143,7204.75,300.5,24,1,20250412-053117
+1182,kein_Terminated,Zeit abgelaufen,0.67,251,5451.25,300.5,24,9,20250412-053130
+1183,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,197,8241.25,278.5,23,8,20250412-053142
+1184,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,23,8,20250412-053144
+1185,kein_Terminated,Zeit abgelaufen,0.73,169,8560.5,300.5,23,0,20250412-053157
+1187,kein_Terminated,Zeit abgelaufen,0.8,212,8123.5,300.5,23,0,20250412-053209
+1187,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,212,8123.5,300.5,23,0,20250412-053209
+1188,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,23,7,20250412-053212
+1189,kein_Terminated,Zeit abgelaufen,0.67,229,6713.0,300.5,23,7,20250412-053224
+1190,kein_Terminated,Zeit abgelaufen,0.4,269,-3183.75,300.5,23,9,20250412-053237
+1191,kein_Terminated,Zeit abgelaufen,0.66,252,6657.75,300.5,23,4,20250412-053249
+1192,kein_Terminated,Zeit abgelaufen,0.79,200,7132.75,300.5,23,4,20250412-053302
+1193,kein_Terminated,Zeit abgelaufen,0.78,201,7089.5,300.5,23,7,20250412-053314
+1195,kein_Terminated,Zeit abgelaufen,0.8,207,7619.75,300.5,23,7,20250412-053327
+1195,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,207,7619.75,300.5,23,7,20250412-053327
+1196,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-120.5,0.0,23,5,20250412-053329
+1197,kein_Terminated,Zeit abgelaufen,0.71,188,8506.75,300.5,23,5,20250412-053342
+1198,kein_Terminated,Zeit abgelaufen,0.77,208,9052.5,300.5,23,0,20250412-053354
+1199,kein_Terminated,Zeit abgelaufen,0.64,304,6290.5,300.5,25,6,20250412-053409
+1200,kein_Terminated,Zeit abgelaufen,0.61,280,4750.25,300.5,25,6,20250412-053423
+1201,kein_Terminated,Zeit abgelaufen,0.68,285,6158.75,300.5,25,8,20250412-053438
+1202,kein_Terminated,Zeit abgelaufen,0.51,380,3582.25,300.5,25,8,20250412-053453
+1203,kein_Terminated,Zeit abgelaufen,0.39,358,583.0,300.5,25,6,20250412-053507
+1204,kein_Terminated,Zeit abgelaufen,0.24,323,1060.25,300.5,25,6,20250412-053522
+1205,kein_Terminated,Zeit abgelaufen,0.46,321,3631.5,300.5,25,0,20250412-053536
+1206,kein_Terminated,Zeit abgelaufen,0.7,269,5423.25,300.5,25,8,20250412-053551
+1207,kein_Terminated,Zeit abgelaufen,0.34,346,1308.75,300.5,25,8,20250412-053605
+1208,kein_Terminated,Zeit abgelaufen,0.64,289,4162.75,300.5,25,6,20250412-053620
+1209,kein_Terminated,Zeit abgelaufen,0.6,324,4436.75,300.5,25,6,20250412-053634
+1210,kein_Terminated,Zeit abgelaufen,0.75,270,7671.25,300.5,25,0,20250412-053649
+1211,kein_Terminated,Zeit abgelaufen,0.47,337,2493.75,300.5,25,0,20250412-053703
+1212,kein_Terminated,Zeit abgelaufen,0.6,265,4316.0,300.5,25,4,20250412-053718
+1213,kein_Terminated,Zeit abgelaufen,0.63,186,6857.5,300.5,23,4,20250412-053731
+1214,kein_Terminated,Zeit abgelaufen,0.73,193,7126.75,300.5,23,4,20250412-053743
+1215,kein_Terminated,Zeit abgelaufen,0.73,184,6993.25,300.5,23,0,20250412-053755
+1216,kein_Terminated,Zeit abgelaufen,0.78,215,7662.0,300.5,23,0,20250412-053808
+1217,kein_Terminated,Zeit abgelaufen,0.77,165,8057.75,300.5,23,2,20250412-053820
+1218,kein_Terminated,Zeit abgelaufen,0.68,249,-2617.5,300.5,23,2,20250412-053833
+1219,kein_Terminated,Zeit abgelaufen,0.62,248,5658.0,300.5,23,9,20250412-053845
+1220,kein_Terminated,Zeit abgelaufen,0.79,150,8675.25,300.5,22,9,20250412-053857
+1221,kein_Terminated,Zeit abgelaufen,0.78,154,8620.0,300.5,22,9,20250412-053910
+1222,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,189,8912.0,283.0,22,9,20250412-053921
+1223,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-124.5,0.0,22,9,20250412-053924
+1224,kein_Terminated,Zeit abgelaufen,0.76,164,8807.75,300.5,22,4,20250412-053936
+1225,kein_Terminated,Zeit abgelaufen,0.77,137,9032.5,300.5,22,4,20250412-053948
+1226,kein_Terminated,Zeit abgelaufen,0.76,180,8299.25,300.5,22,3,20250412-054000
+1227,kein_Terminated,Zeit abgelaufen,0.42,337,-330.0,300.5,25,1,20250412-054014
+1228,kein_Terminated,Zeit abgelaufen,0.68,320,197.75,300.5,25,1,20250412-054029
+1229,kein_Terminated,Zeit abgelaufen,0.73,249,6984.25,300.5,25,9,20250412-054043
+1230,kein_Terminated,Zeit abgelaufen,0.47,325,-1234.0,300.5,25,9,20250412-054058
+1231,kein_Terminated,Zeit abgelaufen,0.01,602,-60521.0,300.5,25,3,20250412-054116
+1232,kein_Terminated,Zeit abgelaufen,0.01,602,29.75,300.5,25,3,20250412-054131
+1233,kein_Terminated,Zeit abgelaufen,0.26,557,-33317.75,300.5,25,0,20250412-054147
+1234,kein_Terminated,Zeit abgelaufen,0.67,179,2352.0,300.5,22,1,20250412-054159
+1235,kein_Terminated,Zeit abgelaufen,0.79,179,9276.5,300.5,22,1,20250412-054211
+1236,kein_Terminated,Zeit abgelaufen,0.78,213,9055.0,300.5,22,4,20250412-054223
+1237,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,196,9445.75,287.0,22,4,20250412-054235
+1238,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,1,20250412-054237
+1239,kein_Terminated,Zeit abgelaufen,0.76,222,7421.25,300.5,22,1,20250412-054250
+1240,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,222,8203.5,276.5,22,8,20250412-054301
+1241,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,24,2,20250412-054304
+1242,kein_Terminated,Zeit abgelaufen,0.75,188,5923.5,300.5,24,2,20250412-054316
+1243,kein_Terminated,Zeit abgelaufen,0.76,227,8486.25,300.5,24,9,20250412-054329
+1244,kein_Terminated,Zeit abgelaufen,0.78,189,9829.75,300.5,24,9,20250412-054341
+1245,kein_Terminated,Zeit abgelaufen,0.69,222,7037.75,300.5,24,8,20250412-054354
+1246,kein_Terminated,Zeit abgelaufen,0.58,257,5069.25,300.5,24,8,20250412-054407
+1247,kein_Terminated,Zeit abgelaufen,0.78,182,8721.5,300.5,24,1,20250412-054419
+1248,kein_Terminated,Zeit abgelaufen,0.41,270,4497.25,300.5,23,9,20250412-054432
+1249,kein_Terminated,Zeit abgelaufen,0.75,195,9207.5,300.5,23,9,20250412-054444
+1250,kein_Terminated,Zeit abgelaufen,0.46,176,4576.75,300.5,23,5,20250412-054457
+1251,kein_Terminated,Zeit abgelaufen,0.68,201,7119.25,300.5,23,5,20250412-054509
+1252,kein_Terminated,Zeit abgelaufen,0.75,220,7031.75,300.5,23,2,20250412-054521
+1253,kein_Terminated,Zeit abgelaufen,0.74,189,8773.25,300.5,23,2,20250412-054534
+1254,kein_Terminated,Zeit abgelaufen,0.72,167,7941.5,300.5,23,1,20250412-054546
+1255,kein_Terminated,Zeit abgelaufen,0.73,165,8548.5,300.5,22,1,20250412-054558
+1256,kein_Terminated,Zeit abgelaufen,0.79,212,9131.0,300.5,22,1,20250412-054610
+1257,kein_Terminated,Zeit abgelaufen,0.75,188,7873.75,300.5,22,9,20250412-054623
+1258,kein_Terminated,Zeit abgelaufen,0.75,148,8288.75,300.5,22,9,20250412-054635
+1259,kein_Terminated,Zeit abgelaufen,0.64,177,7758.75,300.5,22,8,20250412-054647
+1260,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,186,9601.75,284.0,22,8,20250412-054658
+1261,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,0,20250412-054701
+1262,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,145,10015.0,288.5,22,7,20250412-054712
+1263,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,7,20250412-054715
+1264,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,137,9911.25,266.5,22,9,20250412-054726
+1265,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-3.75,0.0,22,9,20250412-054729
+1266,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,186,10229.75,283.0,22,7,20250412-054740
+1267,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,7,20250412-054743
+1268,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,192,9222.75,292.0,22,6,20250412-054755
+1269,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-11.75,0.0,23,9,20250412-054757
+1270,kein_Terminated,Zeit abgelaufen,0.6,310,-17282.75,300.5,23,9,20250412-054810
+1271,kein_Terminated,Zeit abgelaufen,0.75,168,7813.75,300.5,23,1,20250412-054822
+1272,kein_Terminated,Zeit abgelaufen,0.68,246,7723.75,300.5,23,1,20250412-054835
+1273,kein_Terminated,Zeit abgelaufen,0.74,218,6065.75,300.5,23,6,20250412-054847
+1274,kein_Terminated,Zeit abgelaufen,0.67,260,5983.0,300.5,23,6,20250412-054900
+1275,kein_Terminated,Zeit abgelaufen,0.76,174,7776.25,300.5,23,4,20250412-054912
+1276,kein_Terminated,Zeit abgelaufen,0.76,174,8336.75,300.5,23,0,20250412-054925
+1277,kein_Terminated,Zeit abgelaufen,0.76,218,8332.75,300.5,23,0,20250412-054937
+15,kein_Terminated,Zeit abgelaufen,0.03,597,293.75,300.5,25,6,20250412-055001
+1278,kein_Terminated,Zeit abgelaufen,0.72,231,7006.75,300.5,23,8,20250412-055006
+1279,kein_Terminated,Zeit abgelaufen,0.77,185,7795.5,300.5,23,8,20250412-055019
+1280,kein_Terminated,Zeit abgelaufen,0.78,204,8681.5,300.5,23,4,20250412-055031
+1281,kein_Terminated,Zeit abgelaufen,0.7,219,7596.75,300.5,23,4,20250412-055043
+1282,kein_Terminated,Zeit abgelaufen,0.64,203,7267.75,300.5,23,8,20250412-055056
+1283,kein_Terminated,Zeit abgelaufen,0.64,203,6623.25,300.5,24,3,20250412-055109
+1284,kein_Terminated,Zeit abgelaufen,0.76,260,6406.5,300.5,24,3,20250412-055121
+1285,kein_Terminated,Zeit abgelaufen,0.68,210,6470.75,300.5,24,6,20250412-055134
+1286,kein_Terminated,Zeit abgelaufen,0.77,213,7767.5,300.5,24,6,20250412-055146
+1287,kein_Terminated,Zeit abgelaufen,0.72,199,6914.0,300.5,24,5,20250412-055159
+1288,kein_Terminated,Zeit abgelaufen,0.43,281,-4950.75,300.5,24,5,20250412-055211
+1289,kein_Terminated,Zeit abgelaufen,0.42,325,-1589.25,300.5,24,6,20250412-055224
+1290,kein_Terminated,Zeit abgelaufen,0.7,183,6915.5,300.5,23,6,20250412-055237
+1291,kein_Terminated,Zeit abgelaufen,0.74,205,7818.5,300.5,23,6,20250412-055249
+1292,kein_Terminated,Zeit abgelaufen,0.74,177,8559.75,300.5,23,4,20250412-055301
+1293,kein_Terminated,Zeit abgelaufen,0.7,196,2990.25,300.5,23,4,20250412-055314
+1294,kein_Terminated,Zeit abgelaufen,0.36,205,3635.0,300.5,23,0,20250412-055326
+1295,kein_Terminated,Zeit abgelaufen,0.66,276,-6557.25,300.5,23,0,20250412-055339
+1296,kein_Terminated,Zeit abgelaufen,0.71,235,1756.5,300.5,23,6,20250412-055351
+1297,kein_Terminated,Zeit abgelaufen,0.63,244,6140.25,300.5,24,2,20250412-055404
+1298,kein_Terminated,Zeit abgelaufen,0.69,246,7504.75,300.5,24,2,20250412-055416
+1299,kein_Terminated,Zeit abgelaufen,0.69,194,7332.0,300.5,24,6,20250412-055429
+1300,kein_Terminated,Zeit abgelaufen,0.72,175,8795.5,300.5,24,6,20250412-055442
+1301,kein_Terminated,Zeit abgelaufen,0.4,203,4026.25,300.5,24,9,20250412-055454
+1302,kein_Terminated,Zeit abgelaufen,0.78,213,8568.75,300.5,24,9,20250412-055507
+1303,kein_Terminated,Zeit abgelaufen,0.69,222,6235.75,300.5,24,6,20250412-055520
+1304,kein_Terminated,Zeit abgelaufen,0.72,205,7340.25,300.5,22,9,20250412-055532
+1305,kein_Terminated,Zeit abgelaufen,0.74,225,6959.75,300.5,22,9,20250412-055544
+1306,kein_Terminated,Zeit abgelaufen,0.79,165,9324.5,300.5,22,8,20250412-055556
+1307,kein_Terminated,Zeit abgelaufen,0.77,186,9028.5,300.5,22,8,20250412-055608
+1308,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,180,8505.25,291.5,22,5,20250412-055620
+1309,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,22,5,20250412-055622
+1310,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,153,8607.0,285.5,22,9,20250412-055634
+1311,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,25,9,20250412-055637
+1312,kein_Terminated,Zeit abgelaufen,0.69,346,3010.0,300.5,25,9,20250412-055652
+1313,kein_Terminated,Zeit abgelaufen,0.01,602,69.75,300.5,25,3,20250412-055707
+1314,kein_Terminated,Zeit abgelaufen,0.01,602,-60521.0,300.5,25,3,20250412-055724
+1315,kein_Terminated,Zeit abgelaufen,0.45,491,-32081.25,300.5,25,5,20250412-055740
+1316,kein_Terminated,Zeit abgelaufen,0.13,590,-56824.5,300.5,25,5,20250412-055757
+1317,kein_Terminated,Zeit abgelaufen,0.48,395,-7867.5,300.5,25,8,20250412-055812
+1318,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,253,2773.5,296.0,24,4,20250412-055825
+1319,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,24,4,20250412-055828
+1320,kein_Terminated,Zeit abgelaufen,0.79,243,2844.5,300.5,24,3,20250412-055840
+1321,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,210,2707.0,236.5,24,3,20250412-055851
+1322,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,24,2,20250412-055854
+1323,kein_Terminated,Zeit abgelaufen,0.67,339,-3769.0,300.5,24,2,20250412-055907
+1324,kein_Terminated,Zeit abgelaufen,0.6,371,-8425.5,300.5,24,6,20250412-055919
+1325,kein_Terminated,Zeit abgelaufen,0.55,264,-2291.25,300.5,23,7,20250412-055932
+1326,kein_Terminated,Zeit abgelaufen,0.72,328,-1787.25,300.5,23,7,20250412-055945
+1327,kein_Terminated,Zeit abgelaufen,0.15,587,793.5,300.5,23,4,20250412-055958
+1328,kein_Terminated,Zeit abgelaufen,0.49,519,-39642.75,300.5,23,4,20250412-060012
+1329,kein_Terminated,Zeit abgelaufen,0.75,347,-5727.5,300.5,23,0,20250412-060025
+1330,kein_Terminated,Zeit abgelaufen,0.49,445,-24603.0,300.5,23,0,20250412-060038
+1331,kein_Terminated,Zeit abgelaufen,0.79,306,-1016.0,300.5,23,4,20250412-060050
+1332,kein_Terminated,Zeit abgelaufen,0.33,554,-47720.5,300.5,22,4,20250412-060105
+1333,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,211,3710.25,253.5,22,4,20250412-060116
+1334,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,0,20250412-060118
+1335,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,146,5238.25,213.5,22,0,20250412-060128
+1336,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,22,8,20250412-060130
+1337,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,199,3566.0,206.5,22,8,20250412-060140
+1338,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-112.5,0.0,22,8,20250412-060142
+1339,kein_Terminated,Zeit abgelaufen,0.28,425,-26590.5,300.5,23,4,20250412-060155
+1340,kein_Terminated,Zeit abgelaufen,0.69,473,-22801.0,300.5,23,4,20250412-060209
+1341,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,178,3633.0,177.5,23,4,20250412-060218
+1342,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,23,4,20250412-060220
+1343,kein_Terminated,Zeit abgelaufen,0.45,532,-42766.25,300.5,23,2,20250412-060235
+1344,kein_Terminated,Zeit abgelaufen,0.76,206,7212.5,300.5,23,2,20250412-060247
+1345,kein_Terminated,Zeit abgelaufen,0.74,178,8467.75,300.5,23,7,20250412-060300
+1346,kein_Terminated,Zeit abgelaufen,0.74,222,8442.25,300.5,22,3,20250412-060312
+1347,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,185,6575.25,292.0,22,3,20250412-060324
+1348,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-3.75,0.0,22,9,20250412-060326
+1349,kein_Terminated,Zeit abgelaufen,0.79,143,8929.5,300.5,22,9,20250412-060338
+1350,kein_Terminated,Zeit abgelaufen,0.76,162,9122.0,300.5,22,2,20250412-060351
+1351,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,180,8820.5,285.5,22,2,20250412-060402
+1352,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,22,5,20250412-060405
+1353,kein_Terminated,Zeit abgelaufen,0.79,236,8381.75,300.5,22,4,20250412-060417
+1354,kein_Terminated,Zeit abgelaufen,0.68,259,6865.0,300.5,22,4,20250412-060429
+1355,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,243,8822.25,289.0,22,9,20250412-060441
+1356,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-3.75,0.0,22,9,20250412-060443
+1357,kein_Terminated,Zeit abgelaufen,0.74,202,4211.5,300.5,22,6,20250412-060456
+1359,kein_Terminated,Zeit abgelaufen,0.8,190,8296.25,300.5,22,6,20250412-060508
+1359,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,190,8296.25,300.5,22,6,20250412-060508
+1360,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-3.75,0.0,22,9,20250412-060510
+1361,kein_Terminated,Zeit abgelaufen,0.79,217,8555.25,300.5,23,0,20250412-060523
+1362,kein_Terminated,Zeit abgelaufen,0.61,190,6230.5,300.5,23,0,20250412-060535
+1363,kein_Terminated,Zeit abgelaufen,0.67,196,7156.0,300.5,23,1,20250412-060548
+1364,kein_Terminated,Zeit abgelaufen,0.78,190,8363.25,300.5,23,1,20250412-060600
+1365,kein_Terminated,Zeit abgelaufen,0.71,202,7281.0,300.5,23,1,20250412-060612
+1366,kein_Terminated,Zeit abgelaufen,0.77,217,6768.0,300.5,23,1,20250412-060625
+1367,kein_Terminated,Zeit abgelaufen,0.76,202,8852.5,300.5,23,3,20250412-060637
+1368,kein_Terminated,Zeit abgelaufen,0.79,203,9365.25,300.5,24,8,20250412-060650
+1369,kein_Terminated,Zeit abgelaufen,0.71,182,7418.5,300.5,24,8,20250412-060702
+1370,kein_Terminated,Zeit abgelaufen,0.75,207,8068.0,300.5,24,5,20250412-060715
+1371,kein_Terminated,Zeit abgelaufen,0.69,209,7839.75,300.5,24,5,20250412-060728
+1372,kein_Terminated,Zeit abgelaufen,0.71,196,7560.0,300.5,24,6,20250412-060740
+1373,kein_Terminated,Zeit abgelaufen,0.45,186,4268.0,300.5,24,6,20250412-060753
+1374,kein_Terminated,Zeit abgelaufen,0.69,242,6610.75,300.5,24,0,20250412-060805
+1375,kein_Terminated,Zeit abgelaufen,0.54,317,1798.5,300.5,25,5,20250412-060820
+16,kein_Terminated,Zeit abgelaufen,0.52,370,2872.25,300.5,25,6,20250412-060838
+1376,kein_Terminated,Zeit abgelaufen,0.71,287,5700.0,300.5,25,5,20250412-060849
+1377,kein_Terminated,Zeit abgelaufen,0.64,294,5823.5,300.5,25,0,20250412-060903
+1378,kein_Terminated,Zeit abgelaufen,0.59,302,4599.0,300.5,25,0,20250412-060918
+1379,kein_Terminated,Zeit abgelaufen,0.69,320,-2660.0,300.5,25,9,20250412-060932
+1380,kein_Terminated,Zeit abgelaufen,0.69,243,5984.5,300.5,25,9,20250412-060947
+1381,kein_Terminated,Zeit abgelaufen,0.67,262,7323.75,300.5,25,8,20250412-061001
+1382,kein_Terminated,Zeit abgelaufen,0.69,331,-601.0,300.5,25,2,20250412-061016
+1383,kein_Terminated,Zeit abgelaufen,0.56,394,1849.0,300.5,25,2,20250412-061030
+1384,kein_Terminated,Zeit abgelaufen,0.7,300,6301.25,300.5,25,7,20250412-061045
+1385,kein_Terminated,Zeit abgelaufen,0.66,329,3516.75,300.5,25,7,20250412-061100
+1386,kein_Terminated,Zeit abgelaufen,0.7,281,5406.5,300.5,25,5,20250412-061114
+1387,kein_Terminated,Zeit abgelaufen,0.54,296,-2058.0,300.5,25,5,20250412-061129
+1388,kein_Terminated,Zeit abgelaufen,0.58,420,-15904.5,300.5,25,1,20250412-061143
+1389,kein_Terminated,Zeit abgelaufen,0.58,294,4196.75,300.5,25,4,20250412-061158
+1390,kein_Terminated,Zeit abgelaufen,0.59,278,5501.75,300.5,25,4,20250412-061212
+1391,kein_Terminated,Zeit abgelaufen,0.01,602,-60521.0,300.5,25,3,20250412-061230
+1392,kein_Terminated,Zeit abgelaufen,0.01,602,114.5,300.5,25,3,20250412-061245
+1393,kein_Terminated,Zeit abgelaufen,0.01,602,29.75,300.5,25,3,20250412-061301
+1394,kein_Terminated,Zeit abgelaufen,0.01,602,-60521.0,300.5,25,3,20250412-061318
+1395,kein_Terminated,Zeit abgelaufen,0.77,354,-688.5,300.5,25,5,20250412-061332
+1396,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,198,6005.25,297.0,22,9,20250412-061345
+1397,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-124.5,0.0,22,9,20250412-061347
+1398,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,189,4850.75,260.5,22,1,20250412-061358
+1399,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,1,20250412-061400
+1400,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,196,4780.0,280.5,22,4,20250412-061412
+1401,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,4,20250412-061414
+1402,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,172,5449.5,201.0,22,6,20250412-061424
+1403,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,25,9,20250412-061427
+1404,kein_Terminated,Zeit abgelaufen,0.53,424,-11966.75,300.5,25,9,20250412-061442
+1405,kein_Terminated,Zeit abgelaufen,0.57,389,-7574.25,300.5,25,9,20250412-061457
+1406,kein_Terminated,Zeit abgelaufen,0.66,379,-2065.25,300.5,25,9,20250412-061512
+1407,kein_Terminated,Zeit abgelaufen,0.79,390,-3024.0,300.5,25,8,20250412-061527
+1408,kein_Terminated,Zeit abgelaufen,0.45,503,-33141.5,300.5,25,8,20250412-061543
+1409,kein_Terminated,Zeit abgelaufen,0.65,474,-26235.75,300.5,25,8,20250412-061558
+1410,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,273,1844.0,258.5,24,7,20250412-061610
+1411,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,24,7,20250412-061613
+1412,kein_Terminated,Zeit abgelaufen,0.75,322,-173.5,300.5,24,3,20250412-061625
+1413,kein_Terminated,Zeit abgelaufen,0.66,440,-23740.75,300.5,24,3,20250412-061639
+1414,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,204,4058.25,222.0,24,5,20250412-061649
+1415,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-120.5,0.0,24,5,20250412-061652
+1416,kein_Terminated,Zeit abgelaufen,0.47,298,-10995.5,300.5,24,2,20250412-061705
+1417,kein_Terminated,Zeit abgelaufen,0.26,549,-47342.75,300.5,23,4,20250412-061719
+1418,kein_Terminated,Zeit abgelaufen,0.75,275,112.0,300.5,23,4,20250412-061732
+1419,kein_Terminated,Zeit abgelaufen,0.79,224,8393.75,300.5,23,3,20250412-061744
+1420,kein_Terminated,Zeit abgelaufen,0.77,188,6784.0,300.5,23,3,20250412-061757
+1421,kein_Terminated,Zeit abgelaufen,0.75,184,7987.25,300.5,23,6,20250412-061809
+1422,kein_Terminated,Zeit abgelaufen,0.75,197,8216.75,300.5,23,6,20250412-061822
+1423,kein_Terminated,Zeit abgelaufen,0.77,208,8137.75,300.5,23,3,20250412-061834
+1424,kein_Terminated,Zeit abgelaufen,0.7,246,5803.25,300.5,24,7,20250412-061847
+1425,kein_Terminated,Zeit abgelaufen,0.72,215,7788.0,300.5,24,7,20250412-061900
+1426,kein_Terminated,Zeit abgelaufen,0.74,169,8068.75,300.5,24,0,20250412-061912
+1427,kein_Terminated,Zeit abgelaufen,0.71,195,7773.5,300.5,24,0,20250412-061925
+1428,kein_Terminated,Zeit abgelaufen,0.62,282,-1834.25,300.5,24,1,20250412-061937
+1429,kein_Terminated,Zeit abgelaufen,0.8,218,8994.25,300.5,24,1,20250412-061950
+1430,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,24,6,20250412-061953
+1431,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,205,8217.25,286.5,23,0,20250412-062005
+1432,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,23,0,20250412-062007
+1433,kein_Terminated,Zeit abgelaufen,0.75,173,8007.25,300.5,23,6,20250412-062020
+1434,kein_Terminated,Zeit abgelaufen,0.77,232,8549.5,300.5,23,6,20250412-062032
+1435,kein_Terminated,Zeit abgelaufen,0.64,218,6776.0,300.5,23,6,20250412-062045
+1436,kein_Terminated,Zeit abgelaufen,0.75,211,8470.25,300.5,23,6,20250412-062057
+1437,kein_Terminated,Zeit abgelaufen,0.68,185,5704.75,300.5,23,5,20250412-062110
+1438,kein_Terminated,Zeit abgelaufen,0.69,253,6437.25,300.5,24,7,20250412-062122
+1439,kein_Terminated,Zeit abgelaufen,0.79,238,8382.5,300.5,24,7,20250412-062135
+1440,kein_Terminated,Zeit abgelaufen,0.75,193,8112.0,300.5,24,2,20250412-062147
+1441,kein_Terminated,Zeit abgelaufen,0.69,232,7106.5,300.5,24,2,20250412-062200
+1442,kein_Terminated,Zeit abgelaufen,0.76,214,8083.25,300.5,24,2,20250412-062213
+1443,kein_Terminated,Zeit abgelaufen,0.71,181,7664.75,300.5,24,2,20250412-062225
+1444,kein_Terminated,Zeit abgelaufen,0.75,254,8272.75,300.5,24,7,20250412-062238
+1445,kein_Terminated,Zeit abgelaufen,0.76,182,8980.5,300.5,22,6,20250412-062250
+1446,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,189,9102.0,300.0,22,6,20250412-062302
+1447,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-11.75,0.0,22,9,20250412-062305
+1448,kein_Terminated,Zeit abgelaufen,0.74,185,7942.5,300.5,22,9,20250412-062317
+1449,kein_Terminated,Zeit abgelaufen,0.77,171,7243.0,300.5,22,8,20250412-062329
+1450,kein_Terminated,Zeit abgelaufen,0.71,212,6439.0,300.5,22,8,20250412-062341
+1451,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,225,8694.0,290.0,22,6,20250412-062353
+1452,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,1,20250412-062356
+1453,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,177,9099.25,270.5,22,1,20250412-062407
+1454,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,22,5,20250412-062409
+1455,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,160,9226.75,292.0,22,5,20250412-062421
+1456,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,3,20250412-062424
+1457,kein_Terminated,Zeit abgelaufen,0.79,225,7982.75,300.5,22,3,20250412-062436
+1458,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,178,8810.5,289.5,22,4,20250412-062448
+1459,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,24,8,20250412-062451
+1460,kein_Terminated,Zeit abgelaufen,0.68,257,5869.5,300.5,24,8,20250412-062503
+1461,kein_Terminated,Zeit abgelaufen,0.72,176,8501.25,300.5,24,5,20250412-062516
+1462,kein_Terminated,Zeit abgelaufen,0.46,246,3468.5,300.5,24,5,20250412-062528
+1463,kein_Terminated,Zeit abgelaufen,0.71,195,6584.5,300.5,24,6,20250412-062541
+1464,kein_Terminated,Zeit abgelaufen,0.43,234,3222.0,300.5,24,6,20250412-062553
+1465,kein_Terminated,Zeit abgelaufen,0.78,186,7399.75,300.5,24,1,20250412-062606
+1466,kein_Terminated,Zeit abgelaufen,0.63,308,6053.75,300.5,25,6,20250412-062621
+1467,kein_Terminated,Zeit abgelaufen,0.59,333,4848.5,300.5,25,6,20250412-062635
+1468,kein_Terminated,Zeit abgelaufen,0.63,342,5953.0,300.5,25,2,20250412-062650
+1469,kein_Terminated,Zeit abgelaufen,0.52,334,4218.0,300.5,25,2,20250412-062705
+1470,kein_Terminated,Zeit abgelaufen,0.64,286,3546.25,300.5,25,7,20250412-062719
+1471,kein_Terminated,Zeit abgelaufen,0.48,324,2916.0,300.5,25,7,20250412-062734
+1472,kein_Terminated,Zeit abgelaufen,0.68,314,6275.5,300.5,25,1,20250412-062748
+17,kein_Terminated,Zeit abgelaufen,0.07,581,938.5,300.5,25,7,20250412-062808
+1473,kein_Terminated,Zeit abgelaufen,0.67,250,5709.5,300.5,23,5,20250412-062815
+1474,kein_Terminated,Zeit abgelaufen,0.79,213,8736.75,300.5,23,5,20250412-062827
+1475,kein_Terminated,Zeit abgelaufen,0.74,189,8749.25,300.5,23,2,20250412-062840
+1476,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,177,9938.75,296.0,23,2,20250412-062852
+1477,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,23,7,20250412-062855
+1478,kein_Terminated,Zeit abgelaufen,0.76,193,8533.5,300.5,23,7,20250412-062907
+1479,kein_Terminated,Zeit abgelaufen,0.76,205,6377.75,300.5,23,2,20250412-062920
+1480,kein_Terminated,Zeit abgelaufen,0.73,213,8642.0,300.5,24,6,20250412-062933
+1481,kein_Terminated,Zeit abgelaufen,0.62,203,6713.5,300.5,24,6,20250412-062945
+1482,kein_Terminated,Zeit abgelaufen,0.66,224,5719.0,300.5,24,2,20250412-062958
+1483,kein_Terminated,Zeit abgelaufen,0.56,228,5115.5,300.5,24,2,20250412-063010
+1484,kein_Terminated,Zeit abgelaufen,0.72,210,6914.0,300.5,24,3,20250412-063023
+1485,kein_Terminated,Zeit abgelaufen,0.74,249,6980.5,300.5,24,3,20250412-063036
+1486,kein_Terminated,Zeit abgelaufen,0.75,221,6492.0,300.5,24,0,20250412-063048
+1487,kein_Terminated,Zeit abgelaufen,0.78,187,7863.5,300.5,23,6,20250412-063101
+1488,kein_Terminated,Zeit abgelaufen,0.6,219,6807.75,300.5,23,6,20250412-063113
+1489,kein_Terminated,Zeit abgelaufen,0.76,202,8586.25,300.5,23,5,20250412-063125
+1490,kein_Terminated,Zeit abgelaufen,0.78,193,8399.25,300.5,23,5,20250412-063138
+1491,kein_Terminated,Zeit abgelaufen,0.71,188,8055.0,300.5,23,0,20250412-063150
+1492,kein_Terminated,Zeit abgelaufen,0.74,211,7560.25,300.5,23,0,20250412-063203
+1493,kein_Terminated,Zeit abgelaufen,0.79,221,7987.5,300.5,23,7,20250412-063215
+1494,kein_Terminated,Zeit abgelaufen,0.68,307,6037.25,300.5,25,7,20250412-063230
+1495,kein_Terminated,Zeit abgelaufen,0.7,266,7691.75,300.5,25,7,20250412-063244
+1496,kein_Terminated,Zeit abgelaufen,0.69,287,4730.75,300.5,25,0,20250412-063259
+1497,kein_Terminated,Zeit abgelaufen,0.45,358,-2090.5,300.5,25,0,20250412-063313
+1498,kein_Terminated,Zeit abgelaufen,0.01,602,-60489.0,300.5,25,3,20250412-063330
+1499,kein_Terminated,Zeit abgelaufen,0.01,602,-6285.5,300.5,25,3,20250412-063345
+1500,kein_Terminated,Zeit abgelaufen,0.01,602,-11858.75,300.5,25,3,20250412-063401
+1501,kein_Terminated,Zeit abgelaufen,0.09,588,-57688.25,300.5,22,6,20250412-063415
+1502,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,206,4251.0,238.0,22,6,20250412-063425
+1503,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,6,20250412-063428
+1504,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,205,4063.25,289.5,22,6,20250412-063439
+1505,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,2,20250412-063442
+1506,kein_Terminated,Zeit abgelaufen,0.76,207,5377.5,300.5,22,2,20250412-063454
+1507,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,160,6340.5,227.0,22,4,20250412-063504
+1508,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,3,20250412-063507
+1509,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,192,5369.0,241.5,22,3,20250412-063517
+1510,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,22,4,20250412-063520
+1511,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,114,7554.25,171.0,22,4,20250412-063528
+1512,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,1,20250412-063530
+1513,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,147,5836.75,209.5,22,1,20250412-063540
+1514,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,6,20250412-063542
+1515,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,203,4644.0,250.0,22,6,20250412-063553
+1516,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,6,20250412-063555
+1517,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,173,4007.5,186.0,22,2,20250412-063604
+1518,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,2,20250412-063607
+1519,kein_Terminated,Zeit abgelaufen,0.29,543,-48784.25,300.5,22,5,20250412-063621
+1520,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,183,9217.75,298.0,22,5,20250412-063633
+1521,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,7,20250412-063636
+1522,kein_Terminated,Zeit abgelaufen,0.68,259,5147.25,300.5,25,9,20250412-063650
+1523,kein_Terminated,Zeit abgelaufen,0.67,321,4338.0,300.5,25,9,20250412-063705
+1524,kein_Terminated,Zeit abgelaufen,0.5,325,3833.25,300.5,25,2,20250412-063719
+1525,kein_Terminated,Zeit abgelaufen,0.59,278,5002.0,300.5,25,2,20250412-063734
+1526,kein_Terminated,Zeit abgelaufen,0.01,602,-60505.0,300.5,25,3,20250412-063751
+1527,kein_Terminated,Zeit abgelaufen,0.01,602,-11858.75,300.5,25,3,20250412-063806
+1528,kein_Terminated,Zeit abgelaufen,0.1,589,658.0,300.5,25,0,20250412-063821
+1529,kein_Terminated,Zeit abgelaufen,0.21,575,-51581.75,300.5,22,6,20250412-063834
+1530,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,242,1587.0,270.5,22,6,20250412-063846
+1531,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-3.75,0.0,22,8,20250412-063848
+1532,kein_Terminated,Zeit abgelaufen,0.35,547,-46952.75,300.5,22,8,20250412-063902
+1533,kein_Terminated,Zeit abgelaufen,0.23,576,-53772.5,300.5,22,0,20250412-063916
+1534,kein_Terminated,Zeit abgelaufen,0.05,592,-58912.75,300.5,22,0,20250412-063931
+1535,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,228,2941.0,237.5,22,6,20250412-063941
+1536,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,25,6,20250412-063944
+1537,kein_Terminated,Zeit abgelaufen,0.27,513,-30763.75,300.5,25,6,20250412-064000
+1538,kein_Terminated,Zeit abgelaufen,0.42,279,1608.25,300.5,25,9,20250412-064014
+1539,kein_Terminated,Zeit abgelaufen,0.45,343,3374.0,300.5,25,9,20250412-064029
+1540,kein_Terminated,Zeit abgelaufen,0.01,602,-60521.0,300.5,25,3,20250412-064047
+1541,kein_Terminated,Zeit abgelaufen,0.01,602,-6285.5,300.5,25,3,20250412-064102
+1542,kein_Terminated,Zeit abgelaufen,0.28,341,963.75,300.5,25,1,20250412-064117
+1543,kein_Terminated,Zeit abgelaufen,0.78,182,9119.75,300.5,22,3,20250412-064129
+1544,kein_Terminated,Zeit abgelaufen,0.74,163,8599.75,300.5,22,3,20250412-064141
+1545,kein_Terminated,Zeit abgelaufen,0.68,240,6103.0,300.5,22,9,20250412-064153
+1546,kein_Terminated,Zeit abgelaufen,0.79,190,9255.75,300.5,22,9,20250412-064205
+1547,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,154,9204.25,295.0,22,5,20250412-064217
+1548,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,22,5,20250412-064220
+1549,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,186,9122.25,292.5,22,3,20250412-064231
+1550,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,22,8,20250412-064234
+1551,kein_Terminated,Zeit abgelaufen,0.71,246,6136.75,300.5,22,8,20250412-064246
+1552,kein_Terminated,Zeit abgelaufen,0.78,196,7665.25,300.5,22,0,20250412-064258
+1553,kein_Terminated,Zeit abgelaufen,0.76,190,8691.0,300.5,22,0,20250412-064310
+1554,kein_Terminated,Zeit abgelaufen,0.67,288,-6239.75,300.5,22,7,20250412-064322
+1555,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,146,9530.0,286.0,22,7,20250412-064334
+1556,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,0,20250412-064337
+1557,kein_Terminated,Zeit abgelaufen,0.71,276,5841.5,300.5,25,1,20250412-064351
+1558,kein_Terminated,Zeit abgelaufen,0.7,319,6402.0,300.5,25,1,20250412-064406
+1559,kein_Terminated,Zeit abgelaufen,0.65,319,6197.0,300.5,25,6,20250412-064420
+1560,kein_Terminated,Zeit abgelaufen,0.72,296,4373.5,300.5,25,6,20250412-064435
+1561,kein_Terminated,Zeit abgelaufen,0.66,287,2186.25,300.5,25,7,20250412-064449
+1562,kein_Terminated,Zeit abgelaufen,0.77,293,6775.0,300.5,25,7,20250412-064504
+1563,kein_Terminated,Zeit abgelaufen,0.01,602,-60521.0,300.5,25,3,20250412-064522
+1564,kein_Terminated,Zeit abgelaufen,0.42,532,2292.0,300.5,24,6,20250412-064535
+1565,kein_Terminated,Zeit abgelaufen,0.2,584,-55171.25,300.5,24,6,20250412-064551
+1566,kein_Terminated,Zeit abgelaufen,0.76,242,4455.5,300.5,24,5,20250412-064604
+1567,kein_Terminated,Zeit abgelaufen,0.6,284,-1622.5,300.5,24,5,20250412-064616
+1568,kein_Terminated,Zeit abgelaufen,0.75,293,1628.0,300.5,24,3,20250412-064629
+1569,kein_Terminated,Zeit abgelaufen,0.39,476,-11254.25,300.5,24,3,20250412-064642
+1570,kein_Terminated,Zeit abgelaufen,0.43,241,372.25,300.5,24,0,20250412-064655
+1571,kein_Terminated,Zeit abgelaufen,0.76,342,-1292.25,300.5,25,5,20250412-064710
+1572,kein_Terminated,Zeit abgelaufen,0.71,346,-2348.0,300.5,25,5,20250412-064724
+18,kein_Terminated,Zeit abgelaufen,0.12,560,1385.0,300.5,24,0,20250412-064749
+1573,kein_Terminated,Zeit abgelaufen,0.18,558,-44082.5,300.5,25,4,20250412-064752
+1574,kein_Terminated,Zeit abgelaufen,0.36,548,-41938.5,300.5,25,4,20250412-064808
+1575,kein_Terminated,Zeit abgelaufen,0.79,371,-2153.25,300.5,25,0,20250412-064823
+1576,kein_Terminated,Zeit abgelaufen,0.73,321,181.25,300.5,25,0,20250412-064838
+1577,kein_Terminated,Zeit abgelaufen,0.37,484,-31502.0,300.5,25,1,20250412-064853
+1578,kein_Terminated,Zeit abgelaufen,0.58,450,-21240.25,300.5,25,5,20250412-064908
+1579,kein_Terminated,Zeit abgelaufen,0.5,384,-5250.25,300.5,25,5,20250412-064923
+1580,kein_Terminated,Zeit abgelaufen,0.56,379,-8500.25,300.5,25,9,20250412-064938
+1581,kein_Terminated,Zeit abgelaufen,0.53,505,-34140.5,300.5,25,9,20250412-064954
+1582,kein_Terminated,Zeit abgelaufen,0.45,474,-28551.0,300.5,25,0,20250412-065009
+1583,kein_Terminated,Zeit abgelaufen,0.45,408,-8796.0,300.5,25,0,20250412-065024
+1584,kein_Terminated,Zeit abgelaufen,0.66,447,-21699.5,300.5,25,5,20250412-065039
+1585,kein_Terminated,Zeit abgelaufen,0.06,599,-58950.25,300.5,24,1,20250412-065054
+1586,kein_Terminated,Zeit abgelaufen,0.61,283,1790.25,300.5,24,1,20250412-065107
+1587,kein_Terminated,Zeit abgelaufen,0.72,242,1977.25,300.5,24,6,20250412-065120
+1588,kein_Terminated,Zeit abgelaufen,0.71,254,3126.25,300.5,24,6,20250412-065133
+1589,kein_Terminated,Zeit abgelaufen,0.54,271,-1250.25,300.5,24,9,20250412-065145
+1590,kein_Terminated,Zeit abgelaufen,0.47,241,-78.5,300.5,24,9,20250412-065158
+1591,kein_Terminated,Zeit abgelaufen,0.75,246,2631.5,300.5,24,7,20250412-065211
+1592,kein_Terminated,Zeit abgelaufen,0.48,281,-2369.25,300.5,23,1,20250412-065224
+1593,kein_Terminated,Zeit abgelaufen,0.77,250,1399.5,300.5,23,1,20250412-065237
+1594,kein_Terminated,Zeit abgelaufen,0.53,275,-2172.25,300.5,23,8,20250412-065249
+1595,kein_Terminated,Zeit abgelaufen,0.54,254,-2572.0,300.5,23,8,20250412-065302
+1596,kein_Terminated,Zeit abgelaufen,0.54,406,-12396.75,300.5,23,9,20250412-065315
+1597,kein_Terminated,Zeit abgelaufen,0.29,565,-49961.25,300.5,23,9,20250412-065329
+1598,kein_Terminated,Zeit abgelaufen,0.75,268,-1036.25,300.5,23,8,20250412-065341
+1599,kein_Terminated,Zeit abgelaufen,0.66,469,-21372.5,300.5,25,6,20250412-065357
+1600,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,353,-919.5,295.5,25,6,20250412-065412
+1601,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,25,1,20250412-065415
+1602,kein_Terminated,Zeit abgelaufen,0.77,401,-4275.5,300.5,25,1,20250412-065430
+1603,kein_Terminated,Zeit abgelaufen,0.18,584,-54132.75,300.5,25,7,20250412-065447
+1604,kein_Terminated,Zeit abgelaufen,0.75,326,-13.75,300.5,25,7,20250412-065502
+1605,kein_Terminated,Zeit abgelaufen,0.49,414,-16005.0,300.5,25,8,20250412-065517
+1606,kein_Terminated,Zeit abgelaufen,0.74,212,3791.75,300.5,22,9,20250412-065529
+1607,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,179,6565.75,209.0,22,9,20250412-065538
+1608,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-124.5,0.0,22,9,20250412-065541
+1609,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,146,6542.5,194.5,22,9,20250412-065549
+1610,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,1,20250412-065552
+1611,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,189,4564.75,261.0,22,1,20250412-065603
+1612,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,2,20250412-065605
+1613,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,337,-1813.75,296.5,25,8,20250412-065620
+1614,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,25,8,20250412-065624
+1615,kein_Terminated,Zeit abgelaufen,0.38,509,-34359.75,300.5,25,2,20250412-065640
+1616,kein_Terminated,Zeit abgelaufen,0.3,550,-45910.5,300.5,25,2,20250412-065656
+1617,kein_Terminated,Zeit abgelaufen,0.32,413,-1498.0,300.5,25,1,20250412-065711
+1618,kein_Terminated,Zeit abgelaufen,0.76,300,3293.5,300.5,25,1,20250412-065726
+1619,kein_Terminated,Zeit abgelaufen,0.48,402,47.0,300.5,25,4,20250412-065740
+1620,kein_Terminated,Zeit abgelaufen,0.54,323,5307.25,300.5,24,1,20250412-065753
+1621,kein_Terminated,Zeit abgelaufen,0.65,253,6872.0,300.5,24,1,20250412-065805
+1622,kein_Terminated,Zeit abgelaufen,0.68,209,6474.0,300.5,24,3,20250412-065818
+1623,kein_Terminated,Zeit abgelaufen,0.74,244,7633.75,300.5,24,3,20250412-065830
+1624,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,275,8336.0,298.5,24,2,20250412-065843
+1625,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,24,2,20250412-065846
+1626,kein_Terminated,Zeit abgelaufen,0.75,242,6254.5,300.5,24,2,20250412-065858
+1627,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,226,7911.5,295.5,24,8,20250412-065911
+1628,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-3.75,0.0,24,8,20250412-065914
+1629,kein_Terminated,Zeit abgelaufen,0.74,201,7742.5,300.5,24,4,20250412-065926
+1630,kein_Terminated,Zeit abgelaufen,0.41,359,-3353.25,300.5,24,4,20250412-065939
+1631,kein_Terminated,Zeit abgelaufen,0.35,152,4208.25,300.5,24,8,20250412-065951
+1632,kein_Terminated,Zeit abgelaufen,0.74,216,7419.5,300.5,24,8,20250412-070004
+1633,kein_Terminated,Zeit abgelaufen,0.73,236,8202.25,300.5,24,7,20250412-070016
+1634,kein_Terminated,Zeit abgelaufen,0.3,430,933.5,300.5,25,2,20250412-070031
+1635,kein_Terminated,Zeit abgelaufen,0.6,363,-7947.5,300.5,25,2,20250412-070045
+1636,kein_Terminated,Zeit abgelaufen,0.55,338,2954.0,300.5,25,5,20250412-070100
+1637,kein_Terminated,Zeit abgelaufen,0.59,312,5110.75,300.5,25,5,20250412-070114
+1638,kein_Terminated,Zeit abgelaufen,0.62,315,5664.25,300.5,25,7,20250412-070129
+1639,kein_Terminated,Zeit abgelaufen,0.72,244,6670.75,300.5,25,7,20250412-070143
+1640,kein_Terminated,Zeit abgelaufen,0.78,298,8031.25,300.5,25,7,20250412-070158
+1641,kein_Terminated,Zeit abgelaufen,0.69,258,6134.25,300.5,23,3,20250412-070210
+1642,kein_Terminated,Zeit abgelaufen,0.73,236,6675.0,300.5,23,3,20250412-070223
+1643,kein_Terminated,Zeit abgelaufen,0.67,197,6527.5,300.5,23,7,20250412-070235
+1644,kein_Terminated,Zeit abgelaufen,0.4,441,-34012.5,300.5,23,7,20250412-070248
+1645,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,187,9034.0,284.0,23,1,20250412-070300
+1646,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,23,1,20250412-070302
+1647,kein_Terminated,Zeit abgelaufen,0.64,255,4402.75,300.5,23,9,20250412-070315
+1648,kein_Terminated,Zeit abgelaufen,0.69,278,7630.25,300.5,23,6,20250412-070327
+1649,kein_Terminated,Zeit abgelaufen,0.42,247,3790.5,300.5,23,6,20250412-070340
+1650,kein_Terminated,Zeit abgelaufen,0.78,226,7435.75,300.5,23,6,20250412-070352
+1651,kein_Terminated,Zeit abgelaufen,0.44,249,3454.0,300.5,23,6,20250412-070405
+1652,kein_Terminated,Zeit abgelaufen,0.76,250,7961.75,300.5,23,1,20250412-070417
+1653,kein_Terminated,Zeit abgelaufen,0.4,381,-5537.0,300.5,23,1,20250412-070430
+1654,kein_Terminated,Zeit abgelaufen,0.72,179,7892.75,300.5,23,8,20250412-070442
+1655,kein_Terminated,Zeit abgelaufen,0.75,190,8631.0,300.5,22,0,20250412-070454
+1656,kein_Terminated,Zeit abgelaufen,0.8,216,7800.5,300.5,22,0,20250412-070506
+1657,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,6,20250412-070509
+1658,kein_Terminated,Zeit abgelaufen,0.76,203,8283.25,300.5,22,6,20250412-070521
+1659,kein_Terminated,Zeit abgelaufen,0.77,211,7073.5,300.5,22,4,20250412-070533
+1660,kein_Terminated,Zeit abgelaufen,0.69,258,7999.75,300.5,22,4,20250412-070545
+1661,kein_Terminated,Zeit abgelaufen,0.53,187,3150.75,300.5,22,1,20250412-070558
+1662,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,199,8407.75,298.0,22,4,20250412-070610
+1663,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,22,4,20250412-070612
+1664,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,161,8835.75,300.0,22,9,20250412-070624
+1665,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-3.75,0.0,22,9,20250412-070627
+1666,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,211,8322.25,296.5,22,3,20250412-070639
+1667,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,3,20250412-070641
+1668,kein_Terminated,Zeit abgelaufen,0.75,237,6946.25,300.5,22,4,20250412-070653
+19,kein_Terminated,Zeit abgelaufen,0.26,498,3350.5,300.5,24,3,20250412-070715
+1669,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,193,8101.5,258.0,22,1,20250412-070717
+1670,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,1,20250412-070719
+1671,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,213,8637.25,298.0,22,5,20250412-070731
+1672,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,5,20250412-070734
+1673,kein_Terminated,Zeit abgelaufen,0.72,191,8448.5,300.5,22,4,20250412-070746
+1674,kein_Terminated,Zeit abgelaufen,0.78,200,6653.75,300.5,22,4,20250412-070758
+1675,kein_Terminated,Zeit abgelaufen,0.74,173,7226.0,300.5,22,0,20250412-070810
+1676,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,174,9382.75,265.0,22,4,20250412-070821
+1677,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,22,4,20250412-070824
+1678,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,192,9523.0,288.0,22,4,20250412-070836
+1679,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,4,20250412-070838
+1680,kein_Terminated,Zeit abgelaufen,0.76,199,6107.5,300.5,22,9,20250412-070851
+1681,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,217,6178.0,295.5,22,9,20250412-070903
+1682,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-124.5,0.0,22,9,20250412-070905
+1683,kein_Terminated,Zeit abgelaufen,0.69,202,5566.5,300.5,24,2,20250412-070918
+1684,kein_Terminated,Zeit abgelaufen,0.38,375,-1065.75,300.5,24,2,20250412-070931
+1685,kein_Terminated,Zeit abgelaufen,0.48,285,1496.0,300.5,24,4,20250412-070943
+1686,kein_Terminated,Zeit abgelaufen,0.72,196,5253.25,300.5,24,4,20250412-070956
+1687,kein_Terminated,Zeit abgelaufen,0.45,198,3095.0,300.5,24,5,20250412-071008
+1688,kein_Terminated,Zeit abgelaufen,0.76,219,8090.5,300.5,24,5,20250412-071021
+1689,kein_Terminated,Zeit abgelaufen,0.78,234,5526.25,300.5,24,0,20250412-071034
+1690,kein_Terminated,Zeit abgelaufen,0.77,172,8871.0,300.5,22,8,20250412-071046
+1691,kein_Terminated,Zeit abgelaufen,0.78,139,8507.25,300.5,22,8,20250412-071058
+1692,kein_Terminated,Zeit abgelaufen,0.78,212,8398.5,300.5,22,5,20250412-071110
+1693,kein_Terminated,Zeit abgelaufen,0.7,184,7817.5,300.5,22,5,20250412-071122
+1694,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,177,9496.5,275.0,22,2,20250412-071133
+1695,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,2,20250412-071136
+1696,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,171,8641.5,290.5,22,7,20250412-071148
+1697,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-11.75,0.0,23,9,20250412-071150
+1698,kein_Terminated,Zeit abgelaufen,0.76,239,9251.5,300.5,23,9,20250412-071203
+1699,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,159,8500.0,263.5,23,1,20250412-071214
+1700,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,23,1,20250412-071217
+1701,kein_Terminated,Zeit abgelaufen,0.72,217,7167.5,300.5,23,5,20250412-071230
+1702,kein_Terminated,Zeit abgelaufen,0.67,224,6366.0,300.5,23,5,20250412-071242
+1703,kein_Terminated,Zeit abgelaufen,0.79,203,8628.0,300.5,23,0,20250412-071255
+1704,kein_Terminated,Zeit abgelaufen,0.76,185,8421.5,300.5,23,2,20250412-071307
+1705,kein_Terminated,Zeit abgelaufen,0.74,249,6955.75,300.5,23,2,20250412-071319
+1706,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,263,8867.0,289.0,23,8,20250412-071332
+1707,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-3.75,0.0,23,8,20250412-071334
+1708,kein_Terminated,Zeit abgelaufen,0.75,207,6927.0,300.5,23,9,20250412-071347
+1709,kein_Terminated,Zeit abgelaufen,0.76,221,8388.75,300.5,23,9,20250412-071359
+1710,kein_Terminated,Zeit abgelaufen,0.74,191,8583.75,300.5,23,3,20250412-071412
+1711,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,165,9628.5,281.5,22,0,20250412-071423
+1712,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,0,20250412-071426
+1713,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,197,9304.5,286.0,22,7,20250412-071438
+1714,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,7,20250412-071440
+1715,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,166,9118.0,292.0,22,4,20250412-071452
+1716,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,22,4,20250412-071455
+1717,kein_Terminated,Zeit abgelaufen,0.77,208,7774.75,300.5,22,2,20250412-071507
+1718,kein_Terminated,Zeit abgelaufen,0.75,248,7092.5,300.5,24,0,20250412-071519
+1719,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,217,8201.75,287.5,24,0,20250412-071531
+1720,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,24,9,20250412-071534
+1721,kein_Terminated,Zeit abgelaufen,0.41,231,1853.75,300.5,24,9,20250412-071547
+1722,kein_Terminated,Zeit abgelaufen,0.75,228,7197.25,300.5,24,4,20250412-071559
+1723,kein_Terminated,Zeit abgelaufen,0.72,234,7192.25,300.5,24,4,20250412-071612
+1724,kein_Terminated,Zeit abgelaufen,0.66,211,6306.75,300.5,24,6,20250412-071624
+1725,kein_Terminated,Zeit abgelaufen,0.79,172,8534.5,300.5,22,4,20250412-071636
+1726,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,174,9514.75,263.5,22,4,20250412-071647
+1727,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,7,20250412-071650
+1728,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,218,7906.75,295.5,22,7,20250412-071702
+1729,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,22,8,20250412-071704
+1730,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,164,9242.75,276.0,22,8,20250412-071716
+1731,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,22,4,20250412-071718
+1732,kein_Terminated,Zeit abgelaufen,0.67,158,7551.0,300.5,22,5,20250412-071730
+1733,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,165,9513.5,269.0,22,5,20250412-071742
+1734,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,0,20250412-071744
+1735,kein_Terminated,Zeit abgelaufen,0.66,262,5157.75,300.5,22,0,20250412-071756
+1736,kein_Terminated,Zeit abgelaufen,0.78,204,6673.75,300.5,22,5,20250412-071808
+1737,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,148,10009.0,268.5,22,5,20250412-071819
+1738,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-3.75,0.0,22,8,20250412-071822
+1739,kein_Terminated,Zeit abgelaufen,0.64,243,5566.0,300.5,25,5,20250412-071836
+1740,kein_Terminated,Zeit abgelaufen,0.78,297,6387.25,300.5,25,5,20250412-071851
+1741,kein_Terminated,Zeit abgelaufen,0.71,293,7642.25,300.5,25,5,20250412-071905
+1742,kein_Terminated,Zeit abgelaufen,0.57,316,3013.25,300.5,25,5,20250412-071920
+1743,kein_Terminated,Zeit abgelaufen,0.61,322,4484.0,300.5,25,5,20250412-071934
+1744,kein_Terminated,Zeit abgelaufen,0.57,308,5728.75,300.5,25,5,20250412-071949
+1745,kein_Terminated,Zeit abgelaufen,0.71,273,6059.0,300.5,25,8,20250412-072003
+1746,kein_Terminated,Zeit abgelaufen,0.78,195,7694.0,300.5,24,6,20250412-072016
+1747,kein_Terminated,Zeit abgelaufen,0.76,200,6402.5,300.5,24,6,20250412-072029
+1748,kein_Terminated,Zeit abgelaufen,0.77,234,8520.75,300.5,24,2,20250412-072041
+1749,kein_Terminated,Zeit abgelaufen,0.79,192,7987.5,300.5,24,2,20250412-072054
+1750,kein_Terminated,Zeit abgelaufen,0.7,218,6593.25,300.5,24,9,20250412-072106
+1751,kein_Terminated,Zeit abgelaufen,0.74,240,7262.75,300.5,24,9,20250412-072119
+1752,kein_Terminated,Zeit abgelaufen,0.75,207,7918.5,300.5,24,0,20250412-072131
+1753,kein_Terminated,Zeit abgelaufen,0.79,222,8180.25,300.5,24,5,20250412-072144
+1754,kein_Terminated,Zeit abgelaufen,0.69,209,7625.5,300.5,24,5,20250412-072157
+1755,kein_Terminated,Zeit abgelaufen,0.68,297,5644.0,300.5,24,8,20250412-072209
+1756,kein_Terminated,Zeit abgelaufen,0.74,228,7951.25,300.5,24,8,20250412-072222
+1757,kein_Terminated,Zeit abgelaufen,0.68,268,-3117.25,300.5,24,8,20250412-072234
+1758,kein_Terminated,Zeit abgelaufen,0.63,237,6732.75,300.5,24,8,20250412-072247
+1759,kein_Terminated,Zeit abgelaufen,0.74,221,6915.75,300.5,24,3,20250412-072300
+1760,kein_Terminated,Zeit abgelaufen,0.64,301,-3299.0,300.5,24,6,20250412-072313
+1761,kein_Terminated,Zeit abgelaufen,0.75,227,7298.0,300.5,24,6,20250412-072325
+1762,kein_Terminated,Zeit abgelaufen,0.76,240,7180.5,300.5,24,0,20250412-072338
+1763,kein_Terminated,Zeit abgelaufen,0.31,395,33.25,300.5,24,0,20250412-072350
+1764,kein_Terminated,Zeit abgelaufen,0.78,208,8786.25,300.5,24,7,20250412-072403
+1765,kein_Terminated,Zeit abgelaufen,0.75,185,7640.25,300.5,24,7,20250412-072416
+1766,kein_Terminated,Zeit abgelaufen,0.78,240,7230.25,300.5,24,4,20250412-072428
+1767,kein_Terminated,Zeit abgelaufen,0.73,224,6296.0,300.5,23,2,20250412-072441
+1768,kein_Terminated,Zeit abgelaufen,0.72,220,5890.5,300.5,23,2,20250412-072453
+1769,kein_Terminated,Zeit abgelaufen,0.77,240,8698.25,300.5,23,3,20250412-072506
+1770,kein_Terminated,Zeit abgelaufen,0.76,240,6051.5,300.5,23,3,20250412-072518
+20,kein_Terminated,Zeit abgelaufen,0.65,328,7420.5,300.5,24,1,20250412-072544
+1771,kein_Terminated,Zeit abgelaufen,0.43,176,4451.0,300.5,23,5,20250412-072545
+1772,kein_Terminated,Zeit abgelaufen,0.79,204,8970.25,300.5,23,5,20250412-072557
+1773,kein_Terminated,Zeit abgelaufen,0.74,232,4574.5,300.5,23,0,20250412-072610
+1774,kein_Terminated,Zeit abgelaufen,0.66,253,4518.0,300.5,24,7,20250412-072622
+1775,kein_Terminated,Zeit abgelaufen,0.79,218,7778.0,300.5,24,7,20250412-072635
+1776,kein_Terminated,Zeit abgelaufen,0.56,269,6457.25,300.5,24,1,20250412-072648
+1777,kein_Terminated,Zeit abgelaufen,0.74,213,7383.5,300.5,24,1,20250412-072700
+1778,kein_Terminated,Zeit abgelaufen,0.68,215,6688.25,300.5,24,2,20250412-072713
+1779,kein_Terminated,Zeit abgelaufen,0.68,290,7445.5,300.5,24,2,20250412-072725
+1780,kein_Terminated,Zeit abgelaufen,0.79,200,9168.5,300.5,24,8,20250412-072738
+1781,kein_Terminated,Zeit abgelaufen,0.62,313,4923.0,300.5,25,4,20250412-072752
+1782,kein_Terminated,Zeit abgelaufen,0.74,317,5431.5,300.5,25,4,20250412-072807
+1783,kein_Terminated,Zeit abgelaufen,0.63,333,6972.5,300.5,25,1,20250412-072822
+1784,kein_Terminated,Zeit abgelaufen,0.59,379,5122.75,300.5,25,1,20250412-072836
+1785,kein_Terminated,Zeit abgelaufen,0.67,319,4737.0,300.5,25,1,20250412-072851
+1786,kein_Terminated,Zeit abgelaufen,0.77,329,6081.75,300.5,25,1,20250412-072905
+1787,kein_Terminated,Zeit abgelaufen,0.71,283,5228.25,300.5,25,8,20250412-072920
+1788,kein_Terminated,Zeit abgelaufen,0.64,315,-10585.75,300.5,22,8,20250412-072932
+1789,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,168,8384.0,274.5,22,8,20250412-072944
+1790,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,3,20250412-072946
+1791,kein_Terminated,Zeit abgelaufen,0.8,219,8405.0,300.5,22,3,20250412-072958
+1792,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-11.75,0.0,22,9,20250412-073001
+1793,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,226,8824.75,286.0,22,9,20250412-073012
+1794,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,1,20250412-073015
+1795,kein_Terminated,Zeit abgelaufen,0.7,194,7173.0,300.5,23,5,20250412-073028
+1796,kein_Terminated,Zeit abgelaufen,0.75,257,7498.75,300.5,23,5,20250412-073040
+1797,kein_Terminated,Zeit abgelaufen,0.5,311,-2040.5,300.5,23,8,20250412-073053
+1798,kein_Terminated,Zeit abgelaufen,0.79,192,9087.0,300.5,23,8,20250412-073105
+1799,kein_Terminated,Zeit abgelaufen,0.77,232,8859.75,300.5,23,7,20250412-073117
+1800,kein_Terminated,Zeit abgelaufen,0.73,196,7992.75,300.5,23,7,20250412-073130
+1801,kein_Terminated,Zeit abgelaufen,0.78,200,8753.5,300.5,23,7,20250412-073142
+1802,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,159,9419.75,299.0,22,2,20250412-073154
+1803,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,2,20250412-073157
+1804,kein_Terminated,Zeit abgelaufen,0.79,166,8542.5,300.5,22,1,20250412-073209
+1805,kein_Terminated,Zeit abgelaufen,0.56,325,-5407.25,300.5,22,1,20250412-073221
+1806,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,150,8116.5,296.0,22,0,20250412-073233
+1807,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,0,20250412-073236
+1808,kein_Terminated,Zeit abgelaufen,0.59,118,6885.25,300.5,22,3,20250412-073248
+1809,kein_Terminated,Zeit abgelaufen,0.78,210,8504.0,300.5,24,4,20250412-073300
+1810,kein_Terminated,Zeit abgelaufen,0.77,203,7763.5,300.5,24,4,20250412-073313
+1811,kein_Terminated,Zeit abgelaufen,0.78,185,7319.0,300.5,24,0,20250412-073326
+1812,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,219,8705.25,279.0,24,0,20250412-073338
+1813,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-120.5,0.0,24,9,20250412-073340
+1814,kein_Terminated,Zeit abgelaufen,0.77,222,8492.75,300.5,24,9,20250412-073353
+1815,kein_Terminated,Zeit abgelaufen,0.6,322,-7434.0,300.5,24,7,20250412-073406
+1816,kein_Terminated,Zeit abgelaufen,0.64,246,6915.75,300.5,25,4,20250412-073420
+1817,kein_Terminated,Zeit abgelaufen,0.46,396,557.0,300.5,25,4,20250412-073435
+1818,kein_Terminated,Zeit abgelaufen,0.63,335,4547.25,300.5,25,5,20250412-073449
+1819,kein_Terminated,Zeit abgelaufen,0.66,257,6668.0,300.5,25,5,20250412-073504
+1820,kein_Terminated,Zeit abgelaufen,0.77,272,8560.5,300.5,25,4,20250412-073518
+1821,kein_Terminated,Zeit abgelaufen,0.74,284,6499.75,300.5,25,4,20250412-073533
+1822,kein_Terminated,Zeit abgelaufen,0.58,237,5647.25,300.5,25,4,20250412-073548
+1823,kein_Terminated,Zeit abgelaufen,0.76,175,6080.25,300.5,24,7,20250412-073600
+1824,kein_Terminated,Zeit abgelaufen,0.75,277,5419.75,300.5,24,7,20250412-073613
+1825,kein_Terminated,Zeit abgelaufen,0.54,343,-13819.25,300.5,24,6,20250412-073625
+1826,kein_Terminated,Zeit abgelaufen,0.79,242,7233.5,300.5,24,6,20250412-073638
+1827,kein_Terminated,Zeit abgelaufen,0.7,271,6178.25,300.5,24,3,20250412-073650
+1828,kein_Terminated,Zeit abgelaufen,0.71,224,6145.5,300.5,24,3,20250412-073703
+1829,kein_Terminated,Zeit abgelaufen,0.76,239,8046.5,300.5,24,0,20250412-073716
+1830,kein_Terminated,Zeit abgelaufen,0.69,239,5554.5,300.5,23,5,20250412-073728
+1831,kein_Terminated,Zeit abgelaufen,0.76,197,7997.75,300.5,23,5,20250412-073741
+1832,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,170,8232.5,293.0,23,3,20250412-073753
+1833,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,23,3,20250412-073756
+1834,kein_Terminated,Zeit abgelaufen,0.73,269,8178.25,300.5,23,2,20250412-073808
+1835,kein_Terminated,Zeit abgelaufen,0.8,261,8623.25,300.5,23,2,20250412-073820
+1836,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-120.5,0.0,23,5,20250412-073823
+1837,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,154,9234.5,283.5,22,1,20250412-073835
+1838,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,1,20250412-073837
+1839,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,152,8513.5,292.0,22,1,20250412-073849
+1840,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,1,20250412-073852
+1841,kein_Terminated,Zeit abgelaufen,0.66,236,5286.5,300.5,22,5,20250412-073904
+1842,kein_Terminated,Zeit abgelaufen,0.7,170,7277.75,300.5,22,5,20250412-073916
+1843,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,193,8393.25,293.0,22,8,20250412-073928
+1844,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,24,6,20250412-073931
+1845,kein_Terminated,Zeit abgelaufen,0.75,231,7777.0,300.5,24,6,20250412-073943
+1846,kein_Terminated,Zeit abgelaufen,0.77,229,7409.25,300.5,24,9,20250412-073956
+1847,kein_Terminated,Zeit abgelaufen,0.78,212,7275.0,300.5,24,9,20250412-074009
+1848,kein_Terminated,Zeit abgelaufen,0.76,205,7696.25,300.5,24,2,20250412-074021
+1849,kein_Terminated,Zeit abgelaufen,0.76,209,5201.5,300.5,24,2,20250412-074034
+1850,kein_Terminated,Zeit abgelaufen,0.75,177,8168.0,300.5,24,7,20250412-074047
+1851,kein_Terminated,Zeit abgelaufen,0.6,262,6078.5,300.5,22,4,20250412-074059
+1852,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,156,9519.25,272.5,22,4,20250412-074110
+1853,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,22,5,20250412-074113
+1854,kein_Terminated,Zeit abgelaufen,0.76,211,8480.75,300.5,22,5,20250412-074125
+1855,kein_Terminated,Zeit abgelaufen,0.62,242,2570.75,300.5,22,7,20250412-074137
+1856,kein_Terminated,Zeit abgelaufen,0.72,213,7118.75,300.5,22,7,20250412-074149
+1857,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,147,9842.0,289.5,22,5,20250412-074201
+1858,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,2,20250412-074203
+1859,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,207,9322.5,282.0,22,2,20250412-074215
+1860,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,6,20250412-074217
+1861,kein_Terminated,Zeit abgelaufen,0.65,182,7319.0,300.5,22,6,20250412-074229
+1862,kein_Terminated,Zeit abgelaufen,0.52,288,3482.5,300.5,22,9,20250412-074242
+1863,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,193,8703.25,284.5,22,9,20250412-074253
+1864,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,22,5,20250412-074256
+1865,kein_Terminated,Zeit abgelaufen,0.77,181,8343.25,300.5,23,7,20250412-074308
+1866,kein_Terminated,Zeit abgelaufen,0.77,223,8356.0,300.5,23,7,20250412-074321
+1867,kein_Terminated,Zeit abgelaufen,0.79,231,8180.25,300.5,23,7,20250412-074333
+1868,kein_Terminated,Zeit abgelaufen,0.73,232,6058.5,300.5,23,7,20250412-074346
+1869,kein_Terminated,Zeit abgelaufen,0.76,226,8227.25,300.5,23,0,20250412-074358
+21,kein_Terminated,Zeit abgelaufen,0.66,357,7946.75,300.5,24,2,20250412-074418
+1870,kein_Terminated,Zeit abgelaufen,0.79,211,8817.5,300.5,23,0,20250412-074423
+1871,kein_Terminated,Zeit abgelaufen,0.73,177,7106.0,300.5,23,7,20250412-074435
+1872,kein_Terminated,Zeit abgelaufen,0.79,173,9293.25,300.5,24,7,20250412-074448
+1873,kein_Terminated,Zeit abgelaufen,0.72,218,6990.75,300.5,24,7,20250412-074500
+1874,kein_Terminated,Zeit abgelaufen,0.74,230,8040.75,300.5,24,2,20250412-074513
+1875,kein_Terminated,Zeit abgelaufen,0.75,195,8329.5,300.5,24,2,20250412-074526
+1876,kein_Terminated,Zeit abgelaufen,0.72,190,7961.5,300.5,24,5,20250412-074538
+1877,kein_Terminated,Zeit abgelaufen,0.45,289,3296.5,300.5,24,5,20250412-074551
+1878,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,178,9004.0,288.0,24,1,20250412-074603
+1879,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,24,3,20250412-074606
+1880,kein_Terminated,Zeit abgelaufen,0.66,247,6436.25,300.5,24,3,20250412-074618
+1881,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,175,9016.0,288.0,24,5,20250412-074631
+1882,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,-120.5,0.0,24,5,20250412-074633
+1883,kein_Terminated,Zeit abgelaufen,0.74,230,8697.25,300.5,24,8,20250412-074646
+1884,kein_Terminated,Zeit abgelaufen,0.74,197,7577.0,300.5,24,8,20250412-074659
+1885,kein_Terminated,Zeit abgelaufen,0.79,202,8869.5,300.5,24,1,20250412-074711
+1886,kein_Terminated,Zeit abgelaufen,0.77,212,8875.75,300.5,23,2,20250412-074724
+1887,kein_Terminated,Zeit abgelaufen,0.74,213,8350.25,300.5,23,2,20250412-074737
+1888,kein_Terminated,Zeit abgelaufen,0.75,196,7494.75,300.5,23,4,20250412-074749
+1889,kein_Terminated,Zeit abgelaufen,0.69,200,7146.5,300.5,23,4,20250412-074801
+1890,kein_Terminated,Zeit abgelaufen,0.74,246,7617.0,300.5,23,4,20250412-074814
+1891,kein_Terminated,Zeit abgelaufen,0.76,244,8320.0,300.5,23,4,20250412-074826
+1892,kein_Terminated,Zeit abgelaufen,0.71,257,7039.5,300.5,23,6,20250412-074839
+1893,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,185,8311.25,289.0,24,7,20250412-074851
+1894,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,24,7,20250412-074854
+1895,kein_Terminated,Zeit abgelaufen,0.76,242,7236.5,300.5,24,3,20250412-074906
+1896,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,190,9006.75,293.5,24,3,20250412-074919
+1897,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,24,3,20250412-074922
+1898,kein_Terminated,Zeit abgelaufen,0.79,248,7032.0,300.5,24,3,20250412-074934
+1899,kein_Terminated,Zeit abgelaufen,0.66,225,5352.0,300.5,24,9,20250412-074947
+1900,kein_Terminated,Zeit abgelaufen,0.67,232,4798.75,300.5,23,5,20250412-074959
+1901,kein_Terminated,Zeit abgelaufen,0.75,237,8450.25,300.5,23,5,20250412-075012
+1902,kein_Terminated,Zeit abgelaufen,0.66,194,7060.0,300.5,23,6,20250412-075024
+1903,kein_Terminated,Zeit abgelaufen,0.78,201,9039.75,300.5,23,6,20250412-075037
+1904,kein_Terminated,Zeit abgelaufen,0.78,189,7455.75,300.5,23,5,20250412-075049
+1905,kein_Terminated,Zeit abgelaufen,0.7,193,7048.25,300.5,23,5,20250412-075102
+1906,kein_Terminated,Zeit abgelaufen,0.67,205,7196.75,300.5,23,2,20250412-075114
+1907,kein_Terminated,Zeit abgelaufen,0.73,245,7972.0,300.5,22,1,20250412-075126
+1909,kein_Terminated,Zeit abgelaufen,0.8,177,9207.0,300.5,22,1,20250412-075138
+1909,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,177,9207.0,300.5,22,1,20250412-075139
+1910,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,22,5,20250412-075141
+1911,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,198,10008.0,282.5,22,5,20250412-075153
+1912,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,1,20250412-075155
+1913,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,199,8999.75,297.0,22,1,20250412-075207
+1914,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,3,20250412-075210
+1915,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,202,8304.5,285.0,22,6,20250412-075221
+1916,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,6,20250412-075224
+1917,kein_Terminated,Zeit abgelaufen,0.79,206,6983.25,300.5,22,6,20250412-075236
+1918,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,216,8606.25,292.0,22,6,20250412-075248
+1919,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,0,0.25,0.0,22,3,20250412-075251
+1920,kein_Terminated,Zeit abgelaufen,0.7,230,7676.75,300.5,22,3,20250412-075303
+1921,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.8,180,8809.25,295.0,22,5,20250412-075315
+1922,80 Prozent der Fläche wurde erkundet,kein_Truncared,0.01,1,0.25,0.0,24,4,20250412-075318
+1923,kein_Terminated,Zeit abgelaufen,0.53,299,4131.0,300.5,24,4,20250412-075330
+1924,kein_Terminated,Zeit abgelaufen,0.67,268,7260.75,300.5,24,6,20250412-075343
+1925,kein_Terminated,Zeit abgelaufen,0.54,214,4722.0,300.5,24,6,20250412-075356
+1926,kein_Terminated,Zeit abgelaufen,0.78,214,9402.75,300.5,24,6,20250412-075408
+1927,kein_Terminated,Zeit abgelaufen,0.78,201,9274.0,300.5,24,6,20250412-075421
+1928,kein_Terminated,Zeit abgelaufen,0.68,273,7155.25,300.5,24,4,20250412-075433
+1929,kein_Terminated,Zeit abgelaufen,0.75,181,8679.75,300.5,22,8,20250412-075445
+1930,kein_Terminated,Zeit abgelaufen,0.77,223,8351.25,300.5,22,8,20250412-075458
+
+Trainingszeit (Stunden)
+6.60

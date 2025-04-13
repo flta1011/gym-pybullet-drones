@@ -92,8 +92,13 @@ def process_csv_file(csv_path):
     # SVG-Datei speichern
     svg_path = os.path.splitext(csv_path)[0] + ".svg"
     plt.savefig(svg_path)
+
+    # JPG-Datei speichern
+    jpg_path = os.path.splitext(csv_path)[0] + ".jpg"
+    plt.savefig(jpg_path)
+
     plt.close(fig)
-    print(f"Diagramm gespeichert: {svg_path}")
+    print(f"Diagramme gespeichert: {svg_path} und {jpg_path}")
     return True
 
 
@@ -112,14 +117,15 @@ def process_folder(base_folder):
         for csv_file in csv_files:
             # Prüfen, ob bereits eine SVG-Datei existiert
             svg_file = os.path.splitext(csv_file)[0] + ".svg"
-            if not os.path.exists(svg_file):
+            jpg_file = os.path.splitext(csv_file)[0] + ".jpg"
+            if not os.path.exists(svg_file) or not os.path.exists(jpg_file):
                 print(f"Verarbeite CSV: {csv_file}")
                 if process_csv_file(csv_file):
                     total_processed += 1
             else:
-                print(f"SVG existiert bereits für: {csv_file}")
+                print(f"SVG und JPG existieren bereits für: {csv_file}")
 
-    print(f"Insgesamt {total_processed} CSV-Dateien verarbeitet und SVG-Dateien erstellt.")
+    print(f"Insgesamt {total_processed} CSV-Dateien verarbeitet und Diagramme erstellt.")
 
 
 # Hauptordner angeben und Verarbeitung starten
