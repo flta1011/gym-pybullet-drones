@@ -109,7 +109,7 @@ DEFAULT_Procent_Step = 0.01  # nur im Debug-Mode aktiv?
 DEFAULT_REWARD_FOR_NEW_FIELD = 4
 DEFAULT_Punishment_for_Step = -0.5
 DEFAULT_Multiplier_Collision_Penalty = 2
-DEFAULT_no_collision_reward = 0.75  # nur bei R6 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
+DEFAULT_no_collision_reward = 0.35  # nur bei R6 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
 DEFAULT_Punishment_for_Walls = 8  # R7 - Negative Reward Map Settings
 DEFAULT_Influence_of_Walls = 4  # R7 - Negative Reward Map Settings
 
@@ -120,8 +120,8 @@ DEFAULT_List_MazesToUse = (22, 23, 24, 25)  # Mazes 0-26 stehen zur Verfügung
 DEFAULT_List_Start_PositionsToUse = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)  # Startpositionen 0-9  stehen zur Verfügung (10 Startpositionen)
 DEFAULT_MaxRoundsOnOneMaze = 6  # nach wie vielen Schritten wird ein neues maze gewählt # NOTE - Verändert nichts
 DEFAULT_MaxRoundsSameStartingPositions = 2
-DEFAULT_collision_penalty_terminated = -100  # mit -10 Trainiert SAC gut, bleibt aber noch ca. 50 mal an der Wand hängen--
-DEFAULT_Terminated_Wall_Distance = 0.1  # DAS IST AUCH DER WERT; ABER DER DIE WANDBESTRAFUNG IM R5/R6 gegeben wird. --> worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25;; WAR ORIGINAL ALEX BEI =0,15!!
+DEFAULT_collision_penalty_terminated = -10  # mit -10 Trainiert SAC gut, bleibt aber noch ca. 50 mal an der Wand hängen--
+DEFAULT_Terminated_Wall_Distance = 0.10  # DAS IST AUCH DER WERT; ABER DER DIE WANDBESTRAFUNG IM R5/R6 gegeben wird. --> worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25;; WAR ORIGINAL ALEX BEI =0,15!!
 
 
 ###############################################################################################
