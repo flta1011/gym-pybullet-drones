@@ -123,6 +123,8 @@ DEFAULT_MaxRoundsSameStartingPositions = 2
 DEFAULT_collision_penalty_terminated = -100  # mit -10 Trainiert SAC gut, bleibt aber noch ca. 50 mal an der Wand hängen--
 DEFAULT_Terminated_Wall_Distance = 0.1  # DAS IST AUCH DER WERT; ABER DER DIE WANDBESTRAFUNG IM R5/R6 gegeben wird. --> worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25;; WAR ORIGINAL ALEX BEI =0,15!!
 
+# NOTE - 0,1 ist fest als Abstandswert für den Zähler "zu nah an der Wand" festgelegt.
+
 
 ###############################################################################################
 ########################MODEL-&Umbgebungs-SETTINGS##############################################
