@@ -90,7 +90,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         vision_attributes=False,
         output_folder="results_maze_training" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"),
         target_position=np.array([0, 0, 0]),
-        Danger_Threshold_Wall=0.20,
+        Danger_Threshold_Wall=0.15,
         EPISODE_LEN_SEC=10 * 60,
         dash_active=False,
         map_size_slam=9,  # Map-Size 9x9m, damit für den cropped Ausschnitt für die Drohne immer genung Fläche vorhanden ist, die ausgeschnitten werden kann
@@ -114,7 +114,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         MaxRoundsOnOneMaze=10,
         MaxRoundsSameStartingPositions=5,
         collision_penalty_terminated=-1000,
-        Terminated_Wall_Distance=0.3,
+        Terminated_Wall_Distance=0.15,
         no_collision_reward=1,
         punishment_for_walls=-2,
         influence_of_walls=3,
@@ -1033,13 +1033,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         state = self._getDroneStateVector(0)  # Einführung neuste
 
         # Erhöhe den Step-Counter für die Zählung der Momente, die zu nah an der Wand waren (in jeden Control-Freq.)
-        if (
-            self.distance_map[
-                int(np.round(self.pos[0][0] / 0.05)),
-                int(np.round(self.pos[0][1] / 0.05)),
-            ]
-            < 0.25
-        ):
+        # wenn einer der Raycasts kleiner als der Treshhold-wert ist:
+        if any(state[21:25] <= self.Terminated_Wall_Distance):
             self.too_close_to_wall_counter += 1
 
         self.timestamp_actual = self.step_counter * self.PYB_TIMESTEP  # Use simulation time instead of real time

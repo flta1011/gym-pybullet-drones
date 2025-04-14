@@ -86,13 +86,23 @@ class SimpleSlam:
 
         # FALLBACK für Errror "index 210 is out of bounds for axis 0 with size 180"
         if grid_x >= self.grid_size:
+            for i in range(3):
+                print(f"WARNING: grid_x >= self.grid_size; grid_x = {grid_x} (grid_size = {self.grid_size})")
             grid_x = self.grid_size - 1
+
         if grid_y >= self.grid_size:
+            for i in range(3):
+                print(f"WARNING: grid_y >= self.grid_size; grid_y = {grid_y} (grid_size = {self.grid_size})")
             grid_y = self.grid_size - 1
+
         # Fallback für Cases < 0 (sollten eigentlich nie auftreten)
         if grid_x < 0:
+            for i in range(3):
+                print(f"WARNING: grid_x < 0; grid_x = {grid_x}")
             grid_x = 0
         if grid_y < 0:
+            for i in range(3):
+                print(f"WARNING: grid_y < 0; grid_y = {grid_y}")
             grid_y = 0
 
         # self.path.append((grid_x, grid_y))
