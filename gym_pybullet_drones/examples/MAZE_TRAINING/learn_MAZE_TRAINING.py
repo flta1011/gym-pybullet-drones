@@ -540,7 +540,7 @@ header_training = [
     "Terminated",
     "Truncated",
     "Map-Abgedeckt",
-    "Wand berührungen",
+    "Wand berührungen(Raycast<=0,1)",
     "Summe Reward",
     "Flugzeit der Runde",
     "Maze_number",

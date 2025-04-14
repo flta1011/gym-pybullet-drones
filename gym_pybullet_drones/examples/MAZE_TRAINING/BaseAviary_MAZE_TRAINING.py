@@ -1034,7 +1034,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         # Erhöhe den Step-Counter für die Zählung der Momente, die zu nah an der Wand waren (in jeden Control-Freq.)
         # wenn einer der Raycasts kleiner als der Treshhold-wert ist:
-        if any(state[21:25] <= self.Terminated_Wall_Distance):
+        if any(state[21:25] <= 0.1):
             self.too_close_to_wall_counter += 1
 
         self.timestamp_actual = self.step_counter * self.PYB_TIMESTEP  # Use simulation time instead of real time
