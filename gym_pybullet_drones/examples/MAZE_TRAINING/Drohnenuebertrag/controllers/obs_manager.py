@@ -1,4 +1,4 @@
-class SLAMManager:
+class OBSManager:
     def __init__(self):
         self.slam_map = None
         self.observation_space = None
