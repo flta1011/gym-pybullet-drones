@@ -39,9 +39,9 @@ import numpy as np
 from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.log import LogConfig
 from cflib.utils import uri_helper
-from preparation_prediction_model_for_real_flight import (
-    get_PPO_Predcitions_1D_Observation,
-)
+
+# from preparation_prediction_model_for_real_flight import (get_PPO_Predcitions_1D_Observation,)
+from Predict_model_for_real_flight import get_model_prediction
 from PyQt6 import QtCore, QtWidgets
 from PyQt6.QtWidgets import QLabel, QPushButton, QSizePolicy
 from stable_baselines3 import PPO
@@ -71,6 +71,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self, URI):
         QtWidgets.QMainWindow.__init__(self)
+
+        self.obs_type = "O8"  # supported "O8" and "O9"
+        self.act_type = "A2"  # supported "A2" and "A3"
 
         self.emergency_stop_active = False
         self.latest_position = None
@@ -235,7 +238,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.hoverTimer = QtCore.QTimer()
         self.hoverTimer.timeout.connect(self.sendHoverCommand)
-        self.hoverTimer.setInterval(100)
+        self.hoverTimer.setInterval(500)  # 14.04.2025; 16:11; first version was 100ms now updated to 500ms to predict with 2Hz
         self.hoverTimer.start()
 
     def sendHoverCommand(self):
@@ -414,7 +417,17 @@ class MainWindow(QtWidgets.QMainWindow):
     #     self.hover = {'x': 0.0, 'y': 0.0, 'z': 0.0, 'yaw': 0.0, 'height': 0.0}
     #     self.hoverTimer.stop()
 
+    def update_observation_space(self):
+        # tbd
+        obs_space = self.latest_measurement
+
+    def predict_model(self):
+        # tbd
+        action = get_model_prediction(self.latest_measurement)
+        return action
+
     def AIFlycommands(self):
+        # TODO: Implement the AI control logic with all models and correct differenciation between action and observation space
         if self.ai_control_active:
             if self.latest_measurement is not None:
                 observation = [self.latest_measurement["front"] / 1000]  # 1D observation [mm to m]
