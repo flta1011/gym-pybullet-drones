@@ -987,6 +987,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                     self.last_clipped_action = clipped_action
 
                     self.PYB_STEPS_IN_ACTUAL_STEP_CALL += 1
+
                     if self.PYB_STEPS_IN_ACTUAL_STEP_CALL == self.PYB_STEPS_PER_REWARD_AND_ACTION_CHANGE:
                         #### Update and store the drones kinematic information #####
                         self._updateAndStoreKinematicInformation()
@@ -994,23 +995,26 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 #### Update and store the drones kinematic information #####
                 self._updateAndStoreKinematicInformation()
 
-        #########################################################################################
-        # SLAM-Update
-        pos = state[0:3]
-        yaw = state[9]  # Assuming this is the yaw angle
+                # SLAM-MAP in der CTRL-LOOP aktualisieren, um Genauigkeit der SLAM-MAP zu erhöhen
+                if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O6" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O8" or self.OBSERVATION_TYPE == "O9":
+                    raycast_results_Check_Distance_Sensors = self.check_distance_sensors(0)
+                    # Get raycast results
+                    raycast_results = {
+                        "front": raycast_results_Check_Distance_Sensors[0],
+                        "back": raycast_results_Check_Distance_Sensors[1],
+                        "left": raycast_results_Check_Distance_Sensors[2],
+                        "right": raycast_results_Check_Distance_Sensors[3],
+                        "up": raycast_results_Check_Distance_Sensors[4],
+                    }
+                    pos = self.pos[0, 0:3]
+                    yaw = self.rpy[0, 2]
+                    self.slam.update(pos, yaw, raycast_results)
+
+        #############################ENDE UPDATE PHYSICS AND CONTROL FOR THIS REWARD_STEP############################################################
+
+        state = self._getDroneStateVector(0)  # Einführung neuste
 
         if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O6" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O8" or self.OBSERVATION_TYPE == "O9":
-
-            # Get raycast results
-            raycast_results = {
-                "front": state[21],
-                "back": state[22],
-                "left": state[23],
-                "right": state[24],
-                "up": state[25],
-            }
-
-            self.slam.update(pos, yaw, raycast_results)
             # update interest values
             try:
                 self._compute_interest_values()
@@ -1020,8 +1024,16 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
             # NOTE - hier: SLAM Map visualisieren (im Training besser deaktiviert)
             # Achtung: bei AKtivierung wird ein Bild pro Step gespeichert!
+            # Only visualize every 100th reward step
             # self.slam.visualize()
         #########################################################################################
+
+        # Prozentsatz der erkundeten Fläche
+        if self.Area_counter_Max != 0:
+            self.Ratio_Area = self.Area_counter / self.Area_counter_Max
+            self.Ratio_Area = round(self.Ratio_Area, 2)  # Round to 2 decimal places
+        else:
+            self.Ratio_Area = 0
 
         #### Prepare the return values #############################
         obs = self._computeObs()
@@ -1030,7 +1042,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         truncated, Grund_Truncated = self._computeTruncated()
         info = self._computeInfo()
         ###Debugging Plots
-        state = self._getDroneStateVector(0)  # Einführung neuste
 
         # Erhöhe den Step-Counter für die Zählung der Momente, die zu nah an der Wand waren (in jeden Control-Freq.)
         # wenn einer der Raycasts kleiner als der Treshhold-wert ist:
@@ -1063,9 +1074,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 print(f"Grund für Terminated: {Grund_Terminated}")
                 print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
 
-        # Prozentsatz der erkundeten Fläche
-        self.Ratio_Area = self.Area_counter / self.Area_counter_Max
-        self.Ratio_Area = round(self.Ratio_Area, 2)  # Round to 2 decimal places
         # Procent = Ratio_Area % self.Procent_Step
         # if Procent == 0:
         # if self.previous_Procent != self.Ratio_Area:
@@ -1481,16 +1489,16 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         state = np.hstack(
             [
-                self.pos[nth_drone, :],  # [0:3]
-                self.quat[nth_drone, :],  # [3:7]
-                self.rpy[nth_drone, :],  # [7:10]
-                self.vel[nth_drone, :],  # [10:13]
-                self.ang_v[nth_drone, :],  # [13:16]
-                0,  # [16]
-                0,  # [17]
-                0,  # [18]
-                0,  # [19]
-                0,  # [20]
+                self.pos[nth_drone, :],  # 3 Stück: 0-2 [0:3]
+                self.quat[nth_drone, :],  # 4 Stück: 3-6 [3:7]
+                self.rpy[nth_drone, :],  # 3 Stück: 7-9 [7:10]
+                self.vel[nth_drone, :],  # 3 Stück: 10-12 [10:13]
+                self.ang_v[nth_drone, :],  # 3 Stück: 13-15 [13:16]
+                0,  # 16 [16]
+                0,  # 17 [17]
+                0,  # 18 [18]
+                0,  # 19 [19]
+                0,  # 20 [20]
                 self.ray_results_actual[0],  # forward [21]
                 self.ray_results_actual[1],  # backward [22]
                 self.ray_results_actual[2],  # left [23]

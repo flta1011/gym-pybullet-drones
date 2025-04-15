@@ -116,7 +116,7 @@ DEFAULT_Influence_of_Walls = 4  # R7 - Negative Reward Map Settings
 
 ##########EXPLORATION/MAZE-SETTINGS######
 DEFAULT_explore_Matrix_Size = 5  # 5 bedeutet eine 5x5 Matrix um die Drohne herum (in diesem Bereich kann die Drohne die Felder einsammeln und diese als erkundet markieren)
-DEFAULT_List_MazesToUse = (22, 23, 24, 25)  # Mazes 0-26 stehen zur Verfügung
+DEFAULT_List_MazesToUse = (26, 26)  # Mazes 0-26 stehen zur Verfügung
 DEFAULT_List_Start_PositionsToUse = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)  # Startpositionen 0-9  stehen zur Verfügung (10 Startpositionen)
 DEFAULT_MaxRoundsOnOneMaze = 6  # nach wie vielen Schritten wird ein neues maze gewählt # NOTE - Verändert nichts
 DEFAULT_MaxRoundsSameStartingPositions = 2

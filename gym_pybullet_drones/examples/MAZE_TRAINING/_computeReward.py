@@ -642,14 +642,6 @@ def _computeReward(
                         self.reward_components["explore_bonus_new_field"] += self.Reward_for_new_field
                         self.Area_counter += 1
 
-                # if self.Ratio_Area == 0.6:
-                #     print("80 Prozent Felder erkundet")
-                #     self.reward_components["Prozentual_Bonus"] = 100
-
-                # if self.Ratio_Area == 0.8:
-                #     print("80 Prozent Felder erkundet")
-                #     self.reward_components["Prozentual_Bonus"] = 100
-
             ###### 1.PUNISHMENT FOR COLLISION #####
 
             Value_on_Heatmap = self.potential_map[x, y]
@@ -749,14 +741,6 @@ def _computeReward(
                         self.reward_components["explore_bonus_new_field"] += self.Reward_for_new_field
                         self.Area_counter += 1
 
-                # if self.Ratio_Area == 0.6:
-                #     print("80 Prozent Felder erkundet")
-                #     self.reward_components["Prozentual_Bonus"] = 100
-
-                # if self.Ratio_Area == 0.8:
-                #     print("80 Prozent Felder erkundet")
-                #     self.reward_components["Prozentual_Bonus"] = 100
-
             ###### PUNISHMENT FOR COLLISION, wenn Truncated sein sollte, gibt es eine große Bestrafung #####
 
             if state[21] < self.Terminated_Wall_Distance or state[22] < self.Terminated_Wall_Distance or state[23] < self.Terminated_Wall_Distance or state[24] < self.Terminated_Wall_Distance:
@@ -854,14 +838,6 @@ def _computeReward(
                         self.reward_map[i, j] = 1
                         self.reward_components["explore_bonus_new_field"] += self.Reward_for_new_field
                         self.Area_counter += 1
-
-                # if self.Ratio_Area == 0.6:
-                #     print("80 Prozent Felder erkundet")
-                #     self.reward_components["Prozentual_Bonus"] = 100
-
-                # if self.Ratio_Area == 0.8:
-                #     print("80 Prozent Felder erkundet")
-                #     self.reward_components["Prozentual_Bonus"] = 100
 
             ###### PUNISHMENT FOR COLLISION, wenn Truncated sein sollte, gibt es eine große Bestrafung #####
 
@@ -978,14 +954,6 @@ def _computeReward(
                         self.reward_map[i, j] = 1
                         self.reward_components["explore_bonus_new_field"] += self.Reward_for_new_field
                         self.Area_counter += 1
-
-                # if self.Ratio_Area == 0.6:
-                #     print("80 Prozent Felder erkundet")
-                #     self.reward_components["Prozentual_Bonus"] = 100
-
-                # if self.Ratio_Area == 0.8:
-                #     print("80 Prozent Felder erkundet")
-                #     self.reward_components["Prozentual_Bonus"] = 100
 
             ###### 1.PUNISHMENT FOR COLLISION #####
 
