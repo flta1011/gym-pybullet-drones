@@ -6,11 +6,9 @@ from vispy.scene.cameras import TurntableCamera
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, drone_controller, obs_manager, ai_controller):
+    def __init__(self, drone_controller):
         super().__init__()
         self.drone_controller = drone_controller
-        self.obs_manager = obs_manager
-        self.ai_controller = ai_controller
 
         # Window setup
         self.resize(800, 600)
@@ -46,8 +44,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.connect_button = QtWidgets.QPushButton("Connect")
         self.start_button = QtWidgets.QPushButton("Start")
         self.emergency_stop_button = QtWidgets.QPushButton("Emergency stop")
-        self.toggle_ai_control_button = QtWidgets.QCheckBox("AI Control")
         self.switch_view_button = QtWidgets.QPushButton("Switch View")  # Button to switch views
+        self.toggle_ai_control_button = QtWidgets.QCheckBox("AI Control")
 
         # Create the layout
         layout = QtWidgets.QVBoxLayout()
@@ -103,7 +101,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.start_button.clicked.connect(self.start_fly)
         self.emergency_stop_button.clicked.connect(self.emergency_stop)
         self.switch_view_button.clicked.connect(self.switch_view)
-        self.toggle_ai_control_button.stateChanged.connect(self.toggle_ai_control)
+        self.toggle_ai_control_button.stateChanged.connect(self.drone_controller.toggle_ai_control)
 
         # Create the 3D mapping
         self.scene_canvas = scene.SceneCanvas(keys=None)
@@ -149,20 +147,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.stacked_widget.setCurrentIndex(new_index)
 
     def connect(self):
-        # Placeholder for drone connection logic
-        pass
+        self.drone_controller.connect()
 
     def start_fly(self):
-        # Placeholder for starting the drone
-        pass
+        self.drone_controller.start_fly()
 
     def emergency_stop(self):
-        # Placeholder for emergency stop logic
-        pass
+        self.drone_controller.emergency_stop()
 
     def toggle_ai_control(self, state):
         # Toggle AI control
-        self.ai_controller.active = bool(state)
+        self.drone_controller.toggle_ai_control(state)
 
     def keyPressEvent(self, event):
         if not event.isAutoRepeat():
@@ -171,51 +166,49 @@ class MainWindow(QtWidgets.QMainWindow):
             elif event.key() == QtCore.Qt.Key.Key_K:
                 self.toggle_ai_control()
 
-            if not self.ai_control_active:
-                if event.key() == QtCore.Qt.Key.Key_Left:
-                    self.updateHover("y", 1)
-                if event.key() == QtCore.Qt.Key.Key_Right:
-                    self.updateHover("y", -1)
-                if event.key() == QtCore.Qt.Key.Key_Up:
-                    self.updateHover("x", 1)
-                if event.key() == QtCore.Qt.Key.Key_Down:
-                    self.updateHover("x", -1)
-                if event.key() == QtCore.Qt.Key.Key_A:
-                    self.updateHover("yaw", -70)
-                if event.key() == QtCore.Qt.Key.Key_D:
-                    self.updateHover("yaw", 70)
-                if event.key() == QtCore.Qt.Key.Key_Z:
-                    self.updateHover("yaw", -200)
-                if event.key() == QtCore.Qt.Key.Key_X:
-                    self.updateHover("yaw", 200)
-                if event.key() == QtCore.Qt.Key.Key_W:
-                    self.updateHover("height", 0.1)
-                if event.key() == QtCore.Qt.Key.Key_S:
-                    self.updateHover("height", -0.1)
+            if event.key() == QtCore.Qt.Key.Key_Left:
+                self.drone_controller.updateHover("y", 1)
+            if event.key() == QtCore.Qt.Key.Key_Right:
+                self.drone_controller.updateHover("y", -1)
+            if event.key() == QtCore.Qt.Key.Key_Up:
+                self.drone_controller.updateHover("x", 1)
+            if event.key() == QtCore.Qt.Key.Key_Down:
+                self.drone_controller.updateHover("x", -1)
+            if event.key() == QtCore.Qt.Key.Key_A:
+                self.drone_controller.updateHover("yaw", -70)
+            if event.key() == QtCore.Qt.Key.Key_D:
+                self.drone_controller.updateHover("yaw", 70)
+            if event.key() == QtCore.Qt.Key.Key_Z:
+                self.drone_controller.updateHover("yaw", -200)
+            if event.key() == QtCore.Qt.Key.Key_X:
+                self.drone_controller.updateHover("yaw", 200)
+            if event.key() == QtCore.Qt.Key.Key_W:
+                self.drone_controller.updateHover("height", 0.1)
+            if event.key() == QtCore.Qt.Key.Key_S:
+                self.drone_controller.updateHover("height", -0.1)
 
     def keyReleaseEvent(self, event):
         if not event.isAutoRepeat():
-            if not self.ai_control_active:
-                if event.key() == QtCore.Qt.Key.Key_Left:
-                    self.updateHover("y", 0)
-                if event.key() == QtCore.Qt.Key.Key_Right:
-                    self.updateHover("y", 0)
-                if event.key() == QtCore.Qt.Key.Key_Up:
-                    self.updateHover("x", 0)
-                if event.key() == QtCore.Qt.Key.Key_Down:
-                    self.updateHover("x", 0)
-                if event.key() == QtCore.Qt.Key.Key_A:
-                    self.updateHover("yaw", 0)
-                if event.key() == QtCore.Qt.Key.Key_D:
-                    self.updateHover("yaw", 0)
-                if event.key() == QtCore.Qt.Key.Key_W:
-                    self.updateHover("height", 0)
-                if event.key() == QtCore.Qt.Key.Key_S:
-                    self.updateHover("height", 0)
-                if event.key() == QtCore.Qt.Key.Key_Z:
-                    self.updateHover("yaw", 0)
-                if event.key() == QtCore.Qt.Key.Key_X:
-                    self.updateHover("yaw", 0)
+            if event.key() == QtCore.Qt.Key.Key_Left:
+                self.drone_controller.updateHover("y", 0)
+            if event.key() == QtCore.Qt.Key.Key_Right:
+                self.drone_controller.updateHover("y", 0)
+            if event.key() == QtCore.Qt.Key.Key_Up:
+                self.drone_controller.updateHover("x", 0)
+            if event.key() == QtCore.Qt.Key.Key_Down:
+                self.drone_controller.updateHover("x", 0)
+            if event.key() == QtCore.Qt.Key.Key_A:
+                self.drone_controller.updateHover("yaw", 0)
+            if event.key() == QtCore.Qt.Key.Key_D:
+                self.drone_controller.updateHover("yaw", 0)
+            if event.key() == QtCore.Qt.Key.Key_W:
+                self.drone_controller.updateHover("height", 0)
+            if event.key() == QtCore.Qt.Key.Key_S:
+                self.drone_controller.updateHover("height", 0)
+            if event.key() == QtCore.Qt.Key.Key_Z:
+                self.drone_controller.updateHover("yaw", 0)
+            if event.key() == QtCore.Qt.Key.Key_X:
+                self.drone_controller.updateHover("yaw", 0)
 
     def closeEvent(self, event):
         if self.cf is not None:

@@ -7,16 +7,42 @@ import numpy as np
 from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.log import LogConfig
 from cflib.utils import uri_helper
+from controllers.obs_manager import OBSManager
 from PyQt6 import QtCore
+from stable_baselines3 import DQN, PPO, SAC
 
 
 class DroneController:
-    def __init__(self, uri):
+    def __init__(self, uri, observation_type, action_type, model_type, model_path):
         self.uri = uri
         self.latest_position = None
         self.latest_measurement = None
         self.SPEED_FACTOR = 0.5
         self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.5}
+        self.obs_manager = OBSManager(observation_type=observation_type)
+
+        # Load the appropriate model type based on MODEL_Version
+        match model_type:
+            case "M1":
+                self.model = PPO.load(model_path)
+                print(f"Loaded PPO model from {model_path}")
+            case "M2":
+                self.model = DQN.load(model_path)
+                print(f"Loaded DQN model from {model_path}")
+            case "M3":
+                self.model = DQN.load(model_path)
+                print(f"Loaded DQN model from {model_path}")
+            case "M4":
+                self.model = DQN.load(model_path)
+                print(f"Loaded DQN model from {model_path}")
+            case "M5":
+                self.model = DQN.load(model_path)
+                print(f"Loaded DQN model from {model_path}")
+            case "M6":
+                self.model = SAC.load(model_path)
+                print(f"Loaded SAC model from {model_path}")
+            case _:
+                print(f"[ERROR]: Unknown model version in TEST-(PREDICTION)-MODE: {model_type}")
 
     def connect(self):
         cflib.crtp.init_drivers()
@@ -102,6 +128,11 @@ class DroneController:
     def get_measurements(self):
         return self.latest_measurement
 
+    def trigger_obs_update(self):
+        position = self.latest_position
+        measurement = self.latest_measurement
+        self.obs_manager.update(position, measurement)
+
     def start_fly(self):
         self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.5}
 
@@ -110,13 +141,20 @@ class DroneController:
         self.hoverTimer.setInterval(500)  # 14.04.2025; 16:11; first version was 100ms now updated to 500ms to predict with 2Hz
         self.hoverTimer.start()
 
-    def sendHoverCommand(self, emergency_stop_active, ai_control_active):
-        if emergency_stop_active:
-            self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.5}
-            self.cf.commander.send_hover_setpoint(0.0, 0.0, 0.0, 0.0)
-            return
+    def emergency_stop(self):
+        self.hoverTimer.stop()
+        self.cf.commander.send_hover_setpoint(0.0, 0.0, 0.0, 0.0)
+        self.cf.commander.send_setpoint(0, 0, 0, 0)
+        self.cf.commander.send_stop_setpoint()
+        print("Emergency stop activated")
 
-        if ai_control_active:
+    def toggle_ai_control(self, state):
+        self.ai_control_active = bool(state)
+
+    def sendHoverCommand(self):
+        self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.5}
+
+        if self.ai_control_active:
             print("Implement AI Fly Controller !!!!")
 
         self.cf.commander.send_hover_setpoint(self.hover["x"], self.hover["y"], self.hover["yaw"], self.hover["height"])
@@ -134,3 +172,7 @@ class DroneController:
             print(f"Updated hover: {self.hover}")
         else:
             print(f"Invalid hover key: {k}")
+
+    def predict_action(self, observation_space):
+        action, _ = self.model.predict(observation_space, deterministic=True)
+        return action

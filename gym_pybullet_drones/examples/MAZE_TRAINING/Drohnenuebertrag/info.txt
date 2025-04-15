@@ -1,0 +1,71 @@
+[MainWindow] <--> [DroneController] <--> [SLAMManager] <--> [AIController]
+       ↑                  ↑                  ↑                  ↓
+       |                  |                  |                  |
+    User Input       Drone State       SLAM Map          Predicted Action
+
+
+
+1. Information Flow Overview
+DroneController
+Input:
+Commands from the AIController (e.g., hover commands, movement actions).
+Manual commands from the MainWindow (e.g., emergency stop, manual control).
+Output:
+Drone state (e.g., position, sensor measurements) to the SLAMManager and MainWindow.
+SLAMManager
+Input:
+Drone state (e.g., position, sensor measurements) from the DroneController.
+Output:
+Updated SLAM map and observation space to the AIController and MainWindow.
+AIController
+Input:
+Observation space from the SLAMManager.
+Output:
+Predicted actions to the DroneController.
+MainWindow
+Input:
+Drone state from the DroneController.
+SLAM map and observation space from the SLAMManager.
+Output:
+Manual commands to the DroneController.
+AI control toggle to the AIController.
+2. Detailed Information Flow
+Step 1: Drone State Updates
+The DroneController continuously updates the drone's state (e.g., position, sensor measurements).
+This state is sent to:
+The SLAMManager for SLAM map updates.
+The MainWindow for displaying the drone's current state.
+Step 2: SLAM Map and Observation Space Updates
+The SLAMManager receives the drone's state from the DroneController.
+It updates the SLAM map and generates the observation space.
+The updated SLAM map and observation space are sent to:
+The AIController for AI predictions.
+The MainWindow for visualization.
+Step 3: AI Predictions
+The AIController receives the observation space from the SLAMManager.
+It uses the observation space to predict the next action.
+The predicted action is sent to the DroneController to control the drone.
+Step 4: GUI Interaction
+The MainWindow displays the drone's state and SLAM map.
+The user can:
+Toggle AI control, which enables or disables the AIController.
+Send manual commands (e.g., emergency stop) to the DroneController.
+3. Example Workflow
+Drone State Update:
+
+The DroneController updates the drone's position and sensor readings.
+This data is sent to the SLAMManager and MainWindow.
+SLAM Map Update:
+
+The SLAMManager updates the SLAM map and observation space based on the drone's state.
+The updated SLAM map is sent to the MainWindow for visualization.
+The observation space is sent to the AIController.
+AI Prediction:
+
+The AIController predicts the next action using the observation space.
+The predicted action is sent to the DroneController.
+GUI Interaction:
+
+The MainWindow displays the drone's state and SLAM map.
+The user toggles AI control, enabling the AIController to take over.
+Alternatively, the user sends manual commands to the DroneController.
