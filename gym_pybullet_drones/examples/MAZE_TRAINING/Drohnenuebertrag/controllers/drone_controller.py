@@ -14,6 +14,9 @@ from stable_baselines3 import DQN, PPO, SAC
 
 class DroneController:
     def __init__(self, uri, observation_type, action_type, model_type, model_path):
+        self.emergency_stop_active = False
+        self.SAFE_DISTANCE = 0.4
+        self.PUSHBACK_DISTANCE = 0.3
         self.uri = uri
         self.observation_type = observation_type
         self.action_type = action_type
@@ -26,6 +29,15 @@ class DroneController:
         self.number_last_actions = 20
         self.last_actions = np.zeros(self.number_last_actions)
         self.obs_manager = OBSManager(observation_type=observation_type)
+
+        # GUI Callbacks
+        self.position_callback = None
+        self.measurement_callback = None
+        self.ai_control_active = False
+        self.start_fly_callback = None
+        self.emergency_stop_callback = None
+        self.key_press_callback = None
+        self.key_release_callback = None
 
         # Load the appropriate model type based on MODEL_Version
         match model_type:
@@ -49,6 +61,12 @@ class DroneController:
                 print(f"Loaded SAC model from {model_path}")
             case _:
                 print(f"[ERROR]: Unknown model version in TEST-(PREDICTION)-MODE: {model_type}")
+
+    def set_position_callback(self, callback):
+        self.position_callback = callback
+
+    def set_measurement_callback(self, callback):
+        self.measurement_callback = callback
 
     def connect(self):
         cflib.crtp.init_drivers()
@@ -113,6 +131,8 @@ class DroneController:
     def pos_data(self, timestamp, data, logconf):
         position = [data["stateEstimate.x"], data["stateEstimate.y"], data["stateEstimate.z"]]
         self.latest_position = position
+        if self.position_callback:
+            self.position_callback(position)
 
     def get_position(self):
         return self.latest_position
@@ -130,6 +150,8 @@ class DroneController:
             "right": data["range.right"],
         }
         self.latest_measurement = measurement
+        if self.measurement_callback:
+            self.measurement_callback(measurement)
         self.trigger_obs_update()
 
     def get_measurements(self):
@@ -143,7 +165,7 @@ class DroneController:
 
         self.hoverTimer = QtCore.QTimer()
         self.hoverTimer.timeout.connect(self.sendHoverCommand)
-        self.hoverTimer.setInterval(500)  # 14.04.2025; 16:11; first version was 100ms now updated to 500ms to predict with 2Hz
+        self.hoverTimer.setInterval(50)  # 14.04.2025; 16:11; first version was 100ms now updated to 500ms to predict with 2Hz
         self.hoverTimer.start()
 
     def emergency_stop(self):
@@ -151,37 +173,137 @@ class DroneController:
         self.cf.commander.send_hover_setpoint(0.0, 0.0, 0.0, 0.0)
         self.cf.commander.send_setpoint(0, 0, 0, 0)
         self.cf.commander.send_stop_setpoint()
+        self.emergency_stop_active = True
         print("Emergency stop activated")
 
     def toggle_ai_control(self, state):
-        self.ai_control_active = bool(state)
+        """
+        Update the AI control state.
+        :param state: The new state of AI control (True or False).
+        """
+        self.ai_control_active = state
+        print(f"DroneController: AI control is now {'active' if state else 'inactive'}.")
 
     def sendHoverCommand(self):
-        self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.5}
-
-        if self.ai_control_active:
-            print("Implement AI Fly Controller !!!!")
-
+        if self.emegency_stop_active:
+            return
+        self.check_safety()
         self.cf.commander.send_hover_setpoint(self.hover["x"], self.hover["y"], self.hover["yaw"], self.hover["height"])
 
-    def updateHover(self, k, v):
+    def check_safety(self):
         """
-        Updates the hover dictionary based on the key and value.
-        :param k: The key to update (e.g., "x", "y", "height").
-        :param v: The value to update (e.g., 1 for forward, -1 for backward).
+        Check the distance sensors and trigger safety mechanisms if a wall is too close.
+        """
+        if self.latest_measurement is None:
+            return  # No measurements available yet
+        # Return if no relevant changes occured in the measurements
+        if self.latest_measurement == self.last_checked_measurement:
+            return  # Skip safety check if measurements haven't changed
+        self.last_checked_measurement = self.latest_measurement
 
-        self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.5}
+        # Get distance sensor readings
+        front = self.latest_measurement.get("front", float("inf"))
+        back = self.latest_measurement.get("back", float("inf"))
+        left = self.latest_measurement.get("left", float("inf"))
+        right = self.latest_measurement.get("right", float("inf"))
+
+        # Check if any sensor detects a wall too close
+        if front < self.SAFE_DISTANCE:
+            self.trigger_safety("front", back, left, right)
+        elif back < self.SAFE_DISTANCE:
+            self.trigger_safety("back", front, left, right)
+        elif left < self.SAFE_DISTANCE:
+            self.trigger_safety("left", front, back, right)
+        elif right < self.SAFE_DISTANCE:
+            self.trigger_safety("right", front, back, left)
+
+    def trigger_safety(self, direction, opposite, adjacent1, adjacent2):
         """
-        if k in self.hover:
-            self.hover[k] += v * self.SPEED_FACTOR
-            print(f"Updated hover: {self.hover}")
+        Trigger the safety mechanism to stop the drone and push it back to a safe distance.
+        :param direction: The direction of the detected wall ("front", "back", "left", "right").
+        :param opposite: The distance in the opposite direction.
+        :param adjacent1: The distance to the first adjacent side.
+        :param adjacent2: The distance to the second adjacent side.
+        """
+        print(f"[SAFETY] Wall detected too close in the {direction} direction!")
+
+        # Stop all movement
+        self.hover["x"] = 0.0
+        self.hover["y"] = 0.0
+        self.hover["yaw"] = 0.0
+        print("[SAFETY] Drone movement stopped.")
+
+        # Determine pushback direction
+        if direction == "front" and opposite > self.PUSHBACK_DISTANCE:
+            self.hover["x"] = -self.PUSHBACK_DISTANCE  # Push backward
+        elif direction == "back" and opposite > self.PUSHBACK_DISTANCE:
+            self.hover["x"] = self.PUSHBACK_DISTANCE  # Push forward
+        elif direction == "left" and opposite > self.PUSHBACK_DISTANCE:
+            self.hover["y"] = self.PUSHBACK_DISTANCE  # Push right
+        elif direction == "right" and opposite > self.PUSHBACK_DISTANCE:
+            self.hover["y"] = -self.PUSHBACK_DISTANCE  # Push left
+
+        # Ensure no collision during pushback
+        if adjacent1 < self.SAFE_DISTANCE or adjacent2 < self.SAFE_DISTANCE:
+            print("[SAFETY] Pushback canceled due to nearby walls.")
+            self.hover["x"] = 0.0
+            self.hover["y"] = 0.0
+
+        print(f"[SAFETY] Updated hover for pushback: {self.hover}")
+
+    def updateHover(self, k=None, v=None, observation_space=None):
+        """
+        Updates the hover dictionary based on the key and value or AI model predictions.
+        :param k: The key to update (e.g., "x", "y", "height") when AI control is not active.
+        :param v: The value to update (e.g., 1 for forward, -1 for backward) when AI control is not active.
+        :param observation_space: The current observation space for the AI model to predict actions when AI control is active.
+        """
+        if self.ai_control_active:
+            # AI control is active, ignore keyboard inputs and use AI model predictions
+            if observation_space is not None:
+                new_x_vel, new_y_vel = self.predict_action(observation_space)
+                self.hover["x"] = new_x_vel * self.SPEED_FACTOR
+                self.hover["y"] = new_y_vel * self.SPEED_FACTOR
+                print(f"[AI Control] Updated hover via AI: {self.hover}")
+            else:
+                print("[AI Control] Observation space is required for AI predictions.")
         else:
-            print(f"Invalid hover key: {k}")
+            # AI control is not active, update hover values via keyboard inputs
+            if k in self.hover:
+                self.hover[k] += v * self.SPEED_FACTOR
+                print(f"[Manual Control] Updated hover via keyboard: {self.hover}")
+            else:
+                print(f"[Manual Control] Invalid hover key: {k}")
 
     def predict_action(self, observation_space):
         action, _ = self.model.predict(observation_space, deterministic=True)
+        if self.action_type == "A3":
+            new_x_vel = action[0]
+            new_y_vel = action[1]
+        else:
+            # 1: np.array([[1, 0, 0, 0.99, 0]]), # Fly 90° (Forward)
+            # 2: np.array([[-1, 0, 0, 0.99, 0]]), # Fly 180° (Backward)
+            # 3: np.array([[0, 1, 0, 0.99, 0]]), # Fly 90° (Left)
+            # 4: np.array([[0, -1, 0, 0.99, 0]]), # Fly 270° (Right)
+
+            if action == 1:
+                new_x_vel = 1
+                new_y_vel = 0
+            elif action == 2:
+                new_x_vel = -1
+                new_y_vel = 0
+            elif action == 3:
+                new_x_vel = 0
+                nex_y_vel = 1
+            elif action == 4:
+                new_x_vel = 0
+                new_y_vel = -1
+            else:
+                new_x_vel = 0
+                new_y_vel = 0
+
         self.update_last_actions(action)
-        return action
+        return new_x_vel, new_y_vel
 
     def update_last_actions(self, action):
         self.last_actions = np.roll(self.last_actions, 1)
