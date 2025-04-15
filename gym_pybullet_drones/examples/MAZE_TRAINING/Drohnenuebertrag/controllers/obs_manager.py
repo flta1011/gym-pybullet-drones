@@ -6,18 +6,319 @@ import numpy as np
 from gymnasium import spaces
 
 
+def _observationSpace(observation_type, cropped_map_size_grid):
+    last_actions_shape = 20
+
+    match observation_type:
+        case "O1":  # X, Y, YAW, Raycast readings
+            """Returns the observation space.
+            Simplified observation space with key state variables.
+
+            10.2.25: deutlich vereinfachte Observation Space, damit es für den PPO einfacher ist, die Zuammenhänge zwischen den relevanten Observations und dem dafür erhaltenen Reward zu erkennen.
+
+            Returns
+            -------
+            ndarray
+                A Box() of shape (NUM_DRONES,H,W,4) or (NUM_DRONES,21) depending on the observation type.
+
+                Information of the self._getDroneStateVector:
+                    ndarray
+                    1x Raycast reading (forward) [21]          -> 0 bis 4
+
+            """
+
+            lo = -np.inf
+            hi = np.inf
+            obs_lower_bound = np.array(
+                [-99, -99, -2 * np.pi, 0, 0, 0, 0, 0]
+            )  # x,y,yaw, Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
+
+            obs_upper_bound = np.array([99, 99, 2 * np.pi, 4, 4, 4, 4, 4])  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
+
+            return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
+
+        case "O2":  # 5 Kanäle für CNN-DQN
+            """
+            Returns the observation space for the CNN-DQN model.
+            The observation space is a Box with shape (5, grid_size, grid_size) containing:
+            - Channel 1: Normalized SLAM map (values in [0,1])
+            - Channel 2: Normalized x position (values in [0,1])
+            - Channel 3: Normalized y position (values in [0,1])
+            - Channel 4: sin(yaw) (values in [-1,1])
+            - Channel 5: cos(yaw) (values in [-1,1])
+            """
+            grid_size = int(cropped_map_size_grid)
+
+            # Create proper shaped arrays for low and high bounds
+            low = np.zeros((5, grid_size, grid_size), dtype=np.float32)
+            high = np.ones((5, grid_size, grid_size), dtype=np.float32)
+
+            # Set specific ranges for each channel
+            low[3, :, :] = -1.0  # sin(yaw) lower bound
+            low[4, :, :] = -1.0  # cos(yaw) lower bound
+
+            return spaces.Box(low=low, high=high, dtype=np.float32)
+
+        case "O3":  # 7 Kanäle für CNN-DQN
+            """
+            Returns the observation space for the CNN-DQN model.
+            The observation space is a Box with shape (7, grid_size, grid_size) containing:
+            - Channel 1: Normalized SLAM map (values in [0,1])
+            - Channel 2: Normalized x position (values in [0,1])
+            - Channel 3: Normalized y position (values in [0,1])
+            - Channel 4: sin(yaw) (values in [-1,1])
+            - Channel 5: cos(yaw) (values in [-1,1])
+            - Channel 6: last Clipped Action (values in [-1,1])
+            - Channel 7: second Last Clipped Action (values in [-1,1])
+            - Channel 8: third Last Clipped Action (values in [-1,1])
+            """
+            grid_size = int(cropped_map_size_grid)
+
+            # Create proper shaped arrays for low and high bounds
+            low = np.zeros((8, grid_size, grid_size), dtype=np.float32)
+            high = np.ones((8, grid_size, grid_size), dtype=np.float32)
+
+            # Set specific ranges for each channel
+            low[3, :, :] = -1.0  # sin(yaw) lower bound
+            low[4, :, :] = -1.0  # cos(yaw) lower bound
+
+            high[3, :, :] = 1.0  # sin(yaw) lower bound
+            high[4, :, :] = 1.0  # cos(yaw) lower bound
+            high[5, :, :] = 4.0  # last Clipped Action lower bound
+            high[6, :, :] = 4.0  # second Last Clipped Action lower bound
+            high[7, :, :] = 4.0  # third Last Clipped Action lower bound
+
+            return spaces.Box(low=low, high=high, dtype=np.float32)
+
+        case "O4":  # 1 Kanal für CNN-DQN nur das Bild
+            """
+            Returns the observation space for the CNN-DQN model.
+            The observation space is a Box with shape (1, grid_size, grid_size) containing:
+            - Channel 1: Grayscale SLAM map (values in [0,255])
+            """
+            grid_size = int(cropped_map_size_grid)
+
+            # Create proper shaped arrays for low and high bounds
+            low = np.zeros((grid_size, grid_size, 1), dtype=np.uint8)
+            high = np.full((grid_size, grid_size, 1), 255, dtype=np.uint8)
+
+            return spaces.Box(low=low, high=high, dtype=np.uint8)
+
+        case "O5":  # X, Y, YAW, Raycast readings, last clipped action, second last clipped action, third last clipped action
+            """Returns the observation space.
+            Simplified observation space with key state variables.
+
+            10.2.25: deutlich vereinfachte Observation Space, damit es für den PPO einfacher ist, die Zuammenhänge zwischen den relevanten Observations und dem dafür erhaltenen Reward zu erkennen.
+
+            Returns
+            -------
+            ndarray
+                A Box() of shape (NUM_DRONES,H,W,4) or (NUM_DRONES,21) depending on the observation type.
+
+                Information of the self._getDroneStateVector:
+                    ndarray
+                    1x Raycast reading (forward) [21]          -> 0 bis 4
+                    Last Action (values in [-1,1])
+            self.number_last_actions
+            """
+
+            lo = -np.inf
+            hi = np.inf
+            obs_lower_bound = np.array(
+                [-99, -99, -2 * np.pi, 0, 0, 0, 0] + [-1] * last_actions_shape
+            )  # x,y,yaw, Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up, last actions
+
+            obs_upper_bound = np.array(
+                [99, 99, 2 * np.pi, 4, 4, 4, 4] + [6] * last_actions_shape
+            )  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up, last actions
+
+            return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
+
+        case "O6":  # 7 Kanäle für CNN-DQN
+            """
+            Returns the observation space for the CNN-DQN model.
+            The observation space is a Box with shape (7, grid_size, grid_size) containing:
+            - Channel 1: Normalized SLAM map (values in [0,1])
+            - Channel 2: Normalized x position (values in [0,1])
+            - Channel 3: Normalized y position (values in [0,1])
+            - Channel 4: sin(yaw) (values in [-1,1])
+            - Channel 5: cos(yaw) (values in [-1,1])
+            - Channel 6: last Clipped Action (values in [-1,1])
+            - Channel 7: second Last Clipped Action (values in [-1,1])
+            - Channel 8: third Last Clipped Action (values in [-1,1])
+            """
+            grid_size = int(cropped_map_size_grid)
+
+            observationSpace = spaces.Dict(
+                {
+                    "image": spaces.Box(low=0, high=255, shape=(grid_size, grid_size, 1), dtype=np.uint8),  # Grayscale image
+                    "x": spaces.Box(low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32),
+                    "y": spaces.Box(low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32),
+                    "sin_yaw": spaces.Box(low=-1, high=1, shape=(1,), dtype=np.float32),
+                    "cos_yaw": spaces.Box(low=-1, high=1, shape=(1,), dtype=np.float32),
+                    "last_action": spaces.Box(
+                        low=0,
+                        high=6,
+                        shape=(last_actions_shape,),
+                        dtype=np.float32,
+                    ),
+                }
+            )
+
+            return observationSpace
+
+        case "O7":  # 7 Kanäle für CNN-DQN
+            """
+            Returns the observation space for the CNN-DQN model.
+            The observation space is a Box with shape (7, grid_size, grid_size) containing:
+            - Channel 1: Normalized SLAM map (values in [0,1])
+            - Channel 2: Normalized x position (values in [0,1])
+            - Channel 3: Normalized y position (values in [0,1])
+            - Channel 4: sin(yaw) (values in [-1,1])
+            - Channel 5: cos(yaw) (values in [-1,1])
+            - Channel 6: last Clipped Action (values in [-1,1])
+            - Channel 7: second Last Clipped Action (values in [-1,1])
+            - Channel 8: third Last Clipped Action (values in [-1,1])
+            """
+            grid_size = int(cropped_map_size_grid)
+
+            observationSpace = spaces.Dict(
+                {
+                    "image": spaces.Box(low=0, high=255, shape=(grid_size, grid_size, 1), dtype=np.uint8),  # Grayscale image
+                    "x": spaces.Box(low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32),
+                    "y": spaces.Box(low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32),
+                    "sin_yaw": spaces.Box(low=-1, high=1, shape=(1,), dtype=np.float32),
+                    "cos_yaw": spaces.Box(low=-1, high=1, shape=(1,), dtype=np.float32),
+                    "last_action": spaces.Box(
+                        low=0,
+                        high=6,
+                        shape=(last_actions_shape,),
+                        dtype=np.float32,
+                    ),
+                    "raycast": spaces.Box(low=0, high=4, shape=(4,), dtype=np.float32),
+                }
+            )
+
+            return observationSpace
+
+        case "O8":  # 7 Kanäle für CNN-DQN
+            """
+            Returns the observation space for the CNN-DQN model.
+            The observation space is a Box with shape (7, grid_size, grid_size) containing:
+            - Channel 1: SLAM map (values in [0,255])
+            - Channel 2: X-Position (values in [-inf,inf])
+            - Channel 3: Y-Position (values in [-ing,inf])
+            - Channel 4: Raycast readings (values in [0,4])
+            - Channel 5: Interest Values (values in [0,32400])
+            - Channel 6: n last Clipped Actions (values in [0, 3])
+            """
+            last_actions_size = last_actions_shape  # Number of last clipped actions
+
+            # Define the low and high bounds for the flattened observation
+            low = np.concatenate(
+                (
+                    np.array([-np.inf], dtype=np.float32),  # X position
+                    np.array([-np.inf], dtype=np.float32),  # Y position
+                    np.zeros(4, dtype=np.float32),  # Raycast readings (values in [0, 4])
+                    np.zeros(4, dtype=np.float32),  # Interest values
+                    np.zeros(last_actions_size, dtype=np.float32),  # Last clipped actions
+                )
+            )
+
+            high = np.concatenate(
+                (
+                    np.array([np.inf], dtype=np.float32),  # X position
+                    np.array([np.inf], dtype=np.float32),  # Y position
+                    np.full(4, 4, dtype=np.float32),  # Raycast readings (values in [0, 4])
+                    np.full(4, 32400, dtype=np.float32),  # Interest values
+                    np.full(last_actions_size, 6, dtype=np.float32),  # Last clipped actions
+                )
+            )
+
+            # Return the flattened observation space
+            return spaces.Box(low=low, high=high, dtype=np.float32)
+
+        case "O9":  # 7 Kanäle für CNN-DQN
+            """
+            Returns the observation space for the CNN-DQN model.
+            The observation space is a Box with shape (7, grid_size, grid_size) containing:
+            - Channel 1: Normalized SLAM map (values in [0,1])
+            - Channel 2: Normalized x position (values in [0,1])
+            - Channel 3: Normalized y position (values in [0,1])
+            - Channel 6: last Clipped Action (values in [-1,1])
+            - Channel 7: second Last Clipped Action (values in [-1,1])
+            - Channel 8: third Last Clipped Action (values in [-1,1])
+            """
+            grid_size = int(cropped_map_size_grid)
+
+            observationSpace = spaces.Dict(
+                {
+                    "image": spaces.Box(low=0, high=255, shape=(grid_size, grid_size, 1), dtype=np.uint8),  # Grayscale image
+                    "x": spaces.Box(low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32),
+                    "y": spaces.Box(low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32),
+                    "raycast": spaces.Box(low=0, high=4, shape=(4,), dtype=np.float32),
+                    "interest_values": spaces.Box(low=0, high=32400, shape=(4,), dtype=np.uint8),
+                    "last_clipped_actions": spaces.Box(low=0, high=6, shape=(last_actions_shape,), dtype=np.float32),
+                }
+            )
+
+            return observationSpace
+
+
 class OBSManager:
     def __init__(self, observation_type):
         self.SLAM = SimpleSlam()
         self.observation_type = observation_type
-        self.observation = _observationSpace()
+        self.observation = _observationSpace(self.observation_type, self.SLAM.cropped_map_size_grid)
+        self.interest_values = np.zeros(4, dtype=int)
 
-    def update(self, position, measurements):
+    def update(self, position, measurements, last_actions):
         self.SLAM.update(drone_pos=position, drone_yaw=measurements["yaw"], raycast_results=measurements)
+        self._compute_interest_values()
 
-        # TODO: observation spaces match cases
-        # TODO: interest_value calculation
-        # TODO: Observation zusammenstellung
+        match self.observation_type:
+            case "O8":
+                """X-Pos, Y-Pos, Raycast Readings, Interest Values, Last Actions"""
+                self.observation = (
+                    np.array(position[0], position[1], measurements["forward"], measurements["backwards"], measurements["left"], measurements["right"])
+                    .extend(self.interest_values)
+                    .extend(last_actions)
+                )
+
+            case "O9":
+                """Slam-image, X-Pos, Y-Pos, Raycast Readings, Interest Values, Last Actions"""
+                raycasts = [measurements["front"], measurements["back"], measurements["left"], measurements["right"]]
+                self.observation = dict(
+                    {
+                        "image": self.SLAM.cropped_grid,
+                        "x": round(position[0], 3),
+                        "y": round(position[1], 3),
+                        "raycast": raycasts,
+                        "interest_values": self.interest_values,
+                        "last_clipped_actions": last_actions,
+                    }
+                )
+
+    def _compute_interest_values(self):
+        drone_position = np.argwhere(self.SLAM == 255)  # Get the drone position
+        # drone_position = [int(state[0] / 0.05), int(state[1] / 0.05)]
+        free_areas = np.argwhere(self.SLAM == 200)  # Get the free areas
+
+        min_x_y = drone_position[0]
+        max_x_y = [min_x_y[0] + 5, min_x_y[1] + 5]
+
+        # Iterate through free areas and calculate their relation to the drone
+        for area in free_areas:
+            if area[0] < min_x_y[0]:
+                self.interest_values["up"] += 1
+            elif area[0] > max_x_y[0]:
+                self.interest_values["down"] += 1
+            if area[1] < min_x_y[1]:
+                self.interest_values["left"] += 1
+            elif area[1] > max_x_y[1]:
+                self.interest_values["right"] += 1
+
+        return self.interest_values
 
     def get_observation(self):
         return self.observation
@@ -300,260 +601,3 @@ class SimpleSlam:
 
     def get_cropped_slam_map(self):
         return self.cropped_grid
-
-
-def _observationSpace(observation_type):
-    match observation_type:
-        case "O1":  # X, Y, YAW, Raycast readings
-            """Returns the observation space.
-            Simplified observation space with key state variables.
-
-            10.2.25: deutlich vereinfachte Observation Space, damit es für den PPO einfacher ist, die Zuammenhänge zwischen den relevanten Observations und dem dafür erhaltenen Reward zu erkennen.
-
-            Returns
-            -------
-            ndarray
-                A Box() of shape (NUM_DRONES,H,W,4) or (NUM_DRONES,21) depending on the observation type.
-
-                Information of the self._getDroneStateVector:
-                    ndarray
-                    1x Raycast reading (forward) [21]          -> 0 bis 4
-
-            """
-
-            lo = -np.inf
-            hi = np.inf
-            obs_lower_bound = np.array(
-                [-99, -99, -2 * np.pi, 0, 0, 0, 0, 0]
-            )  # x,y,yaw, Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
-
-            obs_upper_bound = np.array([99, 99, 2 * np.pi, 4, 4, 4, 4, 4])  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up
-
-            return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
-
-        case "O2":  # 5 Kanäle für CNN-DQN
-            """
-            Returns the observation space for the CNN-DQN model.
-            The observation space is a Box with shape (5, grid_size, grid_size) containing:
-            - Channel 1: Normalized SLAM map (values in [0,1])
-            - Channel 2: Normalized x position (values in [0,1])
-            - Channel 3: Normalized y position (values in [0,1])
-            - Channel 4: sin(yaw) (values in [-1,1])
-            - Channel 5: cos(yaw) (values in [-1,1])
-            """
-            grid_size = int(self.slam.cropped_map_size_grid)
-
-            # Create proper shaped arrays for low and high bounds
-            low = np.zeros((5, grid_size, grid_size), dtype=np.float32)
-            high = np.ones((5, grid_size, grid_size), dtype=np.float32)
-
-            # Set specific ranges for each channel
-            low[3, :, :] = -1.0  # sin(yaw) lower bound
-            low[4, :, :] = -1.0  # cos(yaw) lower bound
-
-            return spaces.Box(low=low, high=high, dtype=np.float32)
-
-        case "O3":  # 7 Kanäle für CNN-DQN
-            """
-            Returns the observation space for the CNN-DQN model.
-            The observation space is a Box with shape (7, grid_size, grid_size) containing:
-            - Channel 1: Normalized SLAM map (values in [0,1])
-            - Channel 2: Normalized x position (values in [0,1])
-            - Channel 3: Normalized y position (values in [0,1])
-            - Channel 4: sin(yaw) (values in [-1,1])
-            - Channel 5: cos(yaw) (values in [-1,1])
-            - Channel 6: last Clipped Action (values in [-1,1])
-            - Channel 7: second Last Clipped Action (values in [-1,1])
-            - Channel 8: third Last Clipped Action (values in [-1,1])
-            """
-            grid_size = int(self.slam.cropped_map_size_grid)
-
-            # Create proper shaped arrays for low and high bounds
-            low = np.zeros((8, grid_size, grid_size), dtype=np.float32)
-            high = np.ones((8, grid_size, grid_size), dtype=np.float32)
-
-            # Set specific ranges for each channel
-            low[3, :, :] = -1.0  # sin(yaw) lower bound
-            low[4, :, :] = -1.0  # cos(yaw) lower bound
-
-            high[3, :, :] = 1.0  # sin(yaw) lower bound
-            high[4, :, :] = 1.0  # cos(yaw) lower bound
-            high[5, :, :] = 4.0  # last Clipped Action lower bound
-            high[6, :, :] = 4.0  # second Last Clipped Action lower bound
-            high[7, :, :] = 4.0  # third Last Clipped Action lower bound
-
-            return spaces.Box(low=low, high=high, dtype=np.float32)
-
-        case "O4":  # 1 Kanal für CNN-DQN nur das Bild
-            """
-            Returns the observation space for the CNN-DQN model.
-            The observation space is a Box with shape (1, grid_size, grid_size) containing:
-            - Channel 1: Grayscale SLAM map (values in [0,255])
-            """
-            grid_size = int(self.slam.cropped_map_size_grid)
-
-            # Create proper shaped arrays for low and high bounds
-            low = np.zeros((grid_size, grid_size, 1), dtype=np.uint8)
-            high = np.full((grid_size, grid_size, 1), 255, dtype=np.uint8)
-
-            return spaces.Box(low=low, high=high, dtype=np.uint8)
-
-        case "O5":  # X, Y, YAW, Raycast readings, last clipped action, second last clipped action, third last clipped action
-            """Returns the observation space.
-            Simplified observation space with key state variables.
-
-            10.2.25: deutlich vereinfachte Observation Space, damit es für den PPO einfacher ist, die Zuammenhänge zwischen den relevanten Observations und dem dafür erhaltenen Reward zu erkennen.
-
-            Returns
-            -------
-            ndarray
-                A Box() of shape (NUM_DRONES,H,W,4) or (NUM_DRONES,21) depending on the observation type.
-
-                Information of the self._getDroneStateVector:
-                    ndarray
-                    1x Raycast reading (forward) [21]          -> 0 bis 4
-                    Last Action (values in [-1,1])
-            self.number_last_actions
-            """
-
-            lo = -np.inf
-            hi = np.inf
-            obs_lower_bound = np.array(
-                [-99, -99, -2 * np.pi, 0, 0, 0, 0] + [-1] * self.number_last_actions
-            )  # x,y,yaw, Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up, last actions
-
-            obs_upper_bound = np.array(
-                [99, 99, 2 * np.pi, 4, 4, 4, 4] + [6] * self.number_last_actions
-            )  # Raycast reading forward, Raycast reading backward, Raycast reading left, Raycast reading right, Raycast reading up, last actions
-
-            return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
-
-        case "O6":  # 7 Kanäle für CNN-DQN
-            """
-            Returns the observation space for the CNN-DQN model.
-            The observation space is a Box with shape (7, grid_size, grid_size) containing:
-            - Channel 1: Normalized SLAM map (values in [0,1])
-            - Channel 2: Normalized x position (values in [0,1])
-            - Channel 3: Normalized y position (values in [0,1])
-            - Channel 4: sin(yaw) (values in [-1,1])
-            - Channel 5: cos(yaw) (values in [-1,1])
-            - Channel 6: last Clipped Action (values in [-1,1])
-            - Channel 7: second Last Clipped Action (values in [-1,1])
-            - Channel 8: third Last Clipped Action (values in [-1,1])
-            """
-            grid_size = int(self.slam.cropped_map_size_grid)
-
-            observationSpace = spaces.Dict(
-                {
-                    "image": spaces.Box(low=0, high=255, shape=(grid_size, grid_size, 1), dtype=np.uint8),  # Grayscale image
-                    "x": spaces.Box(low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32),
-                    "y": spaces.Box(low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32),
-                    "sin_yaw": spaces.Box(low=-1, high=1, shape=(1,), dtype=np.float32),
-                    "cos_yaw": spaces.Box(low=-1, high=1, shape=(1,), dtype=np.float32),
-                    "last_action": spaces.Box(
-                        low=0,
-                        high=6,
-                        shape=(self.last_actions.shape[0],),
-                        dtype=np.float32,
-                    ),
-                }
-            )
-
-            return observationSpace
-
-        case "O7":  # 7 Kanäle für CNN-DQN
-            """
-            Returns the observation space for the CNN-DQN model.
-            The observation space is a Box with shape (7, grid_size, grid_size) containing:
-            - Channel 1: Normalized SLAM map (values in [0,1])
-            - Channel 2: Normalized x position (values in [0,1])
-            - Channel 3: Normalized y position (values in [0,1])
-            - Channel 4: sin(yaw) (values in [-1,1])
-            - Channel 5: cos(yaw) (values in [-1,1])
-            - Channel 6: last Clipped Action (values in [-1,1])
-            - Channel 7: second Last Clipped Action (values in [-1,1])
-            - Channel 8: third Last Clipped Action (values in [-1,1])
-            """
-            grid_size = int(self.slam.cropped_map_size_grid)
-
-            observationSpace = spaces.Dict(
-                {
-                    "image": spaces.Box(low=0, high=255, shape=(grid_size, grid_size, 1), dtype=np.uint8),  # Grayscale image
-                    "x": spaces.Box(low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32),
-                    "y": spaces.Box(low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32),
-                    "sin_yaw": spaces.Box(low=-1, high=1, shape=(1,), dtype=np.float32),
-                    "cos_yaw": spaces.Box(low=-1, high=1, shape=(1,), dtype=np.float32),
-                    "last_action": spaces.Box(
-                        low=0,
-                        high=6,
-                        shape=(self.last_actions.shape[0],),
-                        dtype=np.float32,
-                    ),
-                    "raycast": spaces.Box(low=0, high=4, shape=(4,), dtype=np.float32),
-                }
-            )
-
-            return observationSpace
-
-        case "O8":  # 7 Kanäle für CNN-DQN
-            """
-            Returns the observation space for the CNN-DQN model.
-            The observation space is a Box with shape (7, grid_size, grid_size) containing:
-            - Channel 1: SLAM map (values in [0,255])
-            - Channel 2: X-Position (values in [-inf,inf])
-            - Channel 3: Y-Position (values in [-ing,inf])
-            - Channel 4: Raycast readings (values in [0,4])
-            - Channel 5: Interest Values (values in [0,32400])
-            - Channel 6: n last Clipped Actions (values in [0, 3])
-            """
-            last_actions_size = self.last_actions.shape[0]  # Number of last clipped actions
-
-            # Define the low and high bounds for the flattened observation
-            low = np.concatenate(
-                (
-                    np.array([-np.inf], dtype=np.float32),  # X position
-                    np.array([-np.inf], dtype=np.float32),  # Y position
-                    np.zeros(4, dtype=np.float32),  # Raycast readings (values in [0, 4])
-                    np.zeros(4, dtype=np.float32),  # Interest values
-                    np.zeros(last_actions_size, dtype=np.float32),  # Last clipped actions
-                )
-            )
-
-            high = np.concatenate(
-                (
-                    np.array([np.inf], dtype=np.float32),  # X position
-                    np.array([np.inf], dtype=np.float32),  # Y position
-                    np.full(4, 4, dtype=np.float32),  # Raycast readings (values in [0, 4])
-                    np.full(4, 32400, dtype=np.float32),  # Interest values
-                    np.full(last_actions_size, 6, dtype=np.float32),  # Last clipped actions
-                )
-            )
-
-            # Return the flattened observation space
-            return spaces.Box(low=low, high=high, dtype=np.float32)
-
-        case "O9":  # 7 Kanäle für CNN-DQN
-            """
-            Returns the observation space for the CNN-DQN model.
-            The observation space is a Box with shape (7, grid_size, grid_size) containing:
-            - Channel 1: Normalized SLAM map (values in [0,1])
-            - Channel 2: Normalized x position (values in [0,1])
-            - Channel 3: Normalized y position (values in [0,1])
-            - Channel 6: last Clipped Action (values in [-1,1])
-            - Channel 7: second Last Clipped Action (values in [-1,1])
-            - Channel 8: third Last Clipped Action (values in [-1,1])
-            """
-            grid_size = int(self.slam.cropped_map_size_grid)
-
-            observationSpace = spaces.Dict(
-                {
-                    "image": spaces.Box(low=0, high=255, shape=(grid_size, grid_size, 1), dtype=np.uint8),  # Grayscale image
-                    "x": spaces.Box(low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32),
-                    "y": spaces.Box(low=-np.inf, high=np.inf, shape=(1,), dtype=np.float32),
-                    "raycast": spaces.Box(low=0, high=4, shape=(4,), dtype=np.float32),
-                    "interest_values": spaces.Box(low=0, high=32400, shape=(4,), dtype=np.uint8),
-                    "last_clipped_actions": spaces.Box(low=0, high=6, shape=(self.last_actions.shape[0],), dtype=np.float32),
-                }
-            )
-
-            return observationSpace

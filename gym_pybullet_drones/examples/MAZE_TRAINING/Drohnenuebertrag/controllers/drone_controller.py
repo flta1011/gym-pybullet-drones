@@ -15,10 +15,16 @@ from stable_baselines3 import DQN, PPO, SAC
 class DroneController:
     def __init__(self, uri, observation_type, action_type, model_type, model_path):
         self.uri = uri
+        self.observation_type = observation_type
+        self.action_type = action_type
+        self.model_type = model_type
+        self.model_path = model_path
         self.latest_position = None
         self.latest_measurement = None
         self.SPEED_FACTOR = 0.5
         self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.5}
+        self.number_last_actions = 20
+        self.last_actions = np.zeros(self.number_last_actions)
         self.obs_manager = OBSManager(observation_type=observation_type)
 
         # Load the appropriate model type based on MODEL_Version
@@ -124,14 +130,13 @@ class DroneController:
             "right": data["range.right"],
         }
         self.latest_measurement = measurement
+        self.trigger_obs_update()
 
     def get_measurements(self):
         return self.latest_measurement
 
     def trigger_obs_update(self):
-        position = self.latest_position
-        measurement = self.latest_measurement
-        self.obs_manager.update(position, measurement)
+        self.obs_manager.update(position=self.latest_position, measurements=self.latest_measurement, last_actions=self.last_actions)
 
     def start_fly(self):
         self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.5}
@@ -175,4 +180,9 @@ class DroneController:
 
     def predict_action(self, observation_space):
         action, _ = self.model.predict(observation_space, deterministic=True)
+        self.update_last_actions(action)
         return action
+
+    def update_last_actions(self, action):
+        self.last_actions = np.roll(self.last_actions, 1)
+        self.last_actions[0] = action
