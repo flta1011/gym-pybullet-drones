@@ -1,1 +1,3 @@
 gamma= 0.95
+
+Ergebnisse auf dem schweren Mazes sind ganz oke. In dem Predicion-Modus performt das Modell auf den einfachen Mazes aber nicht so gut und hängt sich im Maze 22 z.B. Regelmäßig auf.. (bleibt an einer Stelle hängen)

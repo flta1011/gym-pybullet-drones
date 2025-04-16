@@ -44,7 +44,7 @@ from gym_pybullet_drones.utils.utils import str2bool, sync
 #####################################################################################################
 
 ####### TRAINING-MODE #######
-Training_Mode = "Training"  # "Training" oder "Test"
+Training_Mode = "Test"  # "Training" oder "Test"
 GUI_Mode = "Train"  # "Train" oder "Test" oder "NoGUI"
 
 ####### GUI-SETTINGS (u.a. Debug-GUI) #######
@@ -55,19 +55,22 @@ DEFAULT_DASH_ACTIVE = False
 ####### Hyperparameter-Set speichern #######
 DEFAULT_SAVE_HYPERPARAMETER_SET = False  # auf false belassen, wird unten auf true gesetzt, sofern gespeichert werden soll (bei Bedarf unten nachlesen)
 ### Hier den Beschreibungstext für das Hyperparameter-Set einfügen ####
-HyperparameterSetDescription = "FT:#Neue Hyperparameter-Sets, weil mit dem Abstand von 0,15 auch bei gutem Flugverhalten sehr viel negativer Reward gesammt wurde --> Mazes sind zu eng--> auf 0,1 verringert + belohnung für Kollision auf 0,75 reduziert"
+HyperparameterSetDescription = "Parameter für das SAC Modell die last actions auf 100 gesetzt, weil mit 200 auch kein direktes Lernen zu Beginn zu sehen war. -> Reward für neue Felder runtergenommen und Bestrafung auch, da damit mit SAC zuletzt besser trainiert wurde."
 
 ###### Verwendung von gespeicherten Hyperparameter-Sets #######
-DEFAULT_USE_SAVED_HYPERPARAMETER_SET = True
+DEFAULT_USE_SAVED_HYPERPARAMETER_SET = False
 # HyperparameterSetIDtoLoad = "SET_20250410-011939"
 # SET_20250409-233159 = am 9.4.25 besprochenen Hyperparameter-Set, mit dem Alex mit DQN erste gute Ergebnisse erzielt hat
 # SET_20250410-011939 = Belohnung für nicht Kollision auf 0,75 reduziert (vorher 1)
+# SET_20250410-011939_TEST_WITH_ADOPTED_MAZES = Testet die Hyperparameter-Sets auf schwereren Mazes: hat mit M5 mittelmaßig gute Ergebnisse gebracht.
+# SET_20250415-211929 = Best SAC Model von den schweren Mazes! (mit gamma = 0.95, 100 last actions)
+
 # For Testing:
-HyperparameterSetIDtoLoad = "SET_20250410-011939_TEST_WITH_ADOPTED_MAZES"
+HyperparameterSetIDtoLoad = "SET_20250415-211929"
 
 
 ####### Verwendung von Pretrained-Modellen #######
-DEFAULT_USE_PRETRAINED_MODEL = False
+DEFAULT_USE_PRETRAINED_MODEL = True
 # DEFAULT_PRETRAINED_MODEL_PATH = '/home/florian/Documents/gym-pybullet-drones/results/durchgelaufen-DQN/final_model.zip'
 # DEFAULT_PRETRAINED_MODEL_PATH = "/home/alex/Documents/RKIM/Semester_1/F&E_1/Dronnenrennen_Group/gym-pybullet-drones/results/save-03.07.2025_02.23.46/best_model.zip"
 DEFAULT_PRETRAINED_MODEL_PATH = (
@@ -80,6 +83,13 @@ DEFAULT_PRETRAINED_MODEL_PATH = (
     "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M5_R6_O9_A2_TR1_T1_20250412-011854/save-04.12.2025_01.18.54/final_model.zip"
 )
 
+# DQM M5 auf denschweren Mazes: --> Number last actions auf 20 setzen!
+DEFAULT_PRETRAINED_MODEL_PATH = (
+    "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M5_R6_O9_A2_TR1_T1_20250415-001326_schwere_Mazes/save-04.15.2025_00.13.26/final_model.zip"
+)
+
+# Best SAC Model von den schweren Mazes! --> "SET_20250415-211929"
+# DEFAULT_PRETRAINED_MODEL_PATH = ("/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M6_R6_O8_A3_TR1_T1_20250415-211929/save-04.15.2025_21.19.29/final_model.zip")
 ###############################################################################
 ######################## TRAINING-SETTINGS (Hyperparameter)#################
 ##############################################################################
@@ -100,27 +110,27 @@ DEFAULT_EVAL_EPISODES = 1
 NumberOfInterationsTillNextCheckpoint = 250000  # Anzahl Steps, bis ein Modell als .zip gespeichert wird
 
 DEFAULT_TRAIN_TIMESTEPS = Ziel_Training_TIME_In_Simulation * DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
-DEFAULF_NUMBER_LAST_ACTIONS = 80
+
 DEFAULT_VelocityScale = 0.5
 
 #########REWARD-SETTINGS##########
 # Bei wie viel Prozent der Fläche einen Print ausgeben
 DEFAULT_Procent_Step = 0.01  # nur im Debug-Mode aktiv?
 DEFAULT_REWARD_FOR_NEW_FIELD = 4
-DEFAULT_Punishment_for_Step = -0.5
+DEFAULT_Punishment_for_Step = 0
 DEFAULT_Multiplier_Collision_Penalty = 2
-DEFAULT_no_collision_reward = 0.75  # nur bei R6 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
+DEFAULT_no_collision_reward = 0  # nur bei R6 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
 DEFAULT_Punishment_for_Walls = 8  # R7 - Negative Reward Map Settings
-DEFAULT_Influence_of_Walls = 4  # R7 - Negative Reward Map Settings
+DEFAULT_Influence_of_Walls = 3  # R7 - Negative Reward Map Settings
 
 
 ##########EXPLORATION/MAZE-SETTINGS######
 DEFAULT_explore_Matrix_Size = 5  # 5 bedeutet eine 5x5 Matrix um die Drohne herum (in diesem Bereich kann die Drohne die Felder einsammeln und diese als erkundet markieren)
-DEFAULT_List_MazesToUse = (26, 26)  # Mazes 0-26 stehen zur Verfügung
+DEFAULT_List_MazesToUse = (21, 21)  # Mazes 0-26 stehen zur Verfügung
 DEFAULT_List_Start_PositionsToUse = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)  # Startpositionen 0-9  stehen zur Verfügung (10 Startpositionen)
 DEFAULT_MaxRoundsOnOneMaze = 6  # nach wie vielen Schritten wird ein neues maze gewählt # NOTE - Verändert nichts
 DEFAULT_MaxRoundsSameStartingPositions = 2
-DEFAULT_collision_penalty_terminated = -100  # mit -10 Trainiert SAC gut, bleibt aber noch ca. 50 mal an der Wand hängen--
+DEFAULT_collision_penalty_terminated = -10  # mit -10 Trainiert SAC gut, bleibt aber noch ca. 50 mal an der Wand hängen--
 DEFAULT_Terminated_Wall_Distance = 0.1  # DAS IST AUCH DER WERT; ABER DER DIE WANDBESTRAFUNG IM R5/R6 gegeben wird. --> worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25;; WAR ORIGINAL ALEX BEI =0,15!!
 
 # NOTE - 0,1 ist fest als Abstandswert für den Zähler "zu nah an der Wand" festgelegt.
@@ -291,7 +301,6 @@ if DEFAULT_SAVE_HYPERPARAMETER_SET:
         "DEFAULT_EPISODE_LEN_SEC",
         "DEFAULT_PUSHBACK_ACTIVE",
         "NumberOfInterationsTillNextCheckpoint",
-        "DEFAULF_NUMBER_LAST_ACTIONS",
         "DEFAULT_VelocityScale",
         "DEFAULT_Procent_Step",
         "DEFAULT_REWARD_FOR_NEW_FIELD",
@@ -349,7 +358,6 @@ if DEFAULT_SAVE_HYPERPARAMETER_SET:
         "DEFAULT_EPISODE_LEN_SEC": DEFAULT_EPISODE_LEN_SEC,
         "DEFAULT_PUSHBACK_ACTIVE": DEFAULT_PUSHBACK_ACTIVE,
         "NumberOfInterationsTillNextCheckpoint": NumberOfInterationsTillNextCheckpoint,
-        "DEFAULF_NUMBER_LAST_ACTIONS": DEFAULF_NUMBER_LAST_ACTIONS,
         "DEFAULT_VelocityScale": DEFAULT_VelocityScale,
         "DEFAULT_Procent_Step": DEFAULT_Procent_Step,
         "DEFAULT_REWARD_FOR_NEW_FIELD": DEFAULT_REWARD_FOR_NEW_FIELD,
@@ -516,8 +524,6 @@ header_params = [
     "DEFAULT_NUMBER_LAST_ACTIONS",
     "DEFAULT_PYB_FREQ",
     "DEFAULT_CTRL_FREQ",
-    "DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ",
-    "DEFAULT_EPISODE_LEN_SEC",
     "DEFAULT_Multiplier_Collision_Penalty",
     "DEFAULT_VelocityScale",
     "DEFAULT_explore_Matrix_Size",
@@ -550,12 +556,12 @@ header_training = [
     "Uhrzeit Welt",
 ]
 
-# Beispielwerte für die Parameter (statisch)
+# Parameter values matching the headers
 parameter_daten = [
-    DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,  # DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ
-    DEFAULT_EPISODE_LEN_SEC,  # DEFAULT_EPISODE_LEN_SEC
-    DEFAULT_REWARD_FOR_NEW_FIELD,  # Bonus_new_Field
-    DEFAULT_Punishment_for_Step,  # Punish_Step_Counter
+    DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,
+    DEFAULT_EPISODE_LEN_SEC,
+    DEFAULT_REWARD_FOR_NEW_FIELD,
+    DEFAULT_Punishment_for_Step,
     DEFAULT_EVAL_FREQ,
     DEFAULT_EVAL_EPISODES,
     DEFAULT_TRAIN_TIMESTEPS,
@@ -563,19 +569,16 @@ parameter_daten = [
     DEFAULT_NUMBER_LAST_ACTIONS,
     DEFAULT_PYB_FREQ,
     DEFAULT_CTRL_FREQ,
-    DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,
-    DEFAULT_EPISODE_LEN_SEC,
     DEFAULT_Multiplier_Collision_Penalty,
     DEFAULT_VelocityScale,
     DEFAULT_explore_Matrix_Size,
     DEFAULT_collision_penalty_terminated,
     DEFAULT_Terminated_Wall_Distance,
     DEFAULT_no_collision_reward,
-    DEFAULT_USE_PRETRAINED_MODEL,
-    DEFAULT_PRETRAINED_MODEL_PATH,
-    DEFAULT_NUMBER_LAST_ACTIONS,
     DEFAULT_Punishment_for_Walls,
     DEFAULT_Influence_of_Walls,
+    DEFAULT_USE_PRETRAINED_MODEL,
+    DEFAULT_PRETRAINED_MODEL_PATH,
     DEFAULT_List_MazesToUse,
     DEFAULT_List_Start_PositionsToUse,
     DEFAULT_MaxRoundsOnOneMaze,
@@ -867,6 +870,7 @@ def run(
                         verbose=1,
                         device="cuda:0",
                         seed=42,
+                        gamma=0.95,
                     )
             case _:
                 raise ValueError(f"Invalid model version: {MODEL_Version}")
