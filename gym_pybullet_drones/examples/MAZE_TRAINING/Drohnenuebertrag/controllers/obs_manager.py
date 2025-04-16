@@ -271,9 +271,16 @@ class OBSManager:
         self.observation_type = observation_type
         self.observation = _observationSpace(self.observation_type, self.SLAM.cropped_map_size_grid)
         self.interest_values = np.zeros(4, dtype=int)
+        self.slam_update_callback = None
+
+    def set_slam_update_callback(self, callback):
+        """Set a callback function to be called after SLAM update."""
+        self.slam_update_callback = callback
 
     def update(self, position, measurements, last_actions):
         self.SLAM.update(drone_pos=position, drone_yaw=measurements["yaw"], raycast_results=measurements)
+        if self.slam_update_callback:
+            self.slam_update_callback(self.SLAM.get_cropped_slam_map())
         self._compute_interest_values()
 
         match self.observation_type:

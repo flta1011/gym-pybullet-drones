@@ -49,8 +49,8 @@ from vispy import scene
 from vispy.scene import visuals
 from vispy.scene.cameras import TurntableCamera
 
-# pathV1 = 'gym_pybullet_drones/Saved-Models_FlyToWall/save-02.11.2025_16.51.09_V1_1D-Observation/best_model.zip'
-# modelV1 = PPO.load(pathV1)
+pathV1 = "gym_pybullet_drones/Saved-Models_FlyToWall/save-02.11.2025_16.51.09_V1_1D-Observation/best_model.zip"
+modelV1 = PPO.load(pathV1)
 
 logging.basicConfig(level=logging.INFO)
 

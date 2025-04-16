@@ -1,5 +1,9 @@
+import sys
+
 import numpy as np
 from PyQt6 import QtCore, QtWidgets
+from PyQt6.QtGui import QImage, QPixmap
+from PyQt6.QtWidgets import QGraphicsScene, QGraphicsView, QLabel
 from vispy import scene
 from vispy.scene import visuals
 from vispy.scene.cameras import TurntableCamera
@@ -46,6 +50,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.emergency_stop_button = QtWidgets.QPushButton("Emergency stop")
         self.switch_view_button = QtWidgets.QPushButton("Switch View")  # Button to switch views
         self.toggle_ai_control_button = QtWidgets.QCheckBox("AI Control")
+        self.toggle_ai_control_button.setTristate(False)
 
         # Create the layout
         layout = QtWidgets.QVBoxLayout()
@@ -143,10 +148,40 @@ class MainWindow(QtWidgets.QMainWindow):
         # Register callbacks
         self.drone_controller.set_position_callback(self.update_position_labels)
         self.drone_controller.set_measurement_callback(self.update_measurement_labels)
-        self.start_fly_callback = None
-        self.emergency_stop_callback = None
-        self.key_press_callback = None
-        self.key_release_callback = None
+        self.drone_controller.set_update_slam_map_callback(self.update_slam_map)
+        self.start_fly_callback = self.drone_controller.start_fly
+        self.emergency_stop_callback = self.drone_controller.emergency_stop
+        self.drone_controller.set_update_slam_map_callback(self.update_slam_map)
+
+        # Define key mappings for key press events
+        self.key_press_mappings = {
+            QtCore.Qt.Key.Key_Left: lambda: self.drone_controller.updateHover("y", 1),  # Move left
+            QtCore.Qt.Key.Key_Right: lambda: self.drone_controller.updateHover("y", -1),  # Move right
+            QtCore.Qt.Key.Key_Up: lambda: self.drone_controller.updateHover("x", 1),  # Move forward
+            QtCore.Qt.Key.Key_Down: lambda: self.drone_controller.updateHover("x", -1),  # Move backward
+            QtCore.Qt.Key.Key_A: lambda: self.drone_controller.updateHover("yaw", -70),  # Rotate counterclockwise
+            QtCore.Qt.Key.Key_D: lambda: self.drone_controller.updateHover("yaw", 70),  # Rotate clockwise
+            QtCore.Qt.Key.Key_Z: lambda: self.drone_controller.updateHover("yaw", -200),  # Fast rotate counterclockwise
+            QtCore.Qt.Key.Key_X: lambda: self.drone_controller.updateHover("yaw", 200),  # Fast rotate clockwise
+            QtCore.Qt.Key.Key_W: lambda: self.drone_controller.updateHover("height", 0.1),  # Ascend
+            QtCore.Qt.Key.Key_S: lambda: self.drone_controller.updateHover("height", -0.1),  # Descend
+            QtCore.Qt.Key.Key_Space: self.on_emergency_stop,  # Emergency stop
+            QtCore.Qt.Key.Key_K: self.on_ai_control_checkbox_changed,  # Toggle AI control
+        }
+
+        # Define key mappings for key release events
+        self.key_release_mappings = {
+            QtCore.Qt.Key.Key_Left: lambda: self.drone_controller.updateHover("y", 0),  # Stop left/right movement
+            QtCore.Qt.Key.Key_Right: lambda: self.drone_controller.updateHover("y", 0),  # Stop left/right movement
+            QtCore.Qt.Key.Key_Up: lambda: self.drone_controller.updateHover("x", 0),  # Stop forward/backward movement
+            QtCore.Qt.Key.Key_Down: lambda: self.drone_controller.updateHover("x", 0),  # Stop forward/backward movement
+            QtCore.Qt.Key.Key_A: lambda: self.drone_controller.updateHover("yaw", 0),  # Stop rotation
+            QtCore.Qt.Key.Key_D: lambda: self.drone_controller.updateHover("yaw", 0),  # Stop rotation
+            QtCore.Qt.Key.Key_Z: lambda: self.drone_controller.updateHover("yaw", 0),  # Stop fast rotation
+            QtCore.Qt.Key.Key_X: lambda: self.drone_controller.updateHover("yaw", 0),  # Stop fast rotation
+            QtCore.Qt.Key.Key_W: lambda: self.drone_controller.updateHover("height", 0),  # Stop ascending/descending
+            QtCore.Qt.Key.Key_S: lambda: self.drone_controller.updateHover("height", 0),  # Stop ascending/descending
+        }
 
     def update_position_labels(self, position):
         self.labels["StateEstimate X:"].setText(f"StateEstimate X: {position[0]:.2f} mm")
@@ -164,6 +199,29 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labels["Pitch:"].setText(f"Pitch: {measurement['pitch']:.2f}")
         self.labels["Roll:"].setText(f"Roll: {measurement['roll']:.2f}")
 
+    def update_slam_map(self, slam_map):
+        """
+        Visualize the 2D array of the slam_map in the second view of the stacked widget.
+        :param slam_map: 2D numpy array representing the SLAM map.
+        """
+        # Normalize the grid values to 0-255 for visualization
+        normalized_grid = ((slam_map - slam_map.min()) / (slam_map.max() - slam_map.min()) * 255).astype(np.uint8)
+
+        # Convert the grid to a QImage
+        height, width = normalized_grid.shape
+        image = QImage(normalized_grid.data, width, height, QImage.Format.Format_Grayscale8)
+
+        # Convert the QImage to a QPixmap
+        pixmap = QPixmap.fromImage(image)
+
+        # Create a QLabel to display the pixmap
+        if not hasattr(self, "slam_map_label"):
+            self.slam_map_label = QLabel(self.slam_map_placeholder)
+            self.slam_map_label.setGeometry(0, 0, self.slam_map_placeholder.width(), self.slam_map_placeholder.height())
+            self.slam_map_label.setScaledContents(True)
+
+        self.slam_map_label.setPixmap(pixmap)
+
     def switch_view(self):
         # Switch between the 3D mapping view and the SLAM map view
         current_index = self.stacked_widget.currentIndex()
@@ -171,11 +229,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.stacked_widget.setCurrentIndex(new_index)
 
     def connect(self):
-        self.drone_controller.connect()
+        if self.drone_controller:
+            self.drone_controller.connect()
+        else:
+            print("Error: DroneController is not initialized.")
 
     def on_start_fly(self):
         if self.start_fly_callback:
             self.start_fly_callback()
+            print("Start fly callback executed.")
+        else:
+            print("Error: Start fly callback is not set.")
 
     def on_emergency_stop(self):
         if self.emergency_stop_callback:
@@ -186,90 +250,31 @@ class MainWindow(QtWidgets.QMainWindow):
         Handle the state change of the AI control checkbox and update the DroneController.
         :param state: The new state of the checkbox (0 for unchecked, 2 for checked).
         """
-        if state == QtCore.Qt.CheckState.Checked:  # Fully checked
+        if state == 2:  # Fully checked
             self.ai_control_active = True
-        elif state == QtCore.Qt.CheckState.Unchecked:  # Fully unchecked
+            print(f"AI control state updated to: {self.ai_control_active}")
+        elif state == 0:  # Fully unchecked
             self.ai_control_active = False
+            print(f"AI control state updated to: {self.ai_control_active}")
         else:
-            return  # Ignore intermediate states
+            print(f"AI control state is in an intermediate state: {state}")
 
-        self.drone_controller.toggle_ai_control(self.ai_control_active)
-        print(f"AI control state updated to: {self.ai_control_active}")
+    def keyPressEvent(self, event):
+        """
+        Handle key press events using the key mappings.
+        """
+        if not event.isAutoRepeat() and event.key() in self.key_press_mappings:
+            self.key_press_mappings[event.key()]()
 
+    def keyReleaseEvent(self, event):
+        """
+        Handle key release events using the key release mappings.
+        """
+        if not event.isAutoRepeat() and event.key() in self.key_release_mappings:
+            self.key_release_mappings[event.key()]()
 
-def keyPressEvent(self, event):
-    """
-    Handle key press events to update the drone's hover parameters.
-    """
-    if not event.isAutoRepeat() and self.key_press_callback:
-        if event.key() == QtCore.Qt.Key.Key_Space:
-            self.emergency_stop()
-        elif event.key() == QtCore.Qt.Key.Key_K:
-            self.toggle_ai_control()
-        elif event.key() == QtCore.Qt.Key.Key_Left:
-            self.drone_controller.updateHover("y", 1)  # Move left
-        elif event.key() == QtCore.Qt.Key.Key_Right:
-            self.drone_controller.updateHover("y", -1)  # Move right
-        elif event.key() == QtCore.Qt.Key.Key_Up:
-            self.drone_controller.updateHover("x", 1)  # Move forward
-        elif event.key() == QtCore.Qt.Key.Key_Down:
-            self.drone_controller.updateHover("x", -1)  # Move backward
-        elif event.key() == QtCore.Qt.Key.Key_A:
-            self.drone_controller.updateHover("yaw", -70)  # Rotate counterclockwise
-        elif event.key() == QtCore.Qt.Key.Key_D:
-            self.drone_controller.updateHover("yaw", 70)  # Rotate clockwise
-        elif event.key() == QtCore.Qt.Key.Key_Z:
-            self.drone_controller.updateHover("yaw", -200)  # Fast rotate counterclockwise
-        elif event.key() == QtCore.Qt.Key.Key_X:
-            self.drone_controller.updateHover("yaw", 200)  # Fast rotate clockwise
-        elif event.key() == QtCore.Qt.Key.Key_W:
-            self.drone_controller.updateHover("height", 0.1)  # Ascend
-        elif event.key() == QtCore.Qt.Key.Key_S:
-            self.drone_controller.updateHover("height", -0.1)  # Descend
-
-
-def keyReleaseEvent(self, event):
-    """
-    Handle key release events to stop the drone's movement.
-    """
-    if not event.isAutoRepeat() and self.key_release_callback:
-        if event.key() == QtCore.Qt.Key.Key_Left:
-            self.drone_controller.updateHover("y", 0)  # Stop left/right movement
-        elif event.key() == QtCore.Qt.Key.Key_Right:
-            self.drone_controller.updateHover("y", 0)  # Stop left/right movement
-        elif event.key() == QtCore.Qt.Key.Key_Up:
-            self.drone_controller.updateHover("x", 0)  # Stop forward/backward movement
-        elif event.key() == QtCore.Qt.Key.Key_Down:
-            self.drone_controller.updateHover("x", 0)  # Stop forward/backward movement
-        elif event.key() == QtCore.Qt.Key.Key_A:
-            self.drone_controller.updateHover("yaw", 0)  # Stop rotation
-        elif event.key() == QtCore.Qt.Key.Key_D:
-            self.drone_controller.updateHover("yaw", 0)  # Stop rotation
-        elif event.key() == QtCore.Qt.Key.Key_W:
-            self.drone_controller.updateHover("height", 0)  # Stop ascending/descending
-        elif event.key() == QtCore.Qt.Key.Key_S:
-            self.drone_controller.updateHover("height", 0)  # Stop ascending/descending
-        elif event.key() == QtCore.Qt.Key.Key_Z:
-            self.drone_controller.updateHover("yaw", 0)  # Stop fast rotation
-        elif event.key() == QtCore.Qt.Key.Key_X:
-            self.drone_controller.updateHover("yaw", 0)  # Stop fast rotation
-
-
-def closeEvent(self, event):
-    if self.drone_controller:
-        self.drone_controller.close_link()
-    event.accept()
-    sys.exit(0)
-
-
-if __name__ == "__main__":
-    import sys
-
-    app = QtWidgets.QApplication(sys.argv)
-    drone_controller = None  # Replace with actual drone controller instance
-    slam_manager = None  # Replace with actual SLAM manager instance
-    ai_controller = None  # Replace with actual AI controller instance
-
-    window = MainWindow(drone_controller, slam_manager, ai_controller)
-    window.show()
-    sys.exit(app.exec())
+    def closeEvent(self, event):
+        if self.drone_controller:
+            self.drone_controller.close_link()
+        event.accept()
+        sys.exit(0)

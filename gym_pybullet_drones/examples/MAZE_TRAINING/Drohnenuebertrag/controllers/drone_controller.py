@@ -7,9 +7,10 @@ import numpy as np
 from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.log import LogConfig
 from cflib.utils import uri_helper
-from controllers.obs_manager import OBSManager
 from PyQt6 import QtCore
 from stable_baselines3 import DQN, PPO, SAC
+
+from .obs_manager import OBSManager
 
 
 class DroneController:
@@ -26,18 +27,19 @@ class DroneController:
         self.latest_measurement = None
         self.SPEED_FACTOR = 0.5
         self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.5}
+        self.hoverTimer = None
         self.number_last_actions = 20
         self.last_actions = np.zeros(self.number_last_actions)
         self.obs_manager = OBSManager(observation_type=observation_type)
 
+        self.ai_control_active = False
+
         # GUI Callbacks
         self.position_callback = None
         self.measurement_callback = None
-        self.ai_control_active = False
         self.start_fly_callback = None
         self.emergency_stop_callback = None
-        self.key_press_callback = None
-        self.key_release_callback = None
+        self.update_slam_map_callback = None
 
         # Load the appropriate model type based on MODEL_Version
         match model_type:
@@ -67,6 +69,10 @@ class DroneController:
 
     def set_measurement_callback(self, callback):
         self.measurement_callback = callback
+
+    def set_update_slam_map_callback(self, callback):
+        """Set the callback for SLAM map updates."""
+        self.obs_manager.set_slam_update_callback(callback)
 
     def connect(self):
         cflib.crtp.init_drivers()
@@ -169,12 +175,16 @@ class DroneController:
         self.hoverTimer.start()
 
     def emergency_stop(self):
-        self.hoverTimer.stop()
-        self.cf.commander.send_hover_setpoint(0.0, 0.0, 0.0, 0.0)
-        self.cf.commander.send_setpoint(0, 0, 0, 0)
-        self.cf.commander.send_stop_setpoint()
-        self.emergency_stop_active = True
-        print("Emergency stop activated")
+        if self.hoverTimer is not None:
+            self.hoverTimer.stop()
+            self.cf.commander.send_hover_setpoint(0.0, 0.0, 0.0, 0.0)
+            self.cf.commander.send_setpoint(0, 0, 0, 0)
+            self.cf.commander.send_stop_setpoint()
+            self.emergency_stop_active = True
+            print("Emergency stop activated")
+        else:
+            print("No hover timer to stop")
+            self.emergency_stop_active = True
 
     def toggle_ai_control(self, state):
         """
@@ -185,7 +195,7 @@ class DroneController:
         print(f"DroneController: AI control is now {'active' if state else 'inactive'}.")
 
     def sendHoverCommand(self):
-        if self.emegency_stop_active:
+        if self.emergency_stop_active:
             return
         self.check_safety()
         self.cf.commander.send_hover_setpoint(self.hover["x"], self.hover["y"], self.hover["yaw"], self.hover["height"])
@@ -197,9 +207,9 @@ class DroneController:
         if self.latest_measurement is None:
             return  # No measurements available yet
         # Return if no relevant changes occured in the measurements
-        if self.latest_measurement == self.last_checked_measurement:
-            return  # Skip safety check if measurements haven't changed
-        self.last_checked_measurement = self.latest_measurement
+        # if self.latest_measurement == self.last_checked_measurement:
+        #     return  # Skip safety check if measurements haven't changed
+        # self.last_checked_measurement = self.latest_measurement
 
         # Get distance sensor readings
         front = self.latest_measurement.get("front", float("inf"))
