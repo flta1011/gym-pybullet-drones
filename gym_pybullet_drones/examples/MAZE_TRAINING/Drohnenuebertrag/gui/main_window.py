@@ -22,19 +22,19 @@ class MainWindow(QtWidgets.QMainWindow):
         # Create the labels
         self.labels = {
             "MultiRanger values:": QtWidgets.QLabel("MultiRanger values"),
-            "Front:": QtWidgets.QLabel("Front: ___.__ mm"),
-            "Back:": QtWidgets.QLabel("Back: ___.__ mm"),
-            "Left:": QtWidgets.QLabel("Left: ___.__ mm"),
-            "Right:": QtWidgets.QLabel("Right: ___.__ mm"),
-            "Up:": QtWidgets.QLabel("Up: ___.__ mm"),
-            "Down:": QtWidgets.QLabel("Down: ___.__ mm"),
+            "Front:": QtWidgets.QLabel("Front: ___.__ m"),
+            "Back:": QtWidgets.QLabel("Back: ___.__ m"),
+            "Left:": QtWidgets.QLabel("Left: ___.__ m"),
+            "Right:": QtWidgets.QLabel("Right: ___.__ m"),
+            "Up:": QtWidgets.QLabel("Up: ___.__ m"),
+            "Down:": QtWidgets.QLabel("Down: ___.__ m"),
             "Yaw:": QtWidgets.QLabel("Yaw: ___.__"),
             "Pitch:": QtWidgets.QLabel("Pitch: ___.__"),
             "Roll:": QtWidgets.QLabel("Roll: ___.__"),
             "Position:": QtWidgets.QLabel("Position"),
-            "StateEstimate X:": QtWidgets.QLabel("StateEstimate X: ___.__ mm"),
-            "StateEstimate Y:": QtWidgets.QLabel("StateEstimate Y: ___.__ mm"),
-            "StateEstimate Z:": QtWidgets.QLabel("StateEstimate Z: ___.__ mm"),
+            "StateEstimate X:": QtWidgets.QLabel("StateEstimate X: ___.__ m"),
+            "StateEstimate Y:": QtWidgets.QLabel("StateEstimate Y: ___.__ m"),
+            "StateEstimate Z:": QtWidgets.QLabel("StateEstimate Z: ___.__ m"),
             "AI:": QtWidgets.QLabel("AI"),
             "AI Control Action:": QtWidgets.QLabel("AI Control Action: ___"),
         }
@@ -184,17 +184,17 @@ class MainWindow(QtWidgets.QMainWindow):
         }
 
     def update_position_labels(self, position):
-        self.labels["StateEstimate X:"].setText(f"StateEstimate X: {position[0]:.2f} mm")
-        self.labels["StateEstimate Y:"].setText(f"StateEstimate Y: {position[1]:.2f} mm")
-        self.labels["StateEstimate Z:"].setText(f"StateEstimate Z: {position[2]:.2f} mm")
+        self.labels["StateEstimate X:"].setText(f"StateEstimate X: {position[0]:.2f} m")
+        self.labels["StateEstimate Y:"].setText(f"StateEstimate Y: {position[1]:.2f} m")
+        self.labels["StateEstimate Z:"].setText(f"StateEstimate Z: {position[2]:.2f} m")
 
     def update_measurement_labels(self, measurement):
-        self.labels["Front:"].setText(f"Front: {measurement['front']:.2f} mm")
-        self.labels["Back:"].setText(f"Back: {measurement['back']:.2f} mm")
-        self.labels["Left:"].setText(f"Left: {measurement['left']:.2f} mm")
-        self.labels["Right:"].setText(f"Right: {measurement['right']:.2f} mm")
-        self.labels["Up:"].setText(f"Up: {measurement['up']:.2f} mm")
-        self.labels["Down:"].setText(f"Down: {measurement['down']:.2f} mm")
+        self.labels["Front:"].setText(f"Front: {measurement['front']:.2f} m")
+        self.labels["Back:"].setText(f"Back: {measurement['back']:.2f} m")
+        self.labels["Left:"].setText(f"Left: {measurement['left']:.2f} m")
+        self.labels["Right:"].setText(f"Right: {measurement['right']:.2f} m")
+        self.labels["Up:"].setText(f"Up: {measurement['up']:.2f} m")
+        self.labels["Down:"].setText(f"Down: {measurement['down']:.2f} m")
         self.labels["Yaw:"].setText(f"Yaw: {measurement['yaw']:.2f}")
         self.labels["Pitch:"].setText(f"Pitch: {measurement['pitch']:.2f}")
         self.labels["Roll:"].setText(f"Roll: {measurement['roll']:.2f}")

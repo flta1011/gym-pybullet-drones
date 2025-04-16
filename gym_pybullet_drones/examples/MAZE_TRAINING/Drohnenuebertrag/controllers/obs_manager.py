@@ -287,9 +287,7 @@ class OBSManager:
             case "O8":
                 """X-Pos, Y-Pos, Raycast Readings, Interest Values, Last Actions"""
                 self.observation = (
-                    np.array(position[0], position[1], measurements["forward"], measurements["backwards"], measurements["left"], measurements["right"])
-                    .extend(self.interest_values)
-                    .extend(last_actions)
+                    np.array(position[0], position[1], measurements["front"], measurements["back"], measurements["left"], measurements["right"]).extend(self.interest_values).extend(last_actions)
                 )
 
             case "O9":

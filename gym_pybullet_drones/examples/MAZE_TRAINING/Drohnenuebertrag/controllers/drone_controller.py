@@ -148,12 +148,12 @@ class DroneController:
             "roll": data["stabilizer.roll"],
             "pitch": data["stabilizer.pitch"],
             "yaw": data["stabilizer.yaw"],
-            "front": data["range.front"],
-            "back": data["range.back"],
-            "up": data["range.up"],
-            "down": data["range.zrange"],
-            "left": data["range.left"],
-            "right": data["range.right"],
+            "front": data["range.front"] / 1000.0,
+            "back": data["range.back"] / 1000.0,
+            "up": data["range.up"] / 1000.0,
+            "down": data["range.zrange"] / 1000.0,
+            "left": data["range.left"] / 1000.0,
+            "right": data["range.right"] / 1000.0,
         }
         self.latest_measurement = measurement
         if self.measurement_callback:
@@ -164,7 +164,20 @@ class DroneController:
         return self.latest_measurement
 
     def trigger_obs_update(self):
-        self.obs_manager.update(position=self.latest_position, measurements=self.latest_measurement, last_actions=self.last_actions)
+        # Create a copy of the measurements with correctly renamed keys for obs_manager
+        if self.latest_measurement and self.latest_position:
+            adjusted_measurements = {
+                "roll": self.latest_measurement["roll"],
+                "pitch": self.latest_measurement["pitch"],
+                "yaw": self.latest_measurement["yaw"],
+                "front": self.latest_measurement["front"],
+                "back": self.latest_measurement["back"],
+                "up": self.latest_measurement["up"],
+                "down": self.latest_measurement["down"],
+                "left": self.latest_measurement["left"],
+                "right": self.latest_measurement["right"],
+            }
+            self.obs_manager.update(position=self.latest_position, measurements=adjusted_measurements, last_actions=self.last_actions)
 
     def start_fly(self):
         self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.5}
