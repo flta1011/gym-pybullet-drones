@@ -105,21 +105,26 @@ class DroneController(QObject):
         self.ai_action_callback = callback
 
     def connect(self):
-        cflib.crtp.init_drivers()
-        self.cf = Crazyflie(ro_cache=None, rw_cache="cache")
+        try:
+            cflib.crtp.init_drivers()
+            self.cf = Crazyflie(ro_cache=None, rw_cache="cache")
 
-        # Connect callbacks from the Crazyflie API
-        self.cf.connected.add_callback(self.connected)
-        self.cf.disconnected.add_callback(self.disconnected)
+            # Connect callbacks from the Crazyflie API
+            self.cf.connected.add_callback(self.connected)
+            self.cf.disconnected.add_callback(self.disconnected)
+            self.cf.connection_failed.add_callback(self.connection_failed)
+            self.cf.connection_lost.add_callback(self.connection_lost)
 
-        # Connect to the Crazyflie
-        if hasattr(self, "cf") and self.cf.is_connected():
-            self.cf.close_link()
-            time.sleep(1)
-        self.cf.open_link(self.uri)
+            # Connect to the Crazyflie
+            if hasattr(self, "cf") and self.cf.is_connected():
+                self.cf.close_link()
+                time.sleep(1)
+            self.cf.open_link(self.uri)
 
-        # Arm the Crazyflie
-        self.cf.platform.send_arming_request(True)
+            # Arm the Crazyflie
+            self.cf.platform.send_arming_request(True)
+        except Exception as e:
+            print(f"Connection error: {str(e)}")
 
     def connected(self, URI):
         print("We are now connected to {}".format(URI))
@@ -381,7 +386,7 @@ class DroneController(QObject):
                 new_y_vel = 0
             elif action == 3:
                 new_x_vel = 0
-                nex_y_vel = 1
+                new_y_vel = 1
             elif action == 4:
                 new_x_vel = 0
                 new_y_vel = -1
