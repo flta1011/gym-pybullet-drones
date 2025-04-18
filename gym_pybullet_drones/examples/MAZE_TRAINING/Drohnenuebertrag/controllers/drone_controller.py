@@ -112,8 +112,6 @@ class DroneController(QObject):
             # Connect callbacks from the Crazyflie API
             self.cf.connected.add_callback(self.connected)
             self.cf.disconnected.add_callback(self.disconnected)
-            self.cf.connection_failed.add_callback(self.connection_failed)
-            self.cf.connection_lost.add_callback(self.connection_lost)
 
             # Connect to the Crazyflie
             if hasattr(self, "cf") and self.cf.is_connected():
@@ -347,20 +345,24 @@ class DroneController(QObject):
     def updateHover(self, k=None, v=None, observation_space=None):
         """
         Updates the hover dictionary based on keyboard input.
-        This method now only handles manual control inputs.
+        This method handles manual control inputs, which always take priority over AI control.
         :param k: The key to update (e.g., "x", "y", "height")
         :param v: The value to update (e.g., 1 for forward, -1 for backward)
         """
-        # Only process keyboard commands when AI is not active
-        if not self.ai_control_active:
-            if k in self.hover:
-                self.hover[k] += v * self.SPEED_FACTOR
-                print(f"[Manual Control] Updated hover via keyboard: {self.hover}")
+        # Always process keyboard commands, regardless of AI control state
+        # This ensures manual override is always possible for safety reasons
+        if k in self.hover:
+            self.hover[k] += v * self.SPEED_FACTOR
+            # If AI control is active, notify that manual override is happening
+            if self.ai_control_active:
+                print(f"[Manual Override] Manual input overriding AI control: {self.hover}")
             else:
-                print(f"[Manual Control] Invalid hover key: {k}")
+                print(f"[Manual Control] Updated hover via keyboard: {self.hover}")
+
+            # Reset AI prediction counter to avoid immediate AI override of manual input
+            self.ai_prediction_counter = 0
         else:
-            # When AI is active, keyboard inputs are ignored
-            print("[AI Control] Manual control inputs ignored while AI is active.")
+            print(f"[Manual Control] Invalid hover key: {k}")
 
     def predict_action(self, observation_space):
         action, _ = self.model.predict(observation_space, deterministic=True)

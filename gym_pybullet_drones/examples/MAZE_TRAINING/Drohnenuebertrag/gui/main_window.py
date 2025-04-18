@@ -51,7 +51,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.connect_button = QtWidgets.QPushButton("Connect")
         self.start_button = QtWidgets.QPushButton("Start")
         self.emergency_stop_button = QtWidgets.QPushButton("Emergency stop")
-        self.switch_view_button = QtWidgets.QPushButton("Switch View")  # Button to switch views
         self.toggle_ai_control_button = QtWidgets.QCheckBox("AI Control")
         self.toggle_ai_control_button.setTristate(False)
 
@@ -63,21 +62,13 @@ class MainWindow(QtWidgets.QMainWindow):
         for label in self.labels.values():
             left_layout.addWidget(label)
 
-        # Create the right layout with a QStackedWidget
+        # Create the right layout for SLAM map
         right_layout = QtWidgets.QVBoxLayout()
-        self.stacked_widget = QtWidgets.QStackedWidget()
-
-        # 3D Mapping Placeholder
-        self.mapping_placeholder = QtWidgets.QWidget()
-        self.mapping_placeholder.setStyleSheet("background-color: gray;")
-        self.stacked_widget.addWidget(self.mapping_placeholder)
-
-        # SLAM Map Placeholder
-        self.slam_map_placeholder = QtWidgets.QWidget()
-        self.slam_map_placeholder.setStyleSheet("background-color: lightblue;")
-        self.stacked_widget.addWidget(self.slam_map_placeholder)
-
-        right_layout.addWidget(self.stacked_widget)
+        
+        # SLAM Map Widget
+        self.slam_map_widget = QtWidgets.QWidget()
+        self.slam_map_widget.setStyleSheet("background-color: lightblue;")
+        right_layout.addWidget(self.slam_map_widget)
 
         # Create the bottom layout for the buttons
         bottom_layout = QtWidgets.QHBoxLayout()
@@ -85,7 +76,6 @@ class MainWindow(QtWidgets.QMainWindow):
         bottom_layout.addWidget(self.connect_button)
         bottom_layout.addWidget(self.start_button)
         bottom_layout.addWidget(self.emergency_stop_button)
-        bottom_layout.addWidget(self.switch_view_button)
         bottom_layout.addWidget(self.toggle_ai_control_button)
         bottom_layout.addStretch()
 
@@ -108,7 +98,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.connect_button.clicked.connect(self.connect)
         self.start_button.clicked.connect(self.on_start_fly)
         self.emergency_stop_button.clicked.connect(self.on_emergency_stop)
-        self.switch_view_button.clicked.connect(self.switch_view)
         self.toggle_ai_control_button.stateChanged.connect(self.on_ai_control_checkbox_changed)
 
         # Create the 3D mapping
@@ -120,14 +109,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.scene_canvas.unfreeze()
 
-        # Add the SceneCanvas to the mapping placeholder
-        layout_right_for_canvas = QtWidgets.QVBoxLayout(self.mapping_placeholder)
-        layout_right_for_canvas.setContentsMargins(0, 0, 0, 0)
-        layout_right_for_canvas.addWidget(self.scene_canvas.native)
-
-        # Set the SceneCanvas to scale dynamically
-        self.scene_canvas.native.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
-
+        # Add the SceneCanvas to the mapping placeholder - Keep for backwards compatibility
+        # but it won't be displayed in the UI
         self.PLOT_CF = True
         self.last_pos = [0, 0, 0]
         self.pos_markers = visuals.Markers()
@@ -157,7 +140,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.emergency_stop_callback = self.drone_controller.emergency_stop
         self.drone_controller.set_update_slam_map_callback(self.update_slam_map)
 
-        # Define key mappings for key press events
         # Define key mappings for key press events
         self.key_press_mappings = {
             QtCore.Qt.Key.Key_A: lambda: self.drone_controller.updateHover("y", 1),  # Move left
@@ -250,13 +232,17 @@ class MainWindow(QtWidgets.QMainWindow):
                 pixmap = QPixmap.fromImage(qimg)
 
                 if not hasattr(self, "slam_map_label"):
-                    self.slam_map_label = QLabel(self.slam_map_placeholder)
-                    self.slam_map_label.setGeometry(0, 0, self.slam_map_placeholder.width(), self.slam_map_placeholder.height())
+                    self.slam_map_label = QLabel(self.slam_map_widget)
+                    self.slam_map_label.setGeometry(0, 0, self.slam_map_widget.width(), self.slam_map_widget.height())
                     self.slam_map_label.setScaledContents(True)
-                    self.slam_map_placeholder.setLayout(QtWidgets.QVBoxLayout())
-                    self.slam_map_placeholder.layout().addWidget(self.slam_map_label)
+                    self.slam_map_widget.setLayout(QtWidgets.QVBoxLayout())
+                    self.slam_map_widget.layout().addWidget(self.slam_map_label)
 
                 self.slam_map_label.setPixmap(pixmap)
+                
+                # Make sure window retains focus after map update
+                self.activateWindow()
+                self.setFocus()
 
             except Exception as e:
                 print(f"Error in update_slam_map: {e}")
@@ -266,23 +252,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 pixmap = QPixmap.fromImage(qimg)
 
                 if not hasattr(self, "slam_map_label"):
-                    self.slam_map_label = QLabel(self.slam_map_placeholder)
-                    self.slam_map_label.setGeometry(0, 0, self.slam_map_placeholder.width(), self.slam_map_placeholder.height())
+                    self.slam_map_label = QLabel(self.slam_map_widget)
+                    self.slam_map_label.setGeometry(0, 0, self.slam_map_widget.width(), self.slam_map_widget.height())
                     self.slam_map_label.setScaledContents(True)
-                    self.slam_map_placeholder.setLayout(QtWidgets.QVBoxLayout())
-                    self.slam_map_placeholder.layout().addWidget(self.slam_map_label)
+                    self.slam_map_widget.setLayout(QtWidgets.QVBoxLayout())
+                    self.slam_map_widget.layout().addWidget(self.slam_map_label)
 
                 self.slam_map_label.setPixmap(pixmap)
-
-    def switch_view(self):
-        # Switch between the 3D mapping view and the SLAM map view
-        current_index = self.stacked_widget.currentIndex()
-        new_index = (current_index + 1) % self.stacked_widget.count()
-        self.stacked_widget.setCurrentIndex(new_index)
-
-        # Make sure main window retains focus after view switch
-        self.activateWindow()
-        self.setFocus()
 
     def connect(self):
         if self.drone_controller:
