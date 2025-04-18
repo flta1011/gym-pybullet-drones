@@ -286,9 +286,14 @@ class OBSManager:
         match self.observation_type:
             case "O8":
                 """X-Pos, Y-Pos, Raycast Readings, Interest Values, Last Actions"""
-                self.observation = (
-                    np.array(position[0], position[1], measurements["front"], measurements["back"], measurements["left"], measurements["right"]).extend(self.interest_values).extend(last_actions)
-                )
+                # Create the observation array properly
+                # First, create a list of all values
+                obs_list = [position[0], position[1], measurements["front"], measurements["back"], measurements["left"], measurements["right"]]
+                # Extend with interest values and last actions
+                obs_list.extend(self.interest_values)
+                obs_list.extend(last_actions)
+                # Convert the whole list to a numpy array
+                self.observation = np.array(obs_list)
 
             case "O9":
                 """Slam-image, X-Pos, Y-Pos, Raycast Readings, Interest Values, Last Actions"""
@@ -305,23 +310,33 @@ class OBSManager:
                 )
 
     def _compute_interest_values(self):
-        drone_position = np.argwhere(self.SLAM == 255)  # Get the drone position
-        # drone_position = [int(state[0] / 0.05), int(state[1] / 0.05)]
-        free_areas = np.argwhere(self.SLAM == 200)  # Get the free areas
+        """
+        Compute interest values based on current drone position.
+        """
+        drone_position = np.argwhere(self.SLAM.occupancy_grid == 255)  # Get the drone position
+        # Check if drone position was found
+        if len(drone_position) == 0:
+            print("Warning: Drone position not found in occupancy grid")
+            return self.interest_values
+
+        free_areas = np.argwhere(self.SLAM.occupancy_grid == 200)  # Get the free areas
 
         min_x_y = drone_position[0]
         max_x_y = [min_x_y[0] + 5, min_x_y[1] + 5]
 
+        # Reset interest values
+        self.interest_values = np.zeros(4, dtype=int)
+
         # Iterate through free areas and calculate their relation to the drone
         for area in free_areas:
             if area[0] < min_x_y[0]:
-                self.interest_values["up"] += 1
+                self.interest_values[0] += 1  # "up"
             elif area[0] > max_x_y[0]:
-                self.interest_values["down"] += 1
+                self.interest_values[1] += 1  # "down"
             if area[1] < min_x_y[1]:
-                self.interest_values["left"] += 1
+                self.interest_values[2] += 1  # "left"
             elif area[1] > max_x_y[1]:
-                self.interest_values["right"] += 1
+                self.interest_values[3] += 1  # "right"
 
         return self.interest_values
 

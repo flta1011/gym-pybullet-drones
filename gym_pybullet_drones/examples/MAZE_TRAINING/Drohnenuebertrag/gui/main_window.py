@@ -200,27 +200,27 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labels["Roll:"].setText(f"Roll: {measurement['roll']:.2f}")
 
     def update_slam_map(self, slam_map):
-        """
-        Visualize the 2D array of the slam_map in the second view of the stacked widget.
-        :param slam_map: 2D numpy array representing the SLAM map.
-        """
-        # Normalize the grid values to 0-255 for visualization
-        normalized_grid = ((slam_map - slam_map.min()) / (slam_map.max() - slam_map.min()) * 255).astype(np.uint8)
+        if slam_map is not None:
+            # Check if there's data in the map
+            if np.isnan(slam_map).any() or slam_map.min() == slam_map.max():
+                # Create a gray placeholder image if map is invalid
+                normalized_grid = np.ones_like(slam_map.squeeze(), dtype=np.uint8) * 128
+            else:
+                # Normalize the map to 0-255 range for display
+                normalized_grid = ((slam_map - slam_map.min()) / (slam_map.max() - slam_map.min()) * 255).astype(np.uint8)
 
-        # Convert the grid to a QImage
-        height, width = normalized_grid.shape
-        image = QImage(normalized_grid.data, width, height, QImage.Format.Format_Grayscale8)
+            # Convert to QImage and display
+            h, w = normalized_grid.shape[:2]
+            bytes_per_line = w
+            qimg = QImage(normalized_grid.data, w, h, bytes_per_line, QImage.Format.Format_Grayscale8)
+            pixmap = QPixmap.fromImage(qimg)
 
-        # Convert the QImage to a QPixmap
-        pixmap = QPixmap.fromImage(image)
+            if not hasattr(self, "slam_map_label"):
+                self.slam_map_label = QLabel(self.slam_map_placeholder)
+                self.slam_map_label.setGeometry(0, 0, self.slam_map_placeholder.width(), self.slam_map_placeholder.height())
+                self.slam_map_label.setScaledContents(True)
 
-        # Create a QLabel to display the pixmap
-        if not hasattr(self, "slam_map_label"):
-            self.slam_map_label = QLabel(self.slam_map_placeholder)
-            self.slam_map_label.setGeometry(0, 0, self.slam_map_placeholder.width(), self.slam_map_placeholder.height())
-            self.slam_map_label.setScaledContents(True)
-
-        self.slam_map_label.setPixmap(pixmap)
+            self.slam_map_label.setPixmap(pixmap)
 
     def switch_view(self):
         # Switch between the 3D mapping view and the SLAM map view
@@ -275,6 +275,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def closeEvent(self, event):
         if self.drone_controller:
-            self.drone_controller.close_link()
+            self.drone_controller.cf.close_link()
         event.accept()
         sys.exit(0)

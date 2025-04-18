@@ -8,6 +8,7 @@ from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.log import LogConfig
 from cflib.utils import uri_helper
 from PyQt6 import QtCore
+from PyQt6.QtCore import QObject, pyqtSignal
 from stable_baselines3 import DQN, PPO, SAC
 
 from .obs_manager import OBSManager
@@ -16,8 +17,8 @@ from .obs_manager import OBSManager
 class DroneController:
     def __init__(self, uri, observation_type, action_type, model_type, model_path):
         self.emergency_stop_active = False
-        self.SAFE_DISTANCE = 0.4
-        self.PUSHBACK_DISTANCE = 0.3
+        self.SAFE_DISTANCE = 1
+        self.PUSHBACK_DISTANCE = 0.6
         self.uri = uri
         self.observation_type = observation_type
         self.action_type = action_type
@@ -25,7 +26,7 @@ class DroneController:
         self.model_path = model_path
         self.latest_position = None
         self.latest_measurement = None
-        self.SPEED_FACTOR = 0.5
+        self.SPEED_FACTOR = 1
         self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.5}
         self.hoverTimer = None
         self.number_last_actions = 20
