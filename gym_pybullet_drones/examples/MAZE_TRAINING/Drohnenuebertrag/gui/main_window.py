@@ -19,6 +19,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Fly to Wall")
         self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
 
+        # Install event filter to capture key events regardless of focus
+        self.installEventFilter(self)
+
         # Create the labels
         self.labels = {
             "MultiRanger values:": QtWidgets.QLabel("MultiRanger values"),
@@ -149,38 +152,40 @@ class MainWindow(QtWidgets.QMainWindow):
         self.drone_controller.set_position_callback(self.update_position_labels)
         self.drone_controller.set_measurement_callback(self.update_measurement_labels)
         self.drone_controller.set_update_slam_map_callback(self.update_slam_map)
+        self.drone_controller.set_ai_action_callback(self.update_ai_action_label)
         self.start_fly_callback = self.drone_controller.start_fly
         self.emergency_stop_callback = self.drone_controller.emergency_stop
         self.drone_controller.set_update_slam_map_callback(self.update_slam_map)
 
         # Define key mappings for key press events
+        # Define key mappings for key press events
         self.key_press_mappings = {
-            QtCore.Qt.Key.Key_Left: lambda: self.drone_controller.updateHover("y", 1),  # Move left
-            QtCore.Qt.Key.Key_Right: lambda: self.drone_controller.updateHover("y", -1),  # Move right
-            QtCore.Qt.Key.Key_Up: lambda: self.drone_controller.updateHover("x", 1),  # Move forward
-            QtCore.Qt.Key.Key_Down: lambda: self.drone_controller.updateHover("x", -1),  # Move backward
-            QtCore.Qt.Key.Key_A: lambda: self.drone_controller.updateHover("yaw", -70),  # Rotate counterclockwise
-            QtCore.Qt.Key.Key_D: lambda: self.drone_controller.updateHover("yaw", 70),  # Rotate clockwise
+            QtCore.Qt.Key.Key_A: lambda: self.drone_controller.updateHover("y", 1),  # Move left
+            QtCore.Qt.Key.Key_D: lambda: self.drone_controller.updateHover("y", -1),  # Move right
+            QtCore.Qt.Key.Key_W: lambda: self.drone_controller.updateHover("x", 1),  # Move forward
+            QtCore.Qt.Key.Key_S: lambda: self.drone_controller.updateHover("x", -1),  # Move backward
+            QtCore.Qt.Key.Key_Left: lambda: self.drone_controller.updateHover("yaw", -70),  # Rotate counterclockwise
+            QtCore.Qt.Key.Key_Right: lambda: self.drone_controller.updateHover("yaw", 70),  # Rotate clockwise
             QtCore.Qt.Key.Key_Z: lambda: self.drone_controller.updateHover("yaw", -200),  # Fast rotate counterclockwise
             QtCore.Qt.Key.Key_X: lambda: self.drone_controller.updateHover("yaw", 200),  # Fast rotate clockwise
-            QtCore.Qt.Key.Key_W: lambda: self.drone_controller.updateHover("height", 0.1),  # Ascend
-            QtCore.Qt.Key.Key_S: lambda: self.drone_controller.updateHover("height", -0.1),  # Descend
+            QtCore.Qt.Key.Key_Up: lambda: self.drone_controller.updateHover("height", 0.1),  # Ascend
+            QtCore.Qt.Key.Key_Down: lambda: self.drone_controller.updateHover("height", -0.1),  # Descend
             QtCore.Qt.Key.Key_Space: self.on_emergency_stop,  # Emergency stop
             QtCore.Qt.Key.Key_K: self.on_ai_control_checkbox_changed,  # Toggle AI control
         }
 
         # Define key mappings for key release events
         self.key_release_mappings = {
-            QtCore.Qt.Key.Key_Left: lambda: self.drone_controller.updateHover("y", 0),  # Stop left/right movement
-            QtCore.Qt.Key.Key_Right: lambda: self.drone_controller.updateHover("y", 0),  # Stop left/right movement
-            QtCore.Qt.Key.Key_Up: lambda: self.drone_controller.updateHover("x", 0),  # Stop forward/backward movement
-            QtCore.Qt.Key.Key_Down: lambda: self.drone_controller.updateHover("x", 0),  # Stop forward/backward movement
-            QtCore.Qt.Key.Key_A: lambda: self.drone_controller.updateHover("yaw", 0),  # Stop rotation
-            QtCore.Qt.Key.Key_D: lambda: self.drone_controller.updateHover("yaw", 0),  # Stop rotation
+            QtCore.Qt.Key.Key_A: lambda: self.drone_controller.updateHover("y", 0),  # Stop left/right movement
+            QtCore.Qt.Key.Key_D: lambda: self.drone_controller.updateHover("y", 0),  # Stop left/right movement
+            QtCore.Qt.Key.Key_W: lambda: self.drone_controller.updateHover("x", 0),  # Stop forward/backward movement
+            QtCore.Qt.Key.Key_S: lambda: self.drone_controller.updateHover("x", 0),  # Stop forward/backward movement
+            QtCore.Qt.Key.Key_Left: lambda: self.drone_controller.updateHover("yaw", 0),  # Stop rotation
+            QtCore.Qt.Key.Key_Right: lambda: self.drone_controller.updateHover("yaw", 0),  # Stop rotation
             QtCore.Qt.Key.Key_Z: lambda: self.drone_controller.updateHover("yaw", 0),  # Stop fast rotation
             QtCore.Qt.Key.Key_X: lambda: self.drone_controller.updateHover("yaw", 0),  # Stop fast rotation
-            QtCore.Qt.Key.Key_W: lambda: self.drone_controller.updateHover("height", 0),  # Stop ascending/descending
-            QtCore.Qt.Key.Key_S: lambda: self.drone_controller.updateHover("height", 0),  # Stop ascending/descending
+            QtCore.Qt.Key.Key_Up: lambda: self.drone_controller.updateHover("height", 0),  # Stop ascending/descending
+            QtCore.Qt.Key.Key_Down: lambda: self.drone_controller.updateHover("height", 0),  # Stop ascending/descending
         }
 
     def update_position_labels(self, position):
@@ -199,34 +204,85 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labels["Pitch:"].setText(f"Pitch: {measurement['pitch']:.2f}")
         self.labels["Roll:"].setText(f"Roll: {measurement['roll']:.2f}")
 
+    def update_ai_action_label(self, action):
+        """
+        Update the AI action label with the provided action value
+        :param action: The AI's most recent action
+        """
+        if action is not None:
+            # Assuming action is a numeric value
+            self.labels["AI Control Action:"].setText(f"AI Control Action: {action}")
+
     def update_slam_map(self, slam_map):
         if slam_map is not None:
-            # Check if there's data in the map
-            if np.isnan(slam_map).any() or slam_map.min() == slam_map.max():
-                # Create a gray placeholder image if map is invalid
-                normalized_grid = np.ones_like(slam_map.squeeze(), dtype=np.uint8) * 128
-            else:
-                # Normalize the map to 0-255 range for display
-                normalized_grid = ((slam_map - slam_map.min()) / (slam_map.max() - slam_map.min()) * 255).astype(np.uint8)
+            try:
+                # Get the squeezed 2D version of the map
+                map_2d = slam_map.squeeze()
+                h, w = map_2d.shape[:2]
 
-            # Convert to QImage and display
-            h, w = normalized_grid.shape[:2]
-            bytes_per_line = w
-            qimg = QImage(normalized_grid.data, w, h, bytes_per_line, QImage.Format.Format_Grayscale8)
-            pixmap = QPixmap.fromImage(qimg)
+                # Create a colored map for better visualization
+                colored_map = np.zeros((h, w, 3), dtype=np.uint8)
 
-            if not hasattr(self, "slam_map_label"):
-                self.slam_map_label = QLabel(self.slam_map_placeholder)
-                self.slam_map_label.setGeometry(0, 0, self.slam_map_placeholder.width(), self.slam_map_placeholder.height())
-                self.slam_map_label.setScaledContents(True)
+                # SLAM map values:
+                # 0 = unknown (gray)
+                # 50 = wall (black)
+                # 125 = visited (light blue)
+                # 200 = free space (white)
+                # 255 = current position (red)
 
-            self.slam_map_label.setPixmap(pixmap)
+                # Unknown areas (value 0) - gray
+                colored_map[map_2d == 0] = [128, 128, 128]
+
+                # Free space (value 200) - white
+                colored_map[map_2d == 200] = [255, 255, 255]
+
+                # Walls (value 50) - black
+                colored_map[map_2d == 50] = [0, 0, 0]
+
+                # Visited areas (value 125) - light blue
+                colored_map[map_2d == 125] = [173, 216, 230]
+
+                # Current position (value 255) - red
+                colored_map[map_2d == 255] = [255, 0, 0]
+
+                # Convert to QImage and display
+                qimg = QImage(colored_map.data, w, h, w * 3, QImage.Format.Format_RGB888)
+                pixmap = QPixmap.fromImage(qimg)
+
+                if not hasattr(self, "slam_map_label"):
+                    self.slam_map_label = QLabel(self.slam_map_placeholder)
+                    self.slam_map_label.setGeometry(0, 0, self.slam_map_placeholder.width(), self.slam_map_placeholder.height())
+                    self.slam_map_label.setScaledContents(True)
+                    self.slam_map_placeholder.setLayout(QtWidgets.QVBoxLayout())
+                    self.slam_map_placeholder.layout().addWidget(self.slam_map_label)
+
+                self.slam_map_label.setPixmap(pixmap)
+
+            except Exception as e:
+                print(f"Error in update_slam_map: {e}")
+                # Fall back to a gray placeholder if there's an error
+                placeholder = np.ones((64, 64, 3), dtype=np.uint8) * 128
+                qimg = QImage(placeholder.data, 64, 64, 64 * 3, QImage.Format.Format_RGB888)
+                pixmap = QPixmap.fromImage(qimg)
+
+                if not hasattr(self, "slam_map_label"):
+                    self.slam_map_label = QLabel(self.slam_map_placeholder)
+                    self.slam_map_label.setGeometry(0, 0, self.slam_map_placeholder.width(), self.slam_map_placeholder.height())
+                    self.slam_map_label.setScaledContents(True)
+                    self.slam_map_placeholder.setLayout(QtWidgets.QVBoxLayout())
+                    self.slam_map_placeholder.layout().addWidget(self.slam_map_label)
+
+                self.slam_map_label.setPixmap(pixmap)
 
     def switch_view(self):
         # Switch between the 3D mapping view and the SLAM map view
         current_index = self.stacked_widget.currentIndex()
         new_index = (current_index + 1) % self.stacked_widget.count()
         self.stacked_widget.setCurrentIndex(new_index)
+
+        # Make sure main window retains focus after view switch
+        self.activateWindow()
+        self.setFocus()
 
     def connect(self):
         if self.drone_controller:
@@ -278,3 +334,19 @@ class MainWindow(QtWidgets.QMainWindow):
             self.drone_controller.cf.close_link()
         event.accept()
         sys.exit(0)
+
+    def eventFilter(self, obj, event):
+        """
+        Global event filter to capture key events regardless of focus
+        """
+        if event.type() == QtCore.QEvent.Type.KeyPress:
+            if not event.isAutoRepeat() and event.key() in self.key_press_mappings:
+                self.key_press_mappings[event.key()]()
+                return True
+        elif event.type() == QtCore.QEvent.Type.KeyRelease:
+            if not event.isAutoRepeat() and event.key() in self.key_release_mappings:
+                self.key_release_mappings[event.key()]()
+                return True
+
+        # Pass other events on
+        return super().eventFilter(obj, event)

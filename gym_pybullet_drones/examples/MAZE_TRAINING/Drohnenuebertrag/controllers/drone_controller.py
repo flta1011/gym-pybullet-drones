@@ -14,11 +14,22 @@ from stable_baselines3 import DQN, PPO, SAC
 from .obs_manager import OBSManager
 
 
-class DroneController:
+class DroneController(QObject):
+    # Define signals for thread-safe updates
+    position_updated = pyqtSignal(list)
+    measurement_updated = pyqtSignal(dict)
+
     def __init__(self, uri, observation_type, action_type, model_type, model_path):
+        super().__init__()
         self.emergency_stop_active = False
-        self.SAFE_DISTANCE = 1
-        self.PUSHBACK_DISTANCE = 0.6
+        # Increased SAFE_DISTANCE for earlier detection
+        self.SAFE_DISTANCE = 1.2
+        # Increased PUSHBACK_DISTANCE for stronger reaction
+        self.PUSHBACK_DISTANCE = 0.3
+        # AI Prediction frequency
+        self.ai_prediction_counter = 0
+        self.ai_prediction_rate = 25  # Only predict every 25th cycle
+
         self.uri = uri
         self.observation_type = observation_type
         self.action_type = action_type
@@ -26,12 +37,21 @@ class DroneController:
         self.model_path = model_path
         self.latest_position = None
         self.latest_measurement = None
-        self.SPEED_FACTOR = 1
+        self.SPEED_FACTOR = 0.4
         self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.5}
         self.hoverTimer = None
         self.number_last_actions = 20
         self.last_actions = np.zeros(self.number_last_actions)
         self.obs_manager = OBSManager(observation_type=observation_type)
+
+        # Safety system improvements
+        self.measurement_history = []
+        self.history_size = 5  # Keep track of the last 5 measurements for filtering
+        self.safety_override_active = False
+        self.safety_override_timer = 0
+        self.safety_timeout = 20  # Safety override remains active for 20 cycles (about 1 second)
+        self.consecutive_danger_readings = 0
+        self.min_consecutive_readings = 2  # Require multiple consecutive readings before triggering safety
 
         self.ai_control_active = False
 
@@ -41,6 +61,11 @@ class DroneController:
         self.start_fly_callback = None
         self.emergency_stop_callback = None
         self.update_slam_map_callback = None
+        self.ai_action_callback = None
+
+        # Connect signals to slots
+        self.position_updated.connect(self._on_position_updated)
+        self.measurement_updated.connect(self._on_measurement_updated)
 
         # Load the appropriate model type based on MODEL_Version
         match model_type:
@@ -74,6 +99,10 @@ class DroneController:
     def set_update_slam_map_callback(self, callback):
         """Set the callback for SLAM map updates."""
         self.obs_manager.set_slam_update_callback(callback)
+
+    def set_ai_action_callback(self, callback):
+        """Set the callback for AI action updates."""
+        self.ai_action_callback = callback
 
     def connect(self):
         cflib.crtp.init_drivers()
@@ -138,6 +167,9 @@ class DroneController:
     def pos_data(self, timestamp, data, logconf):
         position = [data["stateEstimate.x"], data["stateEstimate.y"], data["stateEstimate.z"]]
         self.latest_position = position
+        self.position_updated.emit(position)
+
+    def _on_position_updated(self, position):
         if self.position_callback:
             self.position_callback(position)
 
@@ -157,6 +189,9 @@ class DroneController:
             "right": data["range.right"] / 1000.0,
         }
         self.latest_measurement = measurement
+        self.measurement_updated.emit(measurement)
+
+    def _on_measurement_updated(self, measurement):
         if self.measurement_callback:
             self.measurement_callback(measurement)
         self.trigger_obs_update()
@@ -185,7 +220,7 @@ class DroneController:
 
         self.hoverTimer = QtCore.QTimer()
         self.hoverTimer.timeout.connect(self.sendHoverCommand)
-        self.hoverTimer.setInterval(50)  # 14.04.2025; 16:11; first version was 100ms now updated to 500ms to predict with 2Hz
+        self.hoverTimer.setInterval(20)
         self.hoverTimer.start()
 
     def emergency_stop(self):
@@ -211,6 +246,21 @@ class DroneController:
     def sendHoverCommand(self):
         if self.emergency_stop_active:
             return
+
+        # Add AI control logic directly in the control loop
+        if self.ai_control_active and hasattr(self, "obs_manager"):
+            # Only predict at 2Hz (every 25 cycles at 50Hz)
+            self.ai_prediction_counter += 1
+            if self.ai_prediction_counter >= self.ai_prediction_rate:
+                self.ai_prediction_counter = 0
+                # Get current observation from obs_manager
+                observation_space = self.obs_manager.get_observation()
+                if observation_space is not None:
+                    # Update hover values based on AI prediction
+                    new_x_vel, new_y_vel = self.predict_action(observation_space)
+                    self.hover["x"] = new_x_vel * self.SPEED_FACTOR
+                    self.hover["y"] = new_y_vel * self.SPEED_FACTOR
+
         self.check_safety()
         self.cf.commander.send_hover_setpoint(self.hover["x"], self.hover["y"], self.hover["yaw"], self.hover["height"])
 
@@ -220,26 +270,40 @@ class DroneController:
         """
         if self.latest_measurement is None:
             return  # No measurements available yet
-        # Return if no relevant changes occured in the measurements
-        # if self.latest_measurement == self.last_checked_measurement:
-        #     return  # Skip safety check if measurements haven't changed
-        # self.last_checked_measurement = self.latest_measurement
+
+        # Add the latest measurement to the history
+        self.measurement_history.append(self.latest_measurement)
+        if len(self.measurement_history) > self.history_size:
+            self.measurement_history.pop(0)
+
+        # Calculate the average of the last few measurements to filter out noise
+        avg_measurement = {key: np.mean([m[key] for m in self.measurement_history]) for key in self.latest_measurement.keys()}
 
         # Get distance sensor readings
-        front = self.latest_measurement.get("front", float("inf"))
-        back = self.latest_measurement.get("back", float("inf"))
-        left = self.latest_measurement.get("left", float("inf"))
-        right = self.latest_measurement.get("right", float("inf"))
+        front = avg_measurement.get("front", float("inf"))
+        back = avg_measurement.get("back", float("inf"))
+        left = avg_measurement.get("left", float("inf"))
+        right = avg_measurement.get("right", float("inf"))
 
         # Check if any sensor detects a wall too close
         if front < self.SAFE_DISTANCE:
-            self.trigger_safety("front", back, left, right)
+            self.consecutive_danger_readings += 1
+            if self.consecutive_danger_readings >= self.min_consecutive_readings:
+                self.trigger_safety("front", back, left, right)
         elif back < self.SAFE_DISTANCE:
-            self.trigger_safety("back", front, left, right)
+            self.consecutive_danger_readings += 1
+            if self.consecutive_danger_readings >= self.min_consecutive_readings:
+                self.trigger_safety("back", front, left, right)
         elif left < self.SAFE_DISTANCE:
-            self.trigger_safety("left", front, back, right)
+            self.consecutive_danger_readings += 1
+            if self.consecutive_danger_readings >= self.min_consecutive_readings:
+                self.trigger_safety("left", front, back, right)
         elif right < self.SAFE_DISTANCE:
-            self.trigger_safety("right", front, back, left)
+            self.consecutive_danger_readings += 1
+            if self.consecutive_danger_readings >= self.min_consecutive_readings:
+                self.trigger_safety("right", front, back, left)
+        else:
+            self.consecutive_danger_readings = 0  # Reset counter if no danger is detected
 
     def trigger_safety(self, direction, opposite, adjacent1, adjacent2):
         """
@@ -277,30 +341,29 @@ class DroneController:
 
     def updateHover(self, k=None, v=None, observation_space=None):
         """
-        Updates the hover dictionary based on the key and value or AI model predictions.
-        :param k: The key to update (e.g., "x", "y", "height") when AI control is not active.
-        :param v: The value to update (e.g., 1 for forward, -1 for backward) when AI control is not active.
-        :param observation_space: The current observation space for the AI model to predict actions when AI control is active.
+        Updates the hover dictionary based on keyboard input.
+        This method now only handles manual control inputs.
+        :param k: The key to update (e.g., "x", "y", "height")
+        :param v: The value to update (e.g., 1 for forward, -1 for backward)
         """
-        if self.ai_control_active:
-            # AI control is active, ignore keyboard inputs and use AI model predictions
-            if observation_space is not None:
-                new_x_vel, new_y_vel = self.predict_action(observation_space)
-                self.hover["x"] = new_x_vel * self.SPEED_FACTOR
-                self.hover["y"] = new_y_vel * self.SPEED_FACTOR
-                print(f"[AI Control] Updated hover via AI: {self.hover}")
-            else:
-                print("[AI Control] Observation space is required for AI predictions.")
-        else:
-            # AI control is not active, update hover values via keyboard inputs
+        # Only process keyboard commands when AI is not active
+        if not self.ai_control_active:
             if k in self.hover:
                 self.hover[k] += v * self.SPEED_FACTOR
                 print(f"[Manual Control] Updated hover via keyboard: {self.hover}")
             else:
                 print(f"[Manual Control] Invalid hover key: {k}")
+        else:
+            # When AI is active, keyboard inputs are ignored
+            print("[AI Control] Manual control inputs ignored while AI is active.")
 
     def predict_action(self, observation_space):
         action, _ = self.model.predict(observation_space, deterministic=True)
+
+        # Call the callback here, where we know action is available
+        if hasattr(self, "ai_action_callback") and self.ai_action_callback is not None:
+            self.ai_action_callback(action)
+
         if self.action_type == "A3":
             new_x_vel = action[0]
             new_y_vel = action[1]
