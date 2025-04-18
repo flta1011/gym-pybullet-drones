@@ -64,10 +64,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Create the right layout for SLAM map
         right_layout = QtWidgets.QVBoxLayout()
-        
+
         # SLAM Map Widget
         self.slam_map_widget = QtWidgets.QWidget()
         self.slam_map_widget.setStyleSheet("background-color: lightblue;")
+        # Set the SLAM map widget to scale dynamically
+        self.slam_map_widget.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         right_layout.addWidget(self.slam_map_widget)
 
         # Create the bottom layout for the buttons
@@ -239,7 +241,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.slam_map_widget.layout().addWidget(self.slam_map_label)
 
                 self.slam_map_label.setPixmap(pixmap)
-                
+
                 # Make sure window retains focus after map update
                 self.activateWindow()
                 self.setFocus()

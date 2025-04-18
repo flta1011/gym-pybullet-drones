@@ -23,9 +23,9 @@ class DroneController(QObject):
         super().__init__()
         self.emergency_stop_active = False
         # Increased SAFE_DISTANCE for earlier detection
-        self.SAFE_DISTANCE = 1.2
+        self.SAFE_DISTANCE = 1
         # Increased PUSHBACK_DISTANCE for stronger reaction
-        self.PUSHBACK_DISTANCE = 0.3
+        self.PUSHBACK_DISTANCE = 0.2
         # AI Prediction frequency
         self.ai_prediction_counter = 0
         self.ai_prediction_rate = 25  # Only predict every 25th cycle
@@ -37,7 +37,7 @@ class DroneController(QObject):
         self.model_path = model_path
         self.latest_position = None
         self.latest_measurement = None
-        self.SPEED_FACTOR = 0.4
+        self.SPEED_FACTOR = 0.5
         self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.5}
         self.hoverTimer = None
         self.number_last_actions = 20
