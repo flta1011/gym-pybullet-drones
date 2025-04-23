@@ -16,7 +16,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Window setup
         self.resize(800, 600)
-        self.setWindowTitle("Fly to Wall")
+        self.setWindowTitle("Drohnenflug DRL")
         self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
 
         # Install event filter to capture key events regardless of focus
