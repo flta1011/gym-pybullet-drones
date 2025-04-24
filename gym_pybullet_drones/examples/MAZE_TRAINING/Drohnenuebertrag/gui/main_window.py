@@ -155,7 +155,7 @@ class MainWindow(QtWidgets.QMainWindow):
             QtCore.Qt.Key.Key_Up: lambda: self.drone_controller.updateHover("height", 0.1),  # Ascend
             QtCore.Qt.Key.Key_Down: lambda: self.drone_controller.updateHover("height", -0.1),  # Descend
             QtCore.Qt.Key.Key_Space: self.on_emergency_stop,  # Emergency stop
-            QtCore.Qt.Key.Key_K: self.on_ai_control_checkbox_changed,  # Toggle AI control
+            # QtCore.Qt.Key.Key_K: self.on_ai_control_checkbox_changed(),  # Toggle AI control
         }
 
         # Define key mappings for key release events
@@ -193,9 +193,11 @@ class MainWindow(QtWidgets.QMainWindow):
         Update the AI action label with the provided action value
         :param action: The AI's most recent action
         """
-        if action is not None:
-            # Assuming action is a numeric value
-            self.labels["AI Control Action:"].setText(f"AI Control Action: {action}")
+        # if action is not None:
+        #     # Assuming action is a numeric value
+        #     self.labels["AI Control Action:"].setText(f"AI Control Action: {action}")
+
+        self.labels["AI Control Action:"].setText(f"AI Control Action: {action}")
 
     def update_slam_map(self, slam_map):
         if slam_map is not None:
@@ -286,12 +288,26 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         if state == 2:  # Fully checked
             self.ai_control_active = True
+            self.drone_controller.set_ai_control_state(True)
             print(f"AI control state updated to: {self.ai_control_active}")
         elif state == 0:  # Fully unchecked
             self.ai_control_active = False
+            self.drone_controller.set_ai_control_state(False)
             print(f"AI control state updated to: {self.ai_control_active}")
         else:
             print(f"AI control state is in an intermediate state: {state}")
+
+    # def on_ai_control_changed(self):
+    #     """
+    #     Handle the state change of the AI control checkbox and update the DroneController.
+    #     :param state: The new state of the checkbox (0 for unchecked, 2 for checked).
+    #     """
+    #     if self.toggle_ai_control_button.isChecked():
+    #         self.ai_control_active = True
+    #         print(f"AI control state updated to: {self.ai_control_active}")
+    #     else:
+    #         self.ai_control_active = False
+    #         print(f"AI control state updated to: {self.ai_control_active}")
 
     def keyPressEvent(self, event):
         """

@@ -7,7 +7,7 @@ from gymnasium import spaces
 
 
 def _observationSpace(observation_type, cropped_map_size_grid):
-    last_actions_shape = 20
+    last_actions_shape = 20  # SECTION Nummer ändern für last actions
 
     match observation_type:
         case "O1":  # X, Y, YAW, Raycast readings
@@ -345,7 +345,7 @@ class OBSManager:
 
 
 class SimpleSlam:
-    def __init__(self, map_size=9, cropped_map_size=6.4, resolution=0.05, init_position=None):
+    def __init__(self, map_size=18, cropped_map_size=6.4, resolution=0.05, init_position=None):
         """Erstellt eine leere Occupancy-Grid Map.
         Args:
             map_size (float): Seitengröße der Map in Metern (z. B. 8 m).

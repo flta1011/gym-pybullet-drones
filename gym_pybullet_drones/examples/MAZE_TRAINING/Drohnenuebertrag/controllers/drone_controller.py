@@ -23,12 +23,12 @@ class DroneController(QObject):
         super().__init__()
         self.emergency_stop_active = False
         # Increased SAFE_DISTANCE for earlier detection
-        self.SAFE_DISTANCE = 1
+        self.SAFE_DISTANCE = 0.25
         # Increased PUSHBACK_DISTANCE for stronger reaction
         self.PUSHBACK_DISTANCE = 0.2
         # AI Prediction frequency
         self.ai_prediction_counter = 0
-        self.ai_prediction_rate = 25  # Only predict every 25th cycle
+        self.ai_prediction_rate = 1  # Only predict every 25th cycle
 
         self.uri = uri
         self.observation_type = observation_type
@@ -37,10 +37,10 @@ class DroneController(QObject):
         self.model_path = model_path
         self.latest_position = None
         self.latest_measurement = None
-        self.SPEED_FACTOR = 0.5
-        self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.5}
+        self.SPEED_FACTOR = 0.1
+        self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.6}  # SECTION Höhe ändern
         self.hoverTimer = None
-        self.number_last_actions = 20
+        self.number_last_actions = 20  # SECTION Nummer ändern für last actions
         self.last_actions = np.zeros(self.number_last_actions)
         self.obs_manager = OBSManager(observation_type=observation_type)
 
@@ -183,7 +183,7 @@ class DroneController(QObject):
         measurement = {
             "roll": data["stabilizer.roll"],
             "pitch": data["stabilizer.pitch"],
-            "yaw": data["stabilizer.yaw"],
+            "yaw": data["stabilizer.yaw"] * np.pi / 180.0,
             "front": data["range.front"] / 1000.0,
             "back": data["range.back"] / 1000.0,
             "up": data["range.up"] / 1000.0,
@@ -193,10 +193,12 @@ class DroneController(QObject):
         }
         self.latest_measurement = measurement
         self.measurement_updated.emit(measurement)
+        # print(self.ai_control_active)
 
     def _on_measurement_updated(self, measurement):
         if self.measurement_callback:
             self.measurement_callback(measurement)
+
         self.trigger_obs_update()
 
     def get_measurements(self):
@@ -219,7 +221,7 @@ class DroneController(QObject):
             self.obs_manager.update(position=self.latest_position, measurements=adjusted_measurements, last_actions=self.last_actions)
 
     def start_fly(self):
-        self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.5}
+        self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.6}  # SECTION Höhe ändern
 
         self.hoverTimer = QtCore.QTimer()
         self.hoverTimer.timeout.connect(self.sendHoverCommand)
@@ -238,7 +240,7 @@ class DroneController(QObject):
             print("No hover timer to stop")
             self.emergency_stop_active = True
 
-    def toggle_ai_control(self, state):
+    def set_ai_control_state(self, state):
         """
         Update the AI control state.
         :param state: The new state of AI control (True or False).
@@ -252,12 +254,14 @@ class DroneController(QObject):
 
         # Add AI control logic directly in the control loop
         if self.ai_control_active and hasattr(self, "obs_manager"):
+            print(f"[AI Control] AI control is active. Current hover: {self.hover}")
             # Only predict at 2Hz (every 25 cycles at 50Hz)
             self.ai_prediction_counter += 1
             if self.ai_prediction_counter >= self.ai_prediction_rate:
                 self.ai_prediction_counter = 0
                 # Get current observation from obs_manager
                 observation_space = self.obs_manager.get_observation()
+                print(f"[AI Control] Observation space: {observation_space}")
                 if observation_space is not None:
                     # Update hover values based on AI prediction
                     new_x_vel, new_y_vel = self.predict_action(observation_space)
@@ -300,11 +304,11 @@ class DroneController(QObject):
         elif left < self.SAFE_DISTANCE:
             self.consecutive_danger_readings += 1
             if self.consecutive_danger_readings >= self.min_consecutive_readings:
-                self.trigger_safety("left", front, back, right)
+                self.trigger_safety("left", right, front, back)
         elif right < self.SAFE_DISTANCE:
             self.consecutive_danger_readings += 1
             if self.consecutive_danger_readings >= self.min_consecutive_readings:
-                self.trigger_safety("right", front, back, left)
+                self.trigger_safety("right", left, front, back)
         else:
             self.consecutive_danger_readings = 0  # Reset counter if no danger is detected
 
@@ -330,9 +334,9 @@ class DroneController(QObject):
         elif direction == "back" and opposite > self.PUSHBACK_DISTANCE:
             self.hover["x"] = self.PUSHBACK_DISTANCE  # Push forward
         elif direction == "left" and opposite > self.PUSHBACK_DISTANCE:
-            self.hover["y"] = self.PUSHBACK_DISTANCE  # Push right
+            self.hover["y"] = -self.PUSHBACK_DISTANCE  # Push right
         elif direction == "right" and opposite > self.PUSHBACK_DISTANCE:
-            self.hover["y"] = -self.PUSHBACK_DISTANCE  # Push left
+            self.hover["y"] = self.PUSHBACK_DISTANCE  # Push left
 
         # Ensure no collision during pushback
         if adjacent1 < self.SAFE_DISTANCE or adjacent2 < self.SAFE_DISTANCE:
@@ -366,7 +370,7 @@ class DroneController(QObject):
 
     def predict_action(self, observation_space):
         action, _ = self.model.predict(observation_space, deterministic=True)
-
+        print(f"Predicted action: {action}")
         # Call the callback here, where we know action is available
         if hasattr(self, "ai_action_callback") and self.ai_action_callback is not None:
             self.ai_action_callback(action)
@@ -400,5 +404,18 @@ class DroneController(QObject):
         return new_x_vel, new_y_vel
 
     def update_last_actions(self, action):
-        self.last_actions = np.roll(self.last_actions, 1)
-        self.last_actions[0] = action
+
+        match self.model_type:
+            case "M1" | "M2" | "M3" | "M4" | "M5":
+                # For DQN models, store the last action in a circular buffer
+                self.last_actions = np.roll(self.last_actions, 1)
+                # Handle different action formats (scalar or array)
+                self.last_actions[0] = action
+            case "M6":
+                # For SAC models, store the last action in a circular buffer
+                # Store the last action in the first position
+                # and roll the rest of the array
+                self.last_actions = np.roll(self.last_actions, 2)
+                # Handle different action formats (scalar or array)
+                self.last_actions[0] = action[0]
+                self.last_actions[1] = action[1]
