@@ -1,0 +1,16 @@
+DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ,DEFAULT_EPISODE_LEN_SEC,DEFAULT_REWARD_FOR_NEW_FIELD,DEFAULT_Punishment_for_Step,DEFAULT_EVAL_FREQ,DEFAULT_EVAL_EPISODES,DEFAULT_TRAIN_TIMESTEPS,DEFAULT_TARGET_REWARD,DEFAULT_NUMBER_LAST_ACTIONS,DEFAULT_PYB_FREQ,DEFAULT_CTRL_FREQ,DEFAULT_Multiplier_Collision_Penalty,DEFAULT_VelocityScale,DEFAULT_explore_Matrix_Size,DEFAULT_collision_penalty_terminated,DEFAULT_Terminated_Wall_Distance,DEFAULT_no_collision_reward,DEFAULT_Punishment_for_Walls,DEFAULT_Influence_of_Walls,DEFAULT_USE_PRETRAINED_MODEL,DEFAULT_PRETRAINED_MODEL_PATH,DEFAULT_List_MazesToUse,DEFAULT_List_Start_PositionsToUse,DEFAULT_MaxRoundsOnOneMaze,DEFAULT_MaxRoundsSameStartingPositions,DEFAULT_USE_SAVED_HYPERPARAMETER_SET,HyperparameterSetIDtoLoad,DEFAULT_UseOrderedMazeAndStartingPositionInsteadOfRandom,DEFAULT_NumberOfRunsOnEachStartingPosition
+2,300,4,0,50000,1,650000,99999,100,100,50,2,0.5,5,-10,0.1,0,8,3,True,/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M1_R6_O8_A2_TR1_T1_20250423-182819/save-04.23.2025_18.28.19/final_model.zip,"(22, 24)","(0, 1)",6,2,False,SET_20250423-182500,True,3
+
+Runde,Terminated,Truncated,Map-Abgedeckt,"Wand berührungen(Raycast<=0,1)",Summe Reward,Flugzeit der Runde,Maze_number,Start-Position,Uhrzeit Welt
+1,kein_Terminated,Zeit abgelaufen,0.55,134,5628,300.5,22,0,20250424-204037
+2,kein_Terminated,Zeit abgelaufen,0.56,72,6376,300.5,22,0,20250424-204051
+3,kein_Terminated,Zeit abgelaufen,0.53,66,6084,300.5,22,0,20250424-204106
+4,kein_Terminated,Zeit abgelaufen,0.58,120,6148,300.5,22,1,20250424-204121
+5,kein_Terminated,Zeit abgelaufen,0.62,69,7074,300.5,22,1,20250424-204136
+6,kein_Terminated,Zeit abgelaufen,0.6,40,7160,300.5,22,1,20250424-204150
+7,kein_Terminated,Zeit abgelaufen,0.33,121,2850,300.5,24,0,20250424-204204
+8,kein_Terminated,Zeit abgelaufen,0.33,124,2860,300.5,24,0,20250424-204219
+9,kein_Terminated,Zeit abgelaufen,0.42,111,4150,300.5,24,0,20250424-204233
+10,kein_Terminated,Zeit abgelaufen,0.47,136,4512,300.5,24,1,20250424-204248
+10,kein_Terminated,Completed all ordered mazes and positions,0.47,0,0,0.0,24,1,20250424-204251
+11,kein_Terminated,Zeit abgelaufen,0.42,164,3600,300.5,24,1,20250424-204306
