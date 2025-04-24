@@ -48,6 +48,9 @@ from gym_pybullet_drones.utils.utils import str2bool, sync
 Training_Mode = "Test"  # "Training" oder "Test"
 GUI_Mode = "Train"  # "Train" oder "Test" oder "NoGUI"
 
+DEFAULT_USE_PRETRAINED_MODEL = True
+BEST_PRETAINED_MODEL_TO_USE = "PPO_einfache_Mazes"  # folgende Modelle vorausgewählt für die Verwendung: "PPO_einfache_Mazes", "PPO_schwere_Mazes", "DQN_MLP_einfache_Mazes", "DQN_MLP_schwere_Mazes", "DQN_CNN_einfache_Mazes", "DQN_MultiInput_einfache_Mazes","DQN_MultiInput_schwere_Mazes", "SAC_einfache_Mazes", "SAC_schwere_Mazes"
+
 ####### GUI-SETTINGS (u.a. Debug-GUI) #######
 DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_ADVANCED_STATUS_PLOT = False
@@ -57,6 +60,7 @@ DEFAULT_DASH_ACTIVE = False
 ## ACHTUNG: unten USE_PRETRAINED_MODEL muss auf False gesetzt werden, da sonst die Werte überschrieben werden! ###
 DEFAULT_SAVE_HYPERPARAMETER_SET = False  # Do not change this one
 DEFAULT_USE_SAVED_HYPERPARAMETER_SET = False  # Do not change this one
+DEFAULT_PRETRAINED_MODEL_PATH = None
 
 if Training_Mode == "Training":
     DEFAULT_SAVE_HYPERPARAMETER_SET = False  # auf false belassen, wird unten auf true gesetzt, sofern gespeichert werden soll (bei Bedarf unten nachlesen)
@@ -64,13 +68,17 @@ if Training_Mode == "Training":
     HyperparameterSetDescription = "Parameter für das SAC Modell die last actions auf 100 gesetzt, weil mit 200 auch kein direktes Lernen zu Beginn zu sehen war. -> Reward für neue Felder runtergenommen und Bestrafung auch, da damit mit SAC zuletzt besser trainiert wurde."
 
     ###### Verwendung von gespeicherten Hyperparameter-Sets (NUR FÜR DAS TRAINING, IM TEST-MODE werden die WERTE AUS DER PRETRAINED-MODEL-CSV_PATH genommen) #######
-    DEFAULT_USE_SAVED_HYPERPARAMETER_SET = False
+    DEFAULT_USE_SAVED_HYPERPARAMETER_SET = True
     # HyperparameterSetIDtoLoad = "SET_20250410-011939"
     # SET_20250409-233159 = am 9.4.25 besprochenen Hyperparameter-Set, mit dem Alex mit DQN erste gute Ergebnisse erzielt hat
     # SET_20250410-011939 = Belohnung für nicht Kollision auf 0,75 reduziert (vorher 1)
     # SET_20250410-011939_TEST_WITH_ADOPTED_MAZES = Testet die Hyperparameter-Sets auf schwereren Mazes: hat mit M5 mittelmaßig gute Ergebnisse gebracht.
     # SET_20250415-211929 = Best SAC Model von den schweren Mazes! (mit gamma = 0.95, 100 last actions)
-    HyperparameterSetIDtoLoad = "SET_20250415-211929"
+    # SET_20250415-083130 = Bestrafung für Kollision von -100 auf -30 reduziert, damit SAC besser trainiert wird (und nun auch für PPO,DQM-MLP genutzt)
+    # SET_20250423-004900 = niedrigere Trainsteps, um innerhalb von 7h fertig zu werden
+    # SET_20250423-182500	wie SET_20250423-004900, nur die einfachen Mazes anstatt die schweren
+
+    HyperparameterSetIDtoLoad = "SET_20250423-004900"
 
 
 if Training_Mode == "Test":
@@ -82,67 +90,88 @@ if Training_Mode == "Test":
 
 
 ####### Verwendung von Pretrained-Modellen (FÜR TRAINING UND TESTING)#######
-DEFAULT_USE_PRETRAINED_MODEL = True
-BEST_PRETAINED_MODEL_TO_USE = "DQN_CNN_einfache_Mazes"
-# folgende Modelle vorausgewählt für die Verwendung: "PPO_einfache_Mazes", "DQN_MLP_einfache_Mazes", "DQN_CNN_einfache_Mazes", "DQN_MultiInput_einfache_Mazes","DQN_MultiInput_schwere_Mazes", "SAC_einfache_Mazes", "SAC_schwere_Mazes"
+
 # get actual path of this file
 actual_path = os.path.abspath(__file__)
 script_dir = os.path.dirname(actual_path)
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(script_dir)))
 
-match BEST_PRETAINED_MODEL_TO_USE:
-    case "PPO_einfache_Mazes":
-        DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(project_root, "")
-        DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(project_root, "")
-    case "DQN_MLP_einfache_Mazes":
-        DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(project_root, "")
-        DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(project_root, "")
-    case "DQN_CNN_einfache_Mazes":
-        DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
-            project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M2_R6_O4_A2_TR1_T1_20250411-114143/save-04.11.2025_11.41.43/final_model.zip"
-        )
-        DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(
-            project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M2_R6_O4_A2_TR1_T1_20250411-114143/TRAINING_M2_R6_O4_A2_TR1_T1_20250411-114143.csv"
-        )
-    case "DQN_MultiInput_einfache_Mazes":
-        DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
-            project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M5_R6_O9_A2_TR1_T1_20250411-180656/save-04.11.2025_18.06.56/final_model.zip"
-        )
-        DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(
-            project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M5_R6_O9_A2_TR1_T1_20250411-180656/TRAINING_M5_R6_O9_A2_TR1_T1_20250411-180656.csv"
-        )
-    case "DQN_MultiInput_schwere_Mazes":
-        DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
-            project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M5_R6_O9_A2_TR1_T1_20250415-001326_schwere_Mazes/save-04.15.2025_00.13.26/final_model.zip"
-        )
-        DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(
-            project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M5_R6_O9_A2_TR1_T1_20250415-001326_schwere_Mazes/TRAINING_M5_R6_O9_A2_TR1_T1_20250415-001326.csv"
-        )
-    case "SAC_einfache_Mazes":
-        DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
-            project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M6_R6_O8_A3_TR1_T1_20250412-224441/save-04.12.2025_22.44.41/best_model.zip"
-        )
-        DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(
-            project_root,
-            "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M6_R6_O8_A3_TR1_T1_20250412-224441/M6_R6_O8_A3_TR1_T1_20250412-224441.csv",
-        )
-    case "SAC_schwere_Mazes":
-        DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
-            project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M6_R6_O8_A3_TR1_T1_20250415-211929_schwere_Mazes/save-04.15.2025_21.19.29/final_model.zip"
-        )
-        DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(
-            project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M6_R6_O8_A3_TR1_T1_20250415-211929_schwere_Mazes/M6_R6_O8_A3_TR1_T1_20250415-211929.csv"
-        )
+if DEFAULT_USE_PRETRAINED_MODEL == True:
+    match BEST_PRETAINED_MODEL_TO_USE:
+        case "PPO_einfache_Mazes":
+            DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M1_R6_O8_A2_TR1_T1_20250423-182819/save-04.23.2025_18.28.19/final_model.zip"
+            )
+            DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M1_R6_O8_A2_TR1_T1_20250423-182819/TRAINING_M1_R6_O8_A2_TR1_T1_20250423-182819.csv"
+            )
+        case "PPO_schwere_Mazes":
+            DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M1_R6_O8_A2_TR1_T1_20250423-074943_schwere-Mazes/save-04.23.2025_07.49.43/final_model.zip"
+            )
+            DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M1_R6_O8_A2_TR1_T1_20250423-074943_schwere-Mazes/TRAINING_M1_R6_O8_A2_TR1_T1_20250423-074943.csv"
+            )
+        case "DQN_MLP_einfache_Mazes":
+            DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M3_R6_O8_A2_TR1_T1_20250423-234819/save-04.23.2025_23.48.19/final_model.zip"
+            )
+            DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M3_R6_O8_A2_TR1_T1_20250423-234819/TRAINING_M3_R6_O8_A2_TR1_T1_20250423-234819.csv"
+            )
+        case "DQN_MLP_schwere_Mazes":
+            DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M3_R6_O8_A2_TR1_T1_20250424-101733_schwere-Mazes/save-04.24.2025_10.17.33/final_model.zip"
+            )
+            DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M3_R6_O8_A2_TR1_T1_20250424-101733_schwere-Mazes/TRAINING_M3_R6_O8_A2_TR1_T1_20250424-101733.csv"
+            )
+        case "DQN_CNN_einfache_Mazes":
+            DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M2_R6_O4_A2_TR1_T1_20250411-114143/save-04.11.2025_11.41.43/final_model.zip"
+            )
+            DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M2_R6_O4_A2_TR1_T1_20250411-114143/TRAINING_M2_R6_O4_A2_TR1_T1_20250411-114143.csv"
+            )
+        case "DQN_MultiInput_einfache_Mazes":
+            DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M5_R6_O9_A2_TR1_T1_20250411-180656/save-04.11.2025_18.06.56/final_model.zip"
+            )
+            DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M5_R6_O9_A2_TR1_T1_20250411-180656/TRAINING_M5_R6_O9_A2_TR1_T1_20250411-180656.csv"
+            )
+        case "DQN_MultiInput_schwere_Mazes":
+            DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M5_R6_O9_A2_TR1_T1_20250415-001326_schwere_Mazes/save-04.15.2025_00.13.26/final_model.zip"
+            )
+            DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M5_R6_O9_A2_TR1_T1_20250415-001326_schwere_Mazes/TRAINING_M5_R6_O9_A2_TR1_T1_20250415-001326.csv"
+            )
+        case "SAC_einfache_Mazes":
+            DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M6_R6_O8_A3_TR1_T1_20250412-224441/save-04.12.2025_22.44.41/best_model.zip"
+            )
+            DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(
+                project_root,
+                "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M6_R6_O8_A3_TR1_T1_20250412-224441/M6_R6_O8_A3_TR1_T1_20250412-224441.csv",
+            )
+        case "SAC_schwere_Mazes":
+            DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M6_R6_O8_A3_TR1_T1_20250415-211929_schwere_Mazes/save-04.15.2025_21.19.29/final_model.zip"
+            )
+            DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M6_R6_O8_A3_TR1_T1_20250415-211929_schwere_Mazes/M6_R6_O8_A3_TR1_T1_20250415-211929.csv"
+            )
 
-# Print paths for verification
-print(f"\nUsing model path: {DEFAULT_PRETRAINED_MODEL_PATH}")
-print(f"Using CSV path: {DEFAULT_PRETRAINED_MODEL_CSV_PATH}")
+    # Print paths for verification
+    print(f"\nUsing pretrainedmodel path: {DEFAULT_PRETRAINED_MODEL_PATH}")
+    print(f"Using CSV path for pretrainedmodel: {DEFAULT_PRETRAINED_MODEL_CSV_PATH}")
 
-# Verify paths exist
-if not os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
-    print(f"Warning: Model file not found at {DEFAULT_PRETRAINED_MODEL_PATH}")
-if not os.path.exists(DEFAULT_PRETRAINED_MODEL_CSV_PATH):
-    print(f"Warning: CSV file not found at {DEFAULT_PRETRAINED_MODEL_CSV_PATH}")
+    # Verify paths exist
+    if not os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
+        print(f"Warning: Model file not found at {DEFAULT_PRETRAINED_MODEL_PATH}")
+    if not os.path.exists(DEFAULT_PRETRAINED_MODEL_CSV_PATH):
+        print(f"Warning: CSV file not found at {DEFAULT_PRETRAINED_MODEL_CSV_PATH}")
 
 ###############################################################################
 ######################## TRAINING-SETTINGS (Hyperparameter)#################
@@ -304,15 +333,16 @@ if DEFAULT_USE_PRETRAINED_MODEL == True:
         print(f"Model: {MODEL_VERSION}, Reward: {REWARD_VERSION}, Observation: {OBSERVATION_TYPE}")
         print(f"Action: {ACTION_TYPE}, Truncated: {TRUNCATED_TYPE}, Terminated: {TERMINATED_TYPE}")
     else:
-        print("Warning: Could not find parameter folder in path. Using default values.")
-        MODEL_VERSION = "M5"
-        REWARD_VERSION = "R6"
-        OBSERVATION_TYPE = "O9"
-        ACTION_TYPE = "A2"
-        TRUNCATED_TYPE = "TR1"
-        TERMINATED_TYPE = "T1"
-else:
-    MODEL_VERSION = "M5"
+        # ERROR
+        raise ValueError("Could not find parameter folder in path. Using default values.")
+
+else:  # Set manually for Training
+    MODEL_VERSION = "M3"
+    REWARD_VERSION = "R6"
+    OBSERVATION_TYPE = "O8"
+    ACTION_TYPE = "A2"
+    TRUNCATED_TYPE = "TR1"
+    TERMINATED_TYPE = "T1"
 
 
 #####################################MODEL_VERSION###########################
@@ -560,7 +590,7 @@ def load_hyperparameter_set(csv_file_path, set_id):
     try:
         with open(csv_file_path, "r", newline="") as csvfile:
             reader = csv.DictReader(csvfile)
-
+            print(f"Starting to load hyperparameter set {set_id}")
             # Find the row with the matching set_id
             for row in reader:
                 if row["set_id"] == set_id:
@@ -610,7 +640,7 @@ def load_hyperparameter_set(csv_file_path, set_id):
                             globals()[key] = value
                             print(f"Setting {key} = {params[key]}")
 
-                    print(f"Successfully loaded hyperparameter set {set_id}")
+                    print(f"--->Successfully loaded hyperparameter set {set_id}\n")
                     return params
 
             print(f"Error: Hyperparameter set {set_id} not found in CSV file")
@@ -638,6 +668,7 @@ timestamp = time.strftime("%Y%m%d-%H%M%S")
 # check if folder gym_pybullet_drones/Auswertungen_der_Modelle/ exists and if not create it
 if not os.path.exists("gym_pybullet_drones/Auswertungen_der_Modelle/"):
     os.makedirs("gym_pybullet_drones/Auswertungen_der_Modelle/")
+
 if Training_Mode == "Training":
     Auswertungs_CSV_Datei = (
         f"gym_pybullet_drones/Auswertungen_der_Modelle/TRAINING_{MODEL_VERSION}_{REWARD_VERSION}_{OBSERVATION_TYPE}_{ACTION_TYPE}_{TRUNCATED_TYPE}_{TERMINATED_TYPE}_{timestamp}.csv"
