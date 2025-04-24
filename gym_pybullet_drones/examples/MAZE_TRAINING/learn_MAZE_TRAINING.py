@@ -58,9 +58,21 @@ DEFAULT_DASH_ACTIVE = False
 
 ####### Ordered Maze and Starting Position Settings #######
 DEFAULT_UseOrderedMazeAndStartingPositionInsteadOfRandom = True
-DEFAULT_NumberOfRunsOnEachStartingPosition = 1
-List_MazestoUseForOrderedMazes = (21, 22)
-List_Start_PositionsToUseForOrderedMazes = (0, 1, 2)
+DEFAULT_NumberOfRunsOnEachStartingPosition = 2
+List_MazestoUseForOrderedMazes = (
+    22,
+    24,
+    25,
+    0,
+    5,
+    8,
+    15,
+    26,
+    4,
+    7,
+    14,
+)  # einfache Mazes Training: (22, 23, 24, 25), schwere Mazes Training: (0, 5, 8, 15, 26), schwere Mazes unbekannt: (6,10, 13)
+List_Start_PositionsToUseForOrderedMazes = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
 ####### Hyperparameter-Set speichern (NUR IM/FÜR den TRAINING-MODE) #######
 ## ACHTUNG: unten USE_PRETRAINED_MODEL muss auf False gesetzt werden, da sonst die Werte überschrieben werden! ###
 DEFAULT_SAVE_HYPERPARAMETER_SET = False  # Do not change this one
