@@ -56,6 +56,11 @@ DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_ADVANCED_STATUS_PLOT = False
 DEFAULT_DASH_ACTIVE = False
 
+####### Ordered Maze and Starting Position Settings #######
+DEFAULT_UseOrderedMazeAndStartingPositionInsteadOfRandom = True
+DEFAULT_NumberOfRunsOnEachStartingPosition = 1
+List_MazestoUseForOrderedMazes = (21, 22)
+List_Start_PositionsToUseForOrderedMazes = (0, 1, 2)
 ####### Hyperparameter-Set speichern (NUR IM/FÜR den TRAINING-MODE) #######
 ## ACHTUNG: unten USE_PRETRAINED_MODEL muss auf False gesetzt werden, da sonst die Werte überschrieben werden! ###
 DEFAULT_SAVE_HYPERPARAMETER_SET = False  # Do not change this one
@@ -465,6 +470,12 @@ else:
         ]
     )
 
+#################################!OVERWRITE MAZES FROM CSV FILE (if ORDERED MAZE MODE) #################################
+if DEFAULT_UseOrderedMazeAndStartingPositionInsteadOfRandom == True:
+    DEFAULT_List_MazesToUse = List_MazestoUseForOrderedMazes
+    DEFAULT_List_Start_PositionsToUse = List_Start_PositionsToUseForOrderedMazes
+
+
 ############################ Hyperparameter-Set speichern ###########################
 HYPERPARAMETER_SET_PATH = os.path.join(os.path.dirname(__file__), "hyperparameter_sets.csv")
 
@@ -709,6 +720,8 @@ header_params = [
     "DEFAULT_MaxRoundsSameStartingPositions",
     "DEFAULT_USE_SAVED_HYPERPARAMETER_SET",
     "HyperparameterSetIDtoLoad",
+    "DEFAULT_UseOrderedMazeAndStartingPositionInsteadOfRandom",
+    "DEFAULT_NumberOfRunsOnEachStartingPosition",
 ]
 
 # Header für die dynamischen Daten (Trainingsergebnisse)
@@ -754,6 +767,8 @@ parameter_daten = [
     DEFAULT_MaxRoundsSameStartingPositions,
     DEFAULT_USE_SAVED_HYPERPARAMETER_SET,
     HyperparameterSetIDtoLoad,
+    DEFAULT_UseOrderedMazeAndStartingPositionInsteadOfRandom,
+    DEFAULT_NumberOfRunsOnEachStartingPosition,
 ]
 
 # Öffnen oder Erstellen der CSV-Datei
@@ -819,6 +834,8 @@ def run(
     no_collision_reward=DEFAULT_no_collision_reward,
     punishment_for_walls=DEFAULT_Punishment_for_Walls,
     influence_of_walls=DEFAULT_Influence_of_Walls,
+    UseOrderedMazeAndStartingPositionInsteadOfRandom=DEFAULT_UseOrderedMazeAndStartingPositionInsteadOfRandom,
+    NumberOfRunsOnEachStartingPosition=DEFAULT_NumberOfRunsOnEachStartingPosition,
 ):
     if TRAIN:
         filename = os.path.join(output_folder, "save-" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
@@ -866,6 +883,8 @@ def run(
                     no_collision_reward=no_collision_reward,
                     punishment_for_walls=punishment_for_walls,
                     influence_of_walls=influence_of_walls,
+                    UseOrderedMazeAndStartingPositionInsteadOfRandom=UseOrderedMazeAndStartingPositionInsteadOfRandom,
+                    NumberOfRunsOnEachStartingPosition=NumberOfRunsOnEachStartingPosition,
                 ),
                 n_envs=1,
                 seed=0,
@@ -908,6 +927,8 @@ def run(
                     collision_penalty_terminated=collision_penalty_terminated,
                     Terminated_Wall_Distance=Terminated_Wall_Distance,
                     no_collision_reward=no_collision_reward,
+                    UseOrderedMazeAndStartingPositionInsteadOfRandom=UseOrderedMazeAndStartingPositionInsteadOfRandom,
+                    NumberOfRunsOnEachStartingPosition=NumberOfRunsOnEachStartingPosition,
                 ),
                 n_envs=1,
                 seed=0,
@@ -1234,6 +1255,8 @@ def run(
                 collision_penalty_terminated=collision_penalty_terminated,
                 Terminated_Wall_Distance=Terminated_Wall_Distance,
                 no_collision_reward=no_collision_reward,
+                UseOrderedMazeAndStartingPositionInsteadOfRandom=UseOrderedMazeAndStartingPositionInsteadOfRandom,
+                NumberOfRunsOnEachStartingPosition=NumberOfRunsOnEachStartingPosition,
             ),
             n_envs=1,
             seed=0,
@@ -1251,14 +1274,20 @@ def run(
         # test_env_nogui: The environment used for evaluation without GUI.
         # n_eval_episodes=10: The number of episodes to run for evaluation.
         # In your code, the function will evaluate the model over 10 episodes and return the mean and standard deviation of the rewards.
-        mean_reward, std_reward = evaluate_policy(model, eval_env, n_eval_episodes=10)
+        mean_reward, std_reward = evaluate_policy(model, eval_env, n_eval_episodes=(len(List_MazesToUse) * len(List_Start_PositionsToUse) * DEFAULT_NumberOfRunsOnEachStartingPosition))
         print("\n\n\nMean reward ", mean_reward, " +- ", std_reward, "\n\n")
         # The reset function is used to reset the environment to its initial state.
         # seed=42: The seed for the random number generator to ensure reproducibility.
         # options={}: Additional options for resetting the environment.
         # In your code, obs will contain the initial observation, and info will contain additional information provided by the environment after resetting.
 
-        obs, info, maze_number = eval_env.reset(seed=42, options={})
+        # Fix for API compatibility - remove parameters from reset
+        obs = eval_env.reset()
+
+        # Get the underlying environment from the wrapper
+        env_unwrapped = eval_env.unwrapped.envs[0]
+        maze_number = env_unwrapped.Maze_number if hasattr(env_unwrapped, "Maze_number") else 0
+
         print(
             "PRINT MAZE NUMBER IM LEARN-------------------------------------------",
             maze_number,
@@ -1273,10 +1302,11 @@ def run(
         # Render: Renders the environment.
         # Sync: Synchronizes the simulation.
         # Reset: Resets the environment if terminated.
-        for i in range((eval_env.EPISODE_LEN_SEC + 2) * eval_env.CTRL_FREQ):
+        for i in range((eval_env.envs[0].EPISODE_LEN_SEC + 2) * eval_env.envs[0].CTRL_FREQ):
 
             action, _states = model.predict(obs, deterministic=True)
-            obs, reward, terminated, truncated, info = eval_env.step(action, maze_number)
+            # Fix for API compatibility - remove second parameter from step
+            obs, reward, terminated, truncated, info = eval_env.step(action)
             obs2 = obs.squeeze()
             act2 = action.squeeze()
             print(
@@ -1299,9 +1329,10 @@ def run(
             #             logger.log(drone=d, timestamp=i / test_env.CTRL_FREQ, state=np.hstack([obs2[d][0:3], np.zeros(4), obs2[d][3:15], act2[d]]), control=np.zeros(12))
             eval_env.render()
             print(terminated)
-            sync(i, start, eval_env.CTRL_TIMESTEP)
+            sync(i, start, eval_env.envs[0].CTRL_TIMESTEP)
             if terminated:
-                obs = eval_env.reset(seed=42, options={})
+                # Fix for API compatibility - remove parameters from reset
+                obs = eval_env.reset()
         eval_env.close()
 
         # if plot and DEFAULT_OBS == ObservationType.KIN:
