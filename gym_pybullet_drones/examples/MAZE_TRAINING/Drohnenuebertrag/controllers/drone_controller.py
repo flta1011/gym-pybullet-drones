@@ -23,12 +23,12 @@ class DroneController(QObject):
         super().__init__()
         self.emergency_stop_active = False
         # Increased SAFE_DISTANCE for earlier detection
-        self.SAFE_DISTANCE = 0.25
+        self.SAFE_DISTANCE = 0.15
         # Increased PUSHBACK_DISTANCE for stronger reaction
         self.PUSHBACK_DISTANCE = 0.2
         # AI Prediction frequency
         self.ai_prediction_counter = 0
-        self.ai_prediction_rate = 1  # Only predict every 25th cycle
+        self.ai_prediction_rate = 25  # Only predict every 25th cycle
 
         self.uri = uri
         self.observation_type = observation_type
@@ -261,7 +261,12 @@ class DroneController(QObject):
                 self.ai_prediction_counter = 0
                 # Get current observation from obs_manager
                 observation_space = self.obs_manager.get_observation()
-                print(f"[AI Control] Observation space: {observation_space}")
+                print(f"[AI Control] Observation space X: {observation_space['x']}")
+                print(f"[AI Control] Observation space Y: {observation_space['y']}")
+                print(f"[AI Control] Observation raycast: {observation_space['raycast']}")
+                print(f"[AI Control] Observation last actions: {observation_space['last_clipped_actions']}")
+                print(f"[AI Control] Observation measurements: {observation_space['interest_values']}")
+
                 if observation_space is not None:
                     # Update hover values based on AI prediction
                     new_x_vel, new_y_vel = self.predict_action(observation_space)

@@ -297,12 +297,12 @@ class OBSManager:
 
             case "O9":
                 """Slam-image, X-Pos, Y-Pos, Raycast Readings, Interest Values, Last Actions"""
-                raycasts = [measurements["front"], measurements["back"], measurements["left"], measurements["right"]]
+                raycasts = np.array([measurements["front"], measurements["back"], measurements["left"], measurements["right"]])
                 self.observation = dict(
                     {
                         "image": self.SLAM.cropped_grid,
-                        "x": round(position[0], 3),
-                        "y": round(position[1], 3),
+                        "x": np.array([round(position[0], 3)], dtype=np.float32),
+                        "y": np.array([round(position[1], 3)], dtype=np.float32),
                         "raycast": raycasts,
                         "interest_values": self.interest_values,
                         "last_clipped_actions": last_actions,

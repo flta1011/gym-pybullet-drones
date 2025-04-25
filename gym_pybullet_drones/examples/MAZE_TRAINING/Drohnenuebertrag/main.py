@@ -13,10 +13,15 @@ if __name__ == "__main__":
     # model_type = "M3"
     # model_path = "/home/moritz_s/Documents/RKIM_1/F_u_E_Drohnenrennen/GitRepo/gym-pybullet-drones/results/save-04.12.2025_21.26.56/final_model.zip"
 
-    observation_type = "O9"
-    action_type = "A2"
-    model_type = "M5"
-    model_path = "/home/moritz_s/Desktop/M5_R6_O9_A2_TR1_T1_20250411-180656_Flo_Model_One/save-04.11.2025_18.06.56/final_model.zip"
+    # observation_type = "O9"
+    # action_type = "A2"
+    # model_type = "M5"
+    # model_path = "/home/moritz_s/Desktop/M5_R6_O9_A2_TR1_T1_20250411-180656_Flo_Model_One/save-04.11.2025_18.06.56/final_model.zip"
+
+    observation_type = "O8"
+    action_type = "A3"
+    model_type = "M6"
+    model_path = "/home/moritz_s/Desktop/M6_R6_O8_A3_TR1_T1_20250415-211929_schwere_Mazes_Flo_Model_Two/save-04.15.2025_21.19.29/final_model.zip"
 
     # SECTION Depending on which drone you set 60 or 80 for the channel
     URI = uri_helper.uri_from_env(default="radio://0/60/2M/E7E7E7E7E7")
