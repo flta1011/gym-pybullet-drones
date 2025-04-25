@@ -45,11 +45,11 @@ from gym_pybullet_drones.utils.utils import str2bool, sync
 #####################################################################################################
 
 ####### TRAINING-MODE #######
-Training_Mode = "Test"  # "Training" oder "Test"
+Training_Mode = "Training"  # "Training" oder "Test"
 GUI_Mode = "Train"  # "Train" oder "Test" oder "NoGUI"
 
-DEFAULT_USE_PRETRAINED_MODEL = True
-BEST_PRETAINED_MODEL_TO_USE = "PPO_einfache_Mazes"  # folgende Modelle vorausgewählt für die Verwendung: "PPO_einfache_Mazes", "PPO_schwere_Mazes", "DQN_MLP_einfache_Mazes", "DQN_MLP_schwere_Mazes", "DQN_CNN_einfache_Mazes", "DQN_MultiInput_einfache_Mazes","DQN_MultiInput_schwere_Mazes", "SAC_einfache_Mazes", "SAC_schwere_Mazes"
+DEFAULT_USE_PRETRAINED_MODEL = False
+BEST_PRETAINED_MODEL_TO_USE = "DQN_CNN_einfache_Mazes"  # folgende Modelle vorausgewählt für die Verwendung: "PPO_einfache_Mazes", "PPO_schwere_Mazes", "DQN_MLP_einfache_Mazes", "DQN_MLP_schwere_Mazes", "DQN_CNN_einfache_Mazes", "DQN_MultiInput_einfache_Mazes","DQN_MultiInput_schwere_Mazes", "SAC_einfache_Mazes", "SAC_schwere_Mazes"
 
 ####### GUI-SETTINGS (u.a. Debug-GUI) #######
 DEFAULT_USER_DEBUG_GUI = False
@@ -57,7 +57,7 @@ DEFAULT_ADVANCED_STATUS_PLOT = False
 DEFAULT_DASH_ACTIVE = False
 
 ####### Ordered Maze and Starting Position Settings #######
-DEFAULT_UseOrderedMazeAndStartingPositionInsteadOfRandom = True
+DEFAULT_UseOrderedMazeAndStartingPositionInsteadOfRandom = False
 DEFAULT_NumberOfRunsOnEachStartingPosition = 3
 List_MazestoUseForOrderedMazes = (
     22,
@@ -71,20 +71,26 @@ List_MazestoUseForOrderedMazes = (
     4,
     7,
     14,
-)  # einfache Mazes Training: (22, 23, 24, 25), schwere Mazes Training: (0, 5, 8, 15, 26), schwere Mazes unbekannt: (6,10, 13)
+)  # einfache Mazes Training: (22, 24, 25), schwere Mazes Training: (0, 5, 8, 15, 26), schwere Mazes unbekannt: (6,10, 13)
 
-List_MazestoUseForOrderedMazes = (
-    22,
-    24,
-)
+# List_MazestoUseForOrderedMazes = (
+#     22,
+#     24,
+#     25,
+#     0,
+#     5,
+#     8,
+#     15,
+#     26,
+# )
 List_Start_PositionsToUseForOrderedMazes = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
-List_Start_PositionsToUseForOrderedMazes = (0, 1)
+# List_Start_PositionsToUseForOrderedMazes = (0, 1)
 
 ####### Hyperparameter-Set speichern (NUR IM/FÜR den TRAINING-MODE) #######
 ## ACHTUNG: unten USE_PRETRAINED_MODEL muss auf False gesetzt werden, da sonst die Werte überschrieben werden! ###
 DEFAULT_SAVE_HYPERPARAMETER_SET = False  # Do not change this one
 DEFAULT_USE_SAVED_HYPERPARAMETER_SET = False  # Do not change this one
-DEFAULT_PRETRAINED_MODEL_PATH = None
+DEFAULT_PRETRAINED_MODEL_PATH = None  # Do not change
 
 if Training_Mode == "Training":
     DEFAULT_SAVE_HYPERPARAMETER_SET = False  # auf false belassen, wird unten auf true gesetzt, sofern gespeichert werden soll (bei Bedarf unten nachlesen)
@@ -101,8 +107,9 @@ if Training_Mode == "Training":
     # SET_20250415-083130 = Bestrafung für Kollision von -100 auf -30 reduziert, damit SAC besser trainiert wird (und nun auch für PPO,DQM-MLP genutzt)
     # SET_20250423-004900 = niedrigere Trainsteps, um innerhalb von 7h fertig zu werden
     # SET_20250423-182500	wie SET_20250423-004900, nur die einfachen Mazes anstatt die schweren
+    # SET_20250425-231500 mit 900.000 Iterations, 100 last actions aber 0,35m Mindestabstand!
 
-    HyperparameterSetIDtoLoad = "SET_20250423-004900"
+    HyperparameterSetIDtoLoad = "SET_20250425-231500"
 
 
 if Training_Mode == "Test":
@@ -361,10 +368,10 @@ if DEFAULT_USE_PRETRAINED_MODEL == True:
         raise ValueError("Could not find parameter folder in path. Using default values.")
 
 else:  # Set manually for Training
-    MODEL_VERSION = "M3"
+    MODEL_VERSION = "M6"
     REWARD_VERSION = "R6"
     OBSERVATION_TYPE = "O8"
-    ACTION_TYPE = "A2"
+    ACTION_TYPE = "A3"
     TRUNCATED_TYPE = "TR1"
     TERMINATED_TYPE = "T1"
 
