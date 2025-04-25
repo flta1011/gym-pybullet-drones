@@ -28,7 +28,7 @@ class DroneController(QObject):
         self.PUSHBACK_DISTANCE = 0.2
         # AI Prediction frequency
         self.ai_prediction_counter = 0
-        self.ai_prediction_rate = 25  # Only predict every 25th cycle
+        self.ai_prediction_rate = 5  # Only predict every 25th cycle
 
         self.uri = uri
         self.observation_type = observation_type
@@ -38,7 +38,7 @@ class DroneController(QObject):
         self.latest_position = None
         self.latest_measurement = None
         self.SPEED_FACTOR = 0.1
-        self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.6}  # SECTION Höhe ändern
+        self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.5}  # SECTION Höhe ändern
         self.hoverTimer = None
         self.number_last_actions = 20  # SECTION Nummer ändern für last actions
         self.last_actions = np.zeros(self.number_last_actions)
@@ -221,7 +221,7 @@ class DroneController(QObject):
             self.obs_manager.update(position=self.latest_position, measurements=adjusted_measurements, last_actions=self.last_actions)
 
     def start_fly(self):
-        self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.6}  # SECTION Höhe ändern
+        self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.5}  # SECTION Höhe ändern
 
         self.hoverTimer = QtCore.QTimer()
         self.hoverTimer.timeout.connect(self.sendHoverCommand)
@@ -261,11 +261,11 @@ class DroneController(QObject):
                 self.ai_prediction_counter = 0
                 # Get current observation from obs_manager
                 observation_space = self.obs_manager.get_observation()
-                print(f"[AI Control] Observation space X: {observation_space['x']}")
-                print(f"[AI Control] Observation space Y: {observation_space['y']}")
-                print(f"[AI Control] Observation raycast: {observation_space['raycast']}")
-                print(f"[AI Control] Observation last actions: {observation_space['last_clipped_actions']}")
-                print(f"[AI Control] Observation measurements: {observation_space['interest_values']}")
+                # print(f"[AI Control] Observation space X: {observation_space['x']}")
+                # print(f"[AI Control] Observation space Y: {observation_space['y']}")
+                # print(f"[AI Control] Observation raycast: {observation_space['raycast']}")
+                # print(f"[AI Control] Observation last actions: {observation_space['last_clipped_actions']}")
+                # print(f"[AI Control] Observation measurements: {observation_space['interest_values']}")
 
                 if observation_space is not None:
                     # Update hover values based on AI prediction

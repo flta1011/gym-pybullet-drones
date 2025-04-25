@@ -90,7 +90,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         vision_attributes=False,
         output_folder="results_maze_training" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"),
         target_position=np.array([0, 0, 0]),
-        Danger_Threshold_Wall=0.20,
+        Danger_Threshold_Wall=0.15,
         EPISODE_LEN_SEC=10 * 60,
         dash_active=False,
         map_size_slam=9,  # Map-Size 9x9m, damit für den cropped Ausschnitt für die Drohne immer genung Fläche vorhanden ist, die ausgeschnitten werden kann
@@ -114,10 +114,12 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         MaxRoundsOnOneMaze=10,
         MaxRoundsSameStartingPositions=5,
         collision_penalty_terminated=-1000,
-        Terminated_Wall_Distance=0.3,
+        Terminated_Wall_Distance=0.15,
         no_collision_reward=1,
         punishment_for_walls=-2,
         influence_of_walls=3,
+        UseOrderedMazeAndStartingPositionInsteadOfRandom=False,
+        NumberOfRunsOnEachStartingPosition=1,
     ):
         """Initialization of a generic aviary environment.
 
@@ -252,6 +254,29 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.MaxRoundsSameStartingPositions = MaxRoundsSameStartingPositions
         self.List_MazesToUse = List_MazesToUse
 
+        # Initialize ordered maze mode variables
+        self.UseOrderedMazeAndStartingPositionInsteadOfRandom = UseOrderedMazeAndStartingPositionInsteadOfRandom
+        self.NumberOfRunsOnEachStartingPosition = NumberOfRunsOnEachStartingPosition
+        self.current_maze_index = 0  # Index to keep track of current maze
+        self.current_start_position_index = 0  # Index to keep track of current starting position
+        self.current_position_run_count = 1  # Counter for runs at current position - Start from 1 not 0
+
+        # Initialize the maze and starting position
+        if UseOrderedMazeAndStartingPositionInsteadOfRandom:
+            # Use ordered selection
+            self.Maze_number = self.List_MazesToUse[self.current_maze_index]
+            self.random_number_Start = self.List_Start_PositionsToUse[self.current_start_position_index]
+        else:
+            # Use random selection
+            self.Maze_number = np.random.choice(self.List_MazesToUse)
+            self.random_number_Start = np.random.choice(self.List_Start_PositionsToUse)
+
+        self.random_number_Target = 1  # Init-Wert, wird im Laufe der Zeit überschrieben! --> Target wird aktuell aber nicht genutzt
+        self.map_size_slam = map_size_slam
+        self.resolution_slam = resolution_slam
+        self.MaxRoundsSameStartingPositions = MaxRoundsSameStartingPositions
+        # self.List_MazesToUse = List_MazesToUse  # Duplicate, already set above
+
         ###########################################################REWARD-SETTINGS###########################################################
         self.collision_penalty_terminated = collision_penalty_terminated
         self.Truncated_Version = Truncated_Type
@@ -262,6 +287,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # R7 - negative reward map variables
         self.punishment_for_walls = punishment_for_walls  # Wie viele Zellen von der Wand entfernt beginnt der negative Reward
         self.influence_of_walls = influence_of_walls  # Wie viele Punkte werden je Zelle abgezogen
+
+        self.FlagFirstRound = True
 
         if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O6" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O9":
             # Initialize SLAM before calling the parent constructor
@@ -617,37 +644,44 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
     ################################################################################
 
-    def reset(self, seed: int = None, options: dict = None):
-        """Resets the environment.
+    def reset(self, seed=None, options=None):
+        """Reset the environment.
 
         Parameters
         ----------
         seed : int, optional
             Random seed.
-        options : dict[..], optional
-            Additinonal options, unused
+        options : dict, optional
+            Additional options for reset.
 
         Returns
         -------
         ndarray | dict[..]
             The initial observation, check the specific implementation of `_computeObs()`
             in each subclass for its format.
-        dict[..]
-            Additional information as a dictionary, check the specific implementation of `_computeInfo()`
-            in each subclass for its format.
 
         """
 
-        #### Reset the simulation ##################################
+        # Increase run counter and check if we need to change maze or starting position
+        self.New_Maze_number_counter += 1
 
         if self.New_Maze_number_counter == self.MaxRoundsOnOneMaze:
 
-            # Wählen Sie eine Zufallszahl aus der Liste der angebenen Mazes aus
-            self.Maze_number = np.random.choice(self.List_MazesToUse)
+            # NOTE - hier geändert
+            if self.UseOrderedMazeAndStartingPositionInsteadOfRandom:
+                # Use ordered maze selection - move to next maze
+                self.current_maze_index = (self.current_maze_index + 1) % len(self.List_MazesToUse)
+                self.Maze_number = self.List_MazesToUse[self.current_maze_index]
+                # Reset starting position to 0 for the new maze
+                self.current_start_position_index = 0
+                self.current_position_run_count = 1  # Start from 1, not 0
+                self.random_number_Start = self.List_Start_PositionsToUse[self.current_start_position_index]
+                print(f"\n>> New maze selected: {self.Maze_number}\n")
+            else:
+                # Original random selection
+                self.Maze_number = np.random.choice(self.List_MazesToUse)
+                print(f"\n>> New maze selected: {self.Maze_number}\n")
 
-            print(
-                f"--------------------------NEW MAZE ausgewählt (wechselt alle {self.MaxRoundsSameStartingPositions} Runden): NEW_MAZE_NUMBER: {self.Maze_number}---------------------------------------"
-            )
             self.New_Maze_number_counter = 0
         else:
             self.New_Maze_number_counter += 1
@@ -987,6 +1021,7 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                     self.last_clipped_action = clipped_action
 
                     self.PYB_STEPS_IN_ACTUAL_STEP_CALL += 1
+
                     if self.PYB_STEPS_IN_ACTUAL_STEP_CALL == self.PYB_STEPS_PER_REWARD_AND_ACTION_CHANGE:
                         #### Update and store the drones kinematic information #####
                         self._updateAndStoreKinematicInformation()
@@ -994,23 +1029,26 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 #### Update and store the drones kinematic information #####
                 self._updateAndStoreKinematicInformation()
 
-        #########################################################################################
-        # SLAM-Update
-        pos = state[0:3]
-        yaw = state[9]  # Assuming this is the yaw angle
+                # SLAM-MAP in der CTRL-LOOP aktualisieren, um Genauigkeit der SLAM-MAP zu erhöhen
+                if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O6" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O8" or self.OBSERVATION_TYPE == "O9":
+                    raycast_results_Check_Distance_Sensors = self.check_distance_sensors(0)
+                    # Get raycast results
+                    raycast_results = {
+                        "front": raycast_results_Check_Distance_Sensors[0],
+                        "back": raycast_results_Check_Distance_Sensors[1],
+                        "left": raycast_results_Check_Distance_Sensors[2],
+                        "right": raycast_results_Check_Distance_Sensors[3],
+                        "up": raycast_results_Check_Distance_Sensors[4],
+                    }
+                    pos = self.pos[0, 0:3]
+                    yaw = self.rpy[0, 2]
+                    self.slam.update(pos, yaw, raycast_results)
+
+        #############################ENDE UPDATE PHYSICS AND CONTROL FOR THIS REWARD_STEP############################################################
+
+        state = self._getDroneStateVector(0)  # Einführung neuste
 
         if self.OBSERVATION_TYPE == "O4" or self.OBSERVATION_TYPE == "O6" or self.OBSERVATION_TYPE == "O7" or self.OBSERVATION_TYPE == "O8" or self.OBSERVATION_TYPE == "O9":
-
-            # Get raycast results
-            raycast_results = {
-                "front": state[21],
-                "back": state[22],
-                "left": state[23],
-                "right": state[24],
-                "up": state[25],
-            }
-
-            self.slam.update(pos, yaw, raycast_results)
             # update interest values
             try:
                 self._compute_interest_values()
@@ -1020,8 +1058,16 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
             # NOTE - hier: SLAM Map visualisieren (im Training besser deaktiviert)
             # Achtung: bei AKtivierung wird ein Bild pro Step gespeichert!
+            # Only visualize every 100th reward step
             # self.slam.visualize()
         #########################################################################################
+
+        # Prozentsatz der erkundeten Fläche
+        if self.Area_counter_Max != 0:
+            self.Ratio_Area = self.Area_counter / self.Area_counter_Max
+            self.Ratio_Area = round(self.Ratio_Area, 2)  # Round to 2 decimal places
+        else:
+            self.Ratio_Area = 0
 
         #### Prepare the return values #############################
         obs = self._computeObs()
@@ -1030,16 +1076,10 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         truncated, Grund_Truncated = self._computeTruncated()
         info = self._computeInfo()
         ###Debugging Plots
-        state = self._getDroneStateVector(0)  # Einführung neuste
 
         # Erhöhe den Step-Counter für die Zählung der Momente, die zu nah an der Wand waren (in jeden Control-Freq.)
-        if (
-            self.distance_map[
-                int(np.round(self.pos[0][0] / 0.05)),
-                int(np.round(self.pos[0][1] / 0.05)),
-            ]
-            < 0.25
-        ):
+        # wenn einer der Raycasts kleiner als der Treshhold-wert ist:
+        if any(state[21:25] <= 0.1):
             self.too_close_to_wall_counter += 1
 
         self.timestamp_actual = self.step_counter * self.PYB_TIMESTEP  # Use simulation time instead of real time
@@ -1068,9 +1108,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 print(f"Grund für Terminated: {Grund_Terminated}")
                 print(f"List of Tuples of Reward and Action: {self.List_Of_Tuples_Of_Reward_And_Action}\n")
 
-        # Prozentsatz der erkundeten Fläche
-        self.Ratio_Area = self.Area_counter / self.Area_counter_Max
-        self.Ratio_Area = round(self.Ratio_Area, 2)  # Round to 2 decimal places
         # Procent = Ratio_Area % self.Procent_Step
         # if Procent == 0:
         # if self.previous_Procent != self.Ratio_Area:
@@ -1099,6 +1136,17 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         # if self.GUI: #deaktiviert, damit der nachfolgende Plot immer kommt, auch wenn keine GUI eingeschaltet ist
         if truncated:
+            # For ordered mode, increment the position run counter at the end of each episode
+            if self.UseOrderedMazeAndStartingPositionInsteadOfRandom:
+                # Only increment if we're not already at the max
+                if self.current_position_run_count <= self.NumberOfRunsOnEachStartingPosition:
+                    self.current_position_run_count += 1
+
+                # Check if we've reached the maximum runs for this position
+                if self.current_position_run_count > self.NumberOfRunsOnEachStartingPosition:
+                    # We'll move to the next position during next reset/housekeeping
+                    print(f"\n>> Completed all runs ({self.NumberOfRunsOnEachStartingPosition}/{self.NumberOfRunsOnEachStartingPosition}) for position {self.random_number_Start}\n")
+
             # Zusammenfassung Trainingslauf
 
             # print(
@@ -1125,25 +1173,35 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 timestamp,
             ]
 
-            # Aufruf zum Hinzufügen von Trainingsdaten
+            # Write to CSV
             self.schreibe_csv(training_daten=training_daten, csv_datei=self.csv_file_path)
-            print(
-                f"Zusammenfassung Trainingslauf Truncated (Grund: {Grund_Truncated})----- Summe Reward am Ende: {self.RewardCounterActualTrainRun}, Flugzeit: {Flugzeit_der_Runde}, Map-Abgedeckt: {self.Ratio_Area}, Wandberührungen: {self.too_close_to_wall_counter}\n"
-            )
+
+            # Episode summary - no opening line
+            print(f"EPISODE SUMMARY - TRUNCATED: {Grund_Truncated}")
+            print(f"Total Reward: {self.RewardCounterActualTrainRun}")
+            print(f"Flight Time: {Flugzeit_der_Runde:.1f}s")
+            print(f"Map Coverage: {self.Ratio_Area:.2f}")
+            print(f"Wall Contacts: {self.too_close_to_wall_counter}")
+            print("=" * 70 + "\n")
 
         if terminated:
+            # For ordered mode, increment the position run counter at the end of each episode
+            if self.UseOrderedMazeAndStartingPositionInsteadOfRandom:
+                # Only increment if we're not already at the max
+                if self.current_position_run_count <= self.NumberOfRunsOnEachStartingPosition:
+                    self.current_position_run_count += 1
 
-            # print(
-            #     f"Observations: x,y,yaw: {state[0]:.3f}, {state[1]:.3f}, {state[9]:.3f}, RayFront/Back: {state[21]:.1f}, {state[22]:.1f}, RayLeft/Right: {state[23]:.1f}, {state[24]:.1f}, RayUp: {state[25]:.1f}"
-            # )
+                # Check if we've reached the maximum runs for this position
+                if self.current_position_run_count > self.NumberOfRunsOnEachStartingPosition:
+                    # We'll move to the next position during next reset/housekeeping
+                    print(f"\n>> Completed all runs ({self.NumberOfRunsOnEachStartingPosition}/{self.NumberOfRunsOnEachStartingPosition}) for position {self.random_number_Start}\n")
 
             timestamp = time.strftime("%Y%m%d-%H%M%S")
 
             # Berechne die Flugzeit der Runde
             Flugzeit_der_Runde = self.step_counter * self.PYB_TIMESTEP
 
-            # Header für die dynamischen Daten (Trainingsergebnisse)
-            # header_training = ["Runde", "Terminated", "Truncated", "Map-Abgedeckt", "Wand berührungen", "Summe Reward", Maze_number]
+            # Prepare training data for CSV
             training_daten = [
                 self.Terminated_Truncated_Counter,
                 Grund_Terminated,
@@ -1157,11 +1215,16 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
                 timestamp,
             ]
 
-            # Aufruf zum Hinzufügen von Trainingsdaten
+            # Write to CSV
             self.schreibe_csv(training_daten=training_daten, csv_datei=self.csv_file_path)
-            print(
-                f"Zusammenfassung Trainingslauf Terminated (Grund: {Grund_Terminated})----- Summe Reward am Ende: {self.RewardCounterActualTrainRun}, Flugzeit: {Flugzeit_der_Runde}, Map-Abgedeckt: {self.Ratio_Area}, Wandberührungen: {self.too_close_to_wall_counter}\n"
-            )
+
+            # Episode summary - no opening line
+            print(f"EPISODE SUMMARY - TERMINATED: {Grund_Terminated}")
+            print(f"Total Reward: {self.RewardCounterActualTrainRun}")
+            print(f"Flight Time: {Flugzeit_der_Runde:.1f}s")
+            print(f"Map Coverage: {self.Ratio_Area:.2f}")
+            print(f"Wall Contacts: {self.too_close_to_wall_counter}")
+            print("=" * 70 + "\n")
 
         # nachfolgendes war nur zum Debugging der getDroneStateVector Funktion genutzt worden
         # ray_cast_readings = self.check_distance_sensors(0)
@@ -1351,19 +1414,63 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.PLANE_ID = p.loadURDF("plane.urdf", physicsClientId=self.CLIENT)
 
         if (self.New_Maze_number_counter % self.MaxRoundsSameStartingPositions) == 0:
+            # NOTE - hier geändert
+            if self.UseOrderedMazeAndStartingPositionInsteadOfRandom:
+                # Move to the next position if we've completed all runs for the current position
+                if self.current_position_run_count > self.NumberOfRunsOnEachStartingPosition:
+                    # Reset run counter and move to next position
+                    self.current_position_run_count = 1  # Reset to 1, not 0
+                    self.current_start_position_index = (self.current_start_position_index + 1) % len(self.List_Start_PositionsToUse)
 
-            self.random_number_Start = np.random.choice(self.List_Start_PositionsToUse)
-            print(
-                f"--------------------------New StartNUMBER selected (wechselt alle {self.MaxRoundsSameStartingPositions} Runden): NEW_Start_Number:{self.random_number_Start}---------------------------------------"
-            )
+                    # Check if we've completed all positions for this maze
+                    if self.current_start_position_index == 0:
+                        # We've wrapped around to position 0, so increment the maze index
+                        self.current_maze_index = (self.current_maze_index + 1) % len(self.List_MazesToUse)
+                        self.Maze_number = self.List_MazesToUse[self.current_maze_index]
+                        print(f"\n>> Completed all positions for previous maze - advancing to maze {self.Maze_number}\n")
 
-            print(f"--------------------------aktuelle MAZE_NUMBER: {self.Maze_number}---------------------------------------")
-            print(f"--------------------------aktuelle StartNUMBER on this Maze: {self.random_number_Start}---------------------------------------")
-            print(f"--------------------------aktueller Maze_Round_Counter: {self.New_Maze_number_counter}---------------------------------------")
-            print(
-                f"--------------------------Remaining rounds on this maze with this Startnumber: {self.MaxRoundsSameStartingPositions - self.New_Maze_number_counter%self.MaxRoundsSameStartingPositions}---------------------------------------"
-            )
-            print(f"--------------------------Remaining Rounds on this Maze: {self.MaxRoundsOnOneMaze - self.New_Maze_number_counter}---------------------------------------")
+                    self.random_number_Start = self.List_Start_PositionsToUse[self.current_start_position_index]
+                    # Announce the new position
+                    print(f"\n>> New starting position selected: {self.random_number_Start}\n")
+            else:
+                # Original random selection
+                self.random_number_Start = np.random.choice(self.List_Start_PositionsToUse)
+                print(f"\n>> New starting position selected: {self.random_number_Start} (changes every {self.MaxRoundsSameStartingPositions} rounds)\n")
+
+            if self.FlagFirstRound == False:
+                # New layout: "Starting new run" banner before the status info
+                print("\n" + "=" * 70)
+                print(f"STARTING NEW RUN IN ORDERED MAZE MODE")
+
+                if self.UseOrderedMazeAndStartingPositionInsteadOfRandom:
+                    print(f"Current Maze: {self.Maze_number} (#{self.current_maze_index+1} of {len(self.List_MazesToUse)})")
+                    print(f"Current Starting Position: {self.random_number_Start} (#{self.current_start_position_index+1} of {len(self.List_Start_PositionsToUse)})")
+                    print(f"Current Run: {self.current_position_run_count}/{self.NumberOfRunsOnEachStartingPosition}")
+
+                    # Calculate the remaining runs
+                    remaining_positions = len(self.List_Start_PositionsToUse) - self.current_start_position_index - 1
+                    remaining_runs_current_pos = self.NumberOfRunsOnEachStartingPosition - self.current_position_run_count + 1
+                    remaining_mazes = len(self.List_MazesToUse) - self.current_maze_index - 1
+
+                    total_remaining_runs = (
+                        remaining_runs_current_pos
+                        + remaining_positions * self.NumberOfRunsOnEachStartingPosition
+                        + remaining_mazes * len(self.List_Start_PositionsToUse) * self.NumberOfRunsOnEachStartingPosition
+                    )
+
+                    print(f"Total Remaining Runs: {total_remaining_runs}")
+                else:
+                    print("RANDOM MAZE MODE")
+                    print(f"Current Maze: {self.Maze_number}")
+                    print(f"Current Starting Position: {self.random_number_Start}")
+                    print(f"Current Maze Round Counter: {self.New_Maze_number_counter}")
+                    print(f"Remaining rounds on this maze with this starting position: {self.MaxRoundsSameStartingPositions - self.New_Maze_number_counter%self.MaxRoundsSameStartingPositions}")
+                    print(f"Remaining Rounds on this Maze: {self.MaxRoundsOnOneMaze - self.New_Maze_number_counter}")
+                # No closing line - this will be added after the episode summary
+
+            # uncheck FlagFirstRound
+            if self.FlagFirstRound == True:
+                self.FlagFirstRound = False
 
             Start_Position_swapped = [0, 0, 0.5]  # NOTE - TARGET POSITION FIX
 
@@ -1374,12 +1481,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         else:
             Start_Position_swapped = [0, 0, 0.5]
 
-            Start_Position = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0:2]
-            Start_Position_swapped[1] = Start_Position[0]
-            Start_Position_swapped[0] = Start_Position[1]
-            # print(f"Start_Position: {Start_Position_swapped}")
-
-        # print(f"Start_Position_swapped: {Start_Position_swapped}")
         self.DRONE_IDS = np.array(
             [
                 p.loadURDF(
@@ -1486,16 +1587,16 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
         state = np.hstack(
             [
-                self.pos[nth_drone, :],  # [0:3]
-                self.quat[nth_drone, :],  # [3:7]
-                self.rpy[nth_drone, :],  # [7:10]
-                self.vel[nth_drone, :],  # [10:13]
-                self.ang_v[nth_drone, :],  # [13:16]
-                0,  # [16]
-                0,  # [17]
-                0,  # [18]
-                0,  # [19]
-                0,  # [20]
+                self.pos[nth_drone, :],  # 3 Stück: 0-2 [0:3]
+                self.quat[nth_drone, :],  # 4 Stück: 3-6 [3:7]
+                self.rpy[nth_drone, :],  # 3 Stück: 7-9 [7:10]
+                self.vel[nth_drone, :],  # 3 Stück: 10-12 [10:13]
+                self.ang_v[nth_drone, :],  # 3 Stück: 13-15 [13:16]
+                0,  # 16 [16]
+                0,  # 17 [17]
+                0,  # 18 [18]
+                0,  # 19 [19]
+                0,  # 20 [20]
                 self.ray_results_actual[0],  # forward [21]
                 self.ray_results_actual[1],  # backward [22]
                 self.ray_results_actual[2],  # left [23]
