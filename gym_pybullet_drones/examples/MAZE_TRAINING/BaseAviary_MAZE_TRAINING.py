@@ -456,10 +456,8 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         self.action_space = self._actionSpace()
         self.observation_space = self._observationSpace()
         #### Housekeeping ##########################################
-        print(
-            self.Maze_number,
-            "-------------------------------INIT MAZE NUMMER-----------------------------",
-        )
+        print(f"###### INIT-Maze_number: {self.Maze_number}#####")
+
         self._housekeeping()
 
         #### Update and store the drones kinematic information #####
@@ -663,25 +661,83 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # Increase run counter and check if we need to change maze or starting position
         self.New_Maze_number_counter += 1
 
-        if self.New_Maze_number_counter >= self.MaxRoundsOnOneMaze:
-
-            # NOTE - hier geändert
+        # On the very first reset, don't increment the position counter
+        if not self.FlagFirstRound:
+            # For subsequent resets, increment the position run counter
             if self.UseOrderedMazeAndStartingPositionInsteadOfRandom:
-                # Use ordered maze selection - move to next maze
-                self.current_maze_index = (self.current_maze_index + 1) % len(self.List_MazesToUse)
-                self.Maze_number = self.List_MazesToUse[self.current_maze_index]
-                # Reset starting position to 0 for the new maze
-                self.current_start_position_index = 0
-                self.current_position_run_count = 1  # Start from 1, not 0
-                self.random_number_Start = self.List_Start_PositionsToUse[self.current_start_position_index]
-                print(f"\n>> New maze selected: {self.Maze_number}\n")
-            else:
-                # Original random selection
-                self.Maze_number = np.random.choice(self.List_MazesToUse)
-                print(f"\n>> New maze selected: {self.Maze_number}\n")
+                # Before we check anything, increment the counter
+                if self.current_position_run_count == self.NumberOfRunsOnEachStartingPosition:
+                    # Position is completed, move to next position
+                    # Only print this after the third run is completed, not during the setup of the fourth
 
+                    print(f">> Completed all runs ({self.NumberOfRunsOnEachStartingPosition}/{self.NumberOfRunsOnEachStartingPosition}) for position {self.random_number_Start}")
+
+                    self.current_start_position_index += 1
+                    self.current_position_run_count = 1
+
+                    # If we've gone through all positions, move to next maze
+                    if self.current_start_position_index == len(self.List_Start_PositionsToUse):
+                        self.current_maze_index = (self.current_maze_index + 1) % len(self.List_MazesToUse)
+                        self.Maze_number = self.List_MazesToUse[self.current_maze_index]
+                        self.current_start_position_index = 0
+                        print(f"\n>> Completed all positions for previous maze - advancing to maze {self.Maze_number}")
+
+                    # Update the starting position
+                    self.random_number_Start = self.List_Start_PositionsToUse[self.current_start_position_index]
+                    print(f">> New starting position selected: {self.random_number_Start} (run {self.current_position_run_count}/{self.NumberOfRunsOnEachStartingPosition})")
+                else:
+                    # This shouldn't happen with default parameters (NumberOfRunsOnEachStartingPosition=3)
+                    self.current_position_run_count += 1
+                    print(f">> Run {self.current_position_run_count}/{self.NumberOfRunsOnEachStartingPosition} for position {self.random_number_Start}")
+
+        # Maze ändern in random mode, auch random starting position
+        if not self.UseOrderedMazeAndStartingPositionInsteadOfRandom and (self.New_Maze_number_counter >= self.MaxRoundsOnOneMaze):
+            # Original random selection
+            self.Maze_number = np.random.choice(self.List_MazesToUse)
+            print(f">> New maze randomly selected. New Maze number: {self.Maze_number}\n")
             self.New_Maze_number_counter = 0
-            print(f"[DEBUG] Reset counter to 0 after maze change")
+
+        # wenn im Random Mode nur die Starting Position ändern, wenn nicht das Maze geändert wird, aber die MaxRoundsSameStartingPositions erreicht sind
+        if (
+            not self.UseOrderedMazeAndStartingPositionInsteadOfRandom
+            and not (self.New_Maze_number_counter >= self.MaxRoundsOnOneMaze)
+            and (self.New_Maze_number_counter % self.MaxRoundsSameStartingPositions) == 0
+        ):
+            self.random_number_Start = np.random.choice(self.List_Start_PositionsToUse)
+            print(f">> New starting position selected: {self.random_number_Start} (changes every {self.MaxRoundsSameStartingPositions} rounds)")
+
+        ### PRINTING###
+        if not self.FlagFirstRound:
+            # New layout: "Starting new run" banner before the status info
+            print("\n" + "=" * 70)
+            if self.UseOrderedMazeAndStartingPositionInsteadOfRandom:
+                print(f"STARTING NEW RUN IN ORDERED MAZE MODE")
+                print(f"Current Maze: {self.Maze_number} (#{self.current_maze_index+1} of {len(self.List_MazesToUse)})")
+                print(f"Current Starting Position: {self.random_number_Start} (#{self.current_start_position_index+1} of {len(self.List_Start_PositionsToUse)})")
+                print(f"Current Run: {self.current_position_run_count}/{self.NumberOfRunsOnEachStartingPosition}")
+
+                # Calculate the remaining runs
+                remaining_positions = len(self.List_Start_PositionsToUse) - self.current_start_position_index - 1
+                remaining_runs_current_pos = self.NumberOfRunsOnEachStartingPosition - self.current_position_run_count + 1
+                remaining_mazes = len(self.List_MazesToUse) - self.current_maze_index - 1
+                total_remaining_runs = (
+                    remaining_runs_current_pos
+                    + remaining_positions * self.NumberOfRunsOnEachStartingPosition
+                    + remaining_mazes * len(self.List_Start_PositionsToUse) * self.NumberOfRunsOnEachStartingPosition
+                )
+                print(f"Total Remaining Runs: {total_remaining_runs}")
+            else:
+                print(f"STARTING NEW RUN IN RANDOM MAZE MODE")
+                print(f"Current Maze: {self.Maze_number}")
+                print(f"Current Starting Position: {self.random_number_Start}")
+                print(f"Current Maze Round Counter: {self.New_Maze_number_counter}")
+                print(f"Remaining rounds on this maze with this starting position: {self.MaxRoundsSameStartingPositions - self.New_Maze_number_counter % self.MaxRoundsSameStartingPositions}")
+                print(f"Remaining Rounds on this Maze: {self.MaxRoundsOnOneMaze - self.New_Maze_number_counter}")
+            # No closing line - this will be added after the episode summary
+
+        # uncheck FlagFirstRound
+        if self.FlagFirstRound:
+            self.FlagFirstRound = False
 
         p.resetSimulation(physicsClientId=self.CLIENT)
 
@@ -1109,15 +1165,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # if self.GUI: #deaktiviert, damit der nachfolgende Plot immer kommt, auch wenn keine GUI eingeschaltet ist
         if truncated:
             # For ordered mode, increment the position run counter at the end of each episode
-            if self.UseOrderedMazeAndStartingPositionInsteadOfRandom:
-                # Only increment if we're not already at the max
-                if self.current_position_run_count <= self.NumberOfRunsOnEachStartingPosition:
-                    self.current_position_run_count += 1
-
-                # Check if we've reached the maximum runs for this position
-                if self.current_position_run_count > self.NumberOfRunsOnEachStartingPosition:
-                    # We'll move to the next position during next reset/housekeeping
-                    print(f"\n>> Completed all runs ({self.NumberOfRunsOnEachStartingPosition}/{self.NumberOfRunsOnEachStartingPosition}) for position {self.random_number_Start}\n")
 
             # Zusammenfassung Trainingslauf
 
@@ -1157,16 +1204,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
             print("=" * 70 + "\n")
 
         if terminated:
-            # For ordered mode, increment the position run counter at the end of each episode
-            if self.UseOrderedMazeAndStartingPositionInsteadOfRandom:
-                # Only increment if we're not already at the max
-                if self.current_position_run_count <= self.NumberOfRunsOnEachStartingPosition:
-                    self.current_position_run_count += 1
-
-                # Check if we've reached the maximum runs for this position
-                if self.current_position_run_count > self.NumberOfRunsOnEachStartingPosition:
-                    # We'll move to the next position during next reset/housekeeping
-                    print(f"\n>> Completed all runs ({self.NumberOfRunsOnEachStartingPosition}/{self.NumberOfRunsOnEachStartingPosition}) for position {self.random_number_Start}\n")
 
             timestamp = time.strftime("%Y%m%d-%H%M%S")
 
@@ -1385,75 +1422,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         #### Load ground plane, drone and obstacles models #########
         self.PLANE_ID = p.loadURDF("plane.urdf", physicsClientId=self.CLIENT)
 
-        # Track position changes and handle starting position selection
-        change_starting_position = False
-
-        if self.UseOrderedMazeAndStartingPositionInsteadOfRandom:
-            # Move to the next position if we've completed all runs for the current position
-            if self.current_position_run_count >= self.NumberOfRunsOnEachStartingPosition:
-                # Reset run counter and move to next position
-                self.current_position_run_count = 1  # Reset to 1, not 0
-                self.current_start_position_index = (self.current_start_position_index + 1) % len(self.List_Start_PositionsToUse)
-                change_starting_position = True
-
-                # Check if we've completed all positions for this maze
-                if self.current_start_position_index == 0:
-                    # We've wrapped around to position 0, so increment the maze index
-                    self.current_maze_index = (self.current_maze_index + 1) % len(self.List_MazesToUse)
-                    self.Maze_number = self.List_MazesToUse[self.current_maze_index]
-                    print(f"\n>> Completed all positions for previous maze - advancing to maze {self.Maze_number}\n")
-            else:
-                # Increment run counter for current position
-                self.current_position_run_count += 1
-        else:
-            # In random mode, change position after MaxRoundsSameStartingPositions episodes
-            if (self.New_Maze_number_counter % self.MaxRoundsSameStartingPositions) == 0:
-                change_starting_position = True
-
-        # Change starting position if needed
-        if change_starting_position or self.FlagFirstRound:
-            if self.UseOrderedMazeAndStartingPositionInsteadOfRandom:
-                self.random_number_Start = self.List_Start_PositionsToUse[self.current_start_position_index]
-                print(f">> New starting position selected: {self.random_number_Start} (run {self.current_position_run_count}/{self.NumberOfRunsOnEachStartingPosition})")
-            else:
-                # Original random selection
-                self.random_number_Start = np.random.choice(self.List_Start_PositionsToUse)
-                print(f">> New starting position selected: {self.random_number_Start} (changes every {self.MaxRoundsSameStartingPositions} rounds)")
-
-        if not self.FlagFirstRound:
-            # New layout: "Starting new run" banner before the status info
-            print("\n" + "=" * 70)
-            if self.UseOrderedMazeAndStartingPositionInsteadOfRandom:
-                print(f"STARTING NEW RUN IN ORDERED MAZE MODE")
-                print(f"Current Maze: {self.Maze_number} (#{self.current_maze_index+1} of {len(self.List_MazesToUse)})")
-                print(f"Current Starting Position: {self.random_number_Start} (#{self.current_start_position_index+1} of {len(self.List_Start_PositionsToUse)})")
-                print(f"Current Run: {self.current_position_run_count}/{self.NumberOfRunsOnEachStartingPosition}")
-
-                # Calculate the remaining runs
-                remaining_positions = len(self.List_Start_PositionsToUse) - self.current_start_position_index - 1
-                remaining_runs_current_pos = self.NumberOfRunsOnEachStartingPosition - self.current_position_run_count + 1
-                remaining_mazes = len(self.List_MazesToUse) - self.current_maze_index - 1
-
-                total_remaining_runs = (
-                    remaining_runs_current_pos
-                    + remaining_positions * self.NumberOfRunsOnEachStartingPosition
-                    + remaining_mazes * len(self.List_Start_PositionsToUse) * self.NumberOfRunsOnEachStartingPosition
-                )
-
-                print(f"Total Remaining Runs: {total_remaining_runs}")
-            else:
-                print(f"STARTING NEW RUN IN RANDOM MAZE MODE")
-                print(f"Current Maze: {self.Maze_number}")
-                print(f"Current Starting Position: {self.random_number_Start}")
-                print(f"Current Maze Round Counter: {self.New_Maze_number_counter}")
-                print(f"Remaining rounds on this maze with this starting position: {self.MaxRoundsSameStartingPositions - self.New_Maze_number_counter % self.MaxRoundsSameStartingPositions}")
-                print(f"Remaining Rounds on this Maze: {self.MaxRoundsOnOneMaze - self.New_Maze_number_counter}")
-            # No closing line - this will be added after the episode summary
-
-        # uncheck FlagFirstRound
-        if self.FlagFirstRound:
-            self.FlagFirstRound = False
-
         # Set drone starting position
         Start_Position_swapped = [0, 0, 0.5]  # Default position
         Start_Position = self.INIT_XYZS[f"map{self.Maze_number}"][0][self.random_number_Start][0:2]
@@ -1486,6 +1454,33 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
         # p.setCollisionFilterPair(bodyUniqueIdA=self.PLANE_ID, bodyUniqueIdB=self.DRONE_IDS[i], linkIndexA=-1, linkIndexB=-1, enableCollision=0, physicsClientId=self.CLIENT)
         if self.OBSTACLES:
             self._addObstacles()
+
+        if self.FlagFirstRound:
+            # New layout: "Starting new run" banner before the status info
+            print("\n" + "=" * 70)
+            if self.UseOrderedMazeAndStartingPositionInsteadOfRandom:
+                print(f"STARTING NEW RUN IN ORDERED MAZE MODE")
+                print(f"Current Maze: {self.Maze_number} (#{self.current_maze_index+1} of {len(self.List_MazesToUse)})")
+                print(f"Current Starting Position: {self.random_number_Start} (#{self.current_start_position_index+1} of {len(self.List_Start_PositionsToUse)})")
+                print(f"Current Run: {self.current_position_run_count}/{self.NumberOfRunsOnEachStartingPosition}")
+
+                # Calculate the remaining runs
+                remaining_positions = len(self.List_Start_PositionsToUse) - self.current_start_position_index - 1
+                remaining_runs_current_pos = self.NumberOfRunsOnEachStartingPosition - self.current_position_run_count + 1
+                remaining_mazes = len(self.List_MazesToUse) - self.current_maze_index - 1
+                total_remaining_runs = (
+                    remaining_runs_current_pos
+                    + remaining_positions * self.NumberOfRunsOnEachStartingPosition
+                    + remaining_mazes * len(self.List_Start_PositionsToUse) * self.NumberOfRunsOnEachStartingPosition
+                )
+                print(f"Total Remaining Runs: {total_remaining_runs}")
+            else:
+                print(f"STARTING NEW RUN IN RANDOM MAZE MODE")
+                print(f"Current Maze: {self.Maze_number}")
+                print(f"Current Starting Position: {self.random_number_Start}")
+                print(f"Current Maze Round Counter: {self.New_Maze_number_counter}")
+                print(f"Remaining rounds on this maze with this starting position: {self.MaxRoundsSameStartingPositions - self.New_Maze_number_counter % self.MaxRoundsSameStartingPositions}")
+                print(f"Remaining Rounds on this Maze: {self.MaxRoundsOnOneMaze - self.New_Maze_number_counter}")
 
     ################################################################################
 

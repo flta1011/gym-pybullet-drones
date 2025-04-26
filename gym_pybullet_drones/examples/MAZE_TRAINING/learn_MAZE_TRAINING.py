@@ -10,7 +10,8 @@ import numpy as np
 import pandas as pd
 import torch
 import yaml
-from sb3_contrib import RecurrentPPO
+
+# from sb3_contrib import RecurrentPPO --> test waren nicht wirklich direkt gut --> versionen machen probleme mit dem pybullet gym -> downgraded
 from stable_baselines3 import DQN, PPO, SAC
 from stable_baselines3.common.callbacks import (
     CallbackList,
@@ -50,7 +51,7 @@ Training_Mode = "Training"  # "Training" oder "Test"
 GUI_Mode = "Train"  # "Train" oder "Test" oder "NoGUI"
 
 DEFAULT_USE_PRETRAINED_MODEL = False
-BEST_PRETAINED_MODEL_TO_USE = "DQN_MultiInput_einfache_Mazes"  # folgende Modelle vorausgewählt für die Verwendung: "PPO_einfache_Mazes", "PPO_schwere_Mazes", "DQN_MLP_einfache_Mazes", "DQN_MLP_schwere_Mazes", "DQN_CNN_einfache_Mazes", "DQN_MultiInput_einfache_Mazes","DQN_MultiInput_schwere_Mazes", "SAC_einfache_Mazes", "SAC_schwere_Mazes", "SAC_neues_Maze_29"
+BEST_PRETAINED_MODEL_TO_USE = "DQN_MultiInput_schwere_Mazes"  # folgende Modelle vorausgewählt für die Verwendung: "PPO_einfache_Mazes", "PPO_schwere_Mazes", "DQN_MLP_einfache_Mazes", "DQN_MLP_schwere_Mazes", "DQN_CNN_einfache_Mazes", "DQN_MultiInput_einfache_Mazes","DQN_MultiInput_schwere_Mazes", "SAC_einfache_Mazes", "SAC_schwere_Mazes", "SAC_neues_Maze_29"
 
 ####### GUI-SETTINGS (u.a. Debug-GUI) #######
 DEFAULT_USER_DEBUG_GUI = False
@@ -63,15 +64,15 @@ DEFAULT_NumberOfRunsOnEachStartingPosition = 3
 List_MazestoUseForOrderedMazes = (
     22,
     24,
-    25,
-    0,
-    5,
-    8,
-    15,
-    26,
-    4,
-    7,
-    14,
+    # 25,
+    # 0,
+    # 5,
+    # 8,
+    # 15,
+    # 26,
+    # 4,
+    # 7,
+    # 14,
 )  # einfache Mazes Training: (22, 24, 25), schwere Mazes Training: (0, 5, 8, 15, 26), schwere Mazes unbekannt: (6,10, 13)
 
 # List_MazestoUseForOrderedMazes = (
@@ -85,7 +86,7 @@ List_MazestoUseForOrderedMazes = (
 #     26,
 # )
 List_Start_PositionsToUseForOrderedMazes = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
-# List_Start_PositionsToUseForOrderedMazes = (0, 1)
+List_Start_PositionsToUseForOrderedMazes = (0, 1)
 
 ####### Hyperparameter-Set speichern (NUR IM/FÜR den TRAINING-MODE) #######
 ## ACHTUNG: unten USE_PRETRAINED_MODEL muss auf False gesetzt werden, da sonst die Werte überschrieben werden! ###
@@ -248,8 +249,8 @@ if Training_Mode == "Training":
     DEFAULT_explore_Matrix_Size = 5  # 5 bedeutet eine 5x5 Matrix um die Drohne herum (in diesem Bereich kann die Drohne die Felder einsammeln und diese als erkundet markieren)
     DEFAULT_List_MazesToUse = (27, 28, 29, 30, 31)  # Mazes 0-26 stehen zur Verfügung
     DEFAULT_List_Start_PositionsToUse = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)  # Startpositionen 0-9  stehen zur Verfügung (10 Startpositionen)
-    DEFAULT_MaxRoundsOnOneMaze = 6  # nach wie vielen Schritten wird ein neues maze gewählt # NOTE - Verändert nichts
-    DEFAULT_MaxRoundsSameStartingPositions = 2
+    DEFAULT_MaxRoundsOnOneMaze = 6  # Force a maze change after this many rounds, regardless of mode
+    DEFAULT_MaxRoundsSameStartingPositions = 2  # Force a position change after this many rounds, regardless of mode
     DEFAULT_collision_penalty_terminated = (
         -10 / DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ
     )  # mit -10 Trainiert SAC gut (freq 2, bevor geteilt wurde!!), bleibt aber noch ca. 50 mal an der Wand hängen-- --> Teielen, um die Bestrafung je Sekunde an der Wand zu normieren
