@@ -1,6 +1,10 @@
 <?xml version="1.0" ?>
 <robot name="maze">
   <link name="base_link"/>
+    <inertial>
+      <mass value="1"/>
+      <inertia ixx="1" iyy="1" izz="1"/>
+    </inertial>
   <link name="floor">
     <visual>
       <geometry>
@@ -23,6 +27,10 @@
     <parent link="base_link"/>
     <child link="floor"/>
     <origin xyz="0 0 0" rpy="0 0 0"/>
+    <inertial>
+      <mass value="1"/>
+      <inertia ixx="1" iyy="1" izz="1"/>
+    </inertial>
   </joint>
   <link name="walls">
     <visual>
@@ -31,6 +39,10 @@
       </geometry>
       <origin xyz="0.025 0.025 0.5" rpy="0 0 0"/>
     </visual>
+    <inertial>
+      <mass value="1"/>
+      <inertia ixx="1" iyy="1" izz="1"/>
+    </inertial>
     <collision>
       <geometry>
         <box size="0.05 0.05 1"/>
@@ -43,6 +55,10 @@
       </geometry>
       <origin xyz="0.07500000000000001 0.025 0.5" rpy="0 0 0"/>
     </visual>
+    <inertial>
+      <mass value="1"/>
+      <inertia ixx="1" iyy="1" izz="1"/>
+    </inertial>
     <collision>
       <geometry>
         <box size="0.05 0.05 1"/>
@@ -5166,5 +5182,9 @@
     <parent link="base_link"/>
     <child link="walls"/>
     <origin xyz="0 0 0" rpy="0 0 0"/>
+    <inertial>
+      <mass value="1"/>
+      <inertia ixx="1" iyy="1" izz="1"/>
+    </inertial>
   </joint>
 </robot>

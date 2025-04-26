@@ -17,7 +17,7 @@ def load_maze(maze_urdf_path, client_id):
 
 def spawn_drone(position, client_id):
     """Spawnt eine Drohne an der angegebenen Position."""
-    drone_urdf_path = os.path.join(pybullet_data.getDataPath(), "/home/moritz_s/Documents/RKIM_1/F_u_E_Drohnenrennen/GitRepo/gym-pybullet-drones/gym_pybullet_drones/assets/cf2x.urdf")
+    drone_urdf_path = os.path.join(pybullet_data.getDataPath(), "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/assets/cf2x.urdf")
     drone_id = p.loadURDF(drone_urdf_path, position, physicsClientId=client_id)
     return drone_id
 
@@ -55,6 +55,8 @@ def main():
     # Ordner mit URDF-Dateien angeben
     urdf_folder = "/home/moritz_s/Documents/RKIM_1/F_u_E_Drohnenrennen/GitRepo/gym-pybullet-drones/gym_pybullet_drones/assets/maze"
     yaml_path = "/home/moritz_s/Documents/RKIM_1/F_u_E_Drohnenrennen/GitRepo/gym-pybullet-drones/gym_pybullet_drones/examples/MAZE_TRAINING/Maze_init_target.yaml"
+    urdf_folder = "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/assets/maze"
+    yaml_path = "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/examples/MAZE_TRAINING/Maze_init_target.yaml"
 
     # Alle URDF-Dateien im Ordner finden
     urdf_files = sorted(glob.glob(os.path.join(urdf_folder, "*.urdf")))
@@ -71,7 +73,7 @@ def main():
         maze_data = yaml.safe_load(file)
 
     # Start-Maze-Index festlegen
-    start_maze_index = 21  # Ändere diesen Wert, um bei einem bestimmten Maze zu starten (z. B. 5 für das 6. Maze)
+    start_maze_index = 15  # Ändere diesen Wert, um bei einem bestimmten Maze zu starten (z. B. 5 für das 6. Maze)
 
     # Mazes und Positionen durchlaufen
     for maze_index in range(start_maze_index, len(maze_data)):

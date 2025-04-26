@@ -85,14 +85,24 @@ class SimpleSlam:
         grid_x, grid_y = self.world_to_grid(x, y)
 
         # FALLBACK für Errror "index 210 is out of bounds for axis 0 with size 180"
-        if grid_x > self.grid_size:
-            grid_x = self.grid_size
-        if grid_y > self.grid_size:
-            grid_y = self.grid_size
+        if grid_x >= self.grid_size:
+            for i in range(3):
+                print(f"WARNING: grid_x >= self.grid_size; grid_x = {grid_x} (grid_size = {self.grid_size})")
+            grid_x = self.grid_size - 1
+
+        if grid_y >= self.grid_size:
+            for i in range(3):
+                print(f"WARNING: grid_y >= self.grid_size; grid_y = {grid_y} (grid_size = {self.grid_size})")
+            grid_y = self.grid_size - 1
+
         # Fallback für Cases < 0 (sollten eigentlich nie auftreten)
         if grid_x < 0:
+            for i in range(3):
+                print(f"WARNING: grid_x < 0; grid_x = {grid_x}")
             grid_x = 0
         if grid_y < 0:
+            for i in range(3):
+                print(f"WARNING: grid_y < 0; grid_y = {grid_y}")
             grid_y = 0
 
         # self.path.append((grid_x, grid_y))
@@ -208,7 +218,12 @@ class SimpleSlam:
             if cropped_end_y - cropped_start_y != 64:
                 cropped_end_y = cropped_start_y + 64
 
-            self.cropped_grid = self.occupancy_grid[cropped_start_x:cropped_end_x, cropped_start_y:cropped_end_y]
+            # Create initial cropped grid with padding to avoid shape mismatches
+            slice_block = self.occupancy_grid[cropped_start_x:cropped_end_x, cropped_start_y:cropped_end_y]
+            h, w, _ = slice_block.shape
+            padded_grid = self.unbekannt_value * np.ones((self.cropped_map_size_grid, self.cropped_map_size_grid, 1))
+            padded_grid[:h, :w, :] = slice_block
+            self.cropped_grid = padded_grid
 
         self.previous_grid_x = self.grid_x
         self.previous_grid_y = self.grid_y

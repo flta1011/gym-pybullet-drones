@@ -1,0 +1,3 @@
+gamma = 0.35
+Ansatz war, einfach Observations (nur Raycasts und last actions) zu machen, damit die Slam-Problematik auf der Drohne eleminiert werden
+-> gute Abdeckung, aber einige Wandkontakte

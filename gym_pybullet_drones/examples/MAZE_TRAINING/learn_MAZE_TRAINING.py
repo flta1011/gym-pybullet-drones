@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import torch
 import yaml
+from sb3_contrib import RecurrentPPO
 from stable_baselines3 import DQN, PPO, SAC
 from stable_baselines3.common.callbacks import (
     CallbackList,
@@ -48,8 +49,8 @@ from gym_pybullet_drones.utils.utils import str2bool, sync
 Training_Mode = "Test"  # "Training" oder "Test"
 GUI_Mode = "Train"  # "Train" oder "Test" oder "NoGUI"
 
-DEFAULT_USE_PRETRAINED_MODEL = True
-BEST_PRETAINED_MODEL_TO_USE = "DQN_MultiInput_einfache_Mazes"  # folgende Modelle vorausgewählt für die Verwendung: "PPO_einfache_Mazes", "PPO_schwere_Mazes", "DQN_MLP_einfache_Mazes", "DQN_MLP_schwere_Mazes", "DQN_CNN_einfache_Mazes", "DQN_MultiInput_einfache_Mazes","DQN_MultiInput_schwere_Mazes", "SAC_einfache_Mazes", "SAC_schwere_Mazes"
+DEFAULT_USE_PRETRAINED_MODEL = False
+BEST_PRETAINED_MODEL_TO_USE = "DQN_MultiInput_einfache_Mazes"  # folgende Modelle vorausgewählt für die Verwendung: "PPO_einfache_Mazes", "PPO_schwere_Mazes", "DQN_MLP_einfache_Mazes", "DQN_MLP_schwere_Mazes", "DQN_CNN_einfache_Mazes", "DQN_MultiInput_einfache_Mazes","DQN_MultiInput_schwere_Mazes", "SAC_einfache_Mazes", "SAC_schwere_Mazes", "SAC_neues_Maze_29"
 
 ####### GUI-SETTINGS (u.a. Debug-GUI) #######
 DEFAULT_USER_DEBUG_GUI = False
@@ -57,7 +58,7 @@ DEFAULT_ADVANCED_STATUS_PLOT = False
 DEFAULT_DASH_ACTIVE = False
 
 ####### Ordered Maze and Starting Position Settings #######
-DEFAULT_UseOrderedMazeAndStartingPositionInsteadOfRandom = True
+DEFAULT_UseOrderedMazeAndStartingPositionInsteadOfRandom = False
 DEFAULT_NumberOfRunsOnEachStartingPosition = 3
 List_MazestoUseForOrderedMazes = (
     22,
@@ -71,20 +72,26 @@ List_MazestoUseForOrderedMazes = (
     4,
     7,
     14,
-)  # einfache Mazes Training: (22, 23, 24, 25), schwere Mazes Training: (0, 5, 8, 15, 26), schwere Mazes unbekannt: (6,10, 13)
+)  # einfache Mazes Training: (22, 24, 25), schwere Mazes Training: (0, 5, 8, 15, 26), schwere Mazes unbekannt: (6,10, 13)
 
-List_MazestoUseForOrderedMazes = (
-    22,
-    24,
-)
+# List_MazestoUseForOrderedMazes = (
+#     22,
+#     24,
+#     25,
+#     0,
+#     5,
+#     8,
+#     15,
+#     26,
+# )
 List_Start_PositionsToUseForOrderedMazes = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
-List_Start_PositionsToUseForOrderedMazes = (0, 1)
+# List_Start_PositionsToUseForOrderedMazes = (0, 1)
 
 ####### Hyperparameter-Set speichern (NUR IM/FÜR den TRAINING-MODE) #######
 ## ACHTUNG: unten USE_PRETRAINED_MODEL muss auf False gesetzt werden, da sonst die Werte überschrieben werden! ###
 DEFAULT_SAVE_HYPERPARAMETER_SET = False  # Do not change this one
 DEFAULT_USE_SAVED_HYPERPARAMETER_SET = False  # Do not change this one
-DEFAULT_PRETRAINED_MODEL_PATH = None
+DEFAULT_PRETRAINED_MODEL_PATH = None  # Do not change
 
 if Training_Mode == "Training":
     DEFAULT_SAVE_HYPERPARAMETER_SET = False  # auf false belassen, wird unten auf true gesetzt, sofern gespeichert werden soll (bei Bedarf unten nachlesen)
@@ -92,7 +99,7 @@ if Training_Mode == "Training":
     HyperparameterSetDescription = "Parameter für das SAC Modell die last actions auf 100 gesetzt, weil mit 200 auch kein direktes Lernen zu Beginn zu sehen war. -> Reward für neue Felder runtergenommen und Bestrafung auch, da damit mit SAC zuletzt besser trainiert wurde."
 
     ###### Verwendung von gespeicherten Hyperparameter-Sets (NUR FÜR DAS TRAINING, IM TEST-MODE werden die WERTE AUS DER PRETRAINED-MODEL-CSV_PATH genommen) #######
-    DEFAULT_USE_SAVED_HYPERPARAMETER_SET = True
+    DEFAULT_USE_SAVED_HYPERPARAMETER_SET = False
     # HyperparameterSetIDtoLoad = "SET_20250410-011939"
     # SET_20250409-233159 = am 9.4.25 besprochenen Hyperparameter-Set, mit dem Alex mit DQN erste gute Ergebnisse erzielt hat
     # SET_20250410-011939 = Belohnung für nicht Kollision auf 0,75 reduziert (vorher 1)
@@ -101,15 +108,15 @@ if Training_Mode == "Training":
     # SET_20250415-083130 = Bestrafung für Kollision von -100 auf -30 reduziert, damit SAC besser trainiert wird (und nun auch für PPO,DQM-MLP genutzt)
     # SET_20250423-004900 = niedrigere Trainsteps, um innerhalb von 7h fertig zu werden
     # SET_20250423-182500	wie SET_20250423-004900, nur die einfachen Mazes anstatt die schweren
+    # SET_20250425-231500 mit 900.000 Iterations, 100 last actions aber 0,35m Mindestabstand!
 
-    HyperparameterSetIDtoLoad = "SET_20250423-004900"
+    HyperparameterSetIDtoLoad = "SET_20250425-231500"
 
 
 if Training_Mode == "Test":
     DEFAULT_SAVE_HYPERPARAMETER_SET = False  # Do not change this one
     DEFAULT_USE_SAVED_HYPERPARAMETER_SET = False  # Do not change this one
     DEFAULT_PUSHBACK_ACTIVE = False
-    DEFAULT_Procent_Step = 0.01  # nur im Debug-Mode aktiv?
     # For Training:
 
 
@@ -157,13 +164,13 @@ if DEFAULT_USE_PRETRAINED_MODEL == True:
             DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(
                 project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M2_R6_O4_A2_TR1_T1_20250411-114143/TRAINING_M2_R6_O4_A2_TR1_T1_20250411-114143.csv"
             )
-        # case "DQN_MultiInput_einfache_Mazes":
-        #     DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
-        #         project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M5_R6_O9_A2_TR1_T1_20250411-180656/save-04.11.2025_18.06.56/final_model.zip"
-        #     )
-        #     DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(
-        #         project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M5_R6_O9_A2_TR1_T1_20250411-180656/TRAINING_M5_R6_O9_A2_TR1_T1_20250411-180656.csv"
-        #     )
+        case "DQN_MultiInput_einfache_Mazes":
+            DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M5_R6_O9_A2_TR1_T1_20250411-180656/save-04.11.2025_18.06.56/final_model.zip"
+            )
+            DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M5_R6_O9_A2_TR1_T1_20250411-180656/TRAINING_M5_R6_O9_A2_TR1_T1_20250411-180656.csv"
+            )
         case "DQN_MultiInput_schwere_Mazes":
             DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
                 project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M5_R6_O9_A2_TR1_T1_20250415-001326_schwere_Mazes/save-04.15.2025_00.13.26/final_model.zip"
@@ -179,21 +186,19 @@ if DEFAULT_USE_PRETRAINED_MODEL == True:
                 project_root,
                 "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M6_R6_O8_A3_TR1_T1_20250412-224441/M6_R6_O8_A3_TR1_T1_20250412-224441.csv",
             )
-        # case "SAC_schwere_Mazes":
-        #     DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
-        #         project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M6_R6_O8_A3_TR1_T1_20250415-211929_schwere_Mazes/save-04.15.2025_21.19.29/final_model.zip"
-        #     )
-        #     DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(
-        #         project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M6_R6_O8_A3_TR1_T1_20250415-211929_schwere_Mazes/M6_R6_O8_A3_TR1_T1_20250415-211929.csv"
-        #     )
-
-        case "DQN_MultiInput_einfache_Mazes":
-            DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(project_root, "/home/moritz_s/Desktop/M5_R6_O9_A2_TR1_T1_20250411-180656_Flo_Model_One/save-04.11.2025_18.06.56/final_model.zip")
-            DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(project_root, "/home/moritz_s/Desktop/M5_R6_O9_A2_TR1_T1_20250411-180656_Flo_Model_One/TRAINING_M5_R6_O9_A2_TR1_T1_20250411-180656.csv")
         case "SAC_schwere_Mazes":
-            DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(project_root, "/home/moritz_s/Desktop/M6_R6_O8_A3_TR1_T1_20250415-211929_schwere_Mazes_Flo_Model_Two/save-04.15.2025_21.19.29/final_model.zip")
+            DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M6_R6_O8_A3_TR1_T1_20250415-211929_schwere_Mazes/save-04.15.2025_21.19.29/final_model.zip"
+            )
             DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(
-                project_root, "/home/moritz_s/Desktop/M6_R6_O8_A3_TR1_T1_20250415-211929_schwere_Mazes_Flo_Model_Two/M6_R6_O8_A3_TR1_T1_20250415-211929.csv"
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M6_R6_O8_A3_TR1_T1_20250415-211929_schwere_Mazes/M6_R6_O8_A3_TR1_T1_20250415-211929.csv"
+            )
+        case "SAC_neues_Maze_29":
+            DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M6_R6_O8_A3_TR1_T1_20250425-233402_neues_Maz_29/save-04.25.2025_23.34.02/final_model.zip"
+            )
+            DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(
+                project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M6_R6_O8_A3_TR1_T1_20250425-233402_neues_Maz_29/TRAINING_M6_R6_O8_A3_TR1_T1_20250425-233402.csv"
             )
 
     # Print paths for verification
@@ -216,7 +221,7 @@ if Training_Mode == "Training":
     DEFAULT_EVAL_EPISODES = 1
     # DEFAULT_TRAIN_TIMESTEPS = 8 * 1e5  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
     DEFAULT_TARGET_REWARD = 99999
-    DEFAULT_NUMBER_LAST_ACTIONS = 20
+    DEFAULT_NUMBER_LAST_ACTIONS = 100
     DEFAULT_PYB_FREQ = 100
     DEFAULT_CTRL_FREQ = 50
     DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 2  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
@@ -224,15 +229,14 @@ if Training_Mode == "Training":
     DEFAULT_PUSHBACK_ACTIVE = False
     DEFAULT_EVAL_FREQ = 5 * 1e4
     DEFAULT_EVAL_EPISODES = 1
-    NumberOfInterationsTillNextCheckpoint = 250000  # Anzahl Steps, bis ein Modell als .zip gespeichert wird
+    NumberOfInterationsTillNextCheckpoint = 50000  # Anzahl Steps, bis ein Modell als .zip gespeichert wird
 
     DEFAULT_TRAIN_TIMESTEPS = Ziel_Training_TIME_In_Simulation * DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 
-    DEFAULT_VelocityScale = 0.5
+    DEFAULT_VelocityScale = 0.35  # nicht 0,5, damit es nicht gegen die Wand fliegt
 
     #########REWARD-SETTINGS##########
     # Bei wie viel Prozent der Fläche einen Print ausgeben
-    DEFAULT_Procent_Step = 0.01  # nur im Debug-Mode aktiv?
     DEFAULT_REWARD_FOR_NEW_FIELD = 4
     DEFAULT_Punishment_for_Step = 0
     DEFAULT_Multiplier_Collision_Penalty = 2
@@ -242,12 +246,14 @@ if Training_Mode == "Training":
 
     ##########EXPLORATION/MAZE-SETTINGS######
     DEFAULT_explore_Matrix_Size = 5  # 5 bedeutet eine 5x5 Matrix um die Drohne herum (in diesem Bereich kann die Drohne die Felder einsammeln und diese als erkundet markieren)
-    DEFAULT_List_MazesToUse = (21, 21)  # Mazes 0-26 stehen zur Verfügung
+    DEFAULT_List_MazesToUse = (27, 28, 29, 30, 31)  # Mazes 0-26 stehen zur Verfügung
     DEFAULT_List_Start_PositionsToUse = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)  # Startpositionen 0-9  stehen zur Verfügung (10 Startpositionen)
     DEFAULT_MaxRoundsOnOneMaze = 6  # nach wie vielen Schritten wird ein neues maze gewählt # NOTE - Verändert nichts
     DEFAULT_MaxRoundsSameStartingPositions = 2
-    DEFAULT_collision_penalty_terminated = -10  # mit -10 Trainiert SAC gut, bleibt aber noch ca. 50 mal an der Wand hängen--
-    DEFAULT_Terminated_Wall_Distance = 0.1  # DAS IST AUCH DER WERT; ABER DER DIE WANDBESTRAFUNG IM R5/R6 gegeben wird. --> worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25;; WAR ORIGINAL ALEX BEI =0,15!!
+    DEFAULT_collision_penalty_terminated = (
+        -10 / DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ
+    )  # mit -10 Trainiert SAC gut (freq 2, bevor geteilt wurde!!), bleibt aber noch ca. 50 mal an der Wand hängen-- --> Teielen, um die Bestrafung je Sekunde an der Wand zu normieren
+    DEFAULT_Terminated_Wall_Distance = 0.3  # DAS IST AUCH DER WERT; ABER DER DIE WANDBESTRAFUNG IM R5/R6 gegeben wird. --> worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25;; WAR ORIGINAL ALEX BEI =0,15!!
 elif DEFAULT_USE_PRETRAINED_MODEL == True:
     # Read the CSV file manually to avoid pandas header issues
     print(f"\nReading parameters from CSV file: {DEFAULT_PRETRAINED_MODEL_CSV_PATH}")
@@ -370,10 +376,10 @@ if DEFAULT_USE_PRETRAINED_MODEL == True:
         raise ValueError("Could not find parameter folder in path. Using default values.")
 
 else:  # Set manually for Training
-    MODEL_VERSION = "M3"
+    MODEL_VERSION = "M6"
     REWARD_VERSION = "R6"
-    OBSERVATION_TYPE = "O8"
-    ACTION_TYPE = "A2"
+    OBSERVATION_TYPE = "O10"
+    ACTION_TYPE = "A3"
     TRUNCATED_TYPE = "TR1"
     TERMINATED_TYPE = "T1"
 
@@ -386,6 +392,7 @@ else:  # Set manually for Training
 - M4:   DQN_CNNPolicy_CustomFeatureExtractor # NO SUPPORT 
 - M5:   DQN_NN_MultiInputPolicy mit fullyConnectLayer
 - M6:   SAC
+- M7:   PPO_MlpLSTMPolicy
 """
 #####################################REWARD_VERSION###########################
 """REWARD_VERSIONen: siehe BaseAviary_MAZE_TRAINING.py für Details
@@ -408,6 +415,7 @@ else:  # Set manually for Training
 - O7: cropped Slam-image, XY Position, Yaw (sin,cos), last actions (n Stück), raycasts
 - O8: X-Pos,Y-Pos, 4-raycast_readings, 4-interest_values, n-last_clipped_actions
 - O9: cropped Slam-image, x-Pos, y-Pos, 4-racast_readings, 4-interest_values, n-last_clipped_actions
+- O10: vereinfache Observations: Ray_front, Ray_back, Ray_left, Ray_right, Velocity X, Velocity Y, sin(yaw), cos(yaw)
 !!!Bei neuer Oberservation Type mit SLAM dies in den IF-Bedingungen (BaseAviary_MAZE_TRAINING.py) erweitern!!!
 """
 #####################################ACTION_TYPE###########################
@@ -525,7 +533,6 @@ if DEFAULT_SAVE_HYPERPARAMETER_SET and Training_Mode == "Training":
         "DEFAULT_PUSHBACK_ACTIVE",
         "NumberOfInterationsTillNextCheckpoint",
         "DEFAULT_VelocityScale",
-        "DEFAULT_Procent_Step",
         "DEFAULT_REWARD_FOR_NEW_FIELD",
         "DEFAULT_Punishment_for_Step",
         "DEFAULT_Multiplier_Collision_Penalty",
@@ -582,7 +589,6 @@ if DEFAULT_SAVE_HYPERPARAMETER_SET and Training_Mode == "Training":
         "DEFAULT_PUSHBACK_ACTIVE": DEFAULT_PUSHBACK_ACTIVE,
         "NumberOfInterationsTillNextCheckpoint": NumberOfInterationsTillNextCheckpoint,
         "DEFAULT_VelocityScale": DEFAULT_VelocityScale,
-        "DEFAULT_Procent_Step": DEFAULT_Procent_Step,
         "DEFAULT_REWARD_FOR_NEW_FIELD": DEFAULT_REWARD_FOR_NEW_FIELD,
         "DEFAULT_Punishment_for_Step": DEFAULT_Punishment_for_Step,
         "DEFAULT_Multiplier_Collision_Penalty": DEFAULT_Multiplier_Collision_Penalty,
@@ -845,7 +851,6 @@ def run(
     Pushback_active=DEFAULT_PUSHBACK_ACTIVE,
     DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
     DEFAULT_VelocityScale=DEFAULT_VelocityScale,
-    Procent_Step=DEFAULT_Procent_Step,
     TRAIN=Default_Train,
     TEST=Default_Test,
     number_last_actions=DEFAULT_NUMBER_LAST_ACTIONS,
@@ -896,7 +901,6 @@ def run(
                     Pushback_active=Pushback_active,
                     DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
                     VelocityScale=DEFAULT_VelocityScale,
-                    Procent_Step=Procent_Step,
                     number_last_actions=number_last_actions,
                     Punishment_for_Step=Punishment_for_Step,
                     Reward_for_new_field=Reward_for_new_field,
@@ -942,7 +946,6 @@ def run(
                     Pushback_active=Pushback_active,
                     DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
                     VelocityScale=DEFAULT_VelocityScale,
-                    Procent_Step=Procent_Step,
                     number_last_actions=number_last_actions,
                     Punishment_for_Step=Punishment_for_Step,
                     Reward_for_new_field=Reward_for_new_field,
@@ -1089,6 +1092,24 @@ def run(
                         device="cuda:0",
                         seed=42,
                         gamma=0.95,
+                    )
+            case "M7":  # M7: PPO_MLPPolicy # see https://sb3-contrib.readthedocs.io/en/master/modules/ppo_recurrent.html#how-to-replicate-the-results
+
+                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
+                    print(
+                        f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_VERSION} with {REWARD_VERSION}, {OBSERVATION_TYPE}, {TRUNCATED_TYPE}, {TERMINATED_TYPE}, {ACTION_TYPE}"
+                    )
+                    model = RecurrentPPO.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
+                else:
+                    print(f"[INFO] Creating new {MODEL_VERSION} with {REWARD_VERSION}, {OBSERVATION_TYPE}, {TRUNCATED_TYPE}, {TERMINATED_TYPE}, {ACTION_TYPE}")
+                    model = RecurrentPPO(
+                        "MlpLstmPolicy",
+                        train_env,
+                        verbose=1,
+                        device="cuda:0",
+                        gamma=0.95,
+                        seed=42,
+                        n_steps=128,
                     )
             case _:
                 raise ValueError(f"Invalid model version: {MODEL_Version}")
@@ -1270,7 +1291,6 @@ def run(
                 Pushback_active=Pushback_active,
                 DEFAULT_Multiplier_Collision_Penalty=DEFAULT_Multiplier_Collision_Penalty,
                 VelocityScale=DEFAULT_VelocityScale,
-                Procent_Step=Procent_Step,
                 number_last_actions=number_last_actions,
                 Punishment_for_Step=Punishment_for_Step,
                 Reward_for_new_field=Reward_for_new_field,
