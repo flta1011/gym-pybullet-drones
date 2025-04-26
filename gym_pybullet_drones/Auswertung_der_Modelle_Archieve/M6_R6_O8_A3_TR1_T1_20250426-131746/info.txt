@@ -1,0 +1,3 @@
+gamma = 0.95 
+# sac trainiert, mit 0,25 Abstand, das das SAC mit 0,1 Abstand doch noch oft an die Wand flog. 
+--> Ergebnis: fliegt seltener an die Wand, aber immer noch hin und wieder
