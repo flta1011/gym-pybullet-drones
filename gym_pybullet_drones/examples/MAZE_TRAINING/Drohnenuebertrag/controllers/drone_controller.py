@@ -195,6 +195,20 @@ class DroneController(QObject):
             "left": data["range.left"] / 1000.0,
             "right": data["range.right"] / 1000.0,
         }
+
+        # Add distance validation for sensors
+        for sensor in ["front", "back", "left", "right", "up", "down"]:
+            # Check if the current sensor reading exceeds 4 meters
+            if measurement[sensor] > 4.0:
+                # Replace with a fixed value to match simulation traning behavior
+                measurement[sensor] = int(4.0)
+                # print(f"Sensor {sensor} reading capped at 4.0m")
+
+        # Update measurement history for safety filtering
+        self.measurement_history.append(measurement.copy())
+        if len(self.measurement_history) > self.history_size:
+            self.measurement_history.pop(0)
+
         self.latest_measurement = measurement
         self.measurement_updated.emit(measurement)
         # print(self.ai_control_active)
