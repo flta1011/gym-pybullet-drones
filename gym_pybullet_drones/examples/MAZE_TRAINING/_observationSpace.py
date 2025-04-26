@@ -257,3 +257,24 @@ def _observationSpace(self):
             )
 
             return observationSpace
+
+        case "O10":  # einfache Werte für einfachere, robusteres Training (MLP)
+            last_actions_size = self.last_actions.shape[0]  # Number of last clipped actions
+
+            # Define the low and high bounds for the flattened observation
+            low = np.concatenate(
+                (
+                    np.zeros(4, dtype=np.float32),  # Raycast readings (values in [0, 4])
+                    np.zeros(last_actions_size, dtype=np.float32),  # Last clipped actions
+                )
+            )
+
+            high = np.concatenate(
+                (
+                    np.full(4, 4, dtype=np.float32),  # Raycast readings (values in [0, 4])
+                    np.full(last_actions_size, 6, dtype=np.float32),  # Last clipped actions
+                )
+            )
+
+            # Return the flattened observation space
+            return spaces.Box(low=low, high=high, dtype=np.float32)

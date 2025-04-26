@@ -218,38 +218,12 @@ class SimpleSlam:
             if cropped_end_y - cropped_start_y != 64:
                 cropped_end_y = cropped_start_y + 64
 
-            # Create initial cropped grid
-
-            self.cropped_grid[0 : self.cropped_map_size_grid, 0 : self.cropped_map_size_grid] = self.occupancy_grid[cropped_start_x:cropped_end_x, cropped_start_y:cropped_end_y]
-
-            # Fallback: Ensure output is 64x64x1
-            if self.cropped_grid.shape != (64, 64, 1):
-                current_height, current_width, _ = self.cropped_grid.shape
-
-                # Create new 64x64x1 grid
-                new_grid = self.unbekannt_value * np.ones((self.cropped_map_size_grid, self.cropped_map_size_grid, 1))
-
-                if current_width > 64:
-                    # Crop from center if too wide
-                    start_x = (current_width - 64) // 2
-                    new_grid = self.cropped_grid[start_x : start_x + 64, :, :]
-                elif current_width < 64:
-                    # Pad if too narrow
-                    pad_left = (64 - current_width) // 2
-                    pad_right = 64 - current_width - pad_left
-                    new_grid[pad_left : 64 - pad_right, :, :] = self.cropped_grid
-
-                if current_height > 64:
-                    # Crop from center if too tall
-                    start_y = (current_height - 64) // 2
-                    new_grid = new_grid[:, start_y : start_y + 64, :]
-                elif current_height < 64:
-                    # Pad if too short
-                    pad_top = (64 - current_height) // 2
-                    pad_bottom = 64 - current_height - pad_top
-                    new_grid[:, pad_top : 64 - pad_bottom, :] = new_grid
-
-                self.cropped_grid = new_grid
+            # Create initial cropped grid with padding to avoid shape mismatches
+            slice_block = self.occupancy_grid[cropped_start_x:cropped_end_x, cropped_start_y:cropped_end_y]
+            h, w, _ = slice_block.shape
+            padded_grid = self.unbekannt_value * np.ones((self.cropped_map_size_grid, self.cropped_map_size_grid, 1))
+            padded_grid[:h, :w, :] = slice_block
+            self.cropped_grid = padded_grid
 
         self.previous_grid_x = self.grid_x
         self.previous_grid_y = self.grid_y

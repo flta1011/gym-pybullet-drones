@@ -454,3 +454,18 @@ def _computeObs(self):
             self.obs = obs  # für Visualisierung in dem Dashboard
 
             return obs
+
+        case "O10":  # einfache Werte für einfachere, robusteres Training (MLP)
+            # Get the current state of the drone
+            state = self._getDroneStateVector(0)
+
+            # Select specific values from obs and concatenate them directly
+            obs = [
+                round(state[21], 3),  # ray front
+                round(state[22], 3),  # ray back
+                round(state[23], 3),  # ray left
+                round(state[24], 3),  # ray right
+            ]
+            obs.extend(self.last_actions)
+
+            return np.array(obs, dtype=np.float32)
