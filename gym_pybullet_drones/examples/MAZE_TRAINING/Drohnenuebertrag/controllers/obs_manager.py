@@ -1,5 +1,7 @@
+import csv
 import os
 import time
+from datetime import datetime
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -273,6 +275,69 @@ class OBSManager:
         self.interest_values = np.zeros(4, dtype=int)
         self.slam_update_callback = None
 
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        output_folder = os.path.join(os.path.dirname(__file__), "observation_logs")
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+        self.observation_csv_path = os.path.join(output_folder, f"observation_log_{timestamp}.csv")
+
+    def _save_observation_to_csv(self, file_path=None):
+        """Save the current observation space to a CSV file.
+
+        Parameters
+        ----------
+        file_path : str, optional
+            Path to save the CSV file. If None, a default path will be created.
+        """
+
+        if file_path is None:
+            # Create default file path
+            timestamp = datetime.now().strftime("%Y%m%d-%H")
+            output_folder = os.path.join(os.path.dirname(__file__), "observation_logs")
+            if not os.path.exists(output_folder):
+                os.makedirs(output_folder)
+            file_path = os.path.join(output_folder, f"observation_log_{timestamp}.csv")
+
+        # Check if file already exists to determine if we need to write headers
+        file_exists = os.path.isfile(file_path)
+
+        # Open the CSV file in append mode
+        with open(file_path, "a", newline="") as csvfile:
+            writer = csv.writer(csvfile)
+
+            # If file doesn't exist, write headers based on observation type
+            if not file_exists:
+                if self.observation_type == "O8":
+                    headers = ["x", "y"]
+                    headers.extend([f"raycast_{dir}" for dir in ["front", "back", "left", "right"]])
+                    headers.extend([f"interest_{i}" for i in range(4)])
+                    headers.extend([f"last_action_{i}" for i in range(len(self.observation) - 10)])
+                    writer.writerow(headers)
+                    writer.writerow([])  # Empty line after headers
+
+                elif self.observation_type == "O9":
+                    headers = ["x", "y"]
+                    headers.extend([f"raycast_{dir}" for dir in ["front", "back", "left", "right"]])
+                    headers.extend([f"interest_{i}" for i in range(4)])
+                    headers.extend([f"last_action_{i}" for i in range(len(self.observation["last_clipped_actions"]))])
+                    writer.writerow(headers)
+                    writer.writerow([])  # Empty line after headers
+
+            # Write the current observation data
+            if self.observation_type == "O8":
+                # For O8, observation is a numpy array
+                writer.writerow(self.observation)
+
+            elif self.observation_type == "O9":
+                # For O9, observation is a dictionary
+                row_data = []
+                row_data.extend(self.observation["x"])
+                row_data.extend(self.observation["y"])
+                row_data.extend(self.observation["raycast"])
+                row_data.extend(self.observation["interest_values"])
+                row_data.extend(self.observation["last_clipped_actions"])
+                writer.writerow(row_data)
+
     def set_slam_update_callback(self, callback):
         """Set a callback function to be called after SLAM update."""
         self.slam_update_callback = callback
@@ -308,6 +373,9 @@ class OBSManager:
                         "last_clipped_actions": last_actions,
                     }
                 )
+
+        # Save the observation to CSV file
+        self._save_observation_to_csv()
 
     def _compute_interest_values(self):
         """

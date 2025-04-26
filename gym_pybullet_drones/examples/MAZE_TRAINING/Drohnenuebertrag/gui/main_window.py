@@ -155,6 +155,8 @@ class MainWindow(QtWidgets.QMainWindow):
             QtCore.Qt.Key.Key_Up: lambda: self.drone_controller.updateHover("height", 0.1),  # Ascend
             QtCore.Qt.Key.Key_Down: lambda: self.drone_controller.updateHover("height", -0.1),  # Descend
             QtCore.Qt.Key.Key_Space: self.on_emergency_stop,  # Emergency stop
+            QtCore.Qt.Key.Key_Return: self.on_start_fly,  # Start flying
+            QtCore.Qt.Key.Key_C: self.connect,  # Connect to drone
             # QtCore.Qt.Key.Key_K: self.on_ai_control_checkbox_changed(),  # Toggle AI control
         }
 
