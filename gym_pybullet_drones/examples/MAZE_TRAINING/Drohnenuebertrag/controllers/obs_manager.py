@@ -398,13 +398,13 @@ class OBSManager:
         # Iterate through free areas and calculate their relation to the drone
         for area in free_areas:
             if area[0] < min_x_y[0]:
-                self.interest_values[0] += 1  # "up"
+                self.interest_values[0] += 1  # "front"
             elif area[0] > max_x_y[0]:
-                self.interest_values[1] += 1  # "down"
+                self.interest_values[1] += 1  # "back"
             if area[1] < min_x_y[1]:
-                self.interest_values[2] += 1  # "left"
+                self.interest_values[3] += 1  # "left"
             elif area[1] > max_x_y[1]:
-                self.interest_values[3] += 1  # "right"
+                self.interest_values[2] += 1  # "right"
 
         return self.interest_values
 
@@ -487,9 +487,13 @@ class SimpleSlam:
         """
         x, y, _ = drone_pos
 
+        #!SECTION Erkenntnis damit im Training Koordinaten in Globalen waren und hier aber die Drohne Koordinaten hat
+        neues_x = x
+        neues_y = y
+
         # Iterate through 5x5 grid centered on current position --> 3x3 grid
 
-        grid_x, grid_y = self.world_to_grid(x, y)
+        grid_x, grid_y = self.world_to_grid(neues_x, neues_y)
 
         # FALLBACK für Errror "index 210 is out of bounds for axis 0 with size 180"
         if grid_x > self.grid_size:
@@ -515,8 +519,8 @@ class SimpleSlam:
             distance = raycast_results.get(direction, 9999)
             if distance < 4:  # Treffer – Wand erkannt
                 angle = angles[direction]
-                end_x = x + distance * np.cos(angle)
-                end_y = y + distance * np.sin(angle)
+                end_x = neues_x + distance * np.cos(angle)
+                end_y = neues_y + distance * np.sin(angle)
                 end_grid_x, end_grid_y = self.world_to_grid(end_x, end_y)
                 cells = self.get_line(grid_x, grid_y, end_grid_x, end_grid_y)
                 # Markiere Zellen entlang der Strahlbahn als frei:
@@ -536,8 +540,8 @@ class SimpleSlam:
 
             elif distance >= 4:  # Distanz ist auf 4 m gekappt, da das die Range des Sensors ist --> alles als frei markieren
                 angle = angles[direction]
-                end_x = x + distance * np.cos(angle)
-                end_y = y + distance * np.sin(angle)
+                end_x = neues_x + distance * np.cos(angle)
+                end_y = neues_y + distance * np.sin(angle)
                 end_grid_x, end_grid_y = self.world_to_grid(end_x, end_y)
                 cells = self.get_line(grid_x, grid_y, end_grid_x, end_grid_y)
                 # Markiere Zellen entlang der Strahlbahn als frei:

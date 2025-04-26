@@ -23,14 +23,14 @@ class DroneController(QObject):
         super().__init__()
         self.emergency_stop_active = False
         # Increased SAFE_DISTANCE for earlier detection
-        self.SAFE_DISTANCE = 0.1
+        self.SAFE_DISTANCE = -0.5
         # Increased PUSHBACK_DISTANCE for stronger reaction
-        self.PUSHBACK_VEL = 0.4
+        self.PUSHBACK_VEL = 0.2
         # AI Prediction frequency
         self.ai_prediction_counter = 0
-        self.hover_frequency = 100  # Hz
+        self.hover_frequency = 3  # Hz
         self.hover_interval = int(1000 / self.hover_frequency)  # seconds
-        self.ai_frequency = 2  # Hz
+        self.ai_frequency = 3  # Hz
         self.ai_prediction_rate = self.hover_frequency / self.ai_frequency  # Only predict every 25th cycle
 
         self.uri = uri
@@ -40,21 +40,18 @@ class DroneController(QObject):
         self.model_path = model_path
         self.latest_position = None
         self.latest_measurement = None
-        self.SPEED_FACTOR = 0.1
+        self.SPEED_FACTOR = 0.3
         self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.5}  # SECTION Höhe ändern
         self.hoverTimer = None
-        self.number_last_actions = 100  # SECTION Nummer ändern für last actions
+        self.number_last_actions = 20  # SECTION Nummer ändern für last actions
         self.last_actions = np.zeros(self.number_last_actions)
         self.obs_manager = OBSManager(observation_type=observation_type)
 
         # Safety system improvements
         self.measurement_history = []
         self.history_size = 5  # Keep track of the last 5 measurements for filtering
-        self.safety_override_active = False
-        self.safety_override_timer = 0
-        self.safety_timeout = 20  # Safety override remains active for 20 cycles (about 1 second)
         self.consecutive_danger_readings = 0
-        self.min_consecutive_readings = 2  # Require multiple consecutive readings before triggering safety
+        self.min_consecutive_readings = 3  # Require multiple consecutive readings before triggering safety
 
         self.ai_control_active = False
 
@@ -70,6 +67,8 @@ class DroneController(QObject):
         # Connect signals to slots
         self.position_updated.connect(self._on_position_updated)
         self.measurement_updated.connect(self._on_measurement_updated)
+
+        self.test_transmission_freq = 1
 
         # Load the appropriate model type based on MODEL_Version
         match model_type:
@@ -195,14 +194,24 @@ class DroneController(QObject):
             "left": data["range.left"] / 1000.0,
             "right": data["range.right"] / 1000.0,
         }
+        # print(f"Meas data recieved: {timestamp} {self.test_transmission_freq}")
+        # self.test_transmission_freq += 1
 
         # Add distance validation for sensors
         for sensor in ["front", "back", "left", "right", "up", "down"]:
             # Check if the current sensor reading exceeds 4 meters
-            if measurement[sensor] > 4.0:
+            if measurement[sensor] > 2.0:
                 # Replace with a fixed value to match simulation traning behavior
-                measurement[sensor] = int(4.0)
-                # print(f"Sensor {sensor} reading capped at 4.0m")
+                measurement[sensor] = 2.1
+                # print(f"Sensor {sensor} reading capped at 2.1m")
+
+        for sensor in ["front", "back", "left", "right"]:
+            # Check if the current sensor reading exceeds 4 meters
+
+            measurement[sensor] = measurement[sensor] - 0.15
+            if measurement[sensor] < 0.05:
+                # Replace with a fixed value to match simulation traning behavior
+                measurement[sensor] = 0.05
 
         # Update measurement history for safety filtering
         self.measurement_history.append(measurement.copy())
@@ -217,7 +226,7 @@ class DroneController(QObject):
         if self.measurement_callback:
             self.measurement_callback(measurement)
 
-        self.trigger_obs_update()
+            self.trigger_obs_update()
 
     def get_measurements(self):
         return self.latest_measurement
@@ -279,13 +288,16 @@ class DroneController(QObject):
                 self.ai_prediction_counter = 0
                 # Get current observation from obs_manager
                 observation_space = self.obs_manager.get_observation()
-                print(f"Observation space: {observation_space}")
+                # print(f"Observation space: {observation_space}")
 
                 if observation_space is not None:
                     # Update hover values based on AI prediction
                     new_x_vel, new_y_vel = self.predict_action(observation_space)
                     self.hover["x"] = new_x_vel * self.SPEED_FACTOR
                     self.hover["y"] = new_y_vel * self.SPEED_FACTOR
+            else:
+                self.hover["x"] = 0.0
+                self.hover["y"] = 0.0
 
             self.check_safety()
         self.cf.commander.send_hover_setpoint(self.hover["x"], self.hover["y"], self.hover["yaw"], self.hover["height"])
@@ -345,7 +357,7 @@ class DroneController(QObject):
         self.hover["x"] = 0.0
         self.hover["y"] = 0.0
         self.hover["yaw"] = 0.0
-        print("[SAFETY] Drone movement stopped.")
+        # print("[SAFETY] Drone movement stopped.")
 
         # Determine pushback direction
         if direction == "front" and opposite > self.PUSHBACK_VEL:
@@ -380,16 +392,65 @@ class DroneController(QObject):
             elif self.model_type == "M1" or self.model_type == "M2" or self.model_type == "M3" or self.model_type == "M4" or self.model_type == "M5":
                 self.update_last_actions(2)
                 self.last_action_was_pushback = True
+
+        # if direction == "front" and opposite > self.PUSHBACK_VEL:
+        #     self.hover["x"] = 0.0
+        #     self.hover["y"] = 0.0
+        #     self.hover["z"] = 0.0
+        #     self.start_fly = False
+        #     # self.hover["x"] = -self.PUSHBACK_VEL * 0.5  # Push backward
+        #     if self.model_type == "M6":
+        #         self.update_last_actions(np.array([-self.PUSHBACK_VEL, 0]))  # No lateral movement for SAC
+        #         self.last_action_was_pushback = True
+        #     elif self.model_type == "M1" or self.model_type == "M2" or self.model_type == "M3" or self.model_type == "M4" or self.model_type == "M5":
+        #         self.update_last_actions(1)  # Update last action to backward
+        #         self.last_action_was_pushback = True
+        # elif direction == "back" and opposite > self.PUSHBACK_VEL:
+        #     self.hover["x"] = 0.0
+        #     self.hover["y"] = 0.0
+        #     self.hover["z"] = 0.0
+        #     self.start_fly = False
+        #     # self.hover["x"] = self.PUSHBACK_VEL * 0.5  # Push forward
+        #     if self.model_type == "M6":
+        #         self.update_last_actions(np.array([self.PUSHBACK_VEL, 0]))
+        #         self.last_action_was_pushback = True
+        #     elif self.model_type == "M1" or self.model_type == "M2" or self.model_type == "M3" or self.model_type == "M4" or self.model_type == "M5":
+        #         self.update_last_actions(0)
+        #         self.last_action_was_pushback = True
+        # elif direction == "left" and opposite > self.PUSHBACK_VEL:
+        #     self.hover["x"] = 0.0
+        #     self.hover["y"] = 0.0
+        #     self.hover["z"] = 0.0
+        #     self.start_fly = False
+        #     # self.hover["y"] = -self.PUSHBACK_VEL * 0.5  # Push right
+        #     if self.model_type == "M6":
+        #         self.update_last_actions(np.array([0, -self.PUSHBACK_VEL]))
+        #         self.last_action_was_pushback = True
+        #     elif self.model_type == "M1" or self.model_type == "M2" or self.model_type == "M3" or self.model_type == "M4" or self.model_type == "M5":
+        #         self.update_last_actions(3)
+        #         self.last_action_was_pushback = True
+        # elif direction == "right" and opposite > self.PUSHBACK_VEL:
+        #     self.hover["x"] = 0.0
+        #     self.hover["y"] = 0.0
+        #     self.hover["z"] = 0.0
+        #     self.start_fly = False
+        #     # self.hover["y"] = self.PUSHBACK_VEL * 0.5  # Push left
+        #     if self.model_type == "M6":
+        #         self.update_last_actions(np.array([0, self.PUSHBACK_VEL]))
+        #         self.last_action_was_pushback = True
+        #     elif self.model_type == "M1" or self.model_type == "M2" or self.model_type == "M3" or self.model_type == "M4" or self.model_type == "M5":
+        #         self.update_last_actions(2)
+        #         self.last_action_was_pushback = True
         else:
             self.last_action_was_pushback = False
 
         # Ensure no collision during pushback
         if adjacent1 < self.SAFE_DISTANCE or adjacent2 < self.SAFE_DISTANCE:
-            print("[SAFETY] Pushback canceled due to nearby walls.")
+            # print("[SAFETY] Pushback canceled due to nearby walls.")
             self.hover["x"] = 0.0
             self.hover["y"] = 0.0
 
-        print(f"[SAFETY] Updated hover for pushback: {self.hover}")
+        # print(f"[SAFETY] Updated hover for pushback: {self.hover}")
 
         self.pushback_hover = self.hover.copy()
 
