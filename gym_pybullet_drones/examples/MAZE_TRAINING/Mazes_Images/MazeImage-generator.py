@@ -46,7 +46,7 @@ for csv_file in csv_files:
 # ----------------------
 image_files = sorted([f for f in os.listdir(script_dir) if f.endswith(".png") and "map_" in f], key=lambda x: int("".join(filter(str.isdigit, x))))
 
-fig, axes = plt.subplots(6, 5, figsize=(20, 24))
+fig, axes = plt.subplots(7, 5, figsize=(20, 28))
 # Increase vertical spacing between subplots
 plt.subplots_adjust(hspace=0.4)
 axes = axes.flatten()
