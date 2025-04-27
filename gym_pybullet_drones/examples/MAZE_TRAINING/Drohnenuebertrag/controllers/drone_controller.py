@@ -4,6 +4,7 @@ import time
 import cflib
 import cflib.crazyflie
 import numpy as np
+import pandas as pd
 from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.log import LogConfig
 from cflib.utils import uri_helper
@@ -12,7 +13,6 @@ from PyQt6.QtCore import QObject, pyqtSignal
 from stable_baselines3 import DQN, PPO, SAC
 
 from .obs_manager import OBSManager
-import pandas as pd
 
 
 class DroneController(QObject):
@@ -24,27 +24,20 @@ class DroneController(QObject):
         super().__init__()
         self.emergency_stop_active = False
         # Increased SAFE_DISTANCE for earlier detection
-        self.SAFE_DISTANCE = 0.15
+        self.SAFE_DISTANCE = 0.1
         # Increased PUSHBACK_DISTANCE for stronger reaction
         self.PUSHBACK_VEL = 0.2
         # AI Prediction frequency
         self.ai_prediction_counter = 0
-        self.hover_frequency = 10  # Hz
+        self.hover_frequency = 5  # Hz
         self.hover_interval = int(1000 / self.hover_frequency)  # seconds
-        self.ai_frequency = 10 # Hz
+        self.ai_frequency = 5  # Hz
         self.ai_prediction_rate = self.hover_frequency / self.ai_frequency  # Only predict every 25th cycle
         # self.yaw_counter1 = 0
         # self.yaw_counter2 = 0
         # self.yaw_counterLimit = 10
         # self.yaw_counterLimit2 = 15
-        self.measurement_beforemalipulation = {
-            "front": 0.0,
-            "back": 0.0,
-            "left": 0.0,
-            "right": 0.0,
-            "up": 0.0,
-            "down": 0.0
-        }
+        self.measurement_beforemalipulation = {"front": 0.0, "back": 0.0, "left": 0.0, "right": 0.0, "up": 0.0, "down": 0.0}
         self.TARGET_FOUND_DISTANCE = 0.5
 
         self.uri = uri
@@ -107,7 +100,6 @@ class DroneController(QObject):
             case _:
                 print(f"[ERROR]: Unknown model version in TEST-(PREDICTION)-MODE: {model_type}")
 
-        
         if model_type == "M1" or model_type == "M2" or model_type == "M3" or model_type == "M4" or model_type == "M5":
 
             policy = self.model.policy
@@ -121,7 +113,7 @@ class DroneController(QObject):
                 print(f"Layer Name: {name}")
                 print(module)
                 # Wenn du auf Gewichte willst:
-                if hasattr(module, 'weight'):
+                if hasattr(module, "weight"):
                     print(f"Gewicht: {module.weight.shape}")
                     print(f"Werte: {module.weight}")
 
@@ -135,24 +127,20 @@ class DroneController(QObject):
             feature_weights = np.abs(weights).sum(axis=0)
 
             # Erstelle ein DataFrame mit den Input-Features und ihren Gesamtgewichtungen
-            feature_weights_df = pd.DataFrame({
-                'Feature': [f"Feature {i:03}" for i in range(weights.shape[1])],  # Führe führende Nullen ein
-                'Total Weight': feature_weights
-            })
+            feature_weights_df = pd.DataFrame({"Feature": [f"Feature {i:03}" for i in range(weights.shape[1])], "Total Weight": feature_weights})  # Führe führende Nullen ein
 
             # Sortiere nach den **größten Gewichtungen**
-            sorted_feature_weights_df = feature_weights_df.sort_values(by='Total Weight', ascending=False)
+            sorted_feature_weights_df = feature_weights_df.sort_values(by="Total Weight", ascending=False)
 
             # Speichere das Ergebnis in einer neuen CSV
             sorted_feature_weights_df.to_csv(f"feature_weight_overview{model_type}.csv", index=False)
 
             print("✅ CSV mit einer Übersicht der Feature-Gewichtungen wurde gespeichert!")
 
-
         elif model_type == "M6":
-        ### sac
+            ### sac
 
-                    # Überprüfe die Struktur des SAC-Modells
+            # Überprüfe die Struktur des SAC-Modells
             print(self.model.__dict__)
 
             # Zugriff auf das Q-Netzwerk (Critic)
@@ -165,13 +153,10 @@ class DroneController(QObject):
                 feature_weights_qf1 = np.abs(weights_qf1).sum(axis=0)
 
                 # Erstelle ein DataFrame mit den Input-Features und ihren Gesamtgewichtungen
-                feature_weights_df_qf1 = pd.DataFrame({
-                    'Feature': [f"Feature {i:03}" for i in range(weights_qf1.shape[1])],  # Führe führende Nullen ein
-                    'Total Weight': feature_weights_qf1
-                })
+                feature_weights_df_qf1 = pd.DataFrame({"Feature": [f"Feature {i:03}" for i in range(weights_qf1.shape[1])], "Total Weight": feature_weights_qf1})  # Führe führende Nullen ein
 
                 # Sortiere nach den **größten Gewichtungen**
-                sorted_feature_weights_df_qf1 = feature_weights_df_qf1.sort_values(by='Total Weight', ascending=False)
+                sorted_feature_weights_df_qf1 = feature_weights_df_qf1.sort_values(by="Total Weight", ascending=False)
 
                 # Speichere das Ergebnis in einer neuen CSV
                 sorted_feature_weights_df_qf1.to_csv("feature_weight_overview_sac.csv", index=False)
@@ -188,19 +173,14 @@ class DroneController(QObject):
             # Berechne die **Summe der absoluten Werte** für jedes Input-Feature (jede Spalte)
             feature_weights_actor = np.abs(weights_actor).sum(axis=0)
 
-            feature_weights_df_actor = pd.DataFrame({
-                'Feature': [f"Feature {i:03}" for i in range(weights_actor.shape[1])],
-                'Total Weight': feature_weights_actor
-            })
+            feature_weights_df_actor = pd.DataFrame({"Feature": [f"Feature {i:03}" for i in range(weights_actor.shape[1])], "Total Weight": feature_weights_actor})
 
-            sorted_feature_weights_df_actor = feature_weights_df_actor.sort_values(by='Total Weight', ascending=False)
+            sorted_feature_weights_df_actor = feature_weights_df_actor.sort_values(by="Total Weight", ascending=False)
 
             # Speichere das Ergebnis in einer neuen CSV für das Policy-Netzwerk (Actor)
             sorted_feature_weights_df_actor.to_csv("feature_weight_overview_sac_actor.csv", index=False)
 
             print("✅ CSV mit einer Übersicht der Feature-Gewichtungen des SAC Policy-Netzwerks wurde gespeichert!")
-
-
 
     def set_position_callback(self, callback):
         self.position_callback = callback
@@ -318,7 +298,7 @@ class DroneController(QObject):
 
         for sensor in ["front", "back", "left", "right"]:
             # Check if the current sensor reading exceeds 4 meters
-            
+
             measurement[sensor] = measurement[sensor] - 0.25
             if measurement[sensor] < 0.0:
                 # Replace with a fixed value to match simulation traning behavior
@@ -409,7 +389,6 @@ class DroneController(QObject):
                     self.hover["x"] = new_x_vel * self.SPEED_FACTOR
                     self.hover["y"] = new_y_vel * self.SPEED_FACTOR
 
-
             self.check_safety()
         self.cf.commander.send_hover_setpoint(self.hover["x"], self.hover["y"], self.hover["yaw"], self.hover["height"])
 
@@ -434,19 +413,17 @@ class DroneController(QObject):
         # left = avg_measurement.get("left", float("inf"))
         # right = avg_measurement.get("right", float("inf"))
 
-
         # Get distance sensor readings
         front = self.measurement_beforemalipulation["front"]
         back = self.measurement_beforemalipulation["back"]
         left = self.measurement_beforemalipulation["left"]
         right = self.measurement_beforemalipulation["right"]
 
-
         # Check if any sensor detects a wall too close
         if self.measurement_beforemalipulation["up"] <= self.TARGET_FOUND_DISTANCE:
             self.hover["x"] = 0.0
             self.hover["y"] = 0.0
-            self.hover["height"] = 0 
+            self.hover["height"] = 0
             self.ai_control_active = False
             self.emergency_stop_active = True
             self.start_fly = False
@@ -523,7 +500,7 @@ class DroneController(QObject):
         if direction == "front" and opposite > self.PUSHBACK_VEL:
             self.hover["x"] = 0.0
             self.hover["y"] = 0.0
-            self.hover["height"] = 0 
+            self.hover["height"] = 0
             self.emergency_stop_active = True
             self.ai_control_active = False
             self.start_fly = False
@@ -537,7 +514,7 @@ class DroneController(QObject):
         elif direction == "back" and opposite > self.PUSHBACK_VEL:
             self.hover["x"] = 0.0
             self.hover["y"] = 0.0
-            self.hover["height"] = 0 
+            self.hover["height"] = 0
             self.ai_control_active = False
             self.emergency_stop_active = True
             self.start_fly = False
@@ -551,7 +528,7 @@ class DroneController(QObject):
         elif direction == "left" and opposite > self.PUSHBACK_VEL:
             self.hover["x"] = 0.0
             self.hover["y"] = 0.0
-            self.hover["height"] = 0 
+            self.hover["height"] = 0
             self.ai_control_active = False
             self.emergency_stop_active = True
             self.start_fly = False
@@ -565,7 +542,7 @@ class DroneController(QObject):
         elif direction == "right" and opposite > self.PUSHBACK_VEL:
             self.hover["x"] = 0.0
             self.hover["y"] = 0.0
-            self.hover["height"] = 0 
+            self.hover["height"] = 0
             self.emergency_stop_active = True
             self.ai_control_active = False
             self.start_fly = False
