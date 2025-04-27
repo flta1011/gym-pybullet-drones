@@ -12,6 +12,7 @@ from PyQt6.QtCore import QObject, pyqtSignal
 from stable_baselines3 import DQN, PPO, SAC
 
 from .obs_manager import OBSManager
+import pandas as pd
 
 
 class DroneController(QObject):
@@ -105,6 +106,101 @@ class DroneController(QObject):
                 print(f"Loaded SAC model from {model_path}")
             case _:
                 print(f"[ERROR]: Unknown model version in TEST-(PREDICTION)-MODE: {model_type}")
+
+        
+        if model_type == "M1" or model_type == "M2" or model_type == "M3" or model_type == "M4" or model_type == "M5":
+
+            policy = self.model.policy
+            q_net = policy.q_net
+
+            # Alle Layers auflisten
+            print(q_net)
+
+            # Zugriff auf die einzelnen Layers:
+            for name, module in q_net.named_children():
+                print(f"Layer Name: {name}")
+                print(module)
+                # Wenn du auf Gewichte willst:
+                if hasattr(module, 'weight'):
+                    print(f"Gewicht: {module.weight.shape}")
+                    print(f"Werte: {module.weight}")
+
+            # Zugriff auf das erste Linear-Layer
+            first_linear_layer = self.model.policy.q_net.q_net[0]
+
+            # Hol dir die Gewichte (nur die Werte, nicht den Bias)
+            weights = first_linear_layer.weight.detach().cpu().numpy()
+
+            # Berechne die **Summe der absoluten Werte** für jedes Input-Feature (jede Spalte)
+            feature_weights = np.abs(weights).sum(axis=0)
+
+            # Erstelle ein DataFrame mit den Input-Features und ihren Gesamtgewichtungen
+            feature_weights_df = pd.DataFrame({
+                'Feature': [f"Feature {i:03}" for i in range(weights.shape[1])],  # Führe führende Nullen ein
+                'Total Weight': feature_weights
+            })
+
+            # Sortiere nach den **größten Gewichtungen**
+            sorted_feature_weights_df = feature_weights_df.sort_values(by='Total Weight', ascending=False)
+
+            # Speichere das Ergebnis in einer neuen CSV
+            sorted_feature_weights_df.to_csv("feature_weight_overview.csv", index=False)
+
+            print("✅ CSV mit einer Übersicht der Feature-Gewichtungen wurde gespeichert!")
+
+
+        elif model_type == "M6":
+        ### sac
+
+                    # Überprüfe die Struktur des SAC-Modells
+            print(self.model.__dict__)
+
+            # Zugriff auf das Q-Netzwerk (Critic)
+            try:
+                # In Stable Baselines3 ist das Q-Netzwerk (Critic) normalerweise unter 'qf1' und 'qf2'
+                qf1_layer = self.model.qf1
+                weights_qf1 = qf1_layer.parameters().__next__().detach().cpu().numpy()  # Zugriff auf die Gewichte der ersten Schicht
+
+                # Berechne die **Summe der absoluten Werte** für jedes Input-Feature (jede Spalte)
+                feature_weights_qf1 = np.abs(weights_qf1).sum(axis=0)
+
+                # Erstelle ein DataFrame mit den Input-Features und ihren Gesamtgewichtungen
+                feature_weights_df_qf1 = pd.DataFrame({
+                    'Feature': [f"Feature {i:03}" for i in range(weights_qf1.shape[1])],  # Führe führende Nullen ein
+                    'Total Weight': feature_weights_qf1
+                })
+
+                # Sortiere nach den **größten Gewichtungen**
+                sorted_feature_weights_df_qf1 = feature_weights_df_qf1.sort_values(by='Total Weight', ascending=False)
+
+                # Speichere das Ergebnis in einer neuen CSV
+                sorted_feature_weights_df_qf1.to_csv("feature_weight_overview_sac_qf1.csv", index=False)
+
+                print("✅ CSV mit einer Übersicht der Feature-Gewichtungen des SAC QF1-Modells wurde gespeichert!")
+
+            except AttributeError:
+                print("❌ qf1 existiert nicht. Überprüfe die Modellstruktur mit 'print(self.model)'.")
+
+            # Zugriff auf das Policy-Netzwerk (Actor)
+            actor_layer = self.model.policy.actor  # Direkt auf den Actor zugreifen
+            weights_actor = actor_layer.parameters().__next__().detach().cpu().numpy()
+
+            # Berechne die **Summe der absoluten Werte** für jedes Input-Feature (jede Spalte)
+            feature_weights_actor = np.abs(weights_actor).sum(axis=0)
+
+            feature_weights_df_actor = pd.DataFrame({
+                'Feature': [f"Feature {i:03}" for i in range(weights_actor.shape[1])],
+                'Total Weight': feature_weights_actor
+            })
+
+            sorted_feature_weights_df_actor = feature_weights_df_actor.sort_values(by='Total Weight', ascending=False)
+
+            # Speichere das Ergebnis in einer neuen CSV für das Policy-Netzwerk (Actor)
+            sorted_feature_weights_df_actor.to_csv("feature_weight_overview_sac_actor.csv", index=False)
+
+            print("✅ CSV mit einer Übersicht der Feature-Gewichtungen des SAC Policy-Netzwerks wurde gespeichert!")
+
+
 
     def set_position_callback(self, callback):
         self.position_callback = callback
