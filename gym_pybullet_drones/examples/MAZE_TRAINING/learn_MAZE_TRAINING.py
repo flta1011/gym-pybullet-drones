@@ -47,11 +47,11 @@ from gym_pybullet_drones.utils.utils import str2bool, sync
 #####################################################################################################
 
 ####### TRAINING-MODE #######
-Training_Mode = "Training"  # "Training" oder "Test"
+Training_Mode = "Test"  # "Training" oder "Test"
 GUI_Mode = "Train"  # "Train" oder "Test" oder "NoGUI"
 
-DEFAULT_USE_PRETRAINED_MODEL = False
-BEST_PRETAINED_MODEL_TO_USE = "DQN_MultiInput_schwere_Mazes"  # folgende Modelle vorausgewählt für die Verwendung: "PPO_einfache_Mazes", "PPO_schwere_Mazes", "DQN_MLP_einfache_Mazes", "DQN_MLP_schwere_Mazes", "DQN_CNN_einfache_Mazes", "DQN_MultiInput_einfache_Mazes","DQN_MultiInput_schwere_Mazes", "SAC_einfache_Mazes", "SAC_schwere_Mazes", "SAC_neues_Maze_29"
+DEFAULT_USE_PRETRAINED_MODEL = True
+BEST_PRETAINED_MODEL_TO_USE = "SAC_schwere_Mazes"  # folgende Modelle vorausgewählt für die Verwendung: "Individuelle_Auswahl","PPO_einfache_Mazes", "PPO_schwere_Mazes", "DQN_MLP_einfache_Mazes", "DQN_MLP_schwere_Mazes", "DQN_CNN_einfache_Mazes", "DQN_MultiInput_einfache_Mazes","DQN_MultiInput_schwere_Mazes", "SAC_einfache_Mazes", "SAC_schwere_Mazes", "SAC_neues_Maze_29"
 
 ####### GUI-SETTINGS (u.a. Debug-GUI) #######
 DEFAULT_USER_DEBUG_GUI = False
@@ -59,34 +59,24 @@ DEFAULT_ADVANCED_STATUS_PLOT = False
 DEFAULT_DASH_ACTIVE = False
 
 ####### Ordered Maze and Starting Position Settings #######
-DEFAULT_UseOrderedMazeAndStartingPositionInsteadOfRandom = False
+DEFAULT_UseOrderedMazeAndStartingPositionInsteadOfRandom = True
 DEFAULT_NumberOfRunsOnEachStartingPosition = 3
 List_MazestoUseForOrderedMazes = (
     22,
     24,
-    # 25,
-    # 0,
-    # 5,
-    # 8,
-    # 15,
-    # 26,
-    # 4,
-    # 7,
-    # 14,
+    25,
+    0,
+    5,
+    8,
+    15,
+    26,
+    4,
+    7,
+    14,
 )  # einfache Mazes Training: (22, 24, 25), schwere Mazes Training: (0, 5, 8, 15, 26), schwere Mazes unbekannt: (6,10, 13)
 
-# List_MazestoUseForOrderedMazes = (
-#     22,
-#     24,
-#     25,
-#     0,
-#     5,
-#     8,
-#     15,
-#     26,
-# )
 List_Start_PositionsToUseForOrderedMazes = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
-List_Start_PositionsToUseForOrderedMazes = (0, 1)
+
 
 ####### Hyperparameter-Set speichern (NUR IM/FÜR den TRAINING-MODE) #######
 ## ACHTUNG: unten USE_PRETRAINED_MODEL muss auf False gesetzt werden, da sonst die Werte überschrieben werden! ###
@@ -130,6 +120,14 @@ project_root = os.path.dirname(os.path.dirname(os.path.dirname(script_dir)))
 
 if DEFAULT_USE_PRETRAINED_MODEL == True:
     match BEST_PRETAINED_MODEL_TO_USE:
+        case "Individuelle_Auswahl":
+            DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
+                project_root, "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M6_R6_O10_A3_TR1_T1_20250426-232945_SAC_O10/_100000_steps.zip"
+            )
+            DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(
+                project_root,
+                "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M6_R6_O10_A3_TR1_T1_20250426-232945_SAC_O10/M6_R6_O10_A3_TR1_T1_20250426-232945.csv",
+            )
         case "PPO_einfache_Mazes":
             DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
                 project_root, "gym_pybullet_drones/Auswertung_der_Modelle_Beste_Modelle/M1_R6_O8_A2_TR1_T1_20250423-182819/save-04.23.2025_18.28.19/final_model.zip"
@@ -225,7 +223,7 @@ if Training_Mode == "Training":
     DEFAULT_NUMBER_LAST_ACTIONS = 100
     DEFAULT_PYB_FREQ = 100
     DEFAULT_CTRL_FREQ = 50
-    DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 2  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
+    DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ = 5  # mit 5hz fliegt die Drohne noch zu oft an die Wand, ohne das das Pushback aktiv werden kann (mit Drehung aktiv) -> 10 HZ
     DEFAULT_EPISODE_LEN_SEC = 5 * 60  # 15 * 60
     DEFAULT_PUSHBACK_ACTIVE = False
     DEFAULT_EVAL_FREQ = 5 * 1e4
@@ -234,11 +232,11 @@ if Training_Mode == "Training":
 
     DEFAULT_TRAIN_TIMESTEPS = Ziel_Training_TIME_In_Simulation * DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ  # nach 100000 Steps sollten schon mehrbahre Erkenntnisse da sein
 
-    DEFAULT_VelocityScale = 0.35  # nicht 0,5, damit es nicht gegen die Wand fliegt
+    DEFAULT_VelocityScale = 0.5  # nicht 0,5, damit es nicht gegen die Wand fliegt
 
     #########REWARD-SETTINGS##########
     # Bei wie viel Prozent der Fläche einen Print ausgeben
-    DEFAULT_REWARD_FOR_NEW_FIELD = 4
+    DEFAULT_REWARD_FOR_NEW_FIELD = 2
     DEFAULT_Punishment_for_Step = 0
     DEFAULT_Multiplier_Collision_Penalty = 2
     DEFAULT_no_collision_reward = 0  # nur bei R6 aktiv! Ist das Zuckerbrot für den Abstand zur Wand
@@ -252,9 +250,9 @@ if Training_Mode == "Training":
     DEFAULT_MaxRoundsOnOneMaze = 6  # Force a maze change after this many rounds, regardless of mode
     DEFAULT_MaxRoundsSameStartingPositions = 2  # Force a position change after this many rounds, regardless of mode
     DEFAULT_collision_penalty_terminated = (
-        -10 / DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ
+        -5 / DEFAULT_REWARD_AND_ACTION_CHANGE_FREQ
     )  # mit -10 Trainiert SAC gut (freq 2, bevor geteilt wurde!!), bleibt aber noch ca. 50 mal an der Wand hängen-- --> Teielen, um die Bestrafung je Sekunde an der Wand zu normieren
-    DEFAULT_Terminated_Wall_Distance = 0.3  # DAS IST AUCH DER WERT; ABER DER DIE WANDBESTRAFUNG IM R5/R6 gegeben wird. --> worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25;; WAR ORIGINAL ALEX BEI =0,15!!
+    DEFAULT_Terminated_Wall_Distance = 0.35  # DAS IST AUCH DER WERT; ABER DER DIE WANDBESTRAFUNG IM R5/R6 gegeben wird. --> worst case betrachtung; wenn Drohe im 45 Grad winkel auf die Wand schaut muss dieser mit cos(45) verrechnet werden --> Distanz: 0,25 -> Worstcase-Distanz = 0,18 ; 0,3 -> 0,21; 0,35 --> 0,25;; WAR ORIGINAL ALEX BEI =0,15!!
 elif DEFAULT_USE_PRETRAINED_MODEL == True:
     # Read the CSV file manually to avoid pandas header issues
     print(f"\nReading parameters from CSV file: {DEFAULT_PRETRAINED_MODEL_CSV_PATH}")
