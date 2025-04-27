@@ -44,10 +44,26 @@ if __name__ == "__main__":
     # model_type = "M6"
     # model_path = "/home/moritz_s/Desktop/SAC_025_Abstand/_700000_steps.zip"
 
-    observation_type = "O8"
+    # observation_type = "O8"
+    # action_type = "A3"
+    # model_type = "M6"
+    # model_path = "/home/moritz_s/Desktop/SAC_025_Abstand_800000/_800000_steps.zip"
+
+    #############################
+    # New Models 27.04.2025 (Flo)
+    #############################
+
+    # # 40 last clipped actions
+    # observation_type = "O9"
+    # action_type = "A2"
+    # model_type = "M5"
+    # model_path = "/home/moritz_s/Desktop/20250427_Models/M5_R6_O9_A2_TR1_T1_20250427-010154_DQN-Neue_Mazes_0-3_Abstand/_1700000_steps.zip"
+
+    # 100 last clipped actions
+    observation_type = "O10"
     action_type = "A3"
     model_type = "M6"
-    model_path = "/home/moritz_s/Desktop/SAC_025_Abstand_800000/_800000_steps.zip"
+    model_path = "/home/moritz_s/Desktop/20250427_Models/M6_R6_O10_A3_TR1_T1_20250427-003400_SAC-O10_0.35-abstand-neue-Mazes-ohne-SLAM/_2200000_steps.zip"
 
     # SECTION Depending on which drone you set 60 or 80 for the channel
     URI = uri_helper.uri_from_env(default="radio://0/60/2M/E7E7E7E7E7")

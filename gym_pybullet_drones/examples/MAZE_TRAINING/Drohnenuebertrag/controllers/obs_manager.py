@@ -8,8 +8,8 @@ import numpy as np
 from gymnasium import spaces
 
 
-def _observationSpace(observation_type, cropped_map_size_grid):
-    last_actions_shape = 20  # SECTION Nummer ändern für last actions
+def _observationSpace(observation_type, cropped_map_size_grid, number_last_actions):
+    last_actions_shape = number_last_actions  # SECTION Nummer ändern für last actions
 
     match observation_type:
         case "O1":  # X, Y, YAW, Raycast readings
@@ -266,12 +266,37 @@ def _observationSpace(observation_type, cropped_map_size_grid):
 
             return observationSpace
 
+        case "O10":
+            """
+            - Channel 1: Raycast readings
+            - Channel 2: n last Clipped Actions
+            """
+            last_actions_size = last_actions_shape  # Number of last clipped actions
+
+            # Define the low and high bounds for the flattened observation
+            low = np.concatenate(
+                (
+                    np.zeros(4, dtype=np.float32),  # Raycast readings (values in [0, 4])
+                    np.zeros(last_actions_size, dtype=np.float32),  # Last clipped actions
+                )
+            )
+
+            high = np.concatenate(
+                (
+                    np.full(4, 4, dtype=np.float32),  # Raycast readings (values in [0, 4])
+                    np.full(last_actions_size, 6, dtype=np.float32),  # Last clipped actions
+                )
+            )
+
+            # Return the flattened observation space
+            return spaces.Box(low=low, high=high, dtype=np.float32)
+
 
 class OBSManager:
-    def __init__(self, observation_type):
+    def __init__(self, observation_type, number_last_actions):
         self.SLAM = SimpleSlam()
         self.observation_type = observation_type
-        self.observation = _observationSpace(self.observation_type, self.SLAM.cropped_map_size_grid)
+        self.observation = _observationSpace(self.observation_type, self.SLAM.cropped_map_size_grid, number_last_actions)
         self.interest_values = np.zeros(4, dtype=int)
         self.slam_update_callback = None
 
@@ -323,6 +348,12 @@ class OBSManager:
                     writer.writerow(headers)
                     writer.writerow([])  # Empty line after headers
 
+                elif self.observation_type == "O10":
+                    headers.extend([f"raycast_{dir}" for dir in ["front", "back", "left", "right"]])
+                    headers.extend([f"last_action_{i}" for i in range(len(self.observation) - 10)])
+                    writer.writerow(headers)
+                    writer.writerow([])  # Empty line after headers
+
             # Write the current observation data
             if self.observation_type == "O8":
                 # For O8, observation is a numpy array
@@ -337,6 +368,10 @@ class OBSManager:
                 row_data.extend(self.observation["interest_values"])
                 row_data.extend(self.observation["last_clipped_actions"])
                 writer.writerow(row_data)
+
+            if self.observation_type == "O10":
+                # For O10, observation is a numpy array
+                writer.writerow(self.observation)
 
     def set_slam_update_callback(self, callback):
         """Set a callback function to be called after SLAM update."""
@@ -373,6 +408,15 @@ class OBSManager:
                         "last_clipped_actions": last_actions,
                     }
                 )
+
+            case "O10":
+                """X-Pos, Y-Pos, Raycast Readings, Interest Values, Last Actions"""
+                # Create the observation array properly
+                # First, create a list of all values
+                obs_list = [measurements["front"], measurements["back"], measurements["left"], measurements["right"]]
+                obs_list.extend(last_actions)
+                # Convert the whole list to a numpy array
+                self.observation = np.array(obs_list)
 
         # Save the observation to CSV file
         self._save_observation_to_csv()

@@ -28,10 +28,14 @@ class DroneController(QObject):
         self.PUSHBACK_VEL = 0.2
         # AI Prediction frequency
         self.ai_prediction_counter = 0
-        self.hover_frequency = 3  # Hz
+        self.hover_frequency = 5  # Hz
         self.hover_interval = int(1000 / self.hover_frequency)  # seconds
-        self.ai_frequency = 3  # Hz
+        self.ai_frequency = 5  # Hz
         self.ai_prediction_rate = self.hover_frequency / self.ai_frequency  # Only predict every 25th cycle
+        self.yaw_counter1 = 0
+        self.yaw_counter2 = 0
+        self.yaw_counterLimit = 10
+        self.yaw_counterLimit2 = 15
 
         self.uri = uri
         self.observation_type = observation_type
@@ -40,12 +44,12 @@ class DroneController(QObject):
         self.model_path = model_path
         self.latest_position = None
         self.latest_measurement = None
-        self.SPEED_FACTOR = 0.3
+        self.SPEED_FACTOR = 0.25
         self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.5}  # SECTION Höhe ändern
         self.hoverTimer = None
-        self.number_last_actions = 20  # SECTION Nummer ändern für last actions
+        self.number_last_actions = 100  # SECTION Nummer ändern für last actions
         self.last_actions = np.zeros(self.number_last_actions)
-        self.obs_manager = OBSManager(observation_type=observation_type)
+        self.obs_manager = OBSManager(observation_type=observation_type, number_last_actions=self.number_last_actions)
 
         # Safety system improvements
         self.measurement_history = []
@@ -208,7 +212,7 @@ class DroneController(QObject):
         for sensor in ["front", "back", "left", "right"]:
             # Check if the current sensor reading exceeds 4 meters
 
-            measurement[sensor] = measurement[sensor] - 0.15
+            measurement[sensor] = measurement[sensor] - 0.05
             if measurement[sensor] < 0.05:
                 # Replace with a fixed value to match simulation traning behavior
                 measurement[sensor] = 0.05
@@ -284,6 +288,8 @@ class DroneController(QObject):
             print(f"[AI Control] AI control is active. Current hover: {self.hover}")
             # Only predict at 2Hz (every 25 cycles at 50Hz)
             self.ai_prediction_counter += 1
+            self.yaw_counter1 += 1
+            self.yaw_counter2 += 1
             if self.ai_prediction_counter >= self.ai_prediction_rate:
                 self.ai_prediction_counter = 0
                 # Get current observation from obs_manager
@@ -295,9 +301,11 @@ class DroneController(QObject):
                     new_x_vel, new_y_vel = self.predict_action(observation_space)
                     self.hover["x"] = new_x_vel * self.SPEED_FACTOR
                     self.hover["y"] = new_y_vel * self.SPEED_FACTOR
-            else:
-                self.hover["x"] = 0.0
-                self.hover["y"] = 0.0
+            if self.yaw_counter1 == self.yaw_counterLimit:
+                self.hover["yaw"] = self.hover["yaw"] + 5
+
+            if self.yaw_counter2 == self.yaw_counterLimit2:
+                self.hover["yaw"] = self.hover["yaw"] - 5
 
             self.check_safety()
         self.cf.commander.send_hover_setpoint(self.hover["x"], self.hover["y"], self.hover["yaw"], self.hover["height"])
