@@ -144,7 +144,7 @@ class DroneController(QObject):
             sorted_feature_weights_df = feature_weights_df.sort_values(by='Total Weight', ascending=False)
 
             # Speichere das Ergebnis in einer neuen CSV
-            sorted_feature_weights_df.to_csv("feature_weight_overview.csv", index=False)
+            sorted_feature_weights_df.to_csv(f"feature_weight_overview{model_type}.csv", index=False)
 
             print("✅ CSV mit einer Übersicht der Feature-Gewichtungen wurde gespeichert!")
 
@@ -174,7 +174,7 @@ class DroneController(QObject):
                 sorted_feature_weights_df_qf1 = feature_weights_df_qf1.sort_values(by='Total Weight', ascending=False)
 
                 # Speichere das Ergebnis in einer neuen CSV
-                sorted_feature_weights_df_qf1.to_csv("feature_weight_overview_sac_qf1.csv", index=False)
+                sorted_feature_weights_df_qf1.to_csv("feature_weight_overview_sac.csv", index=False)
 
                 print("✅ CSV mit einer Übersicht der Feature-Gewichtungen des SAC QF1-Modells wurde gespeichert!")
 
