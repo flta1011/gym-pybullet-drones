@@ -24,20 +24,21 @@ class DroneController(QObject):
         super().__init__()
         self.emergency_stop_active = False
         # Increased SAFE_DISTANCE for earlier detection
-        self.SAFE_DISTANCE = 0.1
+        self.SAFE_DISTANCE = 0.25
+        self.SAFE_DISTANCE_Landing = 0.1
         # Increased PUSHBACK_DISTANCE for stronger reaction
         self.PUSHBACK_VEL = 0.2
         # AI Prediction frequency
         self.ai_prediction_counter = 0
-        self.hover_frequency = 5  # Hz
+        self.hover_frequency = 50  # Hz
         self.hover_interval = int(1000 / self.hover_frequency)  # seconds
-        self.ai_frequency = 5  # Hz
+        self.ai_frequency = 50  # Hz
         self.ai_prediction_rate = self.hover_frequency / self.ai_frequency  # Only predict every 25th cycle
         # self.yaw_counter1 = 0
         # self.yaw_counter2 = 0
         # self.yaw_counterLimit = 10
         # self.yaw_counterLimit2 = 15
-        self.measurement_beforemalipulation = {"front": 0.0, "back": 0.0, "left": 0.0, "right": 0.0, "up": 0.0, "down": 0.0}
+        self.measurement_beforemalipulation = {"front": 0.0, "back": 0.0, "left": 0.0, "right": 0.0, "up": 0.0, "down": 0.0, "yaw": 0.0, "roll": 0.0, "pitch": 0.0}
         self.TARGET_FOUND_DISTANCE = 0.5
 
         self.uri = uri
@@ -47,10 +48,10 @@ class DroneController(QObject):
         self.model_path = model_path
         self.latest_position = None
         self.latest_measurement = None
-        self.SPEED_FACTOR = 0.25
-        self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.5}  # SECTION Höhe ändern
+        self.SPEED_FACTOR = 0.35  # 0.25
+        self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.4}  # SECTION Höhe ändern
         self.hoverTimer = None
-        self.number_last_actions = 40  # SECTION Nummer ändern für last actions
+        self.number_last_actions = 20  # SECTION Nummer ändern für last actions
         self.last_actions = np.zeros(self.number_last_actions)
         self.obs_manager = OBSManager(observation_type=observation_type, number_last_actions=self.number_last_actions)
 
@@ -58,7 +59,7 @@ class DroneController(QObject):
         self.measurement_history = []
         self.history_size = 5  # Keep track of the last 5 measurements for filtering
         self.consecutive_danger_readings = 0
-        self.min_consecutive_readings = 3  # Require multiple consecutive readings before triggering safety
+        self.min_consecutive_readings = 1  # Require multiple consecutive readings before triggering safety
 
         self.ai_control_active = False
 
@@ -100,87 +101,87 @@ class DroneController(QObject):
             case _:
                 print(f"[ERROR]: Unknown model version in TEST-(PREDICTION)-MODE: {model_type}")
 
-        if model_type == "M1" or model_type == "M2" or model_type == "M3" or model_type == "M4" or model_type == "M5":
+        # if model_type == "M1" or model_type == "M2" or model_type == "M3" or model_type == "M4" or model_type == "M5":
 
-            policy = self.model.policy
-            q_net = policy.q_net
+        #     policy = self.model.policy
+        #     q_net = policy.q_net
 
-            # Alle Layers auflisten
-            print(q_net)
+        #     # Alle Layers auflisten
+        #     print(q_net)
 
-            # Zugriff auf die einzelnen Layers:
-            for name, module in q_net.named_children():
-                print(f"Layer Name: {name}")
-                print(module)
-                # Wenn du auf Gewichte willst:
-                if hasattr(module, "weight"):
-                    print(f"Gewicht: {module.weight.shape}")
-                    print(f"Werte: {module.weight}")
+        #     # Zugriff auf die einzelnen Layers:
+        #     for name, module in q_net.named_children():
+        #         print(f"Layer Name: {name}")
+        #         print(module)
+        #         # Wenn du auf Gewichte willst:
+        #         if hasattr(module, "weight"):
+        #             print(f"Gewicht: {module.weight.shape}")
+        #             print(f"Werte: {module.weight}")
 
-            # Zugriff auf das erste Linear-Layer
-            first_linear_layer = self.model.policy.q_net.q_net[0]
+        #     # Zugriff auf das erste Linear-Layer
+        #     first_linear_layer = self.model.policy.q_net.q_net[0]
 
-            # Hol dir die Gewichte (nur die Werte, nicht den Bias)
-            weights = first_linear_layer.weight.detach().cpu().numpy()
+        #     # Hol dir die Gewichte (nur die Werte, nicht den Bias)
+        #     weights = first_linear_layer.weight.detach().cpu().numpy()
 
-            # Berechne die **Summe der absoluten Werte** für jedes Input-Feature (jede Spalte)
-            feature_weights = np.abs(weights).sum(axis=0)
+        #     # Berechne die **Summe der absoluten Werte** für jedes Input-Feature (jede Spalte)
+        #     feature_weights = np.abs(weights).sum(axis=0)
 
-            # Erstelle ein DataFrame mit den Input-Features und ihren Gesamtgewichtungen
-            feature_weights_df = pd.DataFrame({"Feature": [f"Feature {i:03}" for i in range(weights.shape[1])], "Total Weight": feature_weights})  # Führe führende Nullen ein
+        #     # Erstelle ein DataFrame mit den Input-Features und ihren Gesamtgewichtungen
+        #     feature_weights_df = pd.DataFrame({"Feature": [f"Feature {i:03}" for i in range(weights.shape[1])], "Total Weight": feature_weights})  # Führe führende Nullen ein
 
-            # Sortiere nach den **größten Gewichtungen**
-            sorted_feature_weights_df = feature_weights_df.sort_values(by="Total Weight", ascending=False)
+        #     # Sortiere nach den **größten Gewichtungen**
+        #     sorted_feature_weights_df = feature_weights_df.sort_values(by="Total Weight", ascending=False)
 
-            # Speichere das Ergebnis in einer neuen CSV
-            sorted_feature_weights_df.to_csv(f"feature_weight_overview{model_type}.csv", index=False)
+        #     # Speichere das Ergebnis in einer neuen CSV
+        #     sorted_feature_weights_df.to_csv(f"feature_weight_overview{model_type}.csv", index=False)
 
-            print("✅ CSV mit einer Übersicht der Feature-Gewichtungen wurde gespeichert!")
+        #     print("✅ CSV mit einer Übersicht der Feature-Gewichtungen wurde gespeichert!")
 
-        elif model_type == "M6":
-            ### sac
+        # elif model_type == "M6":
+        #     ### sac
 
-            # Überprüfe die Struktur des SAC-Modells
-            print(self.model.__dict__)
+        #     # Überprüfe die Struktur des SAC-Modells
+        #     print(self.model.__dict__)
 
-            # Zugriff auf das Q-Netzwerk (Critic)
-            try:
-                # In Stable Baselines3 ist das Q-Netzwerk (Critic) normalerweise unter 'qf1' und 'qf2'
-                qf1_layer = self.model.qf1
-                weights_qf1 = qf1_layer.parameters().__next__().detach().cpu().numpy()  # Zugriff auf die Gewichte der ersten Schicht
+        #     # Zugriff auf das Q-Netzwerk (Critic)
+        #     try:
+        #         # In Stable Baselines3 ist das Q-Netzwerk (Critic) normalerweise unter 'qf1' und 'qf2'
+        #         qf1_layer = self.model.qf1
+        #         weights_qf1 = qf1_layer.parameters().__next__().detach().cpu().numpy()  # Zugriff auf die Gewichte der ersten Schicht
 
-                # Berechne die **Summe der absoluten Werte** für jedes Input-Feature (jede Spalte)
-                feature_weights_qf1 = np.abs(weights_qf1).sum(axis=0)
+        #         # Berechne die **Summe der absoluten Werte** für jedes Input-Feature (jede Spalte)
+        #         feature_weights_qf1 = np.abs(weights_qf1).sum(axis=0)
 
-                # Erstelle ein DataFrame mit den Input-Features und ihren Gesamtgewichtungen
-                feature_weights_df_qf1 = pd.DataFrame({"Feature": [f"Feature {i:03}" for i in range(weights_qf1.shape[1])], "Total Weight": feature_weights_qf1})  # Führe führende Nullen ein
+        #         # Erstelle ein DataFrame mit den Input-Features und ihren Gesamtgewichtungen
+        #         feature_weights_df_qf1 = pd.DataFrame({"Feature": [f"Feature {i:03}" for i in range(weights_qf1.shape[1])], "Total Weight": feature_weights_qf1})  # Führe führende Nullen ein
 
-                # Sortiere nach den **größten Gewichtungen**
-                sorted_feature_weights_df_qf1 = feature_weights_df_qf1.sort_values(by="Total Weight", ascending=False)
+        #         # Sortiere nach den **größten Gewichtungen**
+        #         sorted_feature_weights_df_qf1 = feature_weights_df_qf1.sort_values(by="Total Weight", ascending=False)
 
-                # Speichere das Ergebnis in einer neuen CSV
-                sorted_feature_weights_df_qf1.to_csv("feature_weight_overview_sac.csv", index=False)
+        #         # Speichere das Ergebnis in einer neuen CSV
+        #         sorted_feature_weights_df_qf1.to_csv("feature_weight_overview_sac.csv", index=False)
 
-                print("✅ CSV mit einer Übersicht der Feature-Gewichtungen des SAC QF1-Modells wurde gespeichert!")
+        #         print("✅ CSV mit einer Übersicht der Feature-Gewichtungen des SAC QF1-Modells wurde gespeichert!")
 
-            except AttributeError:
-                print("❌ qf1 existiert nicht. Überprüfe die Modellstruktur mit 'print(self.model)'.")
+        #     except AttributeError:
+        #         print("❌ qf1 existiert nicht. Überprüfe die Modellstruktur mit 'print(self.model)'.")
 
-            # Zugriff auf das Policy-Netzwerk (Actor)
-            actor_layer = self.model.policy.actor  # Direkt auf den Actor zugreifen
-            weights_actor = actor_layer.parameters().__next__().detach().cpu().numpy()
+        #     # Zugriff auf das Policy-Netzwerk (Actor)
+        #     actor_layer = self.model.policy.actor  # Direkt auf den Actor zugreifen
+        #     weights_actor = actor_layer.parameters().__next__().detach().cpu().numpy()
 
-            # Berechne die **Summe der absoluten Werte** für jedes Input-Feature (jede Spalte)
-            feature_weights_actor = np.abs(weights_actor).sum(axis=0)
+        #     # Berechne die **Summe der absoluten Werte** für jedes Input-Feature (jede Spalte)
+        #     feature_weights_actor = np.abs(weights_actor).sum(axis=0)
 
-            feature_weights_df_actor = pd.DataFrame({"Feature": [f"Feature {i:03}" for i in range(weights_actor.shape[1])], "Total Weight": feature_weights_actor})
+        #     feature_weights_df_actor = pd.DataFrame({"Feature": [f"Feature {i:03}" for i in range(weights_actor.shape[1])], "Total Weight": feature_weights_actor})
 
-            sorted_feature_weights_df_actor = feature_weights_df_actor.sort_values(by="Total Weight", ascending=False)
+        #     sorted_feature_weights_df_actor = feature_weights_df_actor.sort_values(by="Total Weight", ascending=False)
 
-            # Speichere das Ergebnis in einer neuen CSV für das Policy-Netzwerk (Actor)
-            sorted_feature_weights_df_actor.to_csv("feature_weight_overview_sac_actor.csv", index=False)
+        #     # Speichere das Ergebnis in einer neuen CSV für das Policy-Netzwerk (Actor)
+        #     sorted_feature_weights_df_actor.to_csv("feature_weight_overview_sac_actor.csv", index=False)
 
-            print("✅ CSV mit einer Übersicht der Feature-Gewichtungen des SAC Policy-Netzwerks wurde gespeichert!")
+        #     print("✅ CSV mit einer Übersicht der Feature-Gewichtungen des SAC Policy-Netzwerks wurde gespeichert!")
 
     def set_position_callback(self, callback):
         self.position_callback = callback
@@ -300,9 +301,9 @@ class DroneController(QObject):
             # Check if the current sensor reading exceeds 4 meters
 
             measurement[sensor] = measurement[sensor] - 0.25
-            if measurement[sensor] < 0.0:
+            if measurement[sensor] < 0.05:
                 # Replace with a fixed value to match simulation traning behavior
-                measurement[sensor] = 0.0
+                measurement[sensor] = 0.05
 
         # Update measurement history for safety filtering
         self.measurement_history.append(measurement.copy())
@@ -336,10 +337,10 @@ class DroneController(QObject):
                 "left": self.latest_measurement["left"],
                 "right": self.latest_measurement["right"],
             }
-            self.obs_manager.update(position=self.latest_position, measurements=adjusted_measurements, last_actions=self.last_actions)
+            self.obs_manager.update(position=self.latest_position, measurements=self.measurement_beforemalipulation, last_actions=self.last_actions)
 
     def start_fly(self):
-        self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.5}  # SECTION Höhe ändern
+        self.hover = {"x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "height": 0.4}  # SECTION Höhe ändern
 
         self.hoverTimer = QtCore.QTimer()
         self.hoverTimer.timeout.connect(self.sendHoverCommand)
@@ -372,7 +373,7 @@ class DroneController(QObject):
 
         # Add AI control logic directly in the control loop
         if self.ai_control_active and hasattr(self, "obs_manager"):
-            print(f"[AI Control] AI control is active. Current hover: {self.hover}")
+            # print(f"[AI Control] AI control is active. Current hover: {self.hover}")
             # Only predict at 2Hz (every 25 cycles at 50Hz)
             self.ai_prediction_counter += 1
             # self.yaw_counter1 += 1
@@ -390,6 +391,7 @@ class DroneController(QObject):
                     self.hover["y"] = new_y_vel * self.SPEED_FACTOR
 
             self.check_safety()
+            # print(f"[AI Control] AI control active. Hover: {self.hover}")
         self.cf.commander.send_hover_setpoint(self.hover["x"], self.hover["y"], self.hover["yaw"], self.hover["height"])
 
     def check_safety(self):
@@ -428,75 +430,36 @@ class DroneController(QObject):
             self.emergency_stop_active = True
             self.start_fly = False
             print(f"[GOAL] Target found!")
-        elif front <= self.SAFE_DISTANCE:
+
+        if front <= self.SAFE_DISTANCE:
             self.consecutive_danger_readings += 1
             if self.consecutive_danger_readings >= self.min_consecutive_readings:
                 self.trigger_safety("front", back, left, right)
-        elif back <= self.SAFE_DISTANCE:
+        # elif back <= self.SAFE_DISTANCE:
+        if back <= self.SAFE_DISTANCE:
             self.consecutive_danger_readings += 1
             if self.consecutive_danger_readings >= self.min_consecutive_readings:
                 self.trigger_safety("back", front, left, right)
-        elif left <= self.SAFE_DISTANCE:
+        if left <= self.SAFE_DISTANCE:
             self.consecutive_danger_readings += 1
             if self.consecutive_danger_readings >= self.min_consecutive_readings:
                 self.trigger_safety("left", right, front, back)
-        elif right <= self.SAFE_DISTANCE:
+        if right <= self.SAFE_DISTANCE:
             self.consecutive_danger_readings += 1
             if self.consecutive_danger_readings >= self.min_consecutive_readings:
                 self.trigger_safety("right", left, front, back)
+        elif front <= self.SAFE_DISTANCE_Landing:
+            self.trigger_safety_stop("front", back, left, right)
+        elif back <= self.SAFE_DISTANCE_Landing:
+            self.trigger_safety_stop("back", front, left, right)
+        elif left <= self.SAFE_DISTANCE_Landing:
+            self.trigger_safety_stop("left", right, front, back)
+        elif right <= self.SAFE_DISTANCE_Landing:
+            self.trigger_safety_stop("right", left, front, back)
         else:
             self.consecutive_danger_readings = 0  # Reset counter if no danger is detected
 
-    def trigger_safety(self, direction, opposite, adjacent1, adjacent2):
-        """
-        Trigger the safety mechanism to stop the drone and push it back to a safe distance.
-        :param direction: The direction of the detected wall ("front", "back", "left", "right").
-        :param opposite: The distance in the opposite direction.
-        :param adjacent1: The distance to the first adjacent side.
-        :param adjacent2: The distance to the second adjacent side.
-        """
-        print(f"[SAFETY] Wall detected too close in the {direction} direction!")
-
-        # Stop all movement
-        self.hover["x"] = 0.0
-        self.hover["y"] = 0.0
-        self.hover["yaw"] = 0.0
-        # print("[SAFETY] Drone movement stopped.")
-
-        # Determine pushback direction
-        # if direction == "front" and opposite > self.PUSHBACK_VEL:
-        #     self.hover["x"] = -self.PUSHBACK_VEL * 0.5  # Push backward
-        #     if self.model_type == "M6":
-        #         self.update_last_actions(np.array([-self.PUSHBACK_VEL, 0]))  # No lateral movement for SAC
-        #         self.last_action_was_pushback = True
-        #     elif self.model_type == "M1" or self.model_type == "M2" or self.model_type == "M3" or self.model_type == "M4" or self.model_type == "M5":
-        #         self.update_last_actions(1)  # Update last action to backward
-        #         self.last_action_was_pushback = True
-        # elif direction == "back" and opposite > self.PUSHBACK_VEL:
-        #     self.hover["x"] = self.PUSHBACK_VEL * 0.5  # Push forward
-        #     if self.model_type == "M6":
-        #         self.update_last_actions(np.array([self.PUSHBACK_VEL, 0]))
-        #         self.last_action_was_pushback = True
-        #     elif self.model_type == "M1" or self.model_type == "M2" or self.model_type == "M3" or self.model_type == "M4" or self.model_type == "M5":
-        #         self.update_last_actions(0)
-        #         self.last_action_was_pushback = True
-        # elif direction == "left" and opposite > self.PUSHBACK_VEL:
-        #     self.hover["y"] = -self.PUSHBACK_VEL * 0.5  # Push right
-        #     if self.model_type == "M6":
-        #         self.update_last_actions(np.array([0, -self.PUSHBACK_VEL]))
-        #         self.last_action_was_pushback = True
-        #     elif self.model_type == "M1" or self.model_type == "M2" or self.model_type == "M3" or self.model_type == "M4" or self.model_type == "M5":
-        #         self.update_last_actions(3)
-        #         self.last_action_was_pushback = True
-        # elif direction == "right" and opposite > self.PUSHBACK_VEL:
-        #     self.hover["y"] = self.PUSHBACK_VEL * 0.5  # Push left
-        #     if self.model_type == "M6":
-        #         self.update_last_actions(np.array([0, self.PUSHBACK_VEL]))
-        #         self.last_action_was_pushback = True
-        #     elif self.model_type == "M1" or self.model_type == "M2" or self.model_type == "M3" or self.model_type == "M4" or self.model_type == "M5":
-        #         self.update_last_actions(2)
-        #         self.last_action_was_pushback = True
-
+    def trigger_safety_stop(self, direction, opposite, adjacent1, adjacent2):
         if direction == "front" and opposite > self.PUSHBACK_VEL:
             self.hover["x"] = 0.0
             self.hover["y"] = 0.0
@@ -556,13 +519,63 @@ class DroneController(QObject):
         else:
             self.last_action_was_pushback = False
 
+    def trigger_safety(self, direction, opposite, adjacent1, adjacent2):
+        """
+        Trigger the safety mechanism to stop the drone and push it back to a safe distance.
+        :param direction: The direction of the detected wall ("front", "back", "left", "right").
+        :param opposite: The distance in the opposite direction.
+        :param adjacent1: The distance to the first adjacent side.
+        :param adjacent2: The distance to the second adjacent side.
+        """
+        print(f"[SAFETY] Wall detected too close in the {direction} direction!")
+
+        # Stop all movement
+        self.hover["x"] = 0.0
+        self.hover["y"] = 0.0
+        self.hover["yaw"] = 0.0
+        # print("[SAFETY] Drone movement stopped.")
+
+        # Determine pushback direction
+        if direction == "front" and opposite > self.PUSHBACK_VEL:
+            self.hover["x"] = -self.PUSHBACK_VEL  # Push backward
+            if self.model_type == "M6":
+                self.update_last_actions(np.array([-self.PUSHBACK_VEL, 0]))  # No lateral movement for SAC
+                self.last_action_was_pushback = True
+            elif self.model_type == "M1" or self.model_type == "M2" or self.model_type == "M3" or self.model_type == "M4" or self.model_type == "M5":
+                self.update_last_actions(1)  # Update last action to backward
+                self.last_action_was_pushback = True
+        elif direction == "back" and opposite > self.PUSHBACK_VEL:
+            self.hover["x"] = self.PUSHBACK_VEL  # Push forward
+            if self.model_type == "M6":
+                self.update_last_actions(np.array([self.PUSHBACK_VEL, 0]))
+                self.last_action_was_pushback = True
+            elif self.model_type == "M1" or self.model_type == "M2" or self.model_type == "M3" or self.model_type == "M4" or self.model_type == "M5":
+                self.update_last_actions(0)
+                self.last_action_was_pushback = True
+        elif direction == "left" and opposite > self.PUSHBACK_VEL:
+            self.hover["y"] = -self.PUSHBACK_VEL  # Push right
+            if self.model_type == "M6":
+                self.update_last_actions(np.array([0, -self.PUSHBACK_VEL]))
+                self.last_action_was_pushback = True
+            elif self.model_type == "M1" or self.model_type == "M2" or self.model_type == "M3" or self.model_type == "M4" or self.model_type == "M5":
+                self.update_last_actions(3)
+                self.last_action_was_pushback = True
+        elif direction == "right" and opposite > self.PUSHBACK_VEL:
+            self.hover["y"] = self.PUSHBACK_VEL  # Push left
+            if self.model_type == "M6":
+                self.update_last_actions(np.array([0, self.PUSHBACK_VEL]))
+                self.last_action_was_pushback = True
+            elif self.model_type == "M1" or self.model_type == "M2" or self.model_type == "M3" or self.model_type == "M4" or self.model_type == "M5":
+                self.update_last_actions(2)
+                self.last_action_was_pushback = True
+
         # Ensure no collision during pushback
         if adjacent1 < self.SAFE_DISTANCE or adjacent2 < self.SAFE_DISTANCE:
             # print("[SAFETY] Pushback canceled due to nearby walls.")
             self.hover["x"] = 0.0
             self.hover["y"] = 0.0
 
-        # print(f"[SAFETY] Updated hover for pushback: {self.hover}")
+        print(f"[SAFETY] Updated hover for pushback: {self.hover}")
 
         self.pushback_hover = self.hover.copy()
 
@@ -590,7 +603,7 @@ class DroneController(QObject):
 
     def predict_action(self, observation_space):
         action, _ = self.model.predict(observation_space, deterministic=True)
-        print(f"Predicted action: {action}")
+        # print(f"Predicted action: {action}")
         # Call the callback here, where we know action is available
         if hasattr(self, "ai_action_callback") and self.ai_action_callback is not None:
             self.ai_action_callback(action)

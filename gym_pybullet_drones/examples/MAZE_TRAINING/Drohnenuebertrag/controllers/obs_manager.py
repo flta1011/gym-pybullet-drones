@@ -561,7 +561,7 @@ class SimpleSlam:
         angles = {"front": drone_yaw, "back": drone_yaw + np.pi, "left": drone_yaw + np.pi / 2, "right": drone_yaw - np.pi / 2}
         for direction in ["front", "back", "left", "right"]:
             distance = raycast_results.get(direction, 9999)
-            if distance < 4:  # Treffer – Wand erkannt
+            if distance < 2.1:  # Treffer – Wand erkannt
                 angle = angles[direction]
                 end_x = neues_x + distance * np.cos(angle)
                 end_y = neues_y + distance * np.sin(angle)
@@ -578,11 +578,29 @@ class SimpleSlam:
                     ):
                         self.occupancy_grid[cx, cy] = self.frei_value
                         self.counter_free_space += 1
+                    if distance == 0.05:
+                        if distance == 0.05 and direction == "front":
+                            self.occupancy_grid[cx + 1, cy] = self.wand_value
+                            self.occupancy_grid[cx + 2, cy] = self.wand_value
+                            self.occupancy_grid[cx + 3, cy] = self.wand_value
+                        elif distance == 0.05 and direction == "back":
+                            self.occupancy_grid[cx - 1, cy] = self.wand_value
+                            self.occupancy_grid[cx - 2, cy] = self.wand_value
+                            self.occupancy_grid[cx - 3, cy] = self.wand_value
+                        elif distance == 0.05 and direction == "left":
+                            self.occupancy_grid[cx, cy - 1] = self.wand_value
+                            self.occupancy_grid[cx, cy - 2] = self.wand_value
+                            self.occupancy_grid[cx, cy - 3] = self.wand_value
+                        elif distance == 0.05 and direction == "right":
+                            self.occupancy_grid[cx, cy + 1] = self.wand_value
+                            self.occupancy_grid[cx, cy + 2] = self.wand_value
+                            self.occupancy_grid[cx, cy + 3] = self.wand_value
+
                 # Markiere den Endpunkt als Wand:
-                if 0 <= end_grid_x < self.grid_size and 0 <= end_grid_y < self.grid_size and self.occupancy_grid[end_grid_x, end_grid_y] != self.frei_value:
+                if 0 <= end_grid_x < self.grid_size and 0 <= end_grid_y < self.grid_size:
                     self.occupancy_grid[end_grid_x, end_grid_y] = self.wand_value
 
-            elif distance >= 4:  # Distanz ist auf 4 m gekappt, da das die Range des Sensors ist --> alles als frei markieren
+            elif distance >= 2.1:  # Distanz ist auf 4 m gekappt, da das die Range des Sensors ist --> alles als frei markieren
                 angle = angles[direction]
                 end_x = neues_x + distance * np.cos(angle)
                 end_y = neues_y + distance * np.sin(angle)
@@ -623,7 +641,7 @@ class SimpleSlam:
                     or self.occupancy_grid[i, j] == self.unbekannt_value
                     or self.occupancy_grid[i, j] == self.frei_value
                     or self.occupancy_grid[i, j] == self.actual_Position_value
-                    and self.occupancy_grid[i, j] != self.wand_value
+                    and self.occupancy_grid[i, j] == self.wand_value
                 ):
                     # self.occupancy_grid[i, j] = self.besucht_value
                     self.occupancy_grid[i, j] = self.actual_Position_value
