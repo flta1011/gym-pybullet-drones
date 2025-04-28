@@ -405,8 +405,8 @@ class SimpleSlam:
 
 
 if __name__ == "__main__":
-    last_actions = np.zeros(100)
-    model = SAC.load("/home/moritz_s/Desktop/Test_Series/01/M6_R6_O8_A3_TR1_T1_20250415_211929_schwere_Mazes_SAC_alt_2Hz_100LA/save-04.15.2025_21.19.29/final_model.zip")
+    last_actions = np.zeros(20)
+    model = DQN.load("/home/moritz_s/Desktop/Test_Series/02/M5_R6_O9_A2_TR1_T1_20250411_180656_DQN_alt_01_Abstand_2hz_20LA/save-04.11.2025_18.06.56/final_model.zip")
 
     slam = SimpleSlam()
 
@@ -461,21 +461,39 @@ if __name__ == "__main__":
                     slam._compute_interest_values()
 
                     # preparing observation
-                    # X-Pos, Y-Pos, Raycast Readings, Interest Values, Last Actions
-                    obs_list = [position_estimate[0], position_estimate[1], front, back, left, right]
-                    obs_list.extend(slam.interest_values)
-                    obs_list.extend(last_actions)
-                    observation = np.array(obs_list)
+                    raycasts = np.array([front, back, left, right])
+                    observation = dict(
+                        {
+                            "image": slam.cropped_grid,
+                            "x": np.array([round(position_estimate[0], 3)], dtype=np.float32),
+                            "y": np.array([round(position_estimate[1], 3)], dtype=np.float32),
+                            "raycast": raycasts,
+                            "interest_values": slam.interest_values,
+                            "last_clipped_actions": last_actions,
+                        }
+                    )
 
                     # Flight Code
                     VELOCITY = 0.25
+                    SPEED_FACTOR = 0.5
                     velocity_x = 0.0
                     velocity_y = 0.0
 
                     # Prediction
                     action, _ = model.predict(observation, deterministic=True)
-                    velocity_x = action[0] * 0.25
-                    velocity_y = action[1] * 0.25
+
+                    if action == 0:
+                        velocity_x = VELOCITY * SPEED_FACTOR
+                        velocity_y = 0.0
+                    elif action == 1:
+                        velocity_x = -VELOCITY * SPEED_FACTOR
+                        velocity_y = 0.0
+                    elif action == 2:
+                        velocity_x = 0.0
+                        velocity_y = VELOCITY * SPEED_FACTOR
+                    elif action == 3:
+                        velocity_x = 0.0
+                        velocity_y = -VELOCITY * SPEED_FACTOR
 
                     # Pushback
                     if is_close(multiranger.front):
