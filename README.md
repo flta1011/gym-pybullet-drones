@@ -83,7 +83,9 @@ conda activate drones
 pip3 install --upgrade pip
 pip3 install -e . # if needed, `sudo apt install build-essential` to install `gcc` and build `pybullet`
 
+
 ```
+
 
 ## This are examples so check if the installation was succesfull
 
@@ -111,6 +113,15 @@ python learn.py --multiagent true # task: 2-drone hover at z == 1.2 and 0.7
 ```
 
 <img src="gym_pybullet_drones/assets/rl.gif" alt="rl example" width="375"> <img src="gym_pybullet_drones/assets/marl.gif" alt="marl example" width="375">
+
+### Installation die bei unserer Projektumsetzung hinzukamen
+
+```sh
+pip install pyyaml
+pip install pandas as pd 
+pip install dash
+
+```
 
 # Projektstruktur
 
