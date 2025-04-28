@@ -62,7 +62,7 @@ logging.basicConfig(level=logging.ERROR)
 
 
 def is_close(range):
-    MIN_DISTANCE = 0.3  # m
+    MIN_DISTANCE = 0.25  # m
 
     if range is None:
         return False
@@ -96,7 +96,7 @@ if __name__ == "__main__":
                 keep_flying = True
 
                 while keep_flying:
-                    VELOCITY = 0.25
+                    VELOCITY = 0.2
                     velocity_x = 0.0
                     velocity_y = 0.0
                     # Observation space
@@ -112,8 +112,8 @@ if __name__ == "__main__":
                     observation = np.array(obs_list, dtype=np.float32)  # Explicitly set dtype
                     # Prediction
                     action, _ = model.predict(observation, deterministic=True)
-                    velocity_x = action[0] * 0.4
-                    velocity_y = action[1] * 0.4
+                    velocity_x = action[0] * 0.35
+                    velocity_y = action[1] * 0.35
 
                     # Pushback
                     if is_close(multiranger.front):
