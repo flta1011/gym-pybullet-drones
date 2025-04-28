@@ -51,7 +51,7 @@ Training_Mode = "Test"  # "Training" oder "Test"
 GUI_Mode = "Train"  # "Train" oder "Test" oder "NoGUI"
 
 DEFAULT_USE_PRETRAINED_MODEL = True
-BEST_PRETAINED_MODEL_TO_USE = "SAC_schwere_Mazes"  # folgende Modelle vorausgewählt für die Verwendung: "Individuelle_Auswahl","PPO_einfache_Mazes", "PPO_schwere_Mazes", "DQN_MLP_einfache_Mazes", "DQN_MLP_schwere_Mazes", "DQN_CNN_einfache_Mazes", "DQN_MultiInput_einfache_Mazes","DQN_MultiInput_schwere_Mazes", "SAC_einfache_Mazes", "SAC_schwere_Mazes", "SAC_neues_Maze_29"
+BEST_PRETAINED_MODEL_TO_USE = "Individuelle_Auswahl"  # folgende Modelle vorausgewählt für die Verwendung: "Individuelle_Auswahl","PPO_einfache_Mazes", "PPO_schwere_Mazes", "DQN_MLP_einfache_Mazes", "DQN_MLP_schwere_Mazes", "DQN_CNN_einfache_Mazes", "DQN_MultiInput_einfache_Mazes","DQN_MultiInput_schwere_Mazes", "SAC_einfache_Mazes", "SAC_schwere_Mazes", "SAC_neues_Maze_29"
 
 ####### GUI-SETTINGS (u.a. Debug-GUI) #######
 DEFAULT_USER_DEBUG_GUI = False
@@ -122,11 +122,11 @@ if DEFAULT_USE_PRETRAINED_MODEL == True:
     match BEST_PRETAINED_MODEL_TO_USE:
         case "Individuelle_Auswahl":
             DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
-                project_root, "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M6_R6_O10_A3_TR1_T1_20250426-232945_SAC_O10/_100000_steps.zip"
+                project_root, "/home/alex/Desktop/FundEModelle/M5_R6_O9_A2_TR1_T1_20250427-010154_DQN-Neue_Mazes_0-3_Abstand/_1700000_steps.zip"
             )
             DEFAULT_PRETRAINED_MODEL_CSV_PATH = os.path.join(
                 project_root,
-                "/home/florian/Documents/gym-pybullet-drones/gym_pybullet_drones/Auswertung_der_Modelle_Archieve/M6_R6_O10_A3_TR1_T1_20250426-232945_SAC_O10/M6_R6_O10_A3_TR1_T1_20250426-232945.csv",
+                "/home/alex/Desktop/FundEModelle/M5_R6_O9_A2_TR1_T1_20250427-010154_DQN-Neue_Mazes_0-3_Abstand/TRAINING_M5_R6_O9_A2_TR1_T1_20250427-010154.csv",
             )
         case "PPO_einfache_Mazes":
             DEFAULT_PRETRAINED_MODEL_PATH = os.path.join(
