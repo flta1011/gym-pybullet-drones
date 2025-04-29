@@ -1076,7 +1076,6 @@ class BaseRLAviary_MAZE_TRAINING(gym.Env):
 
                     self.PYB_STEPS_IN_ACTUAL_STEP_CALL += 1
 
-
                     if self.PYB_STEPS_IN_ACTUAL_STEP_CALL == self.PYB_STEPS_PER_REWARD_AND_ACTION_CHANGE:
                         #### Update and store the drones kinematic information #####
                         self._updateAndStoreKinematicInformation()
