@@ -110,7 +110,6 @@ if Training_Mode == "Test":
     DEFAULT_PUSHBACK_ACTIVE = False
     # For Training:
 
-
 ####### Verwendung von Pretrained-Modellen (FÜR TRAINING UND TESTING)#######
 
 # get actual path of this file
