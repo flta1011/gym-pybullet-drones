@@ -466,7 +466,7 @@ def _computeReward(
                 # 1 = Einmal besucht,
                 # 2 = Zweimal besucht,
                 # 3 = Dreimal besucht,
-                # 4 = Startpunkt,
+                # 4 = Startpun
                 # 5 = Zielpunkt,
                 # 6 = Wand
 
