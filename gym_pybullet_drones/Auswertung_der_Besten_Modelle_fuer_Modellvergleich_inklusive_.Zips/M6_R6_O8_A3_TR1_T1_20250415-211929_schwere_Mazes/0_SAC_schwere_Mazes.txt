@@ -1,5 +1,0 @@
-auf den schweren Mazes trainiert, gamma = 0.95!
-
-->> gute Ergebnisse! leider hin und wieder Wandkontakte --> top
-
---> SET_20250415-211929	verwendet/gespeichert: Parameter für das SAC Modell die last actions auf 100 gesetzt, weil mit 200 auch kein direktes Lernen zu Beginn zu sehen war. -> Reward für neue Felder runtergenommen und Bestrafung auch, da damit mit SAC zuletzt besser trainiert wurde.
