@@ -1092,24 +1092,26 @@ def run(
                         seed=42,
                         gamma=0.95,
                     )
-            case "M7":  # M7: PPO_MLPPolicy # see https://sb3-contrib.readthedocs.io/en/master/modules/ppo_recurrent.html#how-to-replicate-the-results
+            ## IST nicht Supportet
+            
+            # case "M7":  # M7: PPO_MLPPolicy # see https://sb3-contrib.readthedocs.io/en/master/modules/ppo_recurrent.html#how-to-replicate-the-results
 
-                if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
-                    print(
-                        f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_VERSION} with {REWARD_VERSION}, {OBSERVATION_TYPE}, {TRUNCATED_TYPE}, {TERMINATED_TYPE}, {ACTION_TYPE}"
-                    )
-                    model = RecurrentPPO.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
-                else:
-                    print(f"[INFO] Creating new {MODEL_VERSION} with {REWARD_VERSION}, {OBSERVATION_TYPE}, {TRUNCATED_TYPE}, {TERMINATED_TYPE}, {ACTION_TYPE}")
-                    model = RecurrentPPO(
-                        "MlpLstmPolicy",
-                        train_env,
-                        verbose=1,
-                        device="cuda:0",
-                        gamma=0.95,
-                        seed=42,
-                        n_steps=128,
-                    )
+            #     if DEFAULT_USE_PRETRAINED_MODEL and os.path.exists(DEFAULT_PRETRAINED_MODEL_PATH):
+            #         print(
+            #             f"[INFO] Loading existing model from {DEFAULT_PRETRAINED_MODEL_PATH} for {MODEL_VERSION} with {REWARD_VERSION}, {OBSERVATION_TYPE}, {TRUNCATED_TYPE}, {TERMINATED_TYPE}, {ACTION_TYPE}"
+            #         )
+            #         model = RecurrentPPO.load(DEFAULT_PRETRAINED_MODEL_PATH, env=train_env)
+            #     else:
+            #         print(f"[INFO] Creating new {MODEL_VERSION} with {REWARD_VERSION}, {OBSERVATION_TYPE}, {TRUNCATED_TYPE}, {TERMINATED_TYPE}, {ACTION_TYPE}")
+            #         model = RecurrentPPO(
+            #             "MlpLstmPolicy",
+            #             train_env,
+            #             verbose=1,
+            #             device="cuda:0",
+            #             gamma=0.95,
+            #             seed=42,
+            #             n_steps=128,
+            #         )
             case _:
                 raise ValueError(f"Invalid model version: {MODEL_Version}")
 
