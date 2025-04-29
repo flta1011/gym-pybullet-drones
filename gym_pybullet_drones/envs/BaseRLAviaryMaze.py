@@ -6,7 +6,7 @@ from collections import deque
 
 from gym_pybullet_drones.envs.BaseAviary import BaseAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType, ImageType
-from gym_pybullet_drones.examples.Test_Flo.DSLPIDControl_TestFlo import DSLPIDControl
+from gym_pybullet_drones.control import DSLPIDControl
 
 
 class BaseRLAviary_Maze(BaseAviary):
